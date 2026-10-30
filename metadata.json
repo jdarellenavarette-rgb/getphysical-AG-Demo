@@ -1,0 +1,6 @@
+{
+  "name": "GetPhysical",
+  "description": "Fitness & recreation ecosystem connecting consumers (Sodia), gyms (GymDash), clubs (Clubdash), and trainers (CoachDash).",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

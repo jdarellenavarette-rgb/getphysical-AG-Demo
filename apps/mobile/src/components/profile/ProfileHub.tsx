@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView } from "react-native";
 import { Award, Shield, Eye, Briefcase, UserCheck, Calendar } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
+import { OrganizerMeetModal } from "./OrganizerMeetModal";
 
 interface ProfileHubProps {
   onSwitchToBusinessMode?: () => void;
@@ -11,6 +12,7 @@ interface ProfileHubProps {
 export function ProfileHub({ onSwitchToBusinessMode, onSwitchToCoachDash }: ProfileHubProps) {
   const { profile, passes, currentRole, setRole } = useEcosystemStore();
   const [activeTab, setActiveTab] = useState<"trophy" | "locker">("trophy");
+  const [isOrganizerModalOpen, setIsOrganizerModalOpen] = useState(false);
 
   const rawMetrics =
     profile.metrics && typeof profile.metrics === "object" && !Array.isArray(profile.metrics)
@@ -74,12 +76,15 @@ export function ProfileHub({ onSwitchToBusinessMode, onSwitchToCoachDash }: Prof
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => setRole(currentRole === "organizer" ? "individual" : "organizer")}
+            onPress={() => {
+              setRole("organizer");
+              setIsOrganizerModalOpen(true);
+            }}
             style={[styles.portalButton, currentRole === "organizer" && styles.portalButtonActive]}
           >
             <Calendar size={13} color="#FAFAFA" />
             <Text style={styles.portalButtonText}>
-              {currentRole === "organizer" ? "Organizer Mode" : "Organizer Pro"}
+              {currentRole === "organizer" ? "Organizer Meet" : "Organizer Pro"}
             </Text>
           </TouchableOpacity>
 
@@ -154,6 +159,11 @@ export function ProfileHub({ onSwitchToBusinessMode, onSwitchToCoachDash }: Prof
           </View>
         )}
       </View>
+
+      <OrganizerMeetModal
+        visible={isOrganizerModalOpen}
+        onClose={() => setIsOrganizerModalOpen(false)}
+      />
     </ScrollView>
   );
 }

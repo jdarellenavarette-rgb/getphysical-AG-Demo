@@ -8,11 +8,26 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"],
-      "sodia-core": ["../../packages/sodia-core/src/index.ts"],
-      "sodia-core/*": ["../../packages/sodia-core/src/*"]
-    }
+      "@/*": [
+        "./src/*"
+      ],
+      "sodia-core": [
+        "../../packages/sodia-core/src/index.ts"
+      ],
+      "sodia-core/*": [
+        "../../packages/sodia-core/src/*"
+      ]
+    },
+    "incremental": true
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "next-env.d.ts"],
-  "exclude": ["node_modules", ".next"]
+  "include": [
+    "next-env.d.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next"
+  ]
 }

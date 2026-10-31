@@ -3,6 +3,8 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "paths": {
+      "react": ["./node_modules/@types/react"],
+      "react/*": ["./node_modules/@types/react/*"],
       "@/*": ["./src/*"],
       "sodia-core": ["../../packages/sodia-core/src/index.ts"],
       "sodia-core/*": ["../../packages/sodia-core/src/*"]

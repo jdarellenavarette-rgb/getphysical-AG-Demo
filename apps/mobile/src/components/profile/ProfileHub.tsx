@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView } from "react-native";
-import { Award, Shield, Eye, Settings, Briefcase, UserCheck } from "lucide-react-native";
+import { Award, Shield, Eye, Briefcase, UserCheck, Calendar } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 
 interface ProfileHubProps {
@@ -31,14 +31,14 @@ export function ProfileHub({ onSwitchToBusinessMode, onSwitchToCoachDash }: Prof
           <Text style={styles.bioText}>{profile.bio}</Text>
         </View>
 
-        {/* ACTIVE ROSTER (Gym Subscriptions) */}
+        {/* ACTIVE ROSTER & AFFILIATIONS */}
         <View style={styles.activeRosterRow}>
           <View style={styles.rosterBadgePrimary}>
             <Shield size={12} color="#10B981" />
             <Text style={styles.rosterBadgeText}>Metro Core VIP</Text>
           </View>
           <View style={styles.rosterBadgeSecondary}>
-            <Text style={styles.rosterBadgeTextSec}>Nexus Member</Text>
+            <Text style={styles.rosterBadgeTextSec}>Nexus Affiliate Organizer</Text>
           </View>
         </View>
 
@@ -58,7 +58,7 @@ export function ProfileHub({ onSwitchToBusinessMode, onSwitchToCoachDash }: Prof
           </View>
         </View>
 
-        {/* ROLE PORTAL SWITCHING */}
+        {/* ROLE PORTAL SWITCHING (GymDash Staff / Clubdash Organizer / CoachDash) */}
         <View style={styles.portalRow}>
           <TouchableOpacity
             onPress={() => {
@@ -67,9 +67,19 @@ export function ProfileHub({ onSwitchToBusinessMode, onSwitchToCoachDash }: Prof
             }}
             style={[styles.portalButton, currentRole === "staff" && styles.portalButtonActive]}
           >
-            <Briefcase size={14} color={currentRole === "staff" ? "#FFFFFF" : "#FAFAFA"} />
+            <Briefcase size={13} color="#FAFAFA" />
             <Text style={styles.portalButtonText}>
-              {currentRole === "staff" ? "In Staff Mode" : "Switch to Business Mode"}
+              {currentRole === "staff" ? "Staff Mode" : "Gym/Club Staff"}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => setRole(currentRole === "organizer" ? "individual" : "organizer")}
+            style={[styles.portalButton, currentRole === "organizer" && styles.portalButtonActive]}
+          >
+            <Calendar size={13} color="#FAFAFA" />
+            <Text style={styles.portalButtonText}>
+              {currentRole === "organizer" ? "Organizer Mode" : "Organizer Pro"}
             </Text>
           </TouchableOpacity>
 
@@ -80,9 +90,9 @@ export function ProfileHub({ onSwitchToBusinessMode, onSwitchToCoachDash }: Prof
             }}
             style={[styles.portalButton, currentRole === "coach" && styles.portalButtonActive]}
           >
-            <UserCheck size={14} color={currentRole === "coach" ? "#FFFFFF" : "#FAFAFA"} />
+            <UserCheck size={13} color="#FAFAFA" />
             <Text style={styles.portalButtonText}>
-              {currentRole === "coach" ? "In Coach Mode" : "Switch to Coach Dash"}
+              {currentRole === "coach" ? "Coach Mode" : "Coach Dash"}
             </Text>
           </TouchableOpacity>
         </View>

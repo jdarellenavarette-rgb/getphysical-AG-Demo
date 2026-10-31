@@ -16,6 +16,7 @@ import {
   UserRole
 } from '../types';
 import { loadPersistentItem, savePersistentItem, clearDatabase } from '../db/storage';
+import { dbService, authService, supabase } from '../lib/supabase';
 
 interface EcosystemContextType {
   // Navigation & Role
@@ -473,6 +474,18 @@ export const EcosystemProvider: React.FC<{ children: ReactNode }> = ({ children 
       referenceNo: 'XND-' + Math.floor(10000 + Math.random() * 90000) + '-PH'
     };
     setLedger(prev => [newTx, ...prev]);
+
+    // Persist to Supabase Financial Ledger
+    dbService.recordLedgerTransaction({
+      reference_no: newTx.referenceNo,
+      type: newTx.type === 'access' ? 'day_pass' : newTx.type === 'refund' ? 'refund' : 'monthly_sub',
+      amount: newTx.amount,
+      description: newTx.action,
+      facility_name: newTx.facilityName,
+      method: (newTx.paymentMethod || 'card').toLowerCase().includes('cash') ? 'cash' : 'card',
+      status: newTx.status === 'refunded' ? 'refunded' : 'settled',
+      metadata: { serviceFee: newTx.serviceFee, splitDetails: newTx.splitDetails }
+    }).catch(err => console.warn('[Supabase Ledger Sync Error]:', err));
   };
 
   const voidOrRefundTransaction = (txId: string, managerPin: string): boolean => {
@@ -860,6 +873,17 @@ export const EcosystemProvider: React.FC<{ children: ReactNode }> = ({ children 
 
     setPosts(prev => [newPost, ...prev]);
     showToast('Post published to Sodia feed!');
+
+    // Persist to Supabase Cloud
+    dbService.createPost({
+      author_name: authorName,
+      author_avatar: authorAvatar,
+      author_role: authorType,
+      content,
+      media_url: newPost.mediaUrl,
+      facility_tag: newPost.facilityTag,
+      stamp: newPost.stamp
+    }).catch(err => console.warn('[Supabase Post Sync Error]:', err));
   };
 
   // PR Challenges
@@ -1476,6 +1500,7 @@ export const EcosystemProvider: React.FC<{ children: ReactNode }> = ({ children 
       })
     );
     showToast(`Bracket Score Finalized: ${scoreA} - ${scoreB}. Winner advanced! Push notification sent.`);
+    dbService.updateMatchScore(matchId, scoreA, scoreB).catch(err => console.warn('[Supabase Match Sync Error]:', err));
   };
 
   const createTournamentEvent = (sport: string, format: string, venue: string, price: number) => {
@@ -1645,6 +1670,74 @@ export const EcosystemProvider: React.FC<{ children: ReactNode }> = ({ children 
         showToast(`Executed Deep Dive Scenario #${diveNumber}`);
     }
   };
+
+  // ─── SUPABASE PROD BACKEND HYDRATION & REALTIME ───
+  useEffect(() => {
+    // 1. Fetch live facilities
+    dbService.getFacilities().then(cloudFacilities => {
+      if (cloudFacilities && cloudFacilities.length > 0) {
+        setFacilities(cloudFacilities.map((f: any) => ({
+          id: f.id,
+          name: f.name,
+          registry: f.registry,
+          category: f.category,
+          logo: f.logo,
+          coverImage: f.cover_image,
+          address: f.address,
+          distance: f.distance || '0.8 km',
+          coords: f.coords || { lat: 14.549, lng: 121.05 },
+          liveCapacity: f.live_capacity || { current: 42, max: 100 },
+          isOpen: f.is_open ?? true,
+          hours: f.hours || '05:00 AM - 11:00 PM',
+          amenities: f.amenities || [],
+          dayPassPrice: Number(f.day_pass_price) || 250,
+          monthlySubPrice: f.monthly_sub_price ? Number(f.monthly_sub_price) : undefined,
+          courtHourlyPrice: f.court_hourly_price ? Number(f.court_hourly_price) : undefined,
+          rating: Number(f.rating) || 4.9,
+          reviewCount: f.review_count || 100,
+          hasActiveChallenge: f.has_active_challenge ?? false,
+          challengeTitle: f.challenge_title,
+          spatialAssets: f.spatial_assets
+        })));
+      }
+    });
+
+    // 2. Fetch live tournament matches
+    dbService.getTournamentMatches().then(cloudMatches => {
+      if (cloudMatches && cloudMatches.length > 0) {
+        setBracketMatches(cloudMatches.map((m: any) => ({
+          id: m.id,
+          round: m.round === 'Grand Finals' ? 3 : m.round.includes('Semi') ? 2 : 1,
+          courtName: m.court_slot || 'Center Court',
+          teamA: { name: m.player_a, score: m.score_a, seed: 1, isWinner: m.score_a > m.score_b },
+          teamB: { name: m.player_b, score: m.score_b, seed: 2, isWinner: m.score_b > m.score_a },
+          status: m.status as any
+        })));
+      }
+    });
+
+    // 3. Supabase Auth listener
+    const { data: authListener } = authService.onAuthStateChange(user => {
+      if (user) {
+        dbService.getProfile(user.id).then(profile => {
+          if (profile) {
+            setCurrentUser(prev => ({
+              ...prev,
+              id: profile.id,
+              name: profile.name || prev.name,
+              username: profile.username || prev.username,
+              avatar: profile.avatar || prev.avatar,
+              bio: profile.bio || prev.bio
+            }));
+          }
+        });
+      }
+    });
+
+    return () => {
+      authListener?.subscription?.unsubscribe();
+    };
+  }, []);
 
   return (
     <EcosystemContext.Provider

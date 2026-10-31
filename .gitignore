@@ -1,8 +1,36 @@
-node_modules/
-build/
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Turborepo
+.turbo
+
+# Next.js
+.next/
+out/
+
+# Expo / React Native
+.expo/
 dist/
-coverage/
-.DS_Store
-*.log
-.env*
+web-build/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Environment & Secrets
+.env
+.env.*
 !.env.example
+
+# Debug & OS
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.DS_Store
+*.pem
+*.tsbuildinfo

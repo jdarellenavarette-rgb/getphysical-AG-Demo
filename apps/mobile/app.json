@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "Sodia - GetPhysical",
+    "slug": "getphysical-sodia",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "sodia",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.getphysical.sodia"
+    },
+    "android": {
+      "package": "com.getphysical.sodia"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-location",
+      "expo-camera"
+    ]
+  }
+}

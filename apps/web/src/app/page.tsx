@@ -5,11 +5,12 @@ import { DailyDash } from '../components/daily-dash/DailyDash';
 import { SpatialCalendar } from '../components/clubdash/SpatialCalendar';
 import { TriageDashboard } from '../components/dashboard/TriageDashboard';
 import { FloatGateModal, ShiftSession } from '../components/daily-dash/FloatGateModal';
+import { SodiaMobileSimulator } from '../components/sodia-preview/SodiaMobileSimulator';
 import { UIStateKind } from 'sodia-core';
-import { Building2, ShieldCheck, Activity, Calendar, Lock, Unlock, AlertTriangle, WifiOff, RefreshCw } from 'lucide-react';
+import { Building2, ShieldCheck, Activity, Calendar, Lock, Unlock, AlertTriangle, WifiOff, RefreshCw, Smartphone } from 'lucide-react';
 
 export default function GymDashWebOSPage() {
-  const [activeTab, setActiveTab] = useState<'DAILY_DASH' | 'SPATIAL' | 'TRIAGE'>('DAILY_DASH');
+  const [activeTab, setActiveTab] = useState<'SODIA_MOBILE' | 'DAILY_DASH' | 'SPATIAL' | 'TRIAGE'>('SODIA_MOBILE');
   const [shift, setShift] = useState<ShiftSession | null>({
     staffId: 'st_882',
     staffName: 'Jane D. (Manager)',
@@ -68,6 +69,16 @@ export default function GymDashWebOSPage() {
 
         {/* View Switchers */}
         <div style={{ display: 'flex', backgroundColor: '#1f2937', padding: '3px', borderRadius: '8px' }}>
+          <button
+            onClick={() => setActiveTab('SODIA_MOBILE')}
+            style={{
+              padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: 700,
+              backgroundColor: activeTab === 'SODIA_MOBILE' ? '#e11d48' : 'transparent',
+              color: activeTab === 'SODIA_MOBILE' ? '#fff' : '#9ca3af', display: 'flex', alignItems: 'center', gap: '6px'
+            }}
+          >
+            <Smartphone size={14} /> Sodia Mobile + Organizer
+          </button>
           <button
             onClick={() => setActiveTab('DAILY_DASH')}
             style={{
@@ -154,6 +165,7 @@ export default function GymDashWebOSPage() {
 
       {/* Main Workspace Body */}
       <main style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
+        {activeTab === 'SODIA_MOBILE' && <SodiaMobileSimulator onTriggerTurnstileScan={() => setActiveTab('DAILY_DASH')} />}
         {activeTab === 'DAILY_DASH' && <DailyDash />}
         {activeTab === 'SPATIAL' && <SpatialCalendar />}
         {activeTab === 'TRIAGE' && <TriageDashboard />}

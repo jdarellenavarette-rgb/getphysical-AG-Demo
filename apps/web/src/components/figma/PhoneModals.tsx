@@ -1,0 +1,142 @@
+'use client';
+
+import React, { useState } from 'react';
+import { X, Send, CheckCircle2, Shield, ArrowUpRight, Receipt, User, Building2 } from 'lucide-react';
+
+interface PhoneModalsProps {
+  isCommentsOpen: boolean;
+  onCloseComments: () => void;
+  isFullHistoryOpen: boolean;
+  onCloseFullHistory: () => void;
+  isMenuOpen: boolean;
+  onCloseMenu: () => void;
+  onSelectRole?: (role: string) => void;
+}
+
+export function PhoneModals({
+  isCommentsOpen,
+  onCloseComments,
+  isFullHistoryOpen,
+  onCloseFullHistory,
+  isMenuOpen,
+  onCloseMenu,
+  onSelectRole,
+}: PhoneModalsProps) {
+  const [commentInput, setCommentInput] = useState('');
+  const [comments, setComments] = useState([
+    { id: '1', author: 'adam.arete', text: 'Form looks super clean Moe! 🔥', time: '18m ago' },
+    { id: '2', author: 'coach.sarah', text: 'Love the tempo on those reps!', time: '12m ago' },
+  ]);
+
+  const handleSendComment = () => {
+    if (!commentInput.trim()) return;
+    setComments([...comments, { id: Date.now().toString(), author: 'you', text: commentInput, time: 'Just now' }]);
+    setCommentInput('');
+  };
+
+  return (
+    <>
+      {/* 1. COMMENTS BOTTOM SHEET MODAL */}
+      {isCommentsOpen && (
+        <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 60, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+          <div style={{ backgroundColor: '#18181b', borderTopLeftRadius: '24px', borderTopRightRadius: '24px', padding: '16px', maxHeight: '70%', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+              <span style={{ fontSize: '13px', fontWeight: 800, color: '#f4f4f5' }}>Comments ({comments.length})</span>
+              <button onClick={onCloseComments} style={{ color: '#a1a1aa' }}><X size={18} /></button>
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '14px' }}>
+              {comments.map((c) => (
+                <div key={c.id} style={{ display: 'flex', gap: '10px', fontSize: '12px' }}>
+                  <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#27272a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#ec4899', fontSize: '10px' }}>
+                    {c.author.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div>
+                    <div><strong style={{ color: '#fff' }}>@{c.author}</strong> <span style={{ color: '#71717a', fontSize: '10px' }}>{c.time}</span></div>
+                    <p style={{ color: '#d4d4d8', margin: '2px 0 0' }}>{c.text}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input
+                type="text"
+                placeholder="Add a comment..."
+                value={commentInput}
+                onChange={(e) => setCommentInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSendComment()}
+                style={{ flex: 1, backgroundColor: '#27272a', border: '1px solid #3f3f46', borderRadius: '99px', padding: '8px 14px', color: '#fff', fontSize: '12px' }}
+              />
+              <button onClick={handleSendComment} style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#ec4899', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Send size={15} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 2. STATEMENT OF ACCOUNT (SOA) FULL HISTORY MODAL */}
+      {isFullHistoryOpen && (
+        <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 60, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+          <div style={{ backgroundColor: '#121215', borderTopLeftRadius: '28px', borderTopRightRadius: '28px', padding: '20px', maxHeight: '82%', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+              <div>
+                <span style={{ fontSize: '14px', fontWeight: 900, color: '#f4f4f5' }}>STATEMENT OF ACCOUNT</span>
+                <div style={{ fontSize: '10px', color: '#10b981', fontWeight: 700 }}>IMMUTABLE POSTGRES 17 LEDGER</div>
+              </div>
+              <button onClick={onCloseFullHistory} style={{ color: '#a1a1aa' }}><X size={18} /></button>
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {[
+                { name: 'Turnstile Check-In • Metro Core', time: 'Today, 08:14 AM', amt: '₱0.00', status: 'GRANTED' },
+                { name: 'Walk-in Day Pass • Metro Core', time: 'Yesterday, 07:30 PM', amt: '-₱265.00', status: 'PAID' },
+                { name: 'Sprout Pickleball Club Pass', time: 'Yesterday, 01:32 PM', amt: 'FREE/PASS', status: 'CLAIMED' },
+                { name: 'GetPhysical+ Monthly Renewal', time: 'Oct 28, 06:48 AM', amt: '-₱149.00', status: 'AUTO-DEBIT' },
+              ].map((tx, idx) => (
+                <div key={idx} style={{ padding: '10px', backgroundColor: '#18181b', borderRadius: '10px', border: '1px solid #27272a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ fontSize: '12px', fontWeight: 700, color: '#f4f4f5' }}>{tx.name}</div>
+                    <div style={{ fontSize: '10px', color: '#71717a' }}>{tx.time}</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '12px', fontWeight: 800, color: tx.amt.startsWith('-') ? '#f87171' : '#34d399' }}>{tx.amt}</div>
+                    <span style={{ fontSize: '9px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', backgroundColor: '#27272a', color: '#a1a1aa' }}>{tx.status}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button onClick={onCloseFullHistory} style={{ marginTop: '12px', width: '100%', padding: '10px', borderRadius: '8px', backgroundColor: '#27272a', color: '#fff', fontSize: '12px', fontWeight: 700 }}>
+              Close Ledger
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 3. MENU DRAWER (HAMBURGER ☰) */}
+      {isMenuOpen && (
+        <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 60, display: 'flex' }} onClick={onCloseMenu}>
+          <div style={{ width: '270px', height: '100%', backgroundColor: '#121215', borderRight: '1px solid #27272a', padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '18px', fontWeight: 900, color: '#fff' }}>getphysical</span>
+              <button onClick={onCloseMenu} style={{ color: '#a1a1aa' }}><X size={18} /></button>
+            </div>
+            <div style={{ padding: '10px 0', borderBottom: '1px solid #27272a' }}>
+              <div style={{ fontSize: '13px', fontWeight: 800, color: '#fff' }}>Adam Arête</div>
+              <div style={{ fontSize: '11px', color: '#ec4899' }}>@adam.arete • Titanium VIP</div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <button onClick={() => { onSelectRole?.('individual'); onCloseMenu(); }} style={{ textAlign: 'left', padding: '8px 10px', borderRadius: '6px', backgroundColor: '#18181b', color: '#f4f4f5', fontSize: '12px', fontWeight: 700 }}>
+                🏃 Individual Athlete Mode
+              </button>
+              <button onClick={() => { onSelectRole?.('organizer'); onCloseMenu(); }} style={{ textAlign: 'left', padding: '8px 10px', borderRadius: '6px', backgroundColor: '#18181b', color: '#f59e0b', fontSize: '12px', fontWeight: 700 }}>
+                🏆 Organizer Pro Mode
+              </button>
+              <button onClick={() => { onSelectRole?.('staff'); onCloseMenu(); }} style={{ textAlign: 'left', padding: '8px 10px', borderRadius: '6px', backgroundColor: '#18181b', color: '#10b981', fontSize: '12px', fontWeight: 700 }}>
+                🏢 Facility Staff Mode
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}

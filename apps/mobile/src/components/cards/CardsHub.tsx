@@ -1,17 +1,16 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
-import { Plus, Gift, Scan, Receipt, ArrowUpRight, CheckCircle2 } from "lucide-react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image } from "react-native";
+import { MapPin, Coins, Ticket } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { ExactVIPCard } from "./ExactVIPCard";
 import { TenStateView } from "../common/TenStateView";
-import { createSuccessState, createLoadingState, type PassRow } from "sodia-core";
+import { createSuccessState } from "sodia-core";
 
 export function CardsHub() {
-  const { passes, facilities, isOffline } = useEcosystemStore();
-  const [selectedPassIndex, setSelectedPassIndex] = useState(0);
+  const { passes, profile, isOffline } = useEcosystemStore();
+  const [selectedPassIndex] = useState(0);
 
   const activePass = passes[selectedPassIndex] ?? passes[0];
-  const facility = facilities.find((f) => f.id === activePass?.facility_id);
 
   const passesState = isOffline
     ? {
@@ -27,83 +26,86 @@ export function CardsHub() {
 
   return (
     <TenStateView state={passesState} onRetry={() => {}}>
-      {(data) => (
-        <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-          {/* CARDS CAROUSEL */}
-          <View style={styles.headerRow}>
-            <Text style={styles.sectionTitle}>3D VIP WALLET</Text>
-            <Text style={styles.cardCounter}>
-              {selectedPassIndex + 1} of {data.length}
-            </Text>
+      {() => (
+        <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
+          {/* USER GREETING: AVATAR + ADAM ARÊTE */}
+          <View style={styles.userGreetingRow}>
+            <Image
+              source={{ uri: profile.avatar_url ?? "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80" }}
+              style={styles.userAvatar}
+            />
+            <Text style={styles.userName}>{profile.name ?? "Adam Arête"}</Text>
           </View>
 
+          {/* 3D VIP CARD STACK */}
           {activePass && (
-            <ExactVIPCard
-              pass={activePass}
-              facilityName={facility?.name ?? "Metro Core Arena"}
-            />
+            <View style={styles.cardWrapper}>
+              <ExactVIPCard
+                pass={activePass}
+                facilityName="Metro Core Arena"
+              />
+            </View>
           )}
 
-          {/* ACTION ROW */}
-          <View style={styles.actionRow}>
-            <TouchableOpacity style={styles.actionButton}>
-              <Scan size={18} color="#FAFAFA" />
-              <Text style={styles.actionButtonText}>Scan Turnstile</Text>
+          {/* PURE WHITE CURVED SHEET: TRANSACTION HISTORY */}
+          <View style={styles.whiteHistorySheet}>
+            <Text style={styles.historyTitle}>Transaction History</Text>
+
+            {/* Item 1: Sprout Pickleball Club */}
+            <View style={styles.txRow}>
+              <View style={styles.txLeft}>
+                <View style={styles.pinIconCircle}>
+                  <MapPin size={17} color="#F97316" />
+                </View>
+                <View>
+                  <Text style={styles.txTitle}>Sprout Pickleball Club</Text>
+                  <Text style={styles.txSub}>Check-in: Today, 01:32PM</Text>
+                </View>
+              </View>
+              <View style={styles.txRight}>
+                <Text style={styles.txStatus}>FREE/PASS</Text>
+                <Text style={styles.txPrice}>PHP 999</Text>
+              </View>
+            </View>
+
+            {/* Item 2: AMP FITNESS SJDM */}
+            <View style={styles.txRow}>
+              <View style={styles.txLeft}>
+                <View style={styles.pinIconCircle}>
+                  <Coins size={17} color="#F97316" />
+                </View>
+                <View>
+                  <Text style={styles.txTitle}>AMP FITNESS SJDM</Text>
+                  <Text style={styles.txSub}>Membership: Yesterday, 11:01AM</Text>
+                </View>
+              </View>
+              <View style={styles.txRight}>
+                <Text style={styles.txStatus}>MONTHLY</Text>
+                <Text style={styles.txPrice}>PHP 799</Text>
+              </View>
+            </View>
+
+            {/* Item 3: GetPhysical+ */}
+            <View style={styles.txRow}>
+              <View style={styles.txLeft}>
+                <View style={styles.ticketIconCircle}>
+                  <Ticket size={17} color="#9333EA" />
+                </View>
+                <View>
+                  <Text style={styles.txTitle}>GetPhysical+</Text>
+                  <Text style={styles.txSub}>Subscription: Yesterday, 06:48AM</Text>
+                </View>
+              </View>
+              <View style={styles.txRight}>
+                <Text style={styles.txStatus}>MONTHLY</Text>
+                <Text style={styles.txPrice}>PHP 149</Text>
+              </View>
+            </View>
+
+            {/* VIEW FULL HISTORY GRADIENT BUTTON */}
+            <TouchableOpacity style={styles.viewFullHistoryButton}>
+              <Text style={styles.viewFullHistoryText}>VIEW FULL HISTORY</Text>
             </TouchableOpacity>
-
-            <TouchableOpacity style={styles.actionButton}>
-              <Gift size={18} color="#FAFAFA" />
-              <Text style={styles.actionButtonText}>Gift a Pass</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={[styles.actionButton, styles.primaryAction]}>
-              <Plus size={18} color="#FFFFFF" />
-              <Text style={styles.primaryActionText}>Add Pass</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* FITNESS SOA LEDGER */}
-          <View style={styles.soaContainer}>
-            <View style={styles.soaHeader}>
-              <View style={styles.soaTitleRow}>
-                <Receipt size={16} color="#A1A1AA" />
-                <Text style={styles.soaTitle}>STATEMENT OF ACCOUNT</Text>
-              </View>
-              <Text style={styles.soaBadge}>IMMUTABLE</Text>
-            </View>
-
-            <View style={styles.ledgerRow}>
-              <View style={styles.ledgerIconAccess}>
-                <CheckCircle2 size={16} color="#10B981" />
-              </View>
-              <View style={styles.ledgerDetails}>
-                <Text style={styles.ledgerAction}>Check-In • Metro Core Arena</Text>
-                <Text style={styles.ledgerTime}>Today, 08:14 AM • Turnstile Verified</Text>
-              </View>
-              <Text style={styles.ledgerValueZero}>0.00</Text>
-            </View>
-
-            <View style={styles.ledgerRow}>
-              <View style={styles.ledgerIconPayment}>
-                <ArrowUpRight size={16} color="#E11D48" />
-              </View>
-              <View style={styles.ledgerDetails}>
-                <Text style={styles.ledgerAction}>Day Pass • Metro Core Arena</Text>
-                <Text style={styles.ledgerTime}>Yesterday, 07:30 PM • Xendit</Text>
-              </View>
-              <Text style={styles.ledgerValueNegative}>-₱265.00</Text>
-            </View>
-
-            <View style={styles.ledgerRow}>
-              <View style={styles.ledgerIconPayment}>
-                <ArrowUpRight size={16} color="#3B82F6" />
-              </View>
-              <View style={styles.ledgerDetails}>
-                <Text style={styles.ledgerAction}>Court A • Nexus Racket Club</Text>
-                <Text style={styles.ledgerTime}>Oct 29, 04:00 PM • Split</Text>
-              </View>
-              <Text style={styles.ledgerValueNegative}>-₱215.00</Text>
-            </View>
           </View>
         </ScrollView>
       )}
@@ -112,142 +114,23 @@ export function CardsHub() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#09090B",
-  },
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingTop: 16,
-  },
-  sectionTitle: {
-    color: "#71717A",
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 1,
-  },
-  cardCounter: {
-    color: "#A1A1AA",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  actionRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    marginVertical: 12,
-    gap: 8,
-  },
-  actionButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#18181B",
-    borderColor: "#27272A",
-    borderWidth: 1,
-    paddingVertical: 12,
-    borderRadius: 12,
-    gap: 6,
-  },
-  actionButtonText: {
-    color: "#FAFAFA",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  primaryAction: {
-    backgroundColor: "#E11D48",
-    borderColor: "#E11D48",
-  },
-  primaryActionText: {
-    color: "#FFFFFF",
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  soaContainer: {
-    backgroundColor: "#121215",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    borderWidth: 1,
-    borderColor: "#18181B",
-    padding: 20,
-    marginTop: 8,
-    minHeight: 280,
-  },
-  soaHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  soaTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  soaTitle: {
-    color: "#FAFAFA",
-    fontSize: 12,
-    fontWeight: "800",
-    letterSpacing: 0.8,
-  },
-  soaBadge: {
-    color: "#10B981",
-    fontSize: 10,
-    fontWeight: "700",
-    backgroundColor: "rgba(16, 185, 129, 0.12)",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  ledgerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#18181B",
-  },
-  ledgerIconAccess: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: "rgba(16, 185, 129, 0.12)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  ledgerIconPayment: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: "rgba(225, 29, 72, 0.12)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  ledgerDetails: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  ledgerAction: {
-    color: "#FAFAFA",
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  ledgerTime: {
-    color: "#71717A",
-    fontSize: 11,
-    marginTop: 2,
-  },
-  ledgerValueZero: {
-    color: "#10B981",
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  ledgerValueNegative: {
-    color: "#FAFAFA",
-    fontSize: 13,
-    fontWeight: "700",
-  },
+  container: { flex: 1, backgroundColor: "#000000" },
+  contentContainer: { paddingBottom: 85 },
+  userGreetingRow: { flexDirection: "row", alignItems: "center", gap: 14, paddingHorizontal: 20, paddingTop: 6, paddingBottom: 10 },
+  userAvatar: { width: 56, height: 56, borderRadius: 28, borderWidth: 2, borderColor: "rgba(255,255,255,0.7)" },
+  userName: { fontSize: 24, fontWeight: "900", color: "#FFFFFF", letterSpacing: -0.3 },
+  cardWrapper: { paddingHorizontal: 16, marginBottom: 14 },
+  whiteHistorySheet: { backgroundColor: "#FFFFFF", borderTopLeftRadius: 36, borderTopRightRadius: 36, paddingHorizontal: 18, paddingTop: 18, paddingBottom: 24, gap: 10 },
+  historyTitle: { fontSize: 17, fontWeight: "900", color: "#000000", textAlign: "center", marginBottom: 6, letterSpacing: -0.3 },
+  txRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 12, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E4E4E7", borderRadius: 14 },
+  txLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
+  pinIconCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: "#FFF7ED", borderWidth: 1, borderColor: "#FED7AA", alignItems: "center", justifyContent: "center" },
+  ticketIconCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: "#FAF5FF", borderWidth: 1, borderColor: "#E9D5FF", alignItems: "center", justifyContent: "center" },
+  txTitle: { fontSize: 12, fontWeight: "800", color: "#000000" },
+  txSub: { fontSize: 10, color: "#A1A1AA", marginTop: 2 },
+  txRight: { alignItems: "flex-end" },
+  txStatus: { fontSize: 11, fontWeight: "900", color: "#000000" },
+  txPrice: { fontSize: 10, color: "#A1A1AA", marginTop: 2 },
+  viewFullHistoryButton: { marginTop: 8, width: "100%", paddingVertical: 12, borderRadius: 999, backgroundColor: "#EC4899", alignItems: "center", justifyContent: "center" },
+  viewFullHistoryText: { color: "#FFFFFF", fontSize: 11, fontWeight: "900", letterSpacing: 0.8 },
 });

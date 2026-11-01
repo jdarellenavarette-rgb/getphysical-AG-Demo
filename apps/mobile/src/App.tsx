@@ -57,7 +57,11 @@ export default function App() {
         </View>
 
         {/* BOTTOM NAVIGATION */}
-        <BottomBar currentTab={currentTab} onSelectTab={setCurrentTab} />
+        <BottomBar
+          currentTab={currentTab}
+          onSelectTab={setCurrentTab}
+          onPressCreate={() => setIsCreatePostOpen(true)}
+        />
 
         {/* FULL SCREEN STORY VIEWER MODAL */}
         <StoryViewerModal

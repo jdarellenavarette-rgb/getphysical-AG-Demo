@@ -1,170 +1,116 @@
-import React from "react";
-import { View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
-import { FlashList } from "@shopify/flash-list";
-import { Heart, MessageCircle, Repeat2, Share2, Plus, Sparkles, MapPin } from "lucide-react-native";
+import React, { useState } from "react";
+import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
+import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
-import type { SodiaPostRow } from "sodia-core";
+import { TenStateView } from "../common/TenStateView";
+import { createSuccessState } from "sodia-core";
 
 interface SodiaFeedProps {
   onPressFacilityCTA?: (facilityId: string) => void;
   onOpenCreatePost?: () => void;
-  onOpenStory?: () => void;
-  onOpenComments?: (postId: string) => void;
+  onOpenStory?: (index: number) => void;
+  onOpenComments?: () => void;
 }
 
-export function SodiaFeed({
-  onPressFacilityCTA,
-  onOpenCreatePost,
-  onOpenStory,
-  onOpenComments,
-}: SodiaFeedProps) {
-  const { posts, profile } = useEcosystemStore();
+export function SodiaFeed({ onOpenComments }: SodiaFeedProps) {
+  const { posts } = useEcosystemStore();
+  const [isLiked, setIsLiked] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [likesCount, setLikesCount] = useState(148);
 
-  const renderHeader = () => (
-    <View style={styles.storiesContainer}>
-      <TouchableOpacity onPress={onOpenCreatePost} style={styles.storyAvatarWrap}>
-        <View style={styles.myStoryCircle}>
-          <Image source={{ uri: profile.avatar_url ?? "" }} style={styles.storyImg} />
-          <View style={styles.addStoryBadge}>
-            <Plus size={12} color="#FFFFFF" />
-          </View>
-        </View>
-        <Text style={styles.storyLabel}>Your Story</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={onOpenStory} style={styles.storyAvatarWrap}>
-        <View style={[styles.storyCircle, styles.unseenBorder]}>
-          <Image
-            source={{ uri: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=200&q=80" }}
-            style={styles.storyImg}
-          />
-        </View>
-        <Text style={styles.storyLabel}>Metro Core</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={onOpenStory} style={styles.storyAvatarWrap}>
-        <View style={[styles.storyCircle, styles.seenBorder]}>
-          <Image
-            source={{ uri: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80" }}
-            style={styles.storyImg}
-          />
-        </View>
-        <Text style={styles.storyLabel}>Coach Ramos</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
-  const renderPost = ({ item }: { item: SodiaPostRow }) => {
-    const isDiscovery = item.id.includes("discovery");
-    const facilityTag =
-      item.facility_tag &&
-      typeof item.facility_tag === "object" &&
-      !Array.isArray(item.facility_tag)
-        ? (item.facility_tag as {
-            id?: string;
-            name?: string;
-            actionCTA?: string;
-            price?: number;
-          })
-        : null;
-    return (
-      <View style={styles.postCard}>
-        {isDiscovery && (
-          <View style={styles.discoveryHeader}>
-            <Sparkles size={12} color="#F59E0B" />
-            <Text style={styles.discoveryText}>SUGGESTED BY WRE ALGORITHM</Text>
-          </View>
-        )}
-
-        <View style={styles.postHeader}>
-          <Image source={{ uri: item.author_avatar ?? "" }} style={styles.authorAvatar} />
-          <View style={styles.authorMeta}>
-            <Text style={styles.authorName}>{item.author_name}</Text>
-            {facilityTag?.name && (
-              <View style={styles.locationRow}>
-                <MapPin size={11} color="#A1A1AA" />
-                <Text style={styles.facilityTagText}>{facilityTag.name}</Text>
-              </View>
-            )}
-          </View>
-
-          {facilityTag && (
-            <TouchableOpacity
-              onPress={() => onPressFacilityCTA?.(facilityTag.id ?? "")}
-              style={styles.ctaPill}
-            >
-              <Text style={styles.ctaPillText}>{facilityTag.actionCTA ?? "Drop In"} • ₱{facilityTag.price ?? 250}</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
-        <Image source={{ uri: item.media_url ?? "" }} style={styles.postMedia} />
-
-        <View style={styles.postBody}>
-          <Text style={styles.postCaption}>{item.content}</Text>
-          <View style={styles.actionRow}>
-            <TouchableOpacity style={styles.actionItem}>
-              <Heart size={18} color="#FAFAFA" />
-              <Text style={styles.actionCount}>{item.likes_count}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => onOpenComments?.(item.id)}
-              style={styles.actionItem}
-            >
-              <MessageCircle size={18} color="#FAFAFA" />
-              <Text style={styles.actionCount}>{item.comments_count}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.actionItem}>
-              <Repeat2 size={18} color="#FAFAFA" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.actionItem}>
-              <Share2 size={18} color="#FAFAFA" />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    );
+  const toggleLike = () => {
+    setIsLiked(!isLiked);
+    setLikesCount(isLiked ? likesCount - 1 : likesCount + 1);
   };
 
   return (
-    <View style={styles.container}>
-      <FlashList
-        data={posts}
-        renderItem={renderPost}
-        estimatedItemSize={360}
-        ListHeaderComponent={renderHeader}
-        showsVerticalScrollIndicator={false}
-      />
-    </View>
+    <TenStateView state={createSuccessState(posts)} onRetry={() => {}}>
+      {() => (
+        <View style={styles.container}>
+          {/* FULLSCREEN IMMERSIVE REEL BACKGROUND */}
+          <Image
+            source={{ uri: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=1200&q=80" }}
+            style={styles.fullscreenImage}
+            resizeMode="cover"
+          />
+
+          {/* GRADIENT OVERLAY */}
+          <View style={styles.darkGradient} />
+
+          {/* RIGHT ACTION RAIL (LIKE, COMMENT, SHARE, SAVE) */}
+          <View style={styles.rightActionRail}>
+            <TouchableOpacity onPress={toggleLike} style={styles.actionButton}>
+              <Heart
+                size={28}
+                color={isLiked ? "#EC4899" : "#FFFFFF"}
+                fill={isLiked ? "#EC4899" : "none"}
+                strokeWidth={1.8}
+              />
+              <Text style={styles.actionLabel}>Like</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={onOpenComments} style={styles.actionButton}>
+              <MessageCircle size={28} color="#FFFFFF" strokeWidth={1.8} />
+              <Text style={styles.actionLabel}>Comment</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.actionButton}>
+              <Send size={26} color="#FFFFFF" strokeWidth={1.8} />
+              <Text style={styles.actionLabel}>Share</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => setIsSaved(!isSaved)} style={styles.actionButton}>
+              <Bookmark
+                size={26}
+                color={isSaved ? "#FBBF24" : "#FFFFFF"}
+                fill={isSaved ? "#FBBF24" : "none"}
+                strokeWidth={1.8}
+              />
+              <Text style={styles.actionLabel}>Save</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* BOTTOM-LEFT CREATOR OVERLAY (MOE TUSCANO) */}
+          <View style={styles.creatorOverlay}>
+            <View style={styles.creatorHeader}>
+              <Image
+                source={{ uri: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80" }}
+                style={styles.creatorAvatar}
+              />
+              <View>
+                <View style={styles.nameRow}>
+                  <Text style={styles.creatorName}>Moe Tuscano</Text>
+                  <View style={styles.moreCircle}>
+                    <MoreHorizontal size={13} color="#FFFFFF" />
+                  </View>
+                </View>
+                <Text style={styles.creatorHandle}>@mowtuscano</Text>
+              </View>
+            </View>
+
+            <Text style={styles.captionText}>
+              Ending the day with some glute sessions.
+            </Text>
+          </View>
+        </View>
+      )}
+    </TenStateView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#09090B" },
-  storiesContainer: { flexDirection: "row", padding: 12, borderBottomWidth: 1, borderBottomColor: "#18181B", gap: 14 },
-  storyAvatarWrap: { alignItems: "center", width: 68 },
-  myStoryCircle: { width: 56, height: 56, borderRadius: 28, position: "relative" },
-  storyCircle: { width: 56, height: 56, borderRadius: 28, padding: 2, borderWidth: 2 },
-  unseenBorder: { borderColor: "#E11D48" },
-  seenBorder: { borderColor: "#27272A" },
-  storyImg: { width: "100%", height: "100%", borderRadius: 26 },
-  addStoryBadge: { position: "absolute", bottom: -2, right: -2, backgroundColor: "#E11D48", borderRadius: 10, width: 20, height: 20, alignItems: "center", justifyContent: "center" },
-  storyLabel: { color: "#A1A1AA", fontSize: 10, marginTop: 4, fontWeight: "600" },
-  postCard: { marginBottom: 16, backgroundColor: "#121215", borderBottomWidth: 1, borderBottomColor: "#18181B" },
-  discoveryHeader: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "rgba(245, 158, 11, 0.12)", paddingHorizontal: 16, paddingVertical: 6 },
-  discoveryText: { color: "#F59E0B", fontSize: 10, fontWeight: "800", letterSpacing: 0.5 },
-  postHeader: { flexDirection: "row", alignItems: "center", padding: 12 },
-  authorAvatar: { width: 40, height: 40, borderRadius: 20 },
-  authorMeta: { flex: 1, marginLeft: 10 },
-  authorName: { color: "#FAFAFA", fontSize: 13, fontWeight: "700" },
-  locationRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
-  facilityTagText: { color: "#A1A1AA", fontSize: 11 },
-  ctaPill: { backgroundColor: "#E11D48", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999 },
-  ctaPillText: { color: "#FFFFFF", fontSize: 11, fontWeight: "700" },
-  postMedia: { width: "100%", height: 260, backgroundColor: "#18181B" },
-  postBody: { padding: 12 },
-  postCaption: { color: "#FAFAFA", fontSize: 13, lineHeight: 18 },
-  actionRow: { flexDirection: "row", alignItems: "center", marginTop: 10, gap: 18 },
-  actionItem: { flexDirection: "row", alignItems: "center", gap: 5 },
-  actionCount: { color: "#A1A1AA", fontSize: 12, fontWeight: "600" },
+  container: { flex: 1, backgroundColor: "#000000", position: "relative" },
+  fullscreenImage: { ...StyleSheet.absoluteFillObject, width: "100%", height: "100%" },
+  darkGradient: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.35)" },
+  rightActionRail: { position: "absolute", right: 14, bottom: 90, alignItems: "center", gap: 16, zIndex: 30 },
+  actionButton: { alignItems: "center", gap: 2 },
+  actionLabel: { fontSize: 11, fontWeight: "700", color: "#FFFFFF", textShadowColor: "rgba(0,0,0,0.8)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 },
+  creatorOverlay: { position: "absolute", left: 16, right: 70, bottom: 75, zIndex: 30 },
+  creatorHeader: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 8 },
+  creatorAvatar: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: "rgba(255,255,255,0.7)" },
+  nameRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  creatorName: { fontSize: 16, fontWeight: "900", color: "#FFFFFF", letterSpacing: -0.3 },
+  moreCircle: { width: 18, height: 18, borderRadius: 9, borderWidth: 1, borderColor: "rgba(255,255,255,0.6)", alignItems: "center", justifyContent: "center" },
+  creatorHandle: { fontSize: 11, color: "rgba(255,255,255,0.7)", marginTop: 1 },
+  captionText: { fontSize: 13, color: "rgba(255,255,255,0.95)", lineHeight: 18 },
 });

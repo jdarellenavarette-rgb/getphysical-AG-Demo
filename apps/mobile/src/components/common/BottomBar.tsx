@@ -1,145 +1,125 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { Home, Compass, CreditCard, Activity, User } from "lucide-react-native";
+import { View, TouchableOpacity, StyleSheet } from "react-native";
+import { MapPin, BarChart2, Plus, Wallet, User } from "lucide-react-native";
 
 export type MobileTab = "sodia" | "discover" | "cards" | "track" | "profile";
 
 interface BottomBarProps {
   currentTab: MobileTab;
   onSelectTab: (tab: MobileTab) => void;
+  onPressCreate?: () => void;
 }
 
-export function BottomBar({ currentTab, onSelectTab }: BottomBarProps) {
+export function BottomBar({ currentTab, onSelectTab, onPressCreate }: BottomBarProps) {
   return (
-    <View style={styles.container}>
-      <TouchableOpacity
-        onPress={() => onSelectTab("sodia")}
-        style={styles.tabItem}
-      >
-        <Home
-          size={20}
-          color={currentTab === "sodia" ? "#E11D48" : "#71717A"}
-        />
-        <Text
-          style={[styles.tabLabel, currentTab === "sodia" && styles.tabLabelActive]}
+    <View style={styles.dockWrapper}>
+      <View style={styles.capsuleDock}>
+        {/* TAB 1: DISCOVER / MAP */}
+        <TouchableOpacity
+          onPress={() => onSelectTab("discover")}
+          style={styles.dockItem}
         >
-          Sodia
-        </Text>
-      </TouchableOpacity>
+          <MapPin
+            size={20}
+            color={currentTab === "discover" ? "#EC4899" : "#A1A1AA"}
+          />
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        onPress={() => onSelectTab("discover")}
-        style={styles.tabItem}
-      >
-        <Compass
-          size={20}
-          color={currentTab === "discover" ? "#E11D48" : "#71717A"}
-        />
-        <Text
-          style={[styles.tabLabel, currentTab === "discover" && styles.tabLabelActive]}
+        {/* TAB 2: JOURNEY / TRACK */}
+        <TouchableOpacity
+          onPress={() => onSelectTab("track")}
+          style={styles.dockItem}
         >
-          Discover
-        </Text>
-      </TouchableOpacity>
+          <BarChart2
+            size={20}
+            color={currentTab === "track" ? "#EC4899" : "#A1A1AA"}
+          />
+        </TouchableOpacity>
 
-      {/* CENTER ELEVATED FAB: CARDS */}
-      <View style={styles.centerFabContainer}>
+        {/* CENTER ELEVATED GRADIENT FAB (+) */}
+        <View style={styles.centerFabAnchor}>
+          <TouchableOpacity
+            onPress={onPressCreate ? onPressCreate : () => onSelectTab("sodia")}
+            style={styles.centerFab}
+          >
+            <Plus size={22} color="#FFFFFF" strokeWidth={3} />
+          </TouchableOpacity>
+        </View>
+
+        {/* TAB 3: VIP CARDS & WALLET */}
         <TouchableOpacity
           onPress={() => onSelectTab("cards")}
-          style={[
-            styles.centerFab,
-            currentTab === "cards" && styles.centerFabActive,
-          ]}
+          style={styles.dockItem}
         >
-          <CreditCard size={22} color="#FFFFFF" />
+          <Wallet
+            size={20}
+            color={currentTab === "cards" ? "#EC4899" : "#A1A1AA"}
+          />
         </TouchableOpacity>
-        <Text
-          style={[styles.tabLabel, currentTab === "cards" && styles.tabLabelActive]}
+
+        {/* TAB 4: PROFILE */}
+        <TouchableOpacity
+          onPress={() => onSelectTab("profile")}
+          style={styles.dockItem}
         >
-          Cards
-        </Text>
+          <User
+            size={20}
+            color={currentTab === "profile" ? "#EC4899" : "#A1A1AA"}
+          />
+        </TouchableOpacity>
       </View>
-
-      <TouchableOpacity
-        onPress={() => onSelectTab("track")}
-        style={styles.tabItem}
-      >
-        <Activity
-          size={20}
-          color={currentTab === "track" ? "#E11D48" : "#71717A"}
-        />
-        <Text
-          style={[styles.tabLabel, currentTab === "track" && styles.tabLabelActive]}
-        >
-          Track
-        </Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        onPress={() => onSelectTab("profile")}
-        style={styles.tabItem}
-      >
-        <User
-          size={20}
-          color={currentTab === "profile" ? "#E11D48" : "#71717A"}
-        />
-        <Text
-          style={[styles.tabLabel, currentTab === "profile" && styles.tabLabelActive]}
-        >
-          Profile
-        </Text>
-      </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    height: 72,
-    backgroundColor: "#09090B",
-    borderTopWidth: 1,
-    borderTopColor: "#18181B",
+  dockWrapper: {
+    position: "absolute",
+    bottom: 12,
+    left: 16,
+    right: 16,
+    zIndex: 50,
+  },
+  capsuleDock: {
+    height: 52,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-around",
-    paddingBottom: 8,
+    justifyContent: "space-between",
+    paddingHorizontal: 18,
+    backgroundColor: "rgba(28, 28, 30, 0.96)",
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.18)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.6,
+    shadowRadius: 20,
+    elevation: 12,
   },
-  tabItem: {
+  dockItem: {
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    flex: 1,
   },
-  centerFabContainer: {
-    alignItems: "center",
-    marginTop: -20,
+  centerFabAnchor: {
     flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
   centerFab: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: "#27272A",
+    backgroundColor: "#EC4899",
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 2,
+    marginTop: -22,
+    borderWidth: 4,
     borderColor: "#09090B",
-    shadowColor: "#000",
+    shadowColor: "#EC4899",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 6,
-  },
-  centerFabActive: {
-    backgroundColor: "#E11D48",
-  },
-  tabLabel: {
-    color: "#71717A",
-    fontSize: 10,
-    fontWeight: "600",
-    marginTop: 4,
-  },
-  tabLabelActive: {
-    color: "#FAFAFA",
-    fontWeight: "700",
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    elevation: 8,
   },
 });

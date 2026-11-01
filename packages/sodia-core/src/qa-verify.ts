@@ -15,11 +15,42 @@ const SUPABASE_URL = "https://brctciqhsyjqxfoqyuoz.supabase.co";
 const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJyY3RjaXFoc3lqcXhmb3F5dW96Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM0MTEzNDIsImV4cCI6MjEwODk4NzM0Mn0.g7EktrouurQq03E2OgZyL_PArxbE3DRfv2ams3qBOaw";
 
+interface QAResult {
+  clientInitialized?: boolean;
+  facilitiesQuery?: {
+    durationMs: number;
+    success: boolean;
+    count: number;
+    error: string | null;
+  };
+  challengesQuery?: {
+    durationMs: number;
+    success: boolean;
+    count: number;
+    error: string | null;
+  };
+  tenStateEnvelopes?: {
+    successStatus: string;
+    loadingStatus: string;
+    allStatesValid: boolean;
+  };
+  feeCalculator?: {
+    oneTimePass: { expected: number; actual: number; valid: boolean };
+    recurringSub: { expected: number; actual: number; valid: boolean };
+  };
+  constantsCheck?: {
+    otpLength: boolean;
+    qrTtl: boolean;
+    postCaptionLimit: boolean;
+    defaultStreakGoal: boolean;
+  };
+}
+
 export async function runFullEcosystemQA(): Promise<{
   allPassed: boolean;
-  results: Record<string, any>;
+  results: QAResult;
 }> {
-  const results: Record<string, any> = {};
+  const results: QAResult = {};
 
   // 1. Client initialization
   const client = createGetPhysicalClient({
@@ -102,11 +133,38 @@ export async function runFullEcosystemQA(): Promise<{
 runFullEcosystemQA()
   .then((report) => {
     console.log(JSON.stringify(report, null, 2));
+
+    // Mimic Sentry by explicitly capturing and reporting detailed errors
     if (!report.allPassed) {
+      console.error("[Sentry QA] Ecosystem Checks Failed!");
+
+      const errors = [];
+      if (!report.results.clientInitialized) errors.push({ tag: "client", msg: "Supabase client failed to initialize." });
+      if (!report.results.facilitiesQuery?.success) errors.push({ tag: "database", msg: "Facilities query failed.", details: report.results.facilitiesQuery?.error });
+      if (!report.results.challengesQuery?.success) errors.push({ tag: "database", msg: "Challenges query failed.", details: report.results.challengesQuery?.error });
+      if (!report.results.tenStateEnvelopes?.allStatesValid) errors.push({ tag: "state", msg: "10-State Envelopes contract violated." });
+      if (!report.results.feeCalculator?.oneTimePass.valid || !report.results.feeCalculator?.recurringSub.valid) errors.push({ tag: "ledger", msg: "Fee calculation mismatch." });
+
+      console.error(JSON.stringify({
+        event_id: `qa_${Date.now()}`,
+        level: "fatal",
+        tags: { environment: "development", release: "getphysical-1.0.0" },
+        breadcrumbs: [
+          { message: "QA Assessment Started", category: "qa" },
+          { message: "Tests Completed", category: "qa", data: report }
+        ],
+        errors: errors
+      }, null, 2));
       process.exit(1);
     }
   })
   .catch((err) => {
-    console.error("QA execution failed:", err);
+    console.error("[Sentry QA] Unhandled Exception Caught:");
+    console.error(JSON.stringify({
+      event_id: `ex_${Date.now()}`,
+      level: "fatal",
+      message: err instanceof Error ? err.message : String(err),
+      stack: err instanceof Error ? err.stack : undefined
+    }, null, 2));
     process.exit(1);
   });

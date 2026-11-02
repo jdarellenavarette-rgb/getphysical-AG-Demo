@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, ScrollView } from "react-native";
-import { Search, MapPin, Users, ShieldAlert, Navigation, X } from "lucide-react-native";
+import { Search, MapPin, Users, Navigation, X, Map as MapIcon, List, UserCheck, Award } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
+import { DiscoverMapCanvas } from "./DiscoverMapCanvas";
 import type { FacilityRow } from "sodia-core";
 
 interface DiscoverViewProps {
@@ -12,10 +13,10 @@ export function DiscoverView({ onSelectFacility }: DiscoverViewProps) {
   const { facilities } = useEcosystemStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("All");
-  const [isLocationDenied, setIsLocationDenied] = useState(false);
-  const [manualZip, setManualZip] = useState("");
+  const [viewMode, setViewMode] = useState<"map" | "list">("map");
+  const [selectedFacilityId, setSelectedFacilityId] = useState<string | null>(facilities[0]?.id ?? null);
 
-  const filters = ["All", "Commercial Gyms", "Pickleball & Courts", "Open Now"];
+  const filters = ["All", "Commercial Gyms", "Pickleball & Courts", "Coaches", "Meets"];
 
   const filteredFacilities = facilities.filter((f) => {
     if (selectedFilter === "Commercial Gyms" && f.registry !== "A") return false;
@@ -29,15 +30,17 @@ export function DiscoverView({ onSelectFacility }: DiscoverViewProps) {
     return true;
   });
 
+  const activeSelectedFacility = facilities.find((f) => f.id === selectedFacilityId) ?? facilities[0];
+
   return (
     <View style={styles.container}>
-      {/* SEARCH & FILTERS */}
+      {/* 1. FLOATING GRAB-STYLE SEARCH HEADER */}
       <View style={styles.searchHeader}>
         <View style={styles.searchBox}>
           <Search size={16} color="#71717A" />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search gyms, courts, or challenges..."
+            placeholder="Search BGC, Makati, clubs or coaches..."
             placeholderTextColor="#71717A"
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -49,7 +52,18 @@ export function DiscoverView({ onSelectFacility }: DiscoverViewProps) {
           )}
         </View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filtersScroll}>
+        {/* MAP / LIST VIEW TOGGLE */}
+        <TouchableOpacity
+          onPress={() => setViewMode(viewMode === "map" ? "list" : "map")}
+          style={styles.viewToggleBtn}
+        >
+          {viewMode === "map" ? <List size={18} color="#FAFAFA" /> : <MapIcon size={18} color="#FAFAFA" />}
+        </TouchableOpacity>
+      </View>
+
+      {/* 2. CATEGORY FILTER PILLS */}
+      <View style={styles.filtersWrapper}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filtersScroll}>
           {filters.map((fil) => (
             <TouchableOpacity
               key={fil}
@@ -64,53 +78,69 @@ export function DiscoverView({ onSelectFacility }: DiscoverViewProps) {
         </ScrollView>
       </View>
 
-      {/* LOCATION DENIED FALLBACK (Spec 3.6) */}
-      {isLocationDenied && (
-        <View style={styles.locationFallbackCard}>
-          <ShieldAlert size={28} color="#F59E0B" />
-          <Text style={styles.fallbackTitle}>Location Access Denied</Text>
-          <Text style={styles.fallbackSubtitle}>
-            Enter your City or Zip Code to discover nearby clubs and live court capacity.
-          </Text>
-          <View style={styles.zipRow}>
-            <TextInput
-              style={styles.zipInput}
-              placeholder="e.g. 1630 or BGC"
-              placeholderTextColor="#71717A"
-              value={manualZip}
-              onChangeText={setManualZip}
-            />
-            <TouchableOpacity
-              onPress={() => setIsLocationDenied(false)}
-              style={styles.zipConfirmButton}
-            >
-              <Text style={styles.zipConfirmText}>Seed Location</Text>
-            </TouchableOpacity>
+      {/* 3. MAP VIEW (GRAB-LIKE GPS RADAR + HORIZONTAL SNAP CAROUSEL) */}
+      {viewMode === "map" ? (
+        <View style={styles.mapViewport}>
+          <DiscoverMapCanvas
+            facilities={filteredFacilities}
+            selectedId={selectedFacilityId}
+            onSelectPin={(id) => setSelectedFacilityId(id)}
+          />
+
+          {/* GRAB-STYLE HORIZONTAL BOTTOM CAROUSEL */}
+          <View style={styles.carouselSection}>
+            <Text style={styles.carouselHeaderTitle}>NEARBY ATHLETIC HUBS</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carouselScroll}>
+              {filteredFacilities.map((fac) => {
+                const isSelected = fac.id === selectedFacilityId;
+                return (
+                  <TouchableOpacity
+                    key={fac.id}
+                    onPress={() => {
+                      setSelectedFacilityId(fac.id);
+                      onSelectFacility?.(fac);
+                    }}
+                    style={[styles.grabCard, isSelected && styles.grabCardActive]}
+                  >
+                    <Image source={{ uri: fac.cover_image ?? "" }} style={styles.grabCover} />
+                    <View style={styles.grabBody}>
+                      <View style={styles.grabTopRow}>
+                        <Text style={styles.grabName}>{fac.name}</Text>
+                        <View style={styles.capacityPill}>
+                          <Users size={11} color="#10B981" />
+                          <Text style={styles.capacityPillText}>
+                            {fac.inside_now_count ?? 42}/{fac.max_capacity ?? 100}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.grabLocationRow}>
+                        <Navigation size={11} color="#71717A" />
+                        <Text style={styles.grabDistanceText}>{fac.distance} • 12 min walk</Text>
+                      </View>
+
+                      <View style={styles.grabFooter}>
+                        <Text style={styles.grabPrice}>
+                          {fac.registry === "A" ? `₱${fac.day_pass_price_php} Day Pass` : `₱${fac.court_hourly_price_php}/hr Court`}
+                        </Text>
+                        <TouchableOpacity
+                          onPress={() => onSelectFacility?.(fac)}
+                          style={styles.grabBookCTA}
+                        >
+                          <Text style={styles.grabBookText}>Instant Book</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
           </View>
         </View>
-      )}
-
-      {/* FACILITY LIST OR EMPTY SEARCH STATE */}
-      <ScrollView style={styles.facilityList} showsVerticalScrollIndicator={false}>
-        {filteredFacilities.length === 0 ? (
-          <View style={styles.emptySearchBox}>
-            <Search size={32} color="#71717A" />
-            <Text style={styles.emptySearchTitle}>No venues found</Text>
-            <Text style={styles.emptySearchSub}>
-              No clubs match "{searchQuery}". Try searching another name or reset filters.
-            </Text>
-            <TouchableOpacity
-              onPress={() => {
-                setSearchQuery("");
-                setSelectedFilter("All");
-              }}
-              style={styles.clearSearchBtn}
-            >
-              <Text style={styles.clearSearchText}>Clear Search & Filters</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          filteredFacilities.map((fac) => (
+      ) : (
+        /* 4. LIST VIEW */
+        <ScrollView style={styles.listScrollView} contentContainerStyle={{ paddingBottom: 110 }} showsVerticalScrollIndicator={false}>
+          {filteredFacilities.map((fac) => (
             <TouchableOpacity
               key={fac.id}
               onPress={() => onSelectFacility?.(fac)}
@@ -136,67 +166,65 @@ export function DiscoverView({ onSelectFacility }: DiscoverViewProps) {
                   <Text style={styles.facAddress}>{fac.address} • {fac.distance}</Text>
                 </View>
 
-                <View style={styles.facFooter}>
-                  <View style={styles.amenitiesWrap}>
-                    {fac.amenities?.slice(0, 2).map((a) => (
-                      <Text key={a} style={styles.amenityPill}>{a}</Text>
-                    ))}
-                  </View>
-                  <TouchableOpacity
-                    onPress={() => onSelectFacility?.(fac)}
-                    style={styles.bookCTA}
-                  >
-                    <Navigation size={12} color="#FFFFFF" style={{ marginRight: 4 }} />
-                    <Text style={styles.bookCTAText}>
-                      {fac.registry === "A" ? `Drop In • ₱${fac.day_pass_price_php}` : `Book • ₱${fac.court_hourly_price_php}/hr`}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
+                <TouchableOpacity
+                  onPress={() => onSelectFacility?.(fac)}
+                  style={styles.bookCTA}
+                >
+                  <Navigation size={12} color="#FFFFFF" style={{ marginRight: 4 }} />
+                  <Text style={styles.bookCTAText}>
+                    {fac.registry === "A" ? `Drop In • ₱${fac.day_pass_price_php}` : `Book • ₱${fac.court_hourly_price_php}/hr`}
+                  </Text>
+                </TouchableOpacity>
               </View>
             </TouchableOpacity>
-          ))
-        )}
-      </ScrollView>
+          ))}
+        </ScrollView>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#09090B" },
-  searchHeader: { padding: 16, borderBottomWidth: 1, borderBottomColor: "#18181B" },
-  searchBox: { flexDirection: "row", alignItems: "center", backgroundColor: "#18181B", borderRadius: 10, paddingHorizontal: 12, height: 42, gap: 8 },
+  searchHeader: { flexDirection: "row", paddingHorizontal: 16, paddingTop: 10, paddingBottom: 8, gap: 10, alignItems: "center" },
+  searchBox: { flex: 1, flexDirection: "row", alignItems: "center", backgroundColor: "#18181B", borderRadius: 12, paddingHorizontal: 12, height: 44, gap: 8, borderWidth: 1, borderColor: "#27272A" },
   searchInput: { flex: 1, color: "#FAFAFA", fontSize: 13 },
-  filtersScroll: { flexDirection: "row", marginTop: 10 },
-  filterChip: { backgroundColor: "#18181B", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, marginRight: 8, borderWidth: 1, borderColor: "#27272A" },
+  viewToggleBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: "#18181B", borderWidth: 1, borderColor: "#27272A", alignItems: "center", justifyContent: "center" },
+  filtersWrapper: { paddingBottom: 10 },
+  filtersScroll: { paddingHorizontal: 16, gap: 8 },
+  filterChip: { backgroundColor: "#18181B", paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, borderWidth: 1, borderColor: "#27272A" },
   filterChipActive: { backgroundColor: "#E11D48", borderColor: "#E11D48" },
-  filterText: { color: "#71717A", fontSize: 11, fontWeight: "600" },
+  filterText: { color: "#71717A", fontSize: 11, fontWeight: "700" },
   filterTextActive: { color: "#FFFFFF" },
-  locationFallbackCard: { margin: 16, backgroundColor: "rgba(245, 158, 11, 0.12)", borderWidth: 1, borderColor: "rgba(245, 158, 11, 0.3)", borderRadius: 12, padding: 14, alignItems: "center" },
-  fallbackTitle: { color: "#F59E0B", fontSize: 14, fontWeight: "700", marginTop: 6 },
-  fallbackSubtitle: { color: "#A1A1AA", fontSize: 12, textAlign: "center", marginTop: 4, lineHeight: 16 },
-  zipRow: { flexDirection: "row", marginTop: 10, gap: 8, width: "100%" },
-  zipInput: { flex: 1, backgroundColor: "#18181B", borderRadius: 8, paddingHorizontal: 12, height: 38, color: "#FAFAFA", fontSize: 12 },
-  zipConfirmButton: { backgroundColor: "#E11D48", borderRadius: 8, paddingHorizontal: 14, justifyContent: "center" },
-  zipConfirmText: { color: "#FFFFFF", fontSize: 11, fontWeight: "700" },
-  facilityList: { flex: 1, padding: 16 },
-  emptySearchBox: { backgroundColor: "#121215", borderRadius: 14, padding: 32, alignItems: "center", borderWidth: 1, borderColor: "#18181B", marginTop: 20 },
-  emptySearchTitle: { color: "#FAFAFA", fontSize: 14, fontWeight: "700", marginTop: 10 },
-  emptySearchSub: { color: "#71717A", fontSize: 12, textAlign: "center", marginTop: 4, maxWidth: 260 },
-  clearSearchBtn: { backgroundColor: "#27272A", borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8, marginTop: 14 },
-  clearSearchText: { color: "#FAFAFA", fontSize: 12, fontWeight: "600" },
-  facilityCard: { backgroundColor: "#121215", borderRadius: 14, borderWidth: 1, borderColor: "#18181B", overflow: "hidden", marginBottom: 16 },
-  facCover: { width: "100%", height: 130, backgroundColor: "#18181B" },
-  facContent: { padding: 14 },
+  mapViewport: { flex: 1 },
+  carouselSection: { paddingVertical: 12 },
+  carouselHeaderTitle: { color: "#71717A", fontSize: 10, fontWeight: "800", letterSpacing: 0.8, paddingHorizontal: 16, marginBottom: 8 },
+  carouselScroll: { paddingHorizontal: 16, gap: 12 },
+  grabCard: { width: 270, backgroundColor: "#18181B", borderRadius: 16, overflow: "hidden", borderWidth: 1, borderColor: "#27272A" },
+  grabCardActive: { borderColor: "#E11D48", borderWidth: 2 },
+  grabCover: { width: "100%", height: 105, backgroundColor: "#27272A" },
+  grabBody: { padding: 12 },
+  grabTopRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  grabName: { color: "#FAFAFA", fontSize: 14, fontWeight: "800", flex: 1, marginRight: 6 },
+  capacityPill: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(16, 185, 129, 0.15)", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
+  capacityPillText: { color: "#10B981", fontSize: 10, fontWeight: "800" },
+  grabLocationRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4 },
+  grabDistanceText: { color: "#71717A", fontSize: 11 },
+  grabFooter: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 10, borderTopWidth: 1, borderTopColor: "#27272A", paddingTop: 8 },
+  grabPrice: { color: "#FAFAFA", fontSize: 12, fontWeight: "800" },
+  grabBookCTA: { backgroundColor: "#E11D48", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
+  grabBookText: { color: "#FFFFFF", fontSize: 11, fontWeight: "800" },
+  listScrollView: { flex: 1, paddingHorizontal: 16 },
+  facilityCard: { backgroundColor: "#121215", borderRadius: 14, borderWidth: 1, borderColor: "#18181B", overflow: "hidden", marginBottom: 14 },
+  facCover: { width: "100%", height: 120, backgroundColor: "#18181B" },
+  facContent: { padding: 12 },
   facTopRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
-  facName: { color: "#FAFAFA", fontSize: 16, fontWeight: "700" },
+  facName: { color: "#FAFAFA", fontSize: 15, fontWeight: "700" },
   facCategory: { color: "#71717A", fontSize: 11, marginTop: 2 },
   capacityBadge: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(16, 185, 129, 0.15)", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
   capacityText: { color: "#10B981", fontSize: 10, fontWeight: "700" },
-  facLocationRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 8 },
+  facLocationRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 6 },
   facAddress: { color: "#71717A", fontSize: 11 },
-  facFooter: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 12 },
-  amenitiesWrap: { flexDirection: "row", gap: 6 },
-  amenityPill: { backgroundColor: "#18181B", color: "#A1A1AA", fontSize: 10, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
-  bookCTA: { flexDirection: "row", alignItems: "center", backgroundColor: "#E11D48", paddingHorizontal: 12, paddingVertical: 7, borderRadius: 8 },
-  bookCTAText: { color: "#FFFFFF", fontSize: 11, fontWeight: "700" },
+  bookCTA: { flexDirection: "row", alignItems: "center", justifyContent: "center", backgroundColor: "#E11D48", paddingVertical: 8, borderRadius: 8, marginTop: 10 },
+  bookCTAText: { color: "#FFFFFF", fontSize: 12, fontWeight: "700" },
 });

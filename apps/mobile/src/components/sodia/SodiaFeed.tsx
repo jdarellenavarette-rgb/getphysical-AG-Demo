@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView, Alert } from "react-native";
 import { Heart, MessageCircle, Bookmark, Plus, MapPin, MoreHorizontal, Flame, CheckCircle2, Send } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { TenStateView } from "../common/TenStateView";
@@ -21,6 +21,7 @@ export function SodiaFeed({
   const { posts, profile } = useEcosystemStore();
   const [likedPosts, setLikedPosts] = useState<Record<string, boolean>>({});
   const [savedPosts, setSavedPosts] = useState<Record<string, boolean>>({});
+  const [sharedPosts, setSharedPosts] = useState<Record<string, boolean>>({});
 
   const toggleLike = (id: string) => {
     setLikedPosts((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -119,7 +120,10 @@ export function SodiaFeed({
                       </View>
                       <Text style={styles.postSubtitle}>BGC Athlete • 2h ago</Text>
                     </View>
-                    <TouchableOpacity style={styles.moreBtn}>
+                    <TouchableOpacity
+                      onPress={() => Alert.alert("Post Options", `Post ID: ${post.id}\nLink copied to clipboard.`)}
+                      style={styles.moreBtn}
+                    >
                       <MoreHorizontal size={18} color="#71717A" />
                     </TouchableOpacity>
                   </View>
@@ -155,8 +159,14 @@ export function SodiaFeed({
                           <Text style={styles.reactionText}>{post.comments_count ?? 0}</Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity style={styles.reactionCapsule}>
-                          <Send size={15} color="#27272A" />
+                        <TouchableOpacity
+                          onPress={() => {
+                            setSharedPosts((prev) => ({ ...prev, [post.id]: true }));
+                            Alert.alert("Post Shared", "Sent to your fitness DMs & story.");
+                          }}
+                          style={[styles.reactionCapsule, sharedPosts[post.id] && { backgroundColor: "rgba(59,130,246,0.15)" }]}
+                        >
+                          <Send size={15} color={sharedPosts[post.id] ? "#3B82F6" : "#27272A"} />
                         </TouchableOpacity>
                       </View>
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, Image, StyleSheet, Modal } from "react-native";
+import { View, Text, TouchableOpacity, Image, StyleSheet, Modal, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft, Camera, Heart, MessageCircle, Bookmark, Share2, Music, CheckCircle2 } from "lucide-react-native";
 
@@ -8,9 +8,10 @@ interface StoryViewerModalProps {
   onClose: () => void;
   onTapLocationTag?: (facilityId: string) => void;
   onOpenComments?: () => void;
+  onOpenCreatePost?: () => void;
 }
 
-export function StoryViewerModal({ visible, onClose, onTapLocationTag, onOpenComments }: StoryViewerModalProps) {
+export function StoryViewerModal({ visible, onClose, onTapLocationTag, onOpenComments, onOpenCreatePost }: StoryViewerModalProps) {
   const insets = useSafeAreaInsets();
   const [activeStoryIdx, setActiveStoryIdx] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
@@ -115,7 +116,13 @@ export function StoryViewerModal({ visible, onClose, onTapLocationTag, onOpenCom
           <TouchableOpacity onPress={onClose} style={styles.topIconBtn}>
             <ArrowLeft size={22} color="#FFFFFF" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.topIconBtn}>
+          <TouchableOpacity
+            onPress={() => {
+              onClose();
+              onOpenCreatePost?.();
+            }}
+            style={styles.topIconBtn}
+          >
             <Camera size={22} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
@@ -143,7 +150,10 @@ export function StoryViewerModal({ visible, onClose, onTapLocationTag, onOpenCom
             <Text style={styles.actionLabel}>{isSaved ? "Saved" : "Save"}</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.actionItem}>
+          <TouchableOpacity
+            onPress={() => Alert.alert("Reel Shared", "Copied reel link to clipboard.")}
+            style={styles.actionItem}
+          >
             <View style={styles.actionIconCircle}>
               <Share2 size={22} color="#FFFFFF" />
             </View>

@@ -4,6 +4,7 @@ import { Flame, Activity, Trophy, Calendar, Sparkles, TrendingUp, ChevronRight }
 
 export function JourneyView() {
   const [activeTab, setActiveTab] = useState<"active" | "recovery">("active");
+  const [showAllActivities, setShowAllActivities] = useState(false);
 
   const weeklyBars = [
     { day: "Sun", height: 45, isPeak: false },
@@ -116,8 +117,8 @@ export function JourneyView() {
       {/* 2. ACTIVITY HISTORY LIST */}
       <View style={styles.sectionHeaderRow}>
         <Text style={styles.sectionTitle}>ACTIVITY HISTORY</Text>
-        <TouchableOpacity>
-          <Text style={styles.viewAllText}>View All</Text>
+        <TouchableOpacity onPress={() => setShowAllActivities(!showAllActivities)}>
+          <Text style={styles.viewAllText}>{showAllActivities ? "Show Less" : "View All"}</Text>
         </TouchableOpacity>
       </View>
 

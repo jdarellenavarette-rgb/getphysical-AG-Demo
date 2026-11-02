@@ -7,9 +7,10 @@ import { OrganizerMeetModal } from "./OrganizerMeetModal";
 interface ProfileHubProps {
   onSwitchToBusinessMode?: () => void;
   onSwitchToCoachDash?: () => void;
+  onOpenMessages?: () => void;
 }
 
-export function ProfileHub({ onSwitchToBusinessMode, onSwitchToCoachDash }: ProfileHubProps) {
+export function ProfileHub({ onSwitchToBusinessMode, onSwitchToCoachDash, onOpenMessages }: ProfileHubProps) {
   const { profile, passes, currentRole, setRole } = useEcosystemStore();
   const [activeTab, setActiveTab] = useState<"trophy" | "locker">("trophy");
   const [isOrganizerModalOpen, setIsOrganizerModalOpen] = useState(false);
@@ -51,7 +52,7 @@ export function ProfileHub({ onSwitchToBusinessMode, onSwitchToCoachDash }: Prof
             <Text style={styles.primaryActionText}>{isFollowing ? "Following" : "Follow Athlete"}</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.secondaryActionBtn}>
+          <TouchableOpacity onPress={onOpenMessages} style={styles.secondaryActionBtn}>
             <MessageSquare size={15} color="#FAFAFA" style={{ marginRight: 6 }} />
             <Text style={styles.secondaryActionText}>Message</Text>
           </TouchableOpacity>

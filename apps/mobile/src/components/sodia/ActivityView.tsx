@@ -5,11 +5,14 @@ import { ArrowLeft, Heart, MessageCircle, Award, UserPlus, Flame } from "lucide-
 
 interface ActivityViewProps {
   onBack: () => void;
+  onNavigateToLift?: () => void;
 }
 
-export function ActivityView({ onBack }: ActivityViewProps) {
+export function ActivityView({ onBack, onNavigateToLift }: ActivityViewProps) {
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<"all" | "requests">("all");
+  const [followedMap, setFollowedMap] = useState<Record<string, boolean>>({});
+  const [acceptedChallenge, setAcceptedChallenge] = useState(false);
 
   const activities = [
     {
@@ -104,8 +107,16 @@ export function ActivityView({ onBack }: ActivityViewProps) {
               </View>
 
               {a.type === "challenge_alert" && (
-                <TouchableOpacity style={styles.viewChallengeBtn}>
-                  <Text style={styles.viewChallengeText}>Defend PR</Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    setAcceptedChallenge(true);
+                    onNavigateToLift?.();
+                  }}
+                  style={[styles.viewChallengeBtn, acceptedChallenge && { backgroundColor: "#10B981" }]}
+                >
+                  <Text style={styles.viewChallengeText}>
+                    {acceptedChallenge ? "Accepted ✓" : "Defend PR"}
+                  </Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -125,8 +136,13 @@ export function ActivityView({ onBack }: ActivityViewProps) {
                 <Text style={styles.timeText}>{a.time}</Text>
               </View>
               {a.hasFollowBack && (
-                <TouchableOpacity style={styles.followBackBtn}>
-                  <Text style={styles.followBackText}>Follow Back</Text>
+                <TouchableOpacity
+                  onPress={() => setFollowedMap((prev) => ({ ...prev, [a.id]: !prev[a.id] }))}
+                  style={[styles.followBackBtn, followedMap[a.id] && { backgroundColor: "#27272A" }]}
+                >
+                  <Text style={styles.followBackText}>
+                    {followedMap[a.id] ? "Following" : "Follow Back"}
+                  </Text>
                 </TouchableOpacity>
               )}
             </View>

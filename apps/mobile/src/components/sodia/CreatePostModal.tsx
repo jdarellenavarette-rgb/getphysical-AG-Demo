@@ -15,6 +15,7 @@ export function CreatePostModal({ visible, onClose }: CreatePostModalProps) {
   const [selectedFacilityId, setSelectedFacilityId] = useState<string | null>("fac_metro_core");
   const [postAsRole, setPostAsRole] = useState<UserRole>("individual");
   const [hasStampAttached, setHasStampAttached] = useState(true);
+  const [hasPhotoAttached, setHasPhotoAttached] = useState(true);
 
   const selectedFac = facilities.find((f) => f.id === selectedFacilityId);
   const remainingChars = SODIA_FIELD_LIMITS.POST_CAPTION_MAX_CHARS - caption.length;
@@ -160,9 +161,14 @@ export function CreatePostModal({ visible, onClose }: CreatePostModalProps) {
                 <Text style={styles.toolText}>Attach Verified Tracker Stamp</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.toolBtn}>
+              <TouchableOpacity
+                onPress={() => setHasPhotoAttached(!hasPhotoAttached)}
+                style={[styles.toolBtn, hasPhotoAttached && { borderColor: "#3B82F6", backgroundColor: "rgba(59,130,246,0.12)" }]}
+              >
                 <ImageIcon size={18} color="#3B82F6" />
-                <Text style={styles.toolText}>Photo / Video Proof</Text>
+                <Text style={styles.toolText}>
+                  {hasPhotoAttached ? "Photo Proof Attached ✓" : "Attach Photo Proof"}
+                </Text>
               </TouchableOpacity>
             </View>
           </ScrollView>

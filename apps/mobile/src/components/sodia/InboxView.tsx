@@ -83,7 +83,7 @@ export function InboxView({ onBack, onSelectThread }: InboxViewProps) {
           <ArrowLeft size={22} color="#FAFAFA" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Messages</Text>
-        <TouchableOpacity style={styles.newMsgBtn}>
+        <TouchableOpacity onPress={() => threads[0] && onSelectThread(threads[0])} style={styles.newMsgBtn}>
           <Edit3 size={18} color="#FAFAFA" />
         </TouchableOpacity>
       </View>

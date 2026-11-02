@@ -14,6 +14,17 @@ export function DMChatView({ thread, onBack }: DMChatViewProps) {
   const [inputText, setInputText] = useState("");
   const [hasCongratulated, setHasCongratulated] = useState(false);
   const [hasAcceptedHandshake, setHasAcceptedHandshake] = useState(false);
+  const [showRawData, setShowRawData] = useState(false);
+  const [extraMessages, setExtraMessages] = useState<{ id: string; text: string; time: string }[]>([]);
+
+  const handleSendMessage = () => {
+    if (!inputText.trim()) return;
+    setExtraMessages((prev) => [
+      ...prev,
+      { id: `msg_${Date.now()}`, text: inputText.trim(), time: "Just now" },
+    ]);
+    setInputText("");
+  };
 
   return (
     <View style={styles.container}>
@@ -67,12 +78,29 @@ export function DMChatView({ thread, onBack }: DMChatViewProps) {
         {thread.type === "coach" && (
           <View style={styles.incomingBubble}>
             <Text style={styles.bubbleText}>I reviewed your last set bar-speed curve.</Text>
-            <TouchableOpacity style={styles.rawDeepLinkBtn}>
-              <Text style={styles.rawDeepLinkText}>📊 View Raw Data (Sets & RPE Breakdown)</Text>
+            <TouchableOpacity onPress={() => setShowRawData(!showRawData)} style={styles.rawDeepLinkBtn}>
+              <Text style={styles.rawDeepLinkText}>
+                {showRawData ? "📊 Hide Telemetry" : "📊 View Raw Data (Sets & RPE Breakdown)"}
+              </Text>
             </TouchableOpacity>
+            {showRawData && (
+              <View style={{ marginTop: 8, padding: 8, backgroundColor: "#18181B", borderRadius: 8 }}>
+                <Text style={{ color: "#10B981", fontSize: 11, fontWeight: "700" }}>Set 1: 140kg @ 0.62 m/s (RPE 7.0)</Text>
+                <Text style={{ color: "#F59E0B", fontSize: 11, fontWeight: "700" }}>Set 2: 180kg @ 0.44 m/s (RPE 8.5)</Text>
+                <Text style={{ color: "#E11D48", fontSize: 11, fontWeight: "700" }}>Set 3: 225kg @ 0.19 m/s (RPE 9.5 PR)</Text>
+              </View>
+            )}
             <Text style={styles.bubbleTime}>08:35 AM</Text>
           </View>
         )}
+
+        {/* EXTRA USER MESSAGES */}
+        {extraMessages.map((msg) => (
+          <View key={msg.id} style={styles.outgoingBubble}>
+            <Text style={styles.bubbleText}>{msg.text}</Text>
+            <Text style={styles.bubbleTime}>{msg.time}</Text>
+          </View>
+        ))}
 
         {/* B2B STAFF HANDSHAKE CARD */}
         {thread.type === "handshake" && (
@@ -104,7 +132,10 @@ export function DMChatView({ thread, onBack }: DMChatViewProps) {
 
       {/* INPUT BAR */}
       <View style={styles.inputContainer}>
-        <TouchableOpacity style={styles.attachBtn}>
+        <TouchableOpacity
+          onPress={() => setInputText((p) => (p ? `${p} ` : "") + "📎 [225kg PR Verified]")}
+          style={styles.attachBtn}
+        >
           <Paperclip size={18} color="#71717A" />
         </TouchableOpacity>
         <TextInput
@@ -113,8 +144,9 @@ export function DMChatView({ thread, onBack }: DMChatViewProps) {
           placeholderTextColor="#71717A"
           value={inputText}
           onChangeText={setInputText}
+          onSubmitEditing={handleSendMessage}
         />
-        <TouchableOpacity style={styles.sendBtn}>
+        <TouchableOpacity onPress={handleSendMessage} style={styles.sendBtn}>
           <Send size={18} color="#FAFAFA" />
         </TouchableOpacity>
       </View>

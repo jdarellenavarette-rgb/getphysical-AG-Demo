@@ -83,6 +83,7 @@ export default function App() {
           <ProfileHub
             onSwitchToBusinessMode={() => setIsStaffDashOpen(true)}
             onSwitchToCoachDash={() => setIsCoachDashOpen(true)}
+            onOpenMessages={() => setIsInboxOpen(true)}
           />
         )}
       </View>
@@ -98,6 +99,8 @@ export default function App() {
       <StoryViewerModal
         visible={isStoryViewerOpen}
         onClose={() => setIsStoryViewerOpen(false)}
+        onOpenCreatePost={() => setIsCreatePostOpen(true)}
+        onOpenComments={() => setIsCommentsOpen(true)}
         onTapLocationTag={(facId) => {
           setIsStoryViewerOpen(false);
           setSelectedFacilityCheckout(facId);
@@ -121,7 +124,13 @@ export default function App() {
 
       {/* NOTIFICATIONS & ACTIVITY MODAL */}
       <Modal visible={isActivityOpen} animationType="slide" onRequestClose={() => setIsActivityOpen(false)}>
-        <ActivityView onBack={() => setIsActivityOpen(false)} />
+        <ActivityView
+          onBack={() => setIsActivityOpen(false)}
+          onNavigateToLift={() => {
+            setIsActivityOpen(false);
+            setCurrentTab("track");
+          }}
+        />
       </Modal>
 
       {/* NAVIGATION DRAWER & ROLE SWITCHER */}

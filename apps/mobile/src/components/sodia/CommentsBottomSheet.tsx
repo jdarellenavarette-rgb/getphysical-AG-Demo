@@ -93,7 +93,7 @@ export function CommentsBottomSheet({ visible, onClose, postId }: CommentsBottom
                     <Text style={styles.commentTime}>{c.time}</Text>
                   </View>
                   <Text style={styles.commentText}>{c.text}</Text>
-                  <TouchableOpacity style={styles.replyTrigger}>
+                  <TouchableOpacity onPress={() => setCommentText(`@${c.author} `)} style={styles.replyTrigger}>
                     <Text style={styles.replyText}>Reply</Text>
                   </TouchableOpacity>
                 </View>

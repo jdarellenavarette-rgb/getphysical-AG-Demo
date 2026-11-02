@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView, Alert } from "react-native";
-import { Heart, MessageCircle, Bookmark, Plus, MapPin, MoreHorizontal, Bell, Search, Send, CheckCircle2 } from "lucide-react-native";
+import { Heart, MessageCircle, Bookmark, Plus, MapPin, MoreHorizontal, Send, CheckCircle2 } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { TenStateView } from "../common/TenStateView";
 import { createSuccessState, createEmptyState } from "sodia-core";
@@ -41,29 +41,7 @@ export function SodiaFeed({
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
-      {/* 1. EDITORIAL HEADER & ATHLETE STREAK PILL (PHOTO 1 LEFT SCREEN) */}
-      <View style={styles.heroHeaderSection}>
-        <Text style={styles.editorialTitle}>Daily Hustle</Text>
-        <Text style={styles.editorialSubtitle}>Move everyday</Text>
-
-        <View style={styles.athletePillCard}>
-          <Image source={{ uri: profile.avatar_url ?? "" }} style={styles.pillAvatar} />
-          <View style={styles.pillMeta}>
-            <Text style={styles.pillName}>{profile.name ?? "CK De Leon"}</Text>
-            <Text style={styles.pillStreak}>Weekly Streak: 5 days</Text>
-          </View>
-          <View style={styles.pillActions}>
-            <TouchableOpacity style={styles.pillIconBtn}>
-              <Bell size={17} color="#09090B" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.pillIconBtn}>
-              <Search size={17} color="#09090B" />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-
-      {/* 2. CHIC RECTANGULAR STORIES BAR (PHOTO 1) */}
+      {/* 1. CHIC RECTANGULAR STORIES BAR */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.storiesContainer}>
         {stories.map((st, idx) => (
           <TouchableOpacity
@@ -180,17 +158,7 @@ export function SodiaFeed({
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#09090B" },
-  contentContainer: { paddingBottom: 110 },
-  heroHeaderSection: { paddingHorizontal: 16, paddingTop: 6, marginBottom: 14 },
-  editorialTitle: { color: "#FAFAFA", fontSize: 24, fontWeight: "900", letterSpacing: -0.5 },
-  editorialSubtitle: { color: "#8E8E93", fontSize: 13, marginTop: 2, fontWeight: "500" },
-  athletePillCard: { flexDirection: "row", alignItems: "center", backgroundColor: "#FFFFFF", borderRadius: 999, paddingHorizontal: 12, paddingVertical: 8, marginTop: 12, shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 8, elevation: 4 },
-  pillAvatar: { width: 36, height: 36, borderRadius: 18 },
-  pillMeta: { flex: 1, marginLeft: 10 },
-  pillName: { color: "#09090B", fontSize: 13, fontWeight: "800" },
-  pillStreak: { color: "#71717A", fontSize: 11, marginTop: 1 },
-  pillActions: { flexDirection: "row", gap: 8 },
-  pillIconBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: "#F4F4F5", alignItems: "center", justifyContent: "center" },
+  contentContainer: { paddingBottom: 110, paddingTop: 10 },
   storiesContainer: { paddingHorizontal: 16, gap: 10, paddingBottom: 16 },
   storyCardItem: { alignItems: "center", width: 68 },
   storyCardFrame: { width: 66, height: 88, borderRadius: 18, borderWidth: 2, borderColor: "#E11D48", padding: 2, position: "relative", overflow: "hidden" },

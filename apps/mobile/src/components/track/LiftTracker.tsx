@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
-import { Check, Plus, Dumbbell, RotateCcw, Award } from "lucide-react-native";
+import { Check, Plus, Dumbbell, RotateCcw, Award, Flame, Zap } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 
 interface WorkoutSet {
@@ -40,12 +40,18 @@ export function LiftTracker() {
     setSets((prev) => [...prev, { setNumber: prev.length + 1, weight: newWeight, reps: newReps, isCompleted: false }]);
   };
 
-  // EMPTY STATE
   if (!activeWorkout.isActive) {
     return (
-      <ScrollView style={styles.container} contentContainerStyle={styles.emptyContent}>
-        {/* 3 CIRCULAR PERSONAL BESTS (INSPIRATION PHOTO 5) */}
-        <Text style={styles.sectionTitle}>PERSONAL BESTS (1RM)</Text>
+      <ScrollView style={styles.container} contentContainerStyle={styles.emptyContent} showsVerticalScrollIndicator={false}>
+        {/* PERSONAL BESTS (1RM) - GYMSHARK AESTHETIC */}
+        <View style={styles.prHeaderRow}>
+          <Text style={styles.sectionTitle}>Personal Bests (1RM)</Text>
+          <View style={styles.verifiedTrophyPill}>
+            <Award size={12} color="#10B981" />
+            <Text style={styles.verifiedTrophyText}>Verified PRs</Text>
+          </View>
+        </View>
+
         <View style={styles.prRingsRow}>
           <View style={styles.prRingItem}>
             <View style={styles.prRingCircle}>
@@ -72,18 +78,20 @@ export function LiftTracker() {
           </View>
         </View>
 
-        {/* EMPTY WORKOUT CARD */}
-        <View style={styles.emptyCard}>
-          <Dumbbell size={40} color="#E11D48" />
-          <Text style={styles.emptyTitle}>Hevy-Grade Strength Tracker</Text>
-          <Text style={styles.emptySubtitle}>
-            Log sets, auto-calculate 1RM volume, and use our circular rest timer.
+        {/* WORKOUT LAUNCHPAD */}
+        <View style={styles.launchpadCard}>
+          <View style={styles.launchpadIcon}>
+            <Dumbbell size={28} color="#FAFAFA" />
+          </View>
+          <Text style={styles.launchpadTitle}>Ready to Train?</Text>
+          <Text style={styles.launchpadSubtitle}>
+            Log sets with live RPE velocity feedback and automated rest timer recovery.
           </Text>
           <TouchableOpacity
             onPress={() => startWorkout("Conventional Deadlift Session")}
             style={styles.startWorkoutButton}
           >
-            <Plus size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+            <Plus size={16} color="#FFFFFF" strokeWidth={2.5} style={{ marginRight: 6 }} />
             <Text style={styles.startWorkoutText}>Start Blank Workout</Text>
           </TouchableOpacity>
         </View>
@@ -104,10 +112,10 @@ export function LiftTracker() {
         </TouchableOpacity>
       </View>
 
-      {/* CIRCULAR REST TIMER (INSPIRATION PHOTO 3) */}
+      {/* REST TIMER (INSPIRATION PHOTO 3) */}
       {activeWorkout.isResting && activeWorkout.restTimerSeconds > 0 && (
         <View style={styles.circularTimerCard}>
-          <Text style={styles.restTitle}>REST PERIOD</Text>
+          <Text style={styles.restTitle}>Rest Countdown</Text>
           <View style={styles.timerRingRow}>
             <TouchableOpacity onPress={() => adjustRestTimer(-15)} style={styles.timerAdjustBtn}>
               <Text style={styles.timerAdjustText}>-15s</Text>
@@ -134,7 +142,7 @@ export function LiftTracker() {
         <View style={styles.exerciseHeader}>
           <Text style={styles.exerciseName}>Conventional Deadlift</Text>
           <View style={styles.targetBadge}>
-            <Text style={styles.targetBadgeText}>POSTERIOR CHAIN</Text>
+            <Text style={styles.targetBadgeText}>Posterior Chain</Text>
           </View>
         </View>
 
@@ -168,45 +176,49 @@ export function LiftTracker() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#09090B", padding: 16 },
   emptyContent: { paddingBottom: 110 },
-  sectionTitle: { color: "#71717A", fontSize: 11, fontWeight: "800", letterSpacing: 0.8, marginBottom: 12 },
-  prRingsRow: { flexDirection: "row", justifyContent: "space-around", marginBottom: 20 },
+  prHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 },
+  sectionTitle: { color: "#FAFAFA", fontSize: 16, fontWeight: "800" },
+  verifiedTrophyPill: { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "rgba(16,185,129,0.12)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
+  verifiedTrophyText: { color: "#10B981", fontSize: 11, fontWeight: "800" },
+  prRingsRow: { flexDirection: "row", justifyContent: "space-around", marginBottom: 22 },
   prRingItem: { alignItems: "center" },
-  prRingCircle: { width: 78, height: 78, borderRadius: 39, borderWidth: 3, borderColor: "#E11D48", alignItems: "center", justifyContent: "center", backgroundColor: "#121215" },
-  prRingWeight: { color: "#FAFAFA", fontSize: 20, fontWeight: "900" },
-  prRingUnit: { color: "#71717A", fontSize: 10, fontWeight: "800", marginTop: -2 },
-  prRingLabel: { color: "#A1A1AA", fontSize: 11, fontWeight: "700", marginTop: 6 },
-  emptyCard: { borderWidth: 1, borderColor: "#27272A", borderRadius: 18, backgroundColor: "#121215", padding: 24, alignItems: "center" },
-  emptyTitle: { fontSize: 16, fontWeight: "800", color: "#FAFAFA", marginTop: 12 },
-  emptySubtitle: { fontSize: 12, color: "#A1A1AA", textAlign: "center", marginTop: 4, lineHeight: 18, maxWidth: 260 },
-  startWorkoutButton: { flexDirection: "row", alignItems: "center", backgroundColor: "#E11D48", paddingHorizontal: 20, paddingVertical: 12, borderRadius: 999, marginTop: 16 },
-  startWorkoutText: { color: "#FFFFFF", fontSize: 13, fontWeight: "800" },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 },
-  title: { color: "#FAFAFA", fontSize: 18, fontWeight: "800" },
-  timerText: { color: "#10B981", fontSize: 12, marginTop: 2, fontWeight: "600" },
-  finishButton: { backgroundColor: "#10B981", paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
-  finishText: { color: "#000000", fontWeight: "800", fontSize: 12 },
-  circularTimerCard: { backgroundColor: "#121215", borderRadius: 18, padding: 18, alignItems: "center", borderWidth: 1, borderColor: "#27272A", marginBottom: 16 },
-  restTitle: { color: "#71717A", fontSize: 10, fontWeight: "800", letterSpacing: 0.8 },
+  prRingCircle: { width: 80, height: 80, borderRadius: 40, borderWidth: 3, borderColor: "#E11D48", alignItems: "center", justifyContent: "center", backgroundColor: "#141418" },
+  prRingWeight: { color: "#FAFAFA", fontSize: 22, fontWeight: "900" },
+  prRingUnit: { color: "#8E8E93", fontSize: 10, fontWeight: "800", marginTop: -2 },
+  prRingLabel: { color: "#A1A1AA", fontSize: 12, fontWeight: "700", marginTop: 8 },
+  launchpadCard: { borderWidth: 1, borderColor: "rgba(255,255,255,0.08)", borderRadius: 22, backgroundColor: "#141418", padding: 24, alignItems: "center" },
+  launchpadIcon: { width: 56, height: 56, borderRadius: 28, backgroundColor: "#202026", alignItems: "center", justifyContent: "center", marginBottom: 12 },
+  launchpadTitle: { fontSize: 18, fontWeight: "800", color: "#FAFAFA" },
+  launchpadSubtitle: { fontSize: 13, color: "#8E8E93", textAlign: "center", marginTop: 6, lineHeight: 19, maxWidth: 280 },
+  startWorkoutButton: { flexDirection: "row", alignItems: "center", backgroundColor: "#E11D48", paddingHorizontal: 24, paddingVertical: 14, borderRadius: 999, marginTop: 18 },
+  startWorkoutText: { color: "#FFFFFF", fontSize: 14, fontWeight: "800" },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 },
+  title: { color: "#FAFAFA", fontSize: 20, fontWeight: "800" },
+  timerText: { color: "#10B981", fontSize: 12, marginTop: 2, fontWeight: "700" },
+  finishButton: { backgroundColor: "#10B981", paddingHorizontal: 16, paddingVertical: 8, borderRadius: 10 },
+  finishText: { color: "#000000", fontWeight: "900", fontSize: 12 },
+  circularTimerCard: { backgroundColor: "#141418", borderRadius: 20, padding: 18, alignItems: "center", borderWidth: 1, borderColor: "rgba(255,255,255,0.08)", marginBottom: 16 },
+  restTitle: { color: "#8E8E93", fontSize: 12, fontWeight: "700" },
   timerRingRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 20, marginVertical: 12 },
-  timerAdjustBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: "#18181B", borderWidth: 1, borderColor: "#27272A", alignItems: "center", justifyContent: "center" },
+  timerAdjustBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: "#202026", alignItems: "center", justifyContent: "center" },
   timerAdjustText: { color: "#FAFAFA", fontSize: 12, fontWeight: "800" },
-  circularClock: { width: 96, height: 96, borderRadius: 48, borderWidth: 3, borderColor: "#10B981", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(16, 185, 129, 0.08)" },
-  secondsBig: { color: "#FAFAFA", fontSize: 32, fontWeight: "900" },
+  circularClock: { width: 100, height: 100, borderRadius: 50, borderWidth: 3.5, borderColor: "#10B981", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(16, 185, 129, 0.08)" },
+  secondsBig: { color: "#FAFAFA", fontSize: 34, fontWeight: "900" },
   secondsLabel: { color: "#10B981", fontSize: 10, fontWeight: "800", marginTop: -2 },
   skipBtn: { padding: 4 },
-  skipText: { color: "#71717A", fontSize: 11, fontWeight: "700" },
-  exerciseCard: { backgroundColor: "#121215", borderRadius: 16, borderWidth: 1, borderColor: "#18181B", padding: 16 },
-  exerciseHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
-  exerciseName: { color: "#FAFAFA", fontSize: 15, fontWeight: "800" },
-  targetBadge: { backgroundColor: "rgba(225, 29, 72, 0.15)", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-  targetBadgeText: { color: "#E11D48", fontSize: 9, fontWeight: "800" },
+  skipText: { color: "#8E8E93", fontSize: 12, fontWeight: "700" },
+  exerciseCard: { backgroundColor: "#141418", borderRadius: 20, borderWidth: 1, borderColor: "rgba(255,255,255,0.08)", padding: 16 },
+  exerciseHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 },
+  exerciseName: { color: "#FAFAFA", fontSize: 16, fontWeight: "800" },
+  targetBadge: { backgroundColor: "rgba(225, 29, 72, 0.15)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  targetBadgeText: { color: "#E11D48", fontSize: 10, fontWeight: "800" },
   setGrid: { gap: 8 },
-  setRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: "#18181B", borderRadius: 10, padding: 12, borderWidth: 1, borderColor: "#27272A" },
-  setRowCompleted: { borderColor: "#10B981", backgroundColor: "rgba(16, 185, 129, 0.08)" },
-  setNumberText: { color: "#71717A", fontSize: 12, fontWeight: "800" },
+  setRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: "#202026", borderRadius: 12, padding: 14 },
+  setRowCompleted: { backgroundColor: "rgba(16, 185, 129, 0.12)" },
+  setNumberText: { color: "#8E8E93", fontSize: 12, fontWeight: "800" },
   setWeightText: { color: "#FAFAFA", fontSize: 14, fontWeight: "800" },
   checkCircle: { width: 24, height: 24, borderRadius: 12, borderWidth: 2, borderColor: "#71717A", alignItems: "center", justifyContent: "center" },
   checkCircleCompleted: { borderColor: "#10B981", backgroundColor: "#10B981" },
-  addSetBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 10, marginTop: 10 },
-  addSetText: { color: "#A1A1AA", fontSize: 12, fontWeight: "700" },
+  addSetBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 12, marginTop: 10 },
+  addSetText: { color: "#A1A1AA", fontSize: 13, fontWeight: "700" },
 });

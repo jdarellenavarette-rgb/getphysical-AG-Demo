@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image } from "react-native";
-import { Plus, Wallet, Ticket, FileText, ChevronRight, Send, QrCode, Eye, EyeOff, Copy, Check } from "lucide-react-native";
+import { Plus, Wallet, Ticket, FileText, ChevronRight, Send, QrCode, Eye, EyeOff, Copy, Check, Bell } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { ExactVIPCard } from "./ExactVIPCard";
 import { ReceiptModal } from "./ReceiptModal";
@@ -29,16 +29,15 @@ export function CardsHub({ onBrowseVenues }: CardsHubProps) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
-      {/* USER GREETING: AVATAR + ADAM ARÊTE */}
+      {/* USER GREETING (INSPIRATION PHOTO 2: MORNING CAT, VIP ACCOUNT) */}
       <View style={styles.userGreetingRow}>
-        <Image
-          source={{ uri: profile.avatar_url ?? "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80" }}
-          style={styles.userAvatar}
-        />
         <View>
-          <Text style={styles.userName}>{profile.name ?? "Adam Arête"}</Text>
-          <Text style={styles.userHandle}>@{profile.username} • VIP Account</Text>
+          <Text style={styles.userName}>Morning Cat,</Text>
+          <Text style={styles.userHandle}>VIP Account</Text>
         </View>
+        <TouchableOpacity style={styles.bellBtn}>
+          <Bell size={20} color="#FAFAFA" />
+        </TouchableOpacity>
       </View>
 
       {/* 3D VIP CARD STACK OR EMPTY CARD OUTLINE */}
@@ -184,10 +183,10 @@ export function CardsHub({ onBrowseVenues }: CardsHubProps) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#09090B" },
   contentContainer: { paddingBottom: 110 },
-  userGreetingRow: { flexDirection: "row", alignItems: "center", gap: 14, paddingHorizontal: 20, paddingTop: 10, paddingBottom: 14 },
-  userAvatar: { width: 56, height: 56, borderRadius: 28, borderWidth: 2, borderColor: "#EC4899" },
-  userName: { fontSize: 22, fontWeight: "900", color: "#FAFAFA", letterSpacing: -0.3 },
-  userHandle: { fontSize: 11, color: "#A1A1AA", marginTop: 1 },
+  userGreetingRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 20, paddingTop: 10, paddingBottom: 14 },
+  bellBtn: { width: 38, height: 38, borderRadius: 19, backgroundColor: "#18181B", alignItems: "center", justifyContent: "center" },
+  userName: { fontSize: 24, fontWeight: "900", color: "#FAFAFA", letterSpacing: -0.5 },
+  userHandle: { fontSize: 12, color: "#8E8E93", marginTop: 2, fontWeight: "600" },
   cardWrapper: { paddingHorizontal: 16, marginBottom: 12 },
   emptyCardContainer: { paddingHorizontal: 16, marginBottom: 16 },
   emptyCardDashed: {

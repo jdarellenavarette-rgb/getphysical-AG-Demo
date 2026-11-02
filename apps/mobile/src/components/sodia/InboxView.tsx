@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, ScrollView } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Search, Edit3, ArrowLeft, Users, Flame, Briefcase } from "lucide-react-native";
 
 export interface DMThread {
@@ -20,6 +21,7 @@ interface InboxViewProps {
 }
 
 export function InboxView({ onBack, onSelectThread }: InboxViewProps) {
+  const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<"primary" | "requests">("primary");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -71,10 +73,14 @@ export function InboxView({ onBack, onSelectThread }: InboxViewProps) {
 
   return (
     <View style={styles.container}>
-      {/* HEADER */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} style={styles.backBtn}>
-          <ArrowLeft size={20} color="#FAFAFA" />
+      {/* HEADER WITH SAFE NOTCH INSET */}
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 50) + 6, height: Math.max(insets.top, 50) + 54 }]}>
+        <TouchableOpacity
+          onPress={onBack}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          style={styles.backBtn}
+        >
+          <ArrowLeft size={22} color="#FAFAFA" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Messages</Text>
         <TouchableOpacity style={styles.newMsgBtn}>
@@ -160,8 +166,8 @@ export function InboxView({ onBack, onSelectThread }: InboxViewProps) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#09090B" },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, height: 50, borderBottomWidth: 1, borderBottomColor: "#18181B" },
-  backBtn: { padding: 4 },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: "#18181B" },
+  backBtn: { minWidth: 44, minHeight: 44, justifyContent: "center", alignItems: "center" },
   headerTitle: { color: "#FAFAFA", fontSize: 16, fontWeight: "800" },
   newMsgBtn: { padding: 4 },
   searchBox: { flexDirection: "row", alignItems: "center", backgroundColor: "#18181B", borderRadius: 10, marginHorizontal: 16, marginTop: 12, paddingHorizontal: 12, height: 38, gap: 8 },

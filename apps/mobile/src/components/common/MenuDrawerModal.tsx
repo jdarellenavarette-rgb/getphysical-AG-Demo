@@ -184,9 +184,9 @@ export function MenuDrawerModal({
 const styles = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.75)", justifyContent: "flex-end" },
   drawerContainer: { backgroundColor: "#121215", borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: "90%", minHeight: "65%", borderWidth: 1, borderColor: "#27272A" },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 20, paddingTop: 18, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: "#1E1E24" },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, paddingTop: 14, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: "#1E1E24" },
   headerTitle: { color: "#FAFAFA", fontSize: 12, fontWeight: "900", letterSpacing: 1 },
-  closeBtn: { padding: 4 },
+  closeBtn: { minWidth: 44, minHeight: 44, justifyContent: "center", alignItems: "center" },
   scrollContent: { padding: 16 },
   userCard: { flexDirection: "row", alignItems: "center", backgroundColor: "#18181B", borderRadius: 14, padding: 14, marginBottom: 18, borderWidth: 1, borderColor: "#27272A" },
   avatar: { width: 50, height: 50, borderRadius: 25, borderWidth: 2, borderColor: "#E11D48" },

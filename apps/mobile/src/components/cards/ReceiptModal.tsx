@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.8)", justifyContent: "flex-end" },
   sheetContainer: { backgroundColor: "#121215", borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: "88%", minHeight: "55%", borderWidth: 1, borderColor: "#27272A" },
   topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingTop: 18, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: "#1E1E24" },
-  backBtn: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 4 },
+  backBtn: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 44, minWidth: 60, justifyContent: "center" },
   backBtnText: { color: "#FAFAFA", fontSize: 13, fontWeight: "700" },
   headerTitle: { color: "#FAFAFA", fontSize: 12, fontWeight: "900", letterSpacing: 1 },
   content: { padding: 18 },

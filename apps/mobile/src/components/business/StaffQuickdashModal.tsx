@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft, QrCode, CheckCircle2, XCircle, Clock, Shield, Sparkles } from "lucide-react-native";
 
 interface StaffQuickdashModalProps {
@@ -16,6 +17,7 @@ interface ScanLog {
 }
 
 export function StaffQuickdashModal({ visible, onClose }: StaffQuickdashModalProps) {
+  const insets = useSafeAreaInsets();
   const [lastScanResult, setLastScanResult] = useState<"GREEN" | "BLUE" | "RED" | null>(null);
   const [scanLogs, setScanLogs] = useState<ScanLog[]>([]);
 
@@ -57,10 +59,14 @@ export function StaffQuickdashModal({ visible, onClose }: StaffQuickdashModalPro
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View style={styles.container}>
-        {/* HEADER BAR WITH PROMINENT BACK BUTTON */}
-        <View style={styles.topBar}>
-          <TouchableOpacity onPress={onClose} style={styles.backBtn}>
-            <ArrowLeft size={18} color="#FAFAFA" />
+        {/* HEADER BAR WITH SAFE NOTCH INSET */}
+        <View style={[styles.topBar, { paddingTop: Math.max(insets.top, 50) + 10 }]}>
+          <TouchableOpacity
+            onPress={onClose}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            style={styles.backBtn}
+          >
+            <ArrowLeft size={20} color="#FAFAFA" />
             <Text style={styles.backBtnText}>Back to Athlete App</Text>
           </TouchableOpacity>
           <View style={styles.badge}>
@@ -144,8 +150,8 @@ export function StaffQuickdashModal({ visible, onClose }: StaffQuickdashModalPro
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#09090B" },
-  topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingTop: 52, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: "#18181B" },
-  backBtn: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 4 },
+  topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: "#18181B" },
+  backBtn: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 44, paddingVertical: 4 },
   backBtnText: { color: "#FAFAFA", fontSize: 13, fontWeight: "700" },
   badge: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(16, 185, 129, 0.15)", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
   badgeText: { color: "#10B981", fontSize: 10, fontWeight: "800" },

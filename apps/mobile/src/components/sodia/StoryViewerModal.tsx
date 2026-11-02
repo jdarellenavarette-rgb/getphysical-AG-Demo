@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, Image, TextInput, StyleSheet, Modal } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { X, Send, MapPin, Award } from "lucide-react-native";
 
 interface StoryViewerModalProps {
@@ -9,6 +10,7 @@ interface StoryViewerModalProps {
 }
 
 export function StoryViewerModal({ visible, onClose, onTapLocationTag }: StoryViewerModalProps) {
+  const insets = useSafeAreaInsets();
   const [activeStoryIdx, setActiveStoryIdx] = useState(0);
   const [replyText, setReplyText] = useState("");
   const [progress, setProgress] = useState(0);
@@ -78,8 +80,8 @@ export function StoryViewerModal({ visible, onClose, onTapLocationTag }: StoryVi
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.overlay}>
-        {/* SEGMENTED PROGRESS BARS (Instagram standard) */}
-        <View style={styles.progressRow}>
+        {/* SEGMENTED PROGRESS BARS (Instagram standard) WITH SAFE NOTCH INSET */}
+        <View style={[styles.progressRow, { paddingTop: Math.max(insets.top, 50) + 6 }]}>
           {stories.map((st, i) => (
             <View key={st.id} style={styles.segmentTrack}>
               <View
@@ -173,7 +175,7 @@ const styles = StyleSheet.create({
   authorMeta: { flex: 1, marginLeft: 10 },
   authorName: { color: "#FAFAFA", fontSize: 13, fontWeight: "700" },
   timeAgo: { color: "#A1A1AA", fontSize: 10, marginTop: 1 },
-  closeBtn: { padding: 4 },
+  closeBtn: { minWidth: 44, minHeight: 44, justifyContent: "center", alignItems: "center" },
   mediaContainer: { flex: 1, position: "relative", justifyContent: "center", alignItems: "center" },
   mediaImage: { width: "100%", height: "100%", resizeMode: "cover" },
   leftTapZone: { position: "absolute", left: 0, top: 0, bottom: 0, width: "30%" },

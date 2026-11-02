@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft, Heart, MessageCircle, Award, UserPlus, Flame } from "lucide-react-native";
 
 interface ActivityViewProps {
@@ -7,6 +8,7 @@ interface ActivityViewProps {
 }
 
 export function ActivityView({ onBack }: ActivityViewProps) {
+  const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<"all" | "requests">("all");
 
   const activities = [
@@ -42,13 +44,17 @@ export function ActivityView({ onBack }: ActivityViewProps) {
 
   return (
     <View style={styles.container}>
-      {/* HEADER */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} style={styles.backBtn}>
-          <ArrowLeft size={20} color="#FAFAFA" />
+      {/* HEADER WITH SAFE NOTCH INSET */}
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 50) + 6, height: Math.max(insets.top, 50) + 54 }]}>
+        <TouchableOpacity
+          onPress={onBack}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          style={styles.backBtn}
+        >
+          <ArrowLeft size={22} color="#FAFAFA" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Activity</Text>
-        <View style={{ width: 28 }} />
+        <View style={{ width: 44 }} />
       </View>
 
       {/* SEGMENTED TABS */}
@@ -132,8 +138,8 @@ export function ActivityView({ onBack }: ActivityViewProps) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#09090B" },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, height: 50, borderBottomWidth: 1, borderBottomColor: "#18181B" },
-  backBtn: { padding: 4 },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: "#18181B" },
+  backBtn: { minWidth: 44, minHeight: 44, justifyContent: "center", alignItems: "center" },
   headerTitle: { color: "#FAFAFA", fontSize: 16, fontWeight: "800" },
   tabRow: { flexDirection: "row", paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: "#18181B", gap: 16 },
   tabItem: { paddingVertical: 12 },

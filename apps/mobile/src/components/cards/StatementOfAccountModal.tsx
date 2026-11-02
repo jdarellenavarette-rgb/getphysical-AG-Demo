@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft, Ticket, Calendar, Filter, FileText } from "lucide-react-native";
 import type { PassRow } from "sodia-core";
 
@@ -16,6 +17,7 @@ export function StatementOfAccountModal({
   onClose,
   onSelectPass,
 }: StatementOfAccountModalProps) {
+  const insets = useSafeAreaInsets();
   const [filter, setFilter] = useState<"all" | "passes" | "courts">("all");
 
   const totalSpent = passes.length * 265;
@@ -23,14 +25,18 @@ export function StatementOfAccountModal({
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View style={styles.container}>
-        {/* HEADER BAR */}
-        <View style={styles.topBar}>
-          <TouchableOpacity onPress={onClose} style={styles.backBtn}>
-            <ArrowLeft size={18} color="#FAFAFA" />
+        {/* HEADER BAR WITH SAFE NOTCH INSET */}
+        <View style={[styles.topBar, { paddingTop: Math.max(insets.top, 50) + 10 }]}>
+          <TouchableOpacity
+            onPress={onClose}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            style={styles.backBtn}
+          >
+            <ArrowLeft size={20} color="#FAFAFA" />
             <Text style={styles.backBtnText}>Cards Hub</Text>
           </TouchableOpacity>
           <Text style={styles.headerTitle}>STATEMENT OF ACCOUNT</Text>
-          <View style={{ width: 40 }} />
+          <View style={{ width: 44 }} />
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
@@ -119,8 +125,8 @@ export function StatementOfAccountModal({
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#09090B" },
-  topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingTop: 52, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: "#18181B" },
-  backBtn: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 4 },
+  topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: "#18181B" },
+  backBtn: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 44, paddingVertical: 4 },
   backBtnText: { color: "#FAFAFA", fontSize: 13, fontWeight: "700" },
   headerTitle: { color: "#FAFAFA", fontSize: 12, fontWeight: "900", letterSpacing: 0.8 },
   content: { padding: 16 },

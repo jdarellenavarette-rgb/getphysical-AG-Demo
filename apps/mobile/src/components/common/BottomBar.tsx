@@ -1,5 +1,6 @@
 import React from "react";
 import { View, TouchableOpacity, StyleSheet } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MapPin, BarChart2, Plus, Wallet, User } from "lucide-react-native";
 
 export type MobileTab = "sodia" | "discover" | "cards" | "track" | "profile";
@@ -11,16 +12,20 @@ interface BottomBarProps {
 }
 
 export function BottomBar({ currentTab, onSelectTab, onPressCreate }: BottomBarProps) {
+  const insets = useSafeAreaInsets();
+  const bottomOffset = Math.max(insets.bottom, 12);
+
   return (
-    <View style={styles.dockWrapper}>
+    <View style={[styles.dockWrapper, { bottom: bottomOffset }]}>
       <View style={styles.capsuleDock}>
         {/* TAB 1: DISCOVER / MAP */}
         <TouchableOpacity
           onPress={() => onSelectTab("discover")}
           style={styles.dockItem}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
           <MapPin
-            size={20}
+            size={22}
             color={currentTab === "discover" ? "#EC4899" : "#A1A1AA"}
           />
         </TouchableOpacity>
@@ -29,20 +34,21 @@ export function BottomBar({ currentTab, onSelectTab, onPressCreate }: BottomBarP
         <TouchableOpacity
           onPress={() => onSelectTab("track")}
           style={styles.dockItem}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
           <BarChart2
-            size={20}
+            size={22}
             color={currentTab === "track" ? "#EC4899" : "#A1A1AA"}
           />
         </TouchableOpacity>
 
-        {/* CENTER ELEVATED GRADIENT FAB (+) */}
+        {/* CENTER ELEVATED FAB (+) */}
         <View style={styles.centerFabAnchor}>
           <TouchableOpacity
             onPress={onPressCreate ? onPressCreate : () => onSelectTab("sodia")}
             style={styles.centerFab}
           >
-            <Plus size={22} color="#FFFFFF" strokeWidth={3} />
+            <Plus size={24} color="#FFFFFF" strokeWidth={3} />
           </TouchableOpacity>
         </View>
 
@@ -50,9 +56,10 @@ export function BottomBar({ currentTab, onSelectTab, onPressCreate }: BottomBarP
         <TouchableOpacity
           onPress={() => onSelectTab("cards")}
           style={styles.dockItem}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
           <Wallet
-            size={20}
+            size={22}
             color={currentTab === "cards" ? "#EC4899" : "#A1A1AA"}
           />
         </TouchableOpacity>
@@ -61,9 +68,10 @@ export function BottomBar({ currentTab, onSelectTab, onPressCreate }: BottomBarP
         <TouchableOpacity
           onPress={() => onSelectTab("profile")}
           style={styles.dockItem}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
           <User
-            size={20}
+            size={22}
             color={currentTab === "profile" ? "#EC4899" : "#A1A1AA"}
           />
         </TouchableOpacity>
@@ -75,17 +83,16 @@ export function BottomBar({ currentTab, onSelectTab, onPressCreate }: BottomBarP
 const styles = StyleSheet.create({
   dockWrapper: {
     position: "absolute",
-    bottom: 12,
     left: 16,
     right: 16,
     zIndex: 50,
   },
   capsuleDock: {
-    height: 52,
+    height: 56,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 18,
+    paddingHorizontal: 16,
     backgroundColor: "rgba(28, 28, 30, 0.96)",
     borderRadius: 999,
     borderWidth: 1,
@@ -98,6 +105,7 @@ const styles = StyleSheet.create({
   },
   dockItem: {
     flex: 1,
+    height: 56,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -107,9 +115,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   centerFab: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     backgroundColor: "#EC4899",
     alignItems: "center",
     justifyContent: "center",

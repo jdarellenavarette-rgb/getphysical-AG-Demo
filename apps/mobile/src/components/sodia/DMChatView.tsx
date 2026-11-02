@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, ScrollView } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft, Send, Paperclip, Flame, Award, Briefcase, CheckCircle2 } from "lucide-react-native";
 import type { DMThread } from "./InboxView";
 
@@ -9,16 +10,21 @@ interface DMChatViewProps {
 }
 
 export function DMChatView({ thread, onBack }: DMChatViewProps) {
+  const insets = useSafeAreaInsets();
   const [inputText, setInputText] = useState("");
   const [hasCongratulated, setHasCongratulated] = useState(false);
   const [hasAcceptedHandshake, setHasAcceptedHandshake] = useState(false);
 
   return (
     <View style={styles.container}>
-      {/* HEADER */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} style={styles.backBtn}>
-          <ArrowLeft size={20} color="#FAFAFA" />
+      {/* HEADER WITH SAFE NOTCH INSET */}
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 50) + 6, height: Math.max(insets.top, 50) + 56 }]}>
+        <TouchableOpacity
+          onPress={onBack}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          style={styles.backBtn}
+        >
+          <ArrowLeft size={22} color="#FAFAFA" />
         </TouchableOpacity>
         <Image source={{ uri: thread.avatar }} style={styles.headerAvatar} />
         <View style={styles.headerMeta}>
@@ -118,8 +124,8 @@ export function DMChatView({ thread, onBack }: DMChatViewProps) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#09090B" },
-  header: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, height: 56, borderBottomWidth: 1, borderBottomColor: "#18181B" },
-  backBtn: { padding: 4 },
+  header: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: "#18181B" },
+  backBtn: { minWidth: 44, minHeight: 44, justifyContent: "center", alignItems: "center" },
   headerAvatar: { width: 36, height: 36, borderRadius: 18, marginLeft: 8 },
   headerMeta: { marginLeft: 10 },
   headerName: { color: "#FAFAFA", fontSize: 13, fontWeight: "700" },

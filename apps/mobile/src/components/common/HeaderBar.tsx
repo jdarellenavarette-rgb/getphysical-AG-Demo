@@ -19,26 +19,42 @@ export function HeaderBar({
     <View style={styles.container}>
       {/* LEFT: ☰ getphysical */}
       <View style={styles.leftRow}>
-        <TouchableOpacity onPress={onOpenMenu} style={styles.menuButton}>
-          <Menu size={22} color="#FAFAFA" />
+        <TouchableOpacity
+          onPress={onOpenMenu}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          style={styles.menuButton}
+        >
+          <Menu size={24} color="#FAFAFA" />
         </TouchableOpacity>
         <Text style={styles.appName}>getphysical</Text>
       </View>
 
       {/* RIGHT: Chat, Bell, Settings */}
       <View style={styles.rightRow}>
-        <TouchableOpacity onPress={onOpenInbox} style={styles.iconButton}>
-          <MessageSquare size={20} color="#FAFAFA" />
+        <TouchableOpacity
+          onPress={onOpenInbox}
+          hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}
+          style={styles.iconButton}
+        >
+          <MessageSquare size={22} color="#FAFAFA" />
           <View style={styles.badgeDot} />
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={onOpenActivity} style={styles.iconButton}>
-          <Bell size={20} color="#FAFAFA" />
+        <TouchableOpacity
+          onPress={onOpenActivity}
+          hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}
+          style={styles.iconButton}
+        >
+          <Bell size={22} color="#FAFAFA" />
           <View style={styles.badgeDot} />
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={onOpenSettings} style={styles.iconButton}>
-          <Settings size={20} color="#FAFAFA" />
+        <TouchableOpacity
+          onPress={onOpenSettings}
+          hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}
+          style={styles.iconButton}
+        >
+          <Settings size={22} color="#FAFAFA" />
         </TouchableOpacity>
       </View>
     </View>
@@ -47,43 +63,49 @@ export function HeaderBar({
 
 const styles = StyleSheet.create({
   container: {
-    height: 52,
+    height: 56,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 18,
+    paddingHorizontal: 16,
     backgroundColor: "#09090B",
     zIndex: 30,
   },
   leftRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 12,
   },
   menuButton: {
-    padding: 6,
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: "center",
+    justifyContent: "center",
   },
   appName: {
     color: "#FAFAFA",
-    fontSize: 20,
+    fontSize: 21,
     fontWeight: "900",
     letterSpacing: -0.5,
   },
   rightRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 6,
   },
   iconButton: {
-    padding: 4,
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: "center",
+    justifyContent: "center",
     position: "relative",
   },
   badgeDot: {
     position: "absolute",
-    top: 2,
-    right: 2,
-    width: 7,
-    height: 7,
+    top: 6,
+    right: 6,
+    width: 8,
+    height: 8,
     borderRadius: 4,
     backgroundColor: "#EC4899",
   },

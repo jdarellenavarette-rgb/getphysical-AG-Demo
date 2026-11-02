@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView, Switch } from "react-native";
-import { ArrowLeft, Watch, Shield, Bell, Smartphone, CheckCircle2, Sliders } from "lucide-react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ArrowLeft, Watch, Shield, Smartphone, CheckCircle2 } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 
 interface SettingsModalProps {
@@ -9,6 +10,7 @@ interface SettingsModalProps {
 }
 
 export function SettingsModal({ visible, onClose }: SettingsModalProps) {
+  const insets = useSafeAreaInsets();
   const { profile } = useEcosystemStore();
   const [appleHealthSync, setAppleHealthSync] = useState(true);
   const [garminSync, setGarminSync] = useState(false);
@@ -18,14 +20,18 @@ export function SettingsModal({ visible, onClose }: SettingsModalProps) {
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View style={styles.container}>
-        {/* TOP BAR WITH EXPLICIT BACK BUTTON */}
-        <View style={styles.topBar}>
-          <TouchableOpacity onPress={onClose} style={styles.backBtn}>
-            <ArrowLeft size={18} color="#FAFAFA" />
+        {/* TOP BAR WITH SAFE NOTCH PADDING */}
+        <View style={[styles.topBar, { paddingTop: Math.max(insets.top, 50) + 10 }]}>
+          <TouchableOpacity
+            onPress={onClose}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            style={styles.backBtn}
+          >
+            <ArrowLeft size={20} color="#FAFAFA" />
             <Text style={styles.backBtnText}>Back</Text>
           </TouchableOpacity>
           <Text style={styles.headerTitle}>SETTINGS & HARDWARE</Text>
-          <View style={{ width: 40 }} />
+          <View style={{ width: 44 }} />
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
@@ -147,9 +153,9 @@ export function SettingsModal({ visible, onClose }: SettingsModalProps) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#09090B" },
-  topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingTop: 52, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: "#18181B" },
-  backBtn: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 4 },
-  backBtnText: { color: "#FAFAFA", fontSize: 13, fontWeight: "700" },
+  topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: "#18181B" },
+  backBtn: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 44, minWidth: 60, justifyContent: "center" },
+  backBtnText: { color: "#FAFAFA", fontSize: 14, fontWeight: "700" },
   headerTitle: { color: "#FAFAFA", fontSize: 13, fontWeight: "900", letterSpacing: 0.8 },
   scrollContent: { padding: 16 },
   card: { backgroundColor: "#121215", borderRadius: 14, padding: 14, marginBottom: 14, borderWidth: 1, borderColor: "#18181B" },

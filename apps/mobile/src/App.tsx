@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { View, StyleSheet, SafeAreaView, StatusBar, Modal, Text, TouchableOpacity } from "react-native";
+import { View, StyleSheet, StatusBar, Modal, Text, TouchableOpacity } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { HeaderBar } from "./components/common/HeaderBar";
 import { BottomBar, type MobileTab } from "./components/common/BottomBar";
 import { SodiaFeed } from "./components/sodia/SodiaFeed";
@@ -23,6 +24,7 @@ import { calculateHybridServiceFee } from "sodia-core";
 import { Shield } from "lucide-react-native";
 
 export default function App() {
+  const insets = useSafeAreaInsets();
   const [currentTab, setCurrentTab] = useState<MobileTab>("sodia");
   const [selectedFacilityCheckout, setSelectedFacilityCheckout] = useState<string | null>(null);
   const [isStoryViewerOpen, setIsStoryViewerOpen] = useState(false);
@@ -47,147 +49,145 @@ export default function App() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={[styles.screenContainer, { paddingTop: Math.max(insets.top, 48) }]}>
       <StatusBar barStyle="light-content" />
-      <View style={styles.screenContainer}>
-        {/* HEADER BAR */}
-        <HeaderBar
-          onOpenMenu={() => setIsMenuOpen(true)}
-          onOpenSettings={() => setIsSettingsOpen(true)}
-          onOpenActivity={() => setIsActivityOpen(true)}
-          onOpenInbox={() => setIsInboxOpen(true)}
-        />
 
-        {/* ACTIVE TAB CONTENT */}
-        <View style={styles.contentArea}>
-          {currentTab === "sodia" && (
-            <SodiaFeed
-              onPressFacilityCTA={(id) => setSelectedFacilityCheckout(id)}
-              onOpenCreatePost={() => setIsCreatePostOpen(true)}
-              onOpenStory={() => setIsStoryViewerOpen(true)}
-              onOpenComments={() => setIsCommentsOpen(true)}
-            />
-          )}
-          {currentTab === "discover" && (
-            <DiscoverView onSelectFacility={(fac) => setSelectedFacilityCheckout(fac.id)} />
-          )}
-          {currentTab === "cards" && (
-            <CardsHub onBrowseVenues={() => setCurrentTab("discover")} />
-          )}
-          {currentTab === "track" && <TrackHub />}
-          {currentTab === "profile" && (
-            <ProfileHub
-              onSwitchToBusinessMode={() => setIsStaffDashOpen(true)}
-              onSwitchToCoachDash={() => setIsCoachDashOpen(true)}
-            />
-          )}
-        </View>
+      {/* HEADER BAR */}
+      <HeaderBar
+        onOpenMenu={() => setIsMenuOpen(true)}
+        onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenActivity={() => setIsActivityOpen(true)}
+        onOpenInbox={() => setIsInboxOpen(true)}
+      />
 
-        {/* BOTTOM NAVIGATION */}
-        <BottomBar
-          currentTab={currentTab}
-          onSelectTab={setCurrentTab}
-          onPressCreate={() => setIsCreatePostOpen(true)}
-        />
+      {/* ACTIVE TAB CONTENT */}
+      <View style={styles.contentArea}>
+        {currentTab === "sodia" && (
+          <SodiaFeed
+            onPressFacilityCTA={(id) => setSelectedFacilityCheckout(id)}
+            onOpenCreatePost={() => setIsCreatePostOpen(true)}
+            onOpenStory={() => setIsStoryViewerOpen(true)}
+            onOpenComments={() => setIsCommentsOpen(true)}
+          />
+        )}
+        {currentTab === "discover" && (
+          <DiscoverView onSelectFacility={(fac) => setSelectedFacilityCheckout(fac.id)} />
+        )}
+        {currentTab === "cards" && (
+          <CardsHub onBrowseVenues={() => setCurrentTab("discover")} />
+        )}
+        {currentTab === "track" && <TrackHub />}
+        {currentTab === "profile" && (
+          <ProfileHub
+            onSwitchToBusinessMode={() => setIsStaffDashOpen(true)}
+            onSwitchToCoachDash={() => setIsCoachDashOpen(true)}
+          />
+        )}
+      </View>
 
-        {/* STORY VIEWER */}
-        <StoryViewerModal
-          visible={isStoryViewerOpen}
-          onClose={() => setIsStoryViewerOpen(false)}
-          onTapLocationTag={(facId) => {
-            setIsStoryViewerOpen(false);
-            setSelectedFacilityCheckout(facId);
-          }}
-        />
+      {/* BOTTOM NAVIGATION */}
+      <BottomBar
+        currentTab={currentTab}
+        onSelectTab={setCurrentTab}
+        onPressCreate={() => setIsCreatePostOpen(true)}
+      />
 
-        {/* COMMENTS BOTTOM SHEET */}
-        <CommentsBottomSheet visible={isCommentsOpen} onClose={() => setIsCommentsOpen(false)} />
+      {/* STORY VIEWER */}
+      <StoryViewerModal
+        visible={isStoryViewerOpen}
+        onClose={() => setIsStoryViewerOpen(false)}
+        onTapLocationTag={(facId) => {
+          setIsStoryViewerOpen(false);
+          setSelectedFacilityCheckout(facId);
+        }}
+      />
 
-        {/* CREATE POST MODAL */}
-        <CreatePostModal visible={isCreatePostOpen} onClose={() => setIsCreatePostOpen(false)} />
+      {/* COMMENTS BOTTOM SHEET */}
+      <CommentsBottomSheet visible={isCommentsOpen} onClose={() => setIsCommentsOpen(false)} />
 
-        {/* INBOX & DM CHAT MODAL */}
-        <Modal visible={isInboxOpen} animationType="slide" onRequestClose={() => setIsInboxOpen(false)}>
-          {activeChatThread ? (
-            <DMChatView thread={activeChatThread} onBack={() => setActiveChatThread(null)} />
-          ) : (
-            <InboxView onBack={() => setIsInboxOpen(false)} onSelectThread={(t) => setActiveChatThread(t)} />
-          )}
-        </Modal>
+      {/* CREATE POST MODAL */}
+      <CreatePostModal visible={isCreatePostOpen} onClose={() => setIsCreatePostOpen(false)} />
 
-        {/* NOTIFICATIONS & ACTIVITY MODAL */}
-        <Modal visible={isActivityOpen} animationType="slide" onRequestClose={() => setIsActivityOpen(false)}>
-          <ActivityView onBack={() => setIsActivityOpen(false)} />
-        </Modal>
+      {/* INBOX & DM CHAT MODAL */}
+      <Modal visible={isInboxOpen} animationType="slide" onRequestClose={() => setIsInboxOpen(false)}>
+        {activeChatThread ? (
+          <DMChatView thread={activeChatThread} onBack={() => setActiveChatThread(null)} />
+        ) : (
+          <InboxView onBack={() => setIsInboxOpen(false)} onSelectThread={(t) => setActiveChatThread(t)} />
+        )}
+      </Modal>
 
-        {/* NAVIGATION DRAWER & ROLE SWITCHER */}
-        <MenuDrawerModal
-          visible={isMenuOpen}
-          onClose={() => setIsMenuOpen(false)}
-          onOpenStaffDash={() => setIsStaffDashOpen(true)}
-          onOpenCoachDash={() => setIsCoachDashOpen(true)}
-          onOpenOrganizer={() => setIsOrganizerOpen(true)}
-          onOpenSettings={() => setIsSettingsOpen(true)}
-        />
+      {/* NOTIFICATIONS & ACTIVITY MODAL */}
+      <Modal visible={isActivityOpen} animationType="slide" onRequestClose={() => setIsActivityOpen(false)}>
+        <ActivityView onBack={() => setIsActivityOpen(false)} />
+      </Modal>
 
-        {/* SETTINGS MODAL */}
-        <SettingsModal visible={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      {/* NAVIGATION DRAWER & ROLE SWITCHER */}
+      <MenuDrawerModal
+        visible={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        onOpenStaffDash={() => setIsStaffDashOpen(true)}
+        onOpenCoachDash={() => setIsCoachDashOpen(true)}
+        onOpenOrganizer={() => setIsOrganizerOpen(true)}
+        onOpenSettings={() => setIsSettingsOpen(true)}
+      />
 
-        {/* BUSINESS ROLE MODALS */}
-        <StaffQuickdashModal visible={isStaffDashOpen} onClose={() => setIsStaffDashOpen(false)} />
-        <CoachQuickdashModal visible={isCoachDashOpen} onClose={() => setIsCoachDashOpen(false)} />
-        <OrganizerMeetModal visible={isOrganizerOpen} onClose={() => setIsOrganizerOpen(false)} />
+      {/* SETTINGS MODAL */}
+      <SettingsModal visible={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
 
-        {/* UNIVERSAL CHECKOUT BOTTOM SHEET */}
-        <Modal
-          visible={!!selectedFacilityCheckout}
-          transparent
-          animationType="slide"
-          onRequestClose={() => setSelectedFacilityCheckout(null)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.checkoutSheet}>
-              <View style={styles.sheetHeader}>
-                <Text style={styles.sheetTitle}>UNIVERSAL CHECKOUT</Text>
-                <TouchableOpacity onPress={() => setSelectedFacilityCheckout(null)}>
-                  <Text style={styles.closeBtn}>Close</Text>
-                </TouchableOpacity>
-              </View>
+      {/* BUSINESS ROLE MODALS */}
+      <StaffQuickdashModal visible={isStaffDashOpen} onClose={() => setIsStaffDashOpen(false)} />
+      <CoachQuickdashModal visible={isCoachDashOpen} onClose={() => setIsCoachDashOpen(false)} />
+      <OrganizerMeetModal visible={isOrganizerOpen} onClose={() => setIsOrganizerOpen(false)} />
 
-              <View style={styles.inventoryItem}>
-                <Text style={styles.invTitle}>Metro Core All-Access Day Pass</Text>
-                <Text style={styles.invPrice}>₱{fee.baseAmountPhp.toFixed(2)}</Text>
-              </View>
-
-              <View style={styles.feeBreakdown}>
-                <View style={styles.feeRow}>
-                  <Text style={styles.feeLabel}>Subtotal</Text>
-                  <Text style={styles.feeVal}>₱{fee.baseAmountPhp.toFixed(2)}</Text>
-                </View>
-                <View style={styles.feeRow}>
-                  <Text style={styles.feeLabel}>Service Fee (Hybrid Model)</Text>
-                  <Text style={styles.feeVal}>₱{fee.serviceFeePhp.toFixed(2)}</Text>
-                </View>
-                <View style={[styles.feeRow, styles.totalRow]}>
-                  <Text style={styles.totalLabel}>Total Charge</Text>
-                  <Text style={styles.totalVal}>₱{fee.totalChargePhp.toFixed(2)}</Text>
-                </View>
-              </View>
-
-              <TouchableOpacity onPress={handleCheckoutConfirm} style={styles.payButton}>
-                <Shield size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
-                <Text style={styles.payButtonText}>Confirm & Pay with Biometrics</Text>
+      {/* UNIVERSAL CHECKOUT BOTTOM SHEET */}
+      <Modal
+        visible={!!selectedFacilityCheckout}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setSelectedFacilityCheckout(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.checkoutSheet}>
+            <View style={styles.sheetHeader}>
+              <Text style={styles.sheetTitle}>UNIVERSAL CHECKOUT</Text>
+              <TouchableOpacity onPress={() => setSelectedFacilityCheckout(null)}>
+                <Text style={styles.closeBtn}>Close</Text>
               </TouchableOpacity>
             </View>
+
+            <View style={styles.inventoryItem}>
+              <Text style={styles.invTitle}>Metro Core All-Access Day Pass</Text>
+              <Text style={styles.invPrice}>₱{fee.baseAmountPhp.toFixed(2)}</Text>
+            </View>
+
+            <View style={styles.feeBreakdown}>
+              <View style={styles.feeRow}>
+                <Text style={styles.feeLabel}>Subtotal</Text>
+                <Text style={styles.feeVal}>₱{fee.baseAmountPhp.toFixed(2)}</Text>
+              </View>
+              <View style={styles.feeRow}>
+                <Text style={styles.feeLabel}>Service Fee (Hybrid Model)</Text>
+                <Text style={styles.feeVal}>₱{fee.serviceFeePhp.toFixed(2)}</Text>
+              </View>
+              <View style={[styles.feeRow, styles.totalRow]}>
+                <Text style={styles.totalLabel}>Total Charge</Text>
+                <Text style={styles.totalVal}>₱{fee.totalChargePhp.toFixed(2)}</Text>
+              </View>
+            </View>
+
+            <TouchableOpacity onPress={handleCheckoutConfirm} style={styles.payButton}>
+              <Shield size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+              <Text style={styles.payButtonText}>Confirm & Pay with Biometrics</Text>
+            </TouchableOpacity>
           </View>
-        </Modal>
-      </View>
-    </SafeAreaView>
+        </View>
+      </Modal>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#09090B" },
   screenContainer: { flex: 1, backgroundColor: "#09090B" },
   contentArea: { flex: 1 },
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.7)", justifyContent: "flex-end" },

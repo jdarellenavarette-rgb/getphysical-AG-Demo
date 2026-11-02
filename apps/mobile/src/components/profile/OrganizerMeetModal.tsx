@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Users, Clock, Trophy, CheckCircle2, Flame, Shield, ArrowLeft, Sparkles } from "lucide-react-native";
 import { REGISTRY_HARD_LIMITS } from "sodia-core";
 
@@ -19,6 +20,7 @@ const INITIAL_WAITLIST = [
 ];
 
 export function OrganizerMeetModal({ visible, onClose }: OrganizerMeetModalProps) {
+  const insets = useSafeAreaInsets();
   const [subTab, setSubTab] = useState<"roster" | "waitlist" | "courts">("roster");
   const [roster, setRoster] = useState<RosterPlayer[]>(INITIAL_ROSTER);
   const [waitlist, setWaitlist] = useState(INITIAL_WAITLIST);
@@ -30,10 +32,14 @@ export function OrganizerMeetModal({ visible, onClose }: OrganizerMeetModalProps
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View style={styles.container}>
-        {/* TOP HEADER */}
-        <View style={styles.topBar}>
-          <TouchableOpacity onPress={onClose} style={styles.backBtn}>
-            <ArrowLeft size={18} color="#FAFAFA" />
+        {/* TOP HEADER WITH SAFE NOTCH PADDING */}
+        <View style={[styles.topBar, { paddingTop: Math.max(insets.top, 50) + 10 }]}>
+          <TouchableOpacity
+            onPress={onClose}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            style={styles.backBtn}
+          >
+            <ArrowLeft size={20} color="#FAFAFA" />
             <Text style={styles.backText}>Profile</Text>
           </TouchableOpacity>
           <View style={styles.rolePill}>

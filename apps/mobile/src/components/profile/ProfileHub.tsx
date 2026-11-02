@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView } from "react-native";
-import { Award, Shield, Eye, Calendar, CheckCircle2, MessageSquare, UserPlus, ArrowLeft } from "lucide-react-native";
+import { Award, Shield, Eye, CheckCircle2, MessageSquare, UserPlus, ArrowLeft, Grid, Film } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { OrganizerMeetModal } from "./OrganizerMeetModal";
 
@@ -11,15 +11,30 @@ interface ProfileHubProps {
   onOpenMessages?: () => void;
 }
 
-export function ProfileHub({ onBack, onSwitchToBusinessMode, onSwitchToCoachDash, onOpenMessages }: ProfileHubProps) {
-  const { profile, passes, currentRole, setRole } = useEcosystemStore();
-  const [activeTab, setActiveTab] = useState<"trophy" | "locker">("trophy");
-  const [isOrganizerModalOpen, setIsOrganizerModalOpen] = useState(false);
+export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
+  const { profile, passes, posts } = useEcosystemStore();
+  const [activeTab, setActiveTab] = useState<"grid" | "trophy" | "locker">("grid");
   const [isFollowing, setIsFollowing] = useState(false);
+
+  const highlights = [
+    { id: "h1", title: "225kg PR", image: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=200&q=80" },
+    { id: "h2", title: "Hyrox '26", image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=200&q=80" },
+    { id: "h3", title: "Court Club", image: "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?auto=format&fit=crop&w=200&q=80" },
+    { id: "h4", title: "Nutrition", image: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=200&q=80" },
+  ];
+
+  const gridPhotos = [
+    "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=400&q=80",
+    "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=400&q=80",
+    "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?auto=format&fit=crop&w=400&q=80",
+    "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=400&q=80",
+    "https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=400&q=80",
+    "https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=400&q=80",
+  ];
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 110 }} showsVerticalScrollIndicator={false}>
-      {/* COVER & AVATAR WITH NIKE/META GRADE STYLING */}
+      {/* COVER & HEADER WITH RETURN PILL */}
       <View style={styles.coverContainer}>
         <Image source={{ uri: profile.cover_url ?? "" }} style={styles.coverPhoto} />
         <View style={styles.coverGradient} />
@@ -49,67 +64,66 @@ export function ProfileHub({ onBack, onSwitchToBusinessMode, onSwitchToCoachDash
           <Text style={styles.bioText}>{profile.bio}</Text>
         </View>
 
-        {/* PRO DUAL ACTION BUTTONS (INSPIRATION PHOTO 1: FOLLOW & MESSAGE) */}
+        {/* PRO DUAL ACTION BUTTONS */}
         <View style={styles.actionBtnRow}>
-          <TouchableOpacity
-            onPress={() => setIsFollowing(!isFollowing)}
-            style={[styles.primaryActionBtn, isFollowing && styles.followingActive]}
-          >
+          <TouchableOpacity onPress={() => setIsFollowing(!isFollowing)} style={[styles.primaryActionBtn, isFollowing && styles.followingActive]}>
             <UserPlus size={15} color="#FFFFFF" style={{ marginRight: 6 }} />
             <Text style={styles.primaryActionText}>{isFollowing ? "Following" : "Follow Athlete"}</Text>
           </TouchableOpacity>
-
           <TouchableOpacity onPress={onOpenMessages} style={styles.secondaryActionBtn}>
             <MessageSquare size={15} color="#FAFAFA" style={{ marginRight: 6 }} />
             <Text style={styles.secondaryActionText}>Message</Text>
           </TouchableOpacity>
         </View>
 
-        {/* STATS STRIP (PHOTO 1 / PHOTO 4) */}
+        {/* STATS STRIP */}
         <View style={styles.metricsRow}>
-          <View style={styles.metricItem}>
-            <Text style={styles.metricVal}>2.3k</Text>
-            <Text style={styles.metricLabel}>Followers</Text>
-          </View>
-          <View style={styles.metricItem}>
-            <Text style={styles.metricVal}>142</Text>
-            <Text style={styles.metricLabel}>Following</Text>
-          </View>
-          <View style={styles.metricItem}>
-            <Text style={styles.metricVal}>342</Text>
-            <Text style={styles.metricLabel}>Workouts</Text>
-          </View>
-          <View style={styles.metricItem}>
-            <Text style={styles.metricVal}>18</Text>
-            <Text style={styles.metricLabel}>PR Stamps</Text>
-          </View>
+          <View style={styles.metricItem}><Text style={styles.metricVal}>2.3k</Text><Text style={styles.metricLabel}>Followers</Text></View>
+          <View style={styles.metricItem}><Text style={styles.metricVal}>142</Text><Text style={styles.metricLabel}>Following</Text></View>
+          <View style={styles.metricItem}><Text style={styles.metricVal}>342</Text><Text style={styles.metricLabel}>Workouts</Text></View>
+          <View style={styles.metricItem}><Text style={styles.metricVal}>18</Text><Text style={styles.metricLabel}>PR Stamps</Text></View>
         </View>
 
-        {/* TABS */}
+        {/* INSTAGRAM-STYLE STORY HIGHLIGHTS TRAY */}
+        <View style={styles.highlightsTray}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.highlightsScroll}>
+            {highlights.map((h) => (
+              <View key={h.id} style={styles.highlightItem}>
+                <View style={styles.highlightRing}>
+                  <Image source={{ uri: h.image }} style={styles.highlightThumb} />
+                </View>
+                <Text numberOfLines={1} style={styles.highlightLabel}>{h.title}</Text>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* INSTAGRAM TABS (GRID / TROPHY CASE / LOCKER) */}
         <View style={styles.tabsHeader}>
-          <TouchableOpacity
-            onPress={() => setActiveTab("trophy")}
-            style={[styles.tabItem, activeTab === "trophy" && styles.tabItemActive]}
-          >
-            <Award size={15} color={activeTab === "trophy" ? "#E11D48" : "#71717A"} />
-            <Text style={[styles.tabText, activeTab === "trophy" && styles.tabTextActive]}>
-              Trophy Case
-            </Text>
+          <TouchableOpacity onPress={() => setActiveTab("grid")} style={[styles.tabItem, activeTab === "grid" && styles.tabItemActive]}>
+            <Grid size={16} color={activeTab === "grid" ? "#E11D48" : "#71717A"} />
           </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => setActiveTab("locker")}
-            style={[styles.tabItem, activeTab === "locker" && styles.tabItemActive]}
-          >
-            <Shield size={15} color={activeTab === "locker" ? "#E11D48" : "#71717A"} />
-            <Text style={[styles.tabText, activeTab === "locker" && styles.tabTextActive]}>
-              Locker ({passes.length})
-            </Text>
+          <TouchableOpacity onPress={() => setActiveTab("trophy")} style={[styles.tabItem, activeTab === "trophy" && styles.tabItemActive]}>
+            <Award size={16} color={activeTab === "trophy" ? "#E11D48" : "#71717A"} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setActiveTab("locker")} style={[styles.tabItem, activeTab === "locker" && styles.tabItemActive]}>
+            <Shield size={16} color={activeTab === "locker" ? "#E11D48" : "#71717A"} />
           </TouchableOpacity>
         </View>
 
-        {/* TROPHY CASE PR STAMPS */}
-        {activeTab === "trophy" ? (
+        {/* TAB CONTENT: 3-COLUMN INSTAGRAM GRID */}
+        {activeTab === "grid" && (
+          <View style={styles.photoGrid}>
+            {gridPhotos.map((photo, i) => (
+              <View key={i} style={styles.gridPhotoWrap}>
+                <Image source={{ uri: photo }} style={styles.gridPhoto} />
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* TAB CONTENT: TROPHY CASE */}
+        {activeTab === "trophy" && (
           <View style={styles.trophyGrid}>
             <View style={styles.stampCard}>
               <View style={styles.stampHeader}>
@@ -117,26 +131,24 @@ export function ProfileHub({ onBack, onSwitchToBusinessMode, onSwitchToCoachDash
                 <Eye size={13} color="#10B981" />
               </View>
               <Text style={styles.stampMetric}>225 KG</Text>
-              <Text style={styles.stampSub}>Conventional Deadlift 1RM</Text>
-              <Text style={styles.stampDate}>Metro Core Arena • Turnstile Validated</Text>
+              <Text style={styles.stampSub}>Conventional Deadlift 1RM • Metro Core Arena</Text>
             </View>
-
             <View style={styles.stampCard}>
               <View style={styles.stampHeader}>
                 <Text style={styles.stampType}>MOVE STAMP • GPS VERIFIED</Text>
                 <Eye size={13} color="#10B981" />
               </View>
               <Text style={styles.stampMetric}>21:45</Text>
-              <Text style={styles.stampSub}>5.00 km Outdoor Pace • 4:21 /km</Text>
-              <Text style={styles.stampDate}>BGC Track 30th • Strava Verified</Text>
+              <Text style={styles.stampSub}>5.00 km Outdoor Pace • BGC Track 30th</Text>
             </View>
           </View>
-        ) : (
+        )}
+
+        {/* TAB CONTENT: ATHLETE LOCKER */}
+        {activeTab === "locker" && (
           <View style={styles.lockerList}>
             {passes.length === 0 ? (
-              <View style={styles.emptyLocker}>
-                <Text style={styles.emptyLockerText}>No active passes in locker</Text>
-              </View>
+              <View style={styles.emptyLocker}><Text style={styles.emptyLockerText}>No active passes in locker</Text></View>
             ) : (
               passes.map((p) => (
                 <View key={p.id} style={styles.lockerRow}>
@@ -148,11 +160,6 @@ export function ProfileHub({ onBack, onSwitchToBusinessMode, onSwitchToCoachDash
           </View>
         )}
       </View>
-
-      <OrganizerMeetModal
-        visible={isOrganizerModalOpen}
-        onClose={() => setIsOrganizerModalOpen(false)}
-      />
     </ScrollView>
   );
 }
@@ -162,6 +169,8 @@ const styles = StyleSheet.create({
   coverContainer: { position: "relative", width: "100%", height: 130 },
   coverPhoto: { width: "100%", height: "100%" },
   coverGradient: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.4)" },
+  backButtonPill: { position: "absolute", top: 12, left: 16, flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "rgba(9, 9, 11, 0.75)", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: "#27272A" },
+  backButtonText: { color: "#FAFAFA", fontSize: 12, fontWeight: "700" },
   profileHeader: { paddingHorizontal: 16, marginTop: -40 },
   avatarRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end" },
   avatar: { width: 80, height: 80, borderRadius: 40, borderWidth: 3, borderColor: "#09090B" },
@@ -178,24 +187,28 @@ const styles = StyleSheet.create({
   primaryActionText: { color: "#FFFFFF", fontSize: 13, fontWeight: "800" },
   secondaryActionBtn: { flex: 1, backgroundColor: "#18181B", borderRadius: 12, paddingVertical: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "#27272A" },
   secondaryActionText: { color: "#FAFAFA", fontSize: 13, fontWeight: "800" },
-  backButtonPill: { position: "absolute", top: 12, left: 16, flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "rgba(9, 9, 11, 0.75)", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: "#27272A" },
-  backButtonText: { color: "#FAFAFA", fontSize: 12, fontWeight: "700" },
   metricsRow: { flexDirection: "row", justifyContent: "space-around", backgroundColor: "#121215", borderRadius: 14, paddingVertical: 14, marginTop: 16, borderWidth: 1, borderColor: "#18181B" },
   metricItem: { alignItems: "center" },
   metricVal: { color: "#FAFAFA", fontSize: 18, fontWeight: "900" },
   metricLabel: { color: "#71717A", fontSize: 10, fontWeight: "700", marginTop: 2 },
-  tabsHeader: { flexDirection: "row", borderBottomWidth: 1, borderBottomColor: "#18181B", marginTop: 20 },
-  tabItem: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 12 },
+  highlightsTray: { marginVertical: 16 },
+  highlightsScroll: { gap: 14 },
+  highlightItem: { alignItems: "center", width: 64 },
+  highlightRing: { width: 58, height: 58, borderRadius: 29, borderWidth: 1.5, borderColor: "#3F3F46", padding: 2 },
+  highlightThumb: { width: "100%", height: "100%", borderRadius: 27 },
+  highlightLabel: { color: "#A1A1AA", fontSize: 10, fontWeight: "600", marginTop: 4, textAlign: "center" },
+  tabsHeader: { flexDirection: "row", borderBottomWidth: 1, borderBottomColor: "#18181B", marginTop: 4 },
+  tabItem: { flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 12 },
   tabItemActive: { borderBottomWidth: 2, borderBottomColor: "#E11D48" },
-  tabText: { color: "#71717A", fontSize: 12, fontWeight: "700" },
-  tabTextActive: { color: "#FAFAFA" },
+  photoGrid: { flexDirection: "row", flexWrap: "wrap", gap: 2, marginTop: 10 },
+  gridPhotoWrap: { width: "32.7%", aspectRatio: 1, backgroundColor: "#141418" },
+  gridPhoto: { width: "100%", height: "100%" },
   trophyGrid: { marginTop: 14, gap: 10 },
   stampCard: { backgroundColor: "#121215", borderRadius: 14, padding: 14, borderWidth: 1, borderColor: "#27272A" },
   stampHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   stampType: { color: "#10B981", fontSize: 10, fontWeight: "800", letterSpacing: 0.5 },
   stampMetric: { color: "#FAFAFA", fontSize: 24, fontWeight: "900", marginTop: 6 },
   stampSub: { color: "#A1A1AA", fontSize: 12, marginTop: 2 },
-  stampDate: { color: "#71717A", fontSize: 10, marginTop: 4 },
   lockerList: { marginTop: 14, gap: 8 },
   emptyLocker: { padding: 24, alignItems: "center" },
   emptyLockerText: { color: "#71717A", fontSize: 13 },

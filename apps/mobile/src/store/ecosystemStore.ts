@@ -19,6 +19,7 @@ export interface MobileEcosystemState {
   passes: readonly PassRow[];
   posts: readonly SodiaPostRow[];
   challenges: readonly PRChallengeRow[];
+  userStory: { image: string; text?: string; createdAt: string } | null;
   isOffline: boolean;
   activeWorkout: {
     title: string;
@@ -32,7 +33,8 @@ export interface MobileEcosystemState {
   startRestTimer: (seconds?: number) => void;
   adjustRestTimer: (deltaSeconds: number) => void;
   stopRestTimer: () => void;
-  addPost: (content: string, facilityId?: string, stamp?: SodiaPostRow["stamp"]) => void;
+  addPost: (content: string, facilityId?: string, stamp?: SodiaPostRow["stamp"], mediaUrl?: string | null) => void;
+  addUserStory: (image: string, text?: string) => void;
   provisionPass: (
     facilityName: string,
     kind: "one_time_pass" | "recurring_subscription",
@@ -83,6 +85,7 @@ export const useEcosystemStore = create<MobileEcosystemState>((set) => ({
   passes: [],
   posts: [],
   challenges: [],
+  userStory: null,
   isOffline: false,
   activeWorkout: {
     title: "",
@@ -155,7 +158,7 @@ export const useEcosystemStore = create<MobileEcosystemState>((set) => ({
       return { passes: [newPass, ...state.passes] };
     }),
 
-  addPost: (content, facilityId, stamp) =>
+  addPost: (content, facilityId, stamp, mediaUrl) =>
     set((state) => {
       const facility = state.facilities.find((f) => f.id === facilityId);
       const newPost: SodiaPostRow = {
@@ -165,7 +168,7 @@ export const useEcosystemStore = create<MobileEcosystemState>((set) => ({
         author_avatar: state.profile.avatar_url,
         author_role: state.currentRole,
         content,
-        media_url: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80",
+        media_url: mediaUrl === undefined ? "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80" : mediaUrl,
         likes_count: 0,
         comments_count: 0,
         facility_tag: facility
@@ -181,6 +184,15 @@ export const useEcosystemStore = create<MobileEcosystemState>((set) => ({
         created_at: new Date().toISOString(),
       };
       return { posts: [newPost, ...state.posts] };
+    }),
+
+  addUserStory: (image, text) =>
+    set({
+      userStory: {
+        image,
+        text,
+        createdAt: new Date().toISOString(),
+      },
     }),
 
   // Helpers to test transitions between Empty and Seeded States

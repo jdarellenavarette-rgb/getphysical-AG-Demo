@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Search, Edit3, ArrowLeft, Users, Flame, Briefcase } from "lucide-react-native";
+import { Search, Edit3, ArrowLeft, Camera, Plus } from "lucide-react-native";
 
 export interface DMThread {
   id: string;
@@ -24,6 +24,13 @@ export function InboxView({ onBack, onSelectThread }: InboxViewProps) {
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<"primary" | "requests">("primary");
   const [searchQuery, setSearchQuery] = useState("");
+
+  const athleteNotes = [
+    { id: "note_me", name: "Your note", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80", note: "Heading to BGC 🏋️", isMe: true },
+    { id: "note_1", name: "Miguel", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80", note: "At Metro Core till 8pm 🔥" },
+    { id: "note_2", name: "Alex", avatar: "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?auto=format&fit=crop&w=200&q=80", note: "Clay prep 🎾" },
+    { id: "note_3", name: "Sarah", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80", note: "Leg day crushed 💪" },
+  ];
 
   const threads: DMThread[] = [
     {
@@ -73,13 +80,9 @@ export function InboxView({ onBack, onSelectThread }: InboxViewProps) {
 
   return (
     <View style={styles.container}>
-      {/* HEADER WITH SAFE NOTCH INSET */}
+      {/* HEADER */}
       <View style={[styles.header, { paddingTop: Math.max(insets.top, 50) + 6, height: Math.max(insets.top, 50) + 54 }]}>
-        <TouchableOpacity
-          onPress={onBack}
-          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          style={styles.backBtn}
-        >
+        <TouchableOpacity onPress={onBack} style={styles.backBtn}>
           <ArrowLeft size={22} color="#FAFAFA" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Messages</Text>
@@ -88,9 +91,9 @@ export function InboxView({ onBack, onSelectThread }: InboxViewProps) {
         </TouchableOpacity>
       </View>
 
-      {/* SEARCH */}
+      {/* SEARCH BOX */}
       <View style={styles.searchBox}>
-        <Search size={16} color="#71717A" />
+        <Search size={15} color="#71717A" />
         <TextInput
           style={styles.searchInput}
           placeholder="Search messages..."
@@ -100,35 +103,42 @@ export function InboxView({ onBack, onSelectThread }: InboxViewProps) {
         />
       </View>
 
-      {/* SEGMENTED TABS */}
-      <View style={styles.tabRow}>
-        <TouchableOpacity
-          onPress={() => setActiveTab("primary")}
-          style={[styles.tabPill, activeTab === "primary" && styles.tabPillActive]}
-        >
-          <Text style={[styles.tabText, activeTab === "primary" && styles.tabTextActive]}>
-            Primary
-          </Text>
-        </TouchableOpacity>
+      {/* INSTAGRAM DIRECT NOTES / ACTIVE TRAY */}
+      <View style={styles.notesTray}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.notesScroll}>
+          {athleteNotes.map((n) => (
+            <View key={n.id} style={styles.noteItem}>
+              <View style={styles.bubbleCloud}>
+                <Text numberOfLines={1} style={styles.bubbleCloudText}>{n.note}</Text>
+              </View>
+              <View style={styles.noteAvatarWrap}>
+                <Image source={{ uri: n.avatar }} style={styles.noteAvatar} />
+                {n.isMe && (
+                  <View style={styles.noteAddPill}>
+                    <Plus size={10} color="#FFFFFF" strokeWidth={3} />
+                  </View>
+                )}
+              </View>
+              <Text numberOfLines={1} style={styles.noteName}>{n.name}</Text>
+            </View>
+          ))}
+        </ScrollView>
+      </View>
 
-        <TouchableOpacity
-          onPress={() => setActiveTab("requests")}
-          style={[styles.tabPill, activeTab === "requests" && styles.tabPillActive]}
-        >
-          <Text style={[styles.tabText, activeTab === "requests" && styles.tabTextActive]}>
-            Requests (2)
-          </Text>
+      {/* TABS */}
+      <View style={styles.tabRow}>
+        <TouchableOpacity onPress={() => setActiveTab("primary")} style={[styles.tabPill, activeTab === "primary" && styles.tabPillActive]}>
+          <Text style={[styles.tabText, activeTab === "primary" && styles.tabTextActive]}>Primary</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => setActiveTab("requests")} style={[styles.tabPill, activeTab === "requests" && styles.tabPillActive]}>
+          <Text style={[styles.tabText, activeTab === "requests" && styles.tabTextActive]}>Requests (2)</Text>
         </TouchableOpacity>
       </View>
 
       {/* THREADS LIST */}
       <ScrollView style={styles.threadList} showsVerticalScrollIndicator={false}>
         {threads.map((t) => (
-          <TouchableOpacity
-            key={t.id}
-            onPress={() => onSelectThread(t)}
-            style={styles.threadItem}
-          >
+          <TouchableOpacity key={t.id} onPress={() => onSelectThread(t)} style={styles.threadItem}>
             <View style={styles.avatarContainer}>
               <Image source={{ uri: t.avatar }} style={styles.avatar} />
               {t.isOnline && <View style={styles.onlineBadge} />}
@@ -144,16 +154,14 @@ export function InboxView({ onBack, onSelectThread }: InboxViewProps) {
                 )}
                 <Text style={styles.threadTime}>{t.timeAgo}</Text>
               </View>
-
               <View style={styles.snippetRow}>
-                <Text
-                  numberOfLines={1}
-                  style={[styles.lastMessage, t.unreadCount > 0 && styles.lastMessageUnread]}
-                >
+                <Text numberOfLines={1} style={[styles.lastMessage, t.unreadCount > 0 && styles.lastMessageUnread]}>
                   {t.lastMessage}
                 </Text>
-                {t.unreadCount > 0 && (
+                {t.unreadCount > 0 ? (
                   <View style={styles.unreadDot} />
+                ) : (
+                  <Camera size={16} color="#71717A" />
                 )}
               </View>
             </View>
@@ -170,14 +178,23 @@ const styles = StyleSheet.create({
   backBtn: { minWidth: 44, minHeight: 44, justifyContent: "center", alignItems: "center" },
   headerTitle: { color: "#FAFAFA", fontSize: 16, fontWeight: "800" },
   newMsgBtn: { padding: 4 },
-  searchBox: { flexDirection: "row", alignItems: "center", backgroundColor: "#18181B", borderRadius: 10, marginHorizontal: 16, marginTop: 12, paddingHorizontal: 12, height: 38, gap: 8 },
+  searchBox: { flexDirection: "row", alignItems: "center", backgroundColor: "#141418", borderRadius: 10, marginHorizontal: 16, marginTop: 10, paddingHorizontal: 12, height: 38, gap: 8, borderWidth: 1, borderColor: "#27272A" },
   searchInput: { flex: 1, color: "#FAFAFA", fontSize: 13 },
-  tabRow: { flexDirection: "row", paddingHorizontal: 16, marginTop: 12, borderBottomWidth: 1, borderBottomColor: "#18181B", gap: 16 },
+  notesTray: { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#18181B" },
+  notesScroll: { paddingHorizontal: 16, gap: 14 },
+  noteItem: { alignItems: "center", width: 72 },
+  bubbleCloud: { backgroundColor: "#27272A", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, marginBottom: 4, maxWidth: 74 },
+  bubbleCloudText: { color: "#FAFAFA", fontSize: 9, fontWeight: "600", textAlign: "center" },
+  noteAvatarWrap: { position: "relative", width: 50, height: 50 },
+  noteAvatar: { width: "100%", height: "100%", borderRadius: 25 },
+  noteAddPill: { position: "absolute", bottom: 0, right: 0, width: 18, height: 18, borderRadius: 9, backgroundColor: "#E11D48", alignItems: "center", justifyContent: "center", borderWidth: 1.5, borderColor: "#09090B" },
+  noteName: { color: "#A1A1AA", fontSize: 10, fontWeight: "600", marginTop: 4, textAlign: "center" },
+  tabRow: { flexDirection: "row", paddingHorizontal: 16, marginTop: 10, borderBottomWidth: 1, borderBottomColor: "#18181B", gap: 16 },
   tabPill: { paddingBottom: 10 },
   tabPillActive: { borderBottomWidth: 2, borderBottomColor: "#E11D48" },
   tabText: { color: "#71717A", fontSize: 13, fontWeight: "600" },
   tabTextActive: { color: "#FAFAFA", fontWeight: "700" },
-  threadList: { flex: 1, paddingHorizontal: 16, paddingTop: 8 },
+  threadList: { flex: 1, paddingHorizontal: 16, paddingTop: 4 },
   threadItem: { flexDirection: "row", alignItems: "center", paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#121215" },
   avatarContainer: { position: "relative" },
   avatar: { width: 50, height: 50, borderRadius: 25 },

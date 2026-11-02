@@ -32,6 +32,7 @@ export function ActivityView({ onBack, onNavigateToLift }: ActivityViewProps) {
       text: "liked your post with Metro Core Arena tag.",
       time: "2h ago",
       section: "Today",
+      postThumb: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=200&q=80",
     },
     {
       id: "act_3",
@@ -119,6 +120,10 @@ export function ActivityView({ onBack, onNavigateToLift }: ActivityViewProps) {
                   </Text>
                 </TouchableOpacity>
               )}
+
+              {a.postThumb && (
+                <Image source={{ uri: a.postThumb }} style={styles.postThumb} />
+              )}
             </View>
           ))}
 
@@ -176,4 +181,5 @@ const styles = StyleSheet.create({
   viewChallengeText: { color: "#FFFFFF", fontSize: 11, fontWeight: "700" },
   followBackBtn: { backgroundColor: "#27272A", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, marginLeft: 8 },
   followBackText: { color: "#FAFAFA", fontSize: 11, fontWeight: "700" },
+  postThumb: { width: 44, height: 44, borderRadius: 8, marginLeft: 8 },
 });

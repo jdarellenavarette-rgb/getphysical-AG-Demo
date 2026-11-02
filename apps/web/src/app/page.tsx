@@ -5,12 +5,14 @@ import { DailyDash } from '../components/daily-dash/DailyDash';
 import { SpatialCalendar } from '../components/clubdash/SpatialCalendar';
 import { TriageDashboard } from '../components/dashboard/TriageDashboard';
 import { FloatGateModal, ShiftSession } from '../components/daily-dash/FloatGateModal';
-import { UnifiedPhoneApp } from '../components/figma/UnifiedPhoneApp';
+import { SodiaMobileApp } from '../components/mobile-app/SodiaMobileApp';
 import { UIStateKind } from 'sodia-core';
-import { Building2, ShieldCheck, Activity, Calendar, Lock, Unlock, AlertTriangle, WifiOff, RefreshCw, Smartphone } from 'lucide-react';
+import { Building2, ShieldCheck, Activity, Calendar, Lock, Unlock, Smartphone, Monitor } from 'lucide-react';
 
-export default function GymDashWebOSPage() {
-  const [activeTab, setActiveTab] = useState<'PHONE_APP' | 'DAILY_DASH' | 'SPATIAL' | 'TRIAGE'>('PHONE_APP');
+export default function AppRootPage() {
+  const [platformView, setPlatformView] = useState<'MOBILE_APP' | 'DESKTOP_SUITE'>('MOBILE_APP');
+  const [desktopTab, setDesktopTab] = useState<'DAILY_DASH' | 'SPATIAL' | 'TRIAGE'>('DAILY_DASH');
+  
   const [shift, setShift] = useState<ShiftSession | null>({
     staffId: 'st_882',
     staffName: 'Jane D. (Manager)',
@@ -36,14 +38,46 @@ export default function GymDashWebOSPage() {
   };
 
   const handleCloseShift = (countedCash: number) => {
-    const expected = (shift?.openingFloat || 2500) + 820; // ₱820 in cash sales
+    const expected = (shift?.openingFloat || 2500) + 820;
     const variance = countedCash - expected;
     setShift((prev) => (prev ? { ...prev, isOpen: false } : null));
     return { variance, flagged: Math.abs(variance) > 0 };
   };
 
+  // If in Member Mobile App Mode:
+  if (platformView === 'MOBILE_APP') {
+    return (
+      <div style={{ minHeight: '100vh', backgroundColor: '#09090b', color: '#fff', display: 'flex', flexDirection: 'column' }}>
+        {/* Subtle Platform Bar (Only visible on wide desktop viewports to toggle suites) */}
+        <div style={{ backgroundColor: '#111827', borderBottom: '1px solid #1f2937', padding: '6px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px' }}>
+            <span style={{ fontWeight: 800, color: '#ec4899' }}>GetPhysical</span>
+            <span style={{ color: '#6b7280' }}>•</span>
+            <span style={{ color: '#9ca3af' }}>Member Mobile Experience (No frames)</span>
+          </div>
+          <button
+            onClick={() => setPlatformView('DESKTOP_SUITE')}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#1f2937',
+              color: '#38bdf8', border: '1px solid #374151', padding: '4px 10px', borderRadius: '6px',
+              fontSize: '11px', fontWeight: 700, cursor: 'pointer'
+            }}
+          >
+            <Monitor size={13} /> Switch to Desktop Business Suite (GymDash/Clubdash)
+          </button>
+        </div>
+
+        {/* Clean Native Mobile App Container (Edge-to-edge on phone screens, centered on desktop) */}
+        <div style={{ flex: 1, display: 'flex', justifyContent: 'center', backgroundColor: '#09090b' }}>
+          <SodiaMobileApp onOpenDesktopSuite={() => setPlatformView('DESKTOP_SUITE')} />
+        </div>
+      </div>
+    );
+  }
+
+  // If in Desktop Business Suite Mode (GymDash & Clubdash):
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: '#0b0f17' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#0b0f17' }}>
       {/* Top B2B Operational Header */}
       <header style={{
         height: '64px', backgroundColor: '#111827', borderBottom: '1px solid #1f2937',
@@ -57,7 +91,7 @@ export default function GymDashWebOSPage() {
             </div>
             <div>
               <div style={{ fontSize: '15px', fontWeight: 800, color: '#f9fafb', letterSpacing: '-0.2px' }}>GymDash & Clubdash Web OS</div>
-              <div style={{ fontSize: '11px', color: '#6b7280' }}>Registry A/B Multi-Tenant Operator</div>
+              <div style={{ fontSize: '11px', color: '#6b7280' }}>Desktop Business Suite • Registry A/B</div>
             </div>
           </div>
           <div style={{ height: '24px', width: '1px', backgroundColor: '#374151' }} />
@@ -67,69 +101,56 @@ export default function GymDashWebOSPage() {
           </div>
         </div>
 
-        {/* View Switchers */}
+        {/* Desktop Suite Switchers */}
         <div style={{ display: 'flex', backgroundColor: '#1f2937', padding: '3px', borderRadius: '8px' }}>
           <button
-            onClick={() => setActiveTab('PHONE_APP')}
+            onClick={() => setDesktopTab('DAILY_DASH')}
             style={{
               padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: 700,
-              backgroundColor: activeTab === 'PHONE_APP' ? '#ec4899' : 'transparent',
-              color: activeTab === 'PHONE_APP' ? '#fff' : '#9ca3af', display: 'flex', alignItems: 'center', gap: '6px'
+              backgroundColor: desktopTab === 'DAILY_DASH' ? '#3b82f6' : 'transparent',
+              color: desktopTab === 'DAILY_DASH' ? '#fff' : '#9ca3af', display: 'flex', alignItems: 'center', gap: '6px',
+              border: 'none', cursor: 'pointer'
             }}
           >
-            <Smartphone size={14} /> Sodia Mobile App (Figma)
+            <Activity size={14} /> Daily Dash (Turnstiles & POS)
           </button>
           <button
-            onClick={() => setActiveTab('DAILY_DASH')}
+            onClick={() => setDesktopTab('SPATIAL')}
             style={{
               padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: 700,
-              backgroundColor: activeTab === 'DAILY_DASH' ? '#3b82f6' : 'transparent',
-              color: activeTab === 'DAILY_DASH' ? '#fff' : '#9ca3af', display: 'flex', alignItems: 'center', gap: '6px'
-            }}
-          >
-            <Activity size={14} /> GymDash Daily Dash
-          </button>
-          <button
-            onClick={() => setActiveTab('SPATIAL')}
-            style={{
-              padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: 700,
-              backgroundColor: activeTab === 'SPATIAL' ? '#3b82f6' : 'transparent',
-              color: activeTab === 'SPATIAL' ? '#fff' : '#9ca3af', display: 'flex', alignItems: 'center', gap: '6px'
+              backgroundColor: desktopTab === 'SPATIAL' ? '#3b82f6' : 'transparent',
+              color: desktopTab === 'SPATIAL' ? '#fff' : '#9ca3af', display: 'flex', alignItems: 'center', gap: '6px',
+              border: 'none', cursor: 'pointer'
             }}
           >
             <Calendar size={14} /> Clubdash Spatial Engine
           </button>
           <button
-            onClick={() => setActiveTab('TRIAGE')}
+            onClick={() => setDesktopTab('TRIAGE')}
             style={{
               padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: 700,
-              backgroundColor: activeTab === 'TRIAGE' ? '#3b82f6' : 'transparent',
-              color: activeTab === 'TRIAGE' ? '#fff' : '#9ca3af', display: 'flex', alignItems: 'center', gap: '6px'
+              backgroundColor: desktopTab === 'TRIAGE' ? '#3b82f6' : 'transparent',
+              color: desktopTab === 'TRIAGE' ? '#fff' : '#9ca3af', display: 'flex', alignItems: 'center', gap: '6px',
+              border: 'none', cursor: 'pointer'
             }}
           >
             <ShieldCheck size={14} /> Manager Triage & CRM
           </button>
         </div>
 
-        {/* Shift Float Gate & 10-State Simulator */}
+        {/* Right Actions: Return to Member App & Shift Float Gate */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {/* 10 State Selector */}
-          <select
-            value={demoState}
-            onChange={(e) => setDemoState(e.target.value as UIStateKind)}
+          <button
+            onClick={() => setPlatformView('MOBILE_APP')}
             style={{
-              backgroundColor: '#1f2937', color: '#e5e7eb', border: '1px solid #374151',
-              borderRadius: '6px', padding: '5px 10px', fontSize: '11px', fontWeight: 600
+              backgroundColor: '#ec489920', border: '1px solid #ec489950', color: '#ec4899',
+              padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 800,
+              display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer'
             }}
           >
-            <option value="success">State: 10/10 Success</option>
-            <option value="slow_network">State: Slow Network</option>
-            <option value="no_internet">State: Offline Gate</option>
-            <option value="session_expired">State: Session Expired</option>
-            <option value="permission_denied">State: Role Denied</option>
-          </select>
+            <Smartphone size={14} /> Member Mobile App
+          </button>
 
-          {/* Shift Float Trigger */}
           <button
             onClick={() => setShowFloatModal(true)}
             style={{
@@ -137,7 +158,7 @@ export default function GymDashWebOSPage() {
               border: `1px solid ${shift?.isOpen ? '#10b98150' : '#ef444450'}`,
               color: shift?.isOpen ? '#34d399' : '#f87171',
               padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 700,
-              display: 'flex', alignItems: 'center', gap: '6px'
+              display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer'
             }}
           >
             {shift?.isOpen ? <Unlock size={14} /> : <Lock size={14} />}
@@ -146,32 +167,14 @@ export default function GymDashWebOSPage() {
         </div>
       </header>
 
-      {/* 10-State Overlay Banners */}
-      {demoState === 'slow_network' && (
-        <div style={{ backgroundColor: '#f59e0b', color: '#000', padding: '8px 24px', fontSize: '12px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <RefreshCw size={14} className="animate-spin" /> High latency detected (&gt;1500ms). Turnstile falling back to local optimistic gate cache.
-        </div>
-      )}
-      {demoState === 'no_internet' && (
-        <div style={{ backgroundColor: '#ef4444', color: '#fff', padding: '8px 24px', fontSize: '12px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <WifiOff size={14} /> Offline Mode Active. Turnstiles operating on 60-second TOTP dynamic token matches against local SQLite shift roster.
-        </div>
-      )}
-      {demoState === 'permission_denied' && (
-        <div style={{ backgroundColor: '#991b1b', color: '#fee2e2', padding: '8px 24px', fontSize: '12px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <AlertTriangle size={14} /> Permission Denied: Only Manager role (RLS) may execute blind cash reconciliations or manual gate overrides.
-        </div>
-      )}
-
-      {/* Main Workspace Body */}
+      {/* Main Desktop Business Body */}
       <main style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
-        {activeTab === 'PHONE_APP' && <UnifiedPhoneApp />}
-        {activeTab === 'DAILY_DASH' && <DailyDash />}
-        {activeTab === 'SPATIAL' && <SpatialCalendar />}
-        {activeTab === 'TRIAGE' && <TriageDashboard />}
+        {desktopTab === 'DAILY_DASH' && <DailyDash />}
+        {desktopTab === 'SPATIAL' && <SpatialCalendar />}
+        {desktopTab === 'TRIAGE' && <TriageDashboard />}
       </main>
 
-      {/* Register Float Modal */}
+      {/* Float Gate Modal */}
       {showFloatModal && (
         <FloatGateModal
           currentShift={shift}

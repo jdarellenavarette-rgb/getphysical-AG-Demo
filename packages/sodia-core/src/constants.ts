@@ -71,3 +71,13 @@ export function calculateHybridServiceFee(
     totalChargePhp: Math.round((sanitizedBase + serviceFeePhp) * 100) / 100,
   };
 }
+
+/**
+ * Deterministic Epley 1RM Formula: Weight * (1 + Reps / 30)
+ */
+export function calculateEpleyOneRepMax(weightKg: number, reps: number): number {
+  if (reps <= 0) return 0;
+  if (reps === 1) return weightKg;
+  return Math.round(weightKg * (1 + reps / 30));
+}
+

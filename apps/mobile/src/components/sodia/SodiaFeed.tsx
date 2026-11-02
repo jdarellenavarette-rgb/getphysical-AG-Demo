@@ -100,8 +100,8 @@ export function SodiaFeed({ onOpenComments }: SodiaFeedProps) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#000000", position: "relative" },
-  fullscreenImage: { ...StyleSheet.absoluteFillObject, width: "100%", height: "100%" },
-  darkGradient: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.35)" },
+  fullscreenImage: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%" },
+  darkGradient: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.35)" },
   rightActionRail: { position: "absolute", right: 14, bottom: 90, alignItems: "center", gap: 16, zIndex: 30 },
   actionButton: { alignItems: "center", gap: 2 },
   actionLabel: { fontSize: 11, fontWeight: "700", color: "#FFFFFF", textShadowColor: "rgba(0,0,0,0.8)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 },

@@ -22,6 +22,7 @@ import { OrganizerMeetModal } from "./components/profile/OrganizerMeetModal";
 import { useEcosystemStore } from "./store/ecosystemStore";
 import { calculateHybridServiceFee } from "sodia-core";
 import { Shield } from "lucide-react-native";
+import { OpeningLoadingScreen } from "./components/common/OpeningLoadingScreen";
 
 export default function App() {
   const insets = useSafeAreaInsets();
@@ -38,6 +39,7 @@ export default function App() {
   const [isStaffDashOpen, setIsStaffDashOpen] = useState(false);
   const [isCoachDashOpen, setIsCoachDashOpen] = useState(false);
   const [isOrganizerOpen, setIsOrganizerOpen] = useState(false);
+  const [isOpeningLoading, setIsOpeningLoading] = useState(true);
 
   const { provisionPass } = useEcosystemStore();
   const fee = calculateHybridServiceFee(250, "one_time_pass");
@@ -51,6 +53,11 @@ export default function App() {
   return (
     <View style={[styles.screenContainer, { paddingTop: Math.max(insets.top, 48) }]}>
       <StatusBar barStyle="light-content" />
+
+      {/* OPENING LOADING SCREEN */}
+      {isOpeningLoading && (
+        <OpeningLoadingScreen onFinish={() => setIsOpeningLoading(false)} />
+      )}
 
       {/* HEADER BAR */}
       <HeaderBar

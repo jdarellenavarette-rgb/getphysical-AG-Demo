@@ -1,32 +1,38 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { MapPin, Navigation, Dumbbell, Award, UserCheck, Flame } from "lucide-react-native";
+import { Navigation, UserCheck, Award } from "lucide-react-native";
 import type { FacilityRow } from "sodia-core";
 
 interface DiscoverMapCanvasProps {
   facilities: readonly FacilityRow[];
   selectedId: string | null;
   onSelectPin: (id: string) => void;
+  onSelectCoach?: () => void;
+  onSelectMeet?: () => void;
 }
 
-export function DiscoverMapCanvas({ facilities, selectedId, onSelectPin }: DiscoverMapCanvasProps) {
-  // Coords mapped across the dark radar canvas
-  const pinPositions: Record<string, { left: number; top: number; type: "gym" | "court" | "coach" | "meet" }> = {
-    fac_metro_core: { left: 55, top: 38, type: "gym" },
-    fac_nexus_club: { left: 22, top: 62, type: "court" },
-    fac_iron_forge: { left: 75, top: 68, type: "gym" },
+export function DiscoverMapCanvas({
+  facilities,
+  selectedId,
+  onSelectPin,
+  onSelectCoach,
+  onSelectMeet,
+}: DiscoverMapCanvasProps) {
+  const pinPositions: Record<string, { left: number; top: number }> = {
+    fac_metro_core: { left: 55, top: 38 },
+    fac_nexus_club: { left: 22, top: 62 },
+    fac_iron_forge: { left: 75, top: 68 },
   };
 
   return (
     <View style={styles.mapContainer}>
-      {/* MAP GRID LINES & RADAR ACCENT */}
       <View style={styles.gridLineHorizontal1} />
       <View style={styles.gridLineHorizontal2} />
       <View style={styles.gridLineVertical1} />
       <View style={styles.gridLineVertical2} />
       <View style={styles.radarRing} />
 
-      {/* USER GPS POSITION (GRAB-STYLE PULSE DOT) */}
+      {/* USER GPS POSITION */}
       <View style={styles.userPinContainer}>
         <View style={styles.userPulseRing} />
         <View style={styles.userDot} />
@@ -37,23 +43,17 @@ export function DiscoverMapCanvas({ facilities, selectedId, onSelectPin }: Disco
 
       {/* VENUE PINS */}
       {facilities.map((fac) => {
-        const pos = pinPositions[fac.id] ?? { left: 50, top: 50, type: "gym" };
+        const pos = pinPositions[fac.id] ?? { left: 50, top: 50 };
         const isSelected = selectedId === fac.id;
 
         return (
           <TouchableOpacity
             key={fac.id}
             onPress={() => onSelectPin(fac.id)}
-            style={[
-              styles.pinContainer,
-              { left: `${pos.left}%`, top: `${pos.top}%` },
-              isSelected && styles.pinContainerSelected,
-            ]}
+            style={[styles.pinContainer, { left: `${pos.left}%`, top: `${pos.top}%` }, isSelected && styles.pinContainerSelected]}
           >
             <View style={[styles.pinBubble, isSelected && styles.pinBubbleSelected]}>
-              <Text style={styles.pinPrice}>
-                ₱{fac.day_pass_price_php ?? fac.court_hourly_price_php}
-              </Text>
+              <Text style={styles.pinPrice}>₱{fac.day_pass_price_php ?? fac.court_hourly_price_php}</Text>
               <View style={[styles.pinDotIndicator, { backgroundColor: isSelected ? "#FFFFFF" : "#10B981" }]} />
             </View>
             <View style={[styles.pinBeak, isSelected && styles.pinBeakSelected]} />
@@ -63,7 +63,7 @@ export function DiscoverMapCanvas({ facilities, selectedId, onSelectPin }: Disco
 
       {/* COACH PIN ON MAP */}
       <TouchableOpacity
-        onPress={() => onSelectPin("fac_metro_core")}
+        onPress={() => onSelectCoach?.()}
         style={[styles.pinContainer, { left: "68%", top: "25%" }]}
       >
         <View style={[styles.pinBubble, { backgroundColor: "#3B82F6", borderColor: "#60A5FA" }]}>
@@ -75,7 +75,7 @@ export function DiscoverMapCanvas({ facilities, selectedId, onSelectPin }: Disco
 
       {/* TOURNAMENT MEET PIN ON MAP */}
       <TouchableOpacity
-        onPress={() => onSelectPin("fac_nexus_club")}
+        onPress={() => onSelectMeet?.()}
         style={[styles.pinContainer, { left: "18%", top: "30%" }]}
       >
         <View style={[styles.pinBubble, { backgroundColor: "#F59E0B", borderColor: "#FBBF24" }]}>
@@ -95,14 +95,7 @@ export function DiscoverMapCanvas({ facilities, selectedId, onSelectPin }: Disco
 }
 
 const styles = StyleSheet.create({
-  mapContainer: {
-    height: 310,
-    backgroundColor: "#101014",
-    position: "relative",
-    overflow: "hidden",
-    borderBottomWidth: 1,
-    borderBottomColor: "#1E1E24",
-  },
+  mapContainer: { height: 310, backgroundColor: "#101014", position: "relative", overflow: "hidden", borderBottomWidth: 1, borderBottomColor: "#1E1E24" },
   gridLineHorizontal1: { position: "absolute", top: "33%", left: 0, right: 0, height: 1, backgroundColor: "rgba(255,255,255,0.04)" },
   gridLineHorizontal2: { position: "absolute", top: "66%", left: 0, right: 0, height: 1, backgroundColor: "rgba(255,255,255,0.04)" },
   gridLineVertical1: { position: "absolute", left: "33%", top: 0, bottom: 0, width: 1, backgroundColor: "rgba(255,255,255,0.04)" },
@@ -115,7 +108,7 @@ const styles = StyleSheet.create({
   userCalloutText: { color: "#FAFAFA", fontSize: 9, fontWeight: "800" },
   pinContainer: { position: "absolute", alignItems: "center", transform: [{ translateX: -24 }, { translateY: -30 }] },
   pinContainerSelected: { zIndex: 40, transform: [{ translateX: -28 }, { translateY: -36 }, { scale: 1.1 }] },
-  pinBubble: { flexDirection: "row", alignItems: "center", backgroundColor: "#18181B", paddingHorizontal: 8, paddingVertical: 5, borderRadius: 8, borderWidth: 1.5, borderColor: "#EC4899", shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.5, shadowRadius: 6 },
+  pinBubble: { flexDirection: "row", alignItems: "center", backgroundColor: "#18181B", paddingHorizontal: 8, paddingVertical: 5, borderRadius: 8, borderWidth: 1.5, borderColor: "#EC4899" },
   pinBubbleSelected: { backgroundColor: "#E11D48", borderColor: "#FFFFFF" },
   pinPrice: { color: "#FAFAFA", fontSize: 11, fontWeight: "900" },
   pinDotIndicator: { width: 5, height: 5, borderRadius: 2.5, marginLeft: 4 },

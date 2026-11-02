@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
-import { Droplet, Search, Plus, Sparkles, Utensils, RotateCcw } from "lucide-react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Modal } from "react-native";
+import { Droplet, Search, Plus, Sparkles, Utensils, RotateCcw, Camera, Barcode, Check } from "lucide-react-native";
 
 interface FoodItem {
   id: string;
@@ -12,10 +12,13 @@ interface FoodItem {
 }
 
 export function FoodTrackerView() {
-  // START IN CLEAN CANONICAL EMPTY STATE
-  const [hydrationLiters, setHydrationLiters] = useState(0.0);
+  const [hydrationLiters, setHydrationLiters] = useState(1.25);
   const [nlpInput, setNlpInput] = useState("");
-  const [loggedItems, setLoggedItems] = useState<FoodItem[]>([]);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [loggedItems, setLoggedItems] = useState<FoodItem[]>([
+    { id: "f_1", name: "Whey Isolate Shake", cal: 130, p: 26, c: 2, f: 1 },
+    { id: "f_2", name: "Chicken Breast & Brown Rice", cal: 450, p: 42, c: 45, f: 6 },
+  ]);
 
   const totalCalories = loggedItems.reduce((acc, curr) => acc + curr.cal, 0);
   const totalProtein = loggedItems.reduce((acc, curr) => acc + curr.p, 0);
@@ -23,21 +26,18 @@ export function FoodTrackerView() {
   const totalFat = loggedItems.reduce((acc, curr) => acc + curr.f, 0);
 
   const addMeal = (name: string, cal: number, p: number, c = 20, f = 5) => {
-    setLoggedItems((prev) => [
-      ...prev,
-      { id: `f_${Date.now()}`, name, cal, p, c, f },
-    ]);
+    setLoggedItems((prev) => [{ id: `f_${Date.now()}`, name, cal, p, c, f }, ...prev]);
   };
 
   const handleNlpSubmit = () => {
     if (!nlpInput.trim()) return;
-    addMeal(nlpInput.trim(), 280, 24, 30, 8);
+    addMeal(nlpInput.trim(), 310, 28, 32, 7);
     setNlpInput("");
   };
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* 4 MACRO WIDGETS */}
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      {/* 1. MYFITNESSPAL-GRADE MACRO GAUGES */}
       <View style={styles.macroCard}>
         <View style={styles.macroHeader}>
           <Text style={styles.macroTitle}>DAILY TARGETS (NASM FORMULA)</Text>
@@ -45,60 +45,79 @@ export function FoodTrackerView() {
         </View>
 
         <View style={styles.ringsRow}>
-          <View style={styles.macroRingItem}>
-            <Text style={styles.ringValue}>{totalCalories}</Text>
-            <Text style={styles.ringLabel}>Calories</Text>
+          <View style={styles.macroCol}>
+            <Text style={styles.ringVal}>{totalCalories}</Text>
+            <View style={styles.progBarTrack}>
+              <View style={[styles.progBarFill, { width: `${Math.min(100, (totalCalories / 2600) * 100)}%`, backgroundColor: "#FAFAFA" }]} />
+            </View>
+            <Text style={styles.ringLabel}>Kcal (2600)</Text>
           </View>
-          <View style={styles.macroRingItem}>
-            <Text style={[styles.ringValue, { color: "#E11D48" }]}>{totalProtein}g</Text>
+
+          <View style={styles.macroCol}>
+            <Text style={[styles.ringVal, { color: "#E11D48" }]}>{totalProtein}g</Text>
+            <View style={styles.progBarTrack}>
+              <View style={[styles.progBarFill, { width: `${Math.min(100, (totalProtein / 180) * 100)}%`, backgroundColor: "#E11D48" }]} />
+            </View>
             <Text style={styles.ringLabel}>Protein (180g)</Text>
           </View>
-          <View style={styles.macroRingItem}>
-            <Text style={[styles.ringValue, { color: "#F59E0B" }]}>{totalFat}g</Text>
-            <Text style={styles.ringLabel}>Fats (70g)</Text>
-          </View>
-          <View style={styles.macroRingItem}>
-            <Text style={[styles.ringValue, { color: "#3B82F6" }]}>{totalCarbs}g</Text>
+
+          <View style={styles.macroCol}>
+            <Text style={[styles.ringVal, { color: "#3B82F6" }]}>{totalCarbs}g</Text>
+            <View style={styles.progBarTrack}>
+              <View style={[styles.progBarFill, { width: `${Math.min(100, (totalCarbs / 280) * 100)}%`, backgroundColor: "#3B82F6" }]} />
+            </View>
             <Text style={styles.ringLabel}>Carbs (280g)</Text>
+          </View>
+
+          <View style={styles.macroCol}>
+            <Text style={[styles.ringVal, { color: "#F59E0B" }]}>{totalFat}g</Text>
+            <View style={styles.progBarTrack}>
+              <View style={[styles.progBarFill, { width: `${Math.min(100, (totalFat / 70) * 100)}%`, backgroundColor: "#F59E0B" }]} />
+            </View>
+            <Text style={styles.ringLabel}>Fats (70g)</Text>
           </View>
         </View>
       </View>
 
-      {/* HYDRATION TRACKER */}
+      {/* 2. HYDRATION TRACKER WITH WATER FILL LEVEL */}
       <View style={styles.hydrationCard}>
-        <View style={styles.hydrationLeft}>
-          <Droplet size={20} color="#38BDF8" />
-          <View style={{ marginLeft: 10 }}>
-            <Text style={styles.hydrationTitle}>HYDRATION</Text>
-            <Text style={styles.hydrationVal}>{hydrationLiters.toFixed(2)} / 3.0 Liters</Text>
+        <View style={styles.hydrationHeader}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Droplet size={18} color="#38BDF8" fill="#38BDF8" />
+            <Text style={styles.hydrationTitle}>HYDRATION LEVEL</Text>
           </View>
+          <Text style={styles.hydrationVal}>{hydrationLiters.toFixed(2)} / 3.0 Liters</Text>
+        </View>
+        <View style={styles.waterTrack}>
+          <View style={[styles.waterFill, { width: `${Math.min(100, (hydrationLiters / 3.0) * 100)}%` }]} />
         </View>
         <View style={styles.hydrationActions}>
-          <TouchableOpacity
-            onPress={() => setHydrationLiters((prev) => Math.min(4.0, prev + 0.25))}
-            style={styles.hydroPill}
-          >
+          <TouchableOpacity onPress={() => setHydrationLiters((p) => Math.min(4.0, p + 0.25))} style={styles.hydroPill}>
             <Text style={styles.hydroPillText}>+250ml</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setHydrationLiters((prev) => Math.min(4.0, prev + 0.5))}
-            style={styles.hydroPill}
-          >
+          <TouchableOpacity onPress={() => setHydrationLiters((p) => Math.min(4.0, p + 0.5))} style={styles.hydroPill}>
             <Text style={styles.hydroPillText}>+500ml</Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* NUTRITIONIX NLP LOGGING ENGINE */}
+      {/* 3. NUTRITIONIX NLP & BARCODE SCANNER */}
       <View style={styles.nlpBox}>
-        <View style={styles.nlpTitleRow}>
-          <Sparkles size={14} color="#F59E0B" />
-          <Text style={styles.nlpTitle}>NUTRITIONIX NLP MACRO PARSER</Text>
+        <View style={styles.nlpTop}>
+          <View style={styles.nlpTitleRow}>
+            <Sparkles size={14} color="#F59E0B" />
+            <Text style={styles.nlpTitle}>AI NUTRITION LOGGER</Text>
+          </View>
+          <TouchableOpacity onPress={() => setIsScannerOpen(true)} style={styles.scanBtn}>
+            <Barcode size={14} color="#FAFAFA" />
+            <Text style={styles.scanBtnText}>Scan Barcode</Text>
+          </TouchableOpacity>
         </View>
+
         <View style={styles.nlpInputRow}>
           <TextInput
             style={styles.nlpInput}
-            placeholder='Type meal: "3 scrambled eggs, 2 toast"'
+            placeholder='Type meal: "3 eggs, 2 toast with avocado"'
             placeholderTextColor="#71717A"
             value={nlpInput}
             onChangeText={setNlpInput}
@@ -108,33 +127,9 @@ export function FoodTrackerView() {
             <Plus size={16} color="#FAFAFA" />
           </TouchableOpacity>
         </View>
-
-        <View style={styles.quickMealsRow}>
-          <TouchableOpacity
-            onPress={() => addMeal("Morning Oats & Berries", 320, 14, 55, 4)}
-            style={styles.quickMealPill}
-          >
-            <Utensils size={10} color="#FAFAFA" />
-            <Text style={styles.quickMealText}>+ Morning Oats</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => addMeal("Whey Isolate Shake", 130, 26, 2, 1)}
-            style={styles.quickMealPill}
-          >
-            <Utensils size={10} color="#FAFAFA" />
-            <Text style={styles.quickMealText}>+ Whey Shake</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => addMeal("Chicken Breast & Brown Rice", 450, 42, 45, 6)}
-            style={styles.quickMealPill}
-          >
-            <Utensils size={10} color="#FAFAFA" />
-            <Text style={styles.quickMealText}>+ Chicken & Rice</Text>
-          </TouchableOpacity>
-        </View>
       </View>
 
-      {/* TODAY'S FOOD LOGS OR CLEAN EMPTY STATE */}
+      {/* 4. TODAY'S FOOD LOGS */}
       <View style={styles.foodHistoryList}>
         <View style={styles.historyHeader}>
           <Text style={styles.historyTitle}>TODAY'S LOGGED FOODS ({loggedItems.length})</Text>
@@ -146,66 +141,102 @@ export function FoodTrackerView() {
           )}
         </View>
 
-        {loggedItems.length === 0 ? (
-          <View style={styles.emptyFoodBox}>
-            <Utensils size={24} color="#71717A" />
-            <Text style={styles.emptyFoodTitle}>No food logged today</Text>
-            <Text style={styles.emptyFoodSub}>
-              Type any meal description above or tap one of the quick pills to start tracking your macro targets.
-            </Text>
-          </View>
-        ) : (
-          loggedItems.map((item) => (
-            <View key={item.id} style={styles.foodRow}>
-              <View>
-                <Text style={styles.foodName}>{item.name}</Text>
-                <Text style={styles.foodMacros}>P: {item.p}g • C: {item.c}g • F: {item.f}g</Text>
-              </View>
-              <Text style={styles.foodCal}>{item.cal} kcal</Text>
+        {loggedItems.map((f) => (
+          <View key={f.id} style={styles.foodItemCard}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.foodName}>{f.name}</Text>
+              <Text style={styles.foodMacros}>P: {f.p}g • C: {f.c}g • F: {f.f}g</Text>
             </View>
-          ))
-        )}
+            <Text style={styles.foodCals}>{f.cal} kcal</Text>
+          </View>
+        ))}
       </View>
+
+      {/* BARCODE / AI SCANNER MODAL */}
+      <Modal visible={isScannerOpen} transparent animationType="slide" onRequestClose={() => setIsScannerOpen(false)}>
+        <View style={styles.scannerOverlay}>
+          <View style={styles.scannerModal}>
+            <View style={styles.scannerHeader}>
+              <Text style={styles.scannerTitle}>AI FOOD & BARCODE SCANNER</Text>
+              <TouchableOpacity onPress={() => setIsScannerOpen(false)}>
+                <Text style={styles.scannerClose}>Close</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.viewfinderBox}>
+              <Camera size={44} color="#71717A" />
+              <Text style={styles.viewfinderText}>Align food item or barcode inside frame</Text>
+            </View>
+            <View style={styles.scannedResultCard}>
+              <Text style={styles.scannedTitle}>Optimum Nutrition Gold Standard Whey</Text>
+              <Text style={styles.scannedSubtitle}>1 scoop (30.4g) • 120 kcal • 24g Protein</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  addMeal("Gold Standard Whey (1 Scoop)", 120, 24, 3, 1);
+                  setIsScannerOpen(false);
+                }}
+                style={styles.addScannedBtn}
+              >
+                <Check size={16} color="#FFFFFF" />
+                <Text style={styles.addScannedText}>Log Scanned Item</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#09090B", padding: 16 },
-  macroCard: { backgroundColor: "#121215", borderRadius: 16, padding: 16, borderWidth: 1, borderColor: "#18181B", marginBottom: 12 },
-  macroHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  macroTitle: { color: "#71717A", fontSize: 10, fontWeight: "800", letterSpacing: 0.8 },
+  container: { flex: 1, backgroundColor: "#09090B" },
+  content: { padding: 14, paddingBottom: 110, gap: 14 },
+  macroCard: { backgroundColor: "#141418", borderRadius: 18, padding: 16, borderWidth: 1, borderColor: "#27272A" },
+  macroHeader: { flexDirection: "row", justifyContent: "space-between", marginBottom: 16 },
+  macroTitle: { color: "#71717A", fontSize: 10, fontWeight: "800", letterSpacing: 0.5 },
   macroRemaining: { color: "#10B981", fontSize: 11, fontWeight: "700" },
-  ringsRow: { flexDirection: "row", justifyContent: "space-around", marginTop: 16 },
-  macroRingItem: { alignItems: "center" },
-  ringValue: { color: "#FAFAFA", fontSize: 18, fontWeight: "800" },
-  ringLabel: { color: "#71717A", fontSize: 10, marginTop: 4 },
-  hydrationCard: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: "rgba(56, 189, 248, 0.1)", borderWidth: 1, borderColor: "rgba(56, 189, 248, 0.25)", borderRadius: 14, padding: 14, marginBottom: 12 },
-  hydrationLeft: { flexDirection: "row", alignItems: "center" },
-  hydrationTitle: { color: "#38BDF8", fontSize: 10, fontWeight: "800", letterSpacing: 0.8 },
-  hydrationVal: { color: "#FAFAFA", fontSize: 14, fontWeight: "700", marginTop: 2 },
-  hydrationActions: { flexDirection: "row", gap: 6 },
-  hydroPill: { backgroundColor: "#18181B", paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
-  hydroPillText: { color: "#38BDF8", fontSize: 11, fontWeight: "700" },
-  nlpBox: { backgroundColor: "#121215", borderRadius: 14, padding: 14, borderWidth: 1, borderColor: "#18181B", marginBottom: 16 },
-  nlpTitleRow: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 8 },
-  nlpTitle: { color: "#F59E0B", fontSize: 10, fontWeight: "800", letterSpacing: 0.8 },
+  ringsRow: { flexDirection: "row", justifyContent: "space-between" },
+  macroCol: { flex: 1, alignItems: "center" },
+  ringVal: { color: "#FAFAFA", fontSize: 16, fontWeight: "800" },
+  progBarTrack: { width: "80%", height: 5, backgroundColor: "#27272A", borderRadius: 3, marginVertical: 6, overflow: "hidden" },
+  progBarFill: { height: "100%", borderRadius: 3 },
+  ringLabel: { color: "#71717A", fontSize: 9, fontWeight: "600" },
+  hydrationCard: { backgroundColor: "#141418", borderRadius: 18, padding: 14, borderWidth: 1, borderColor: "#27272A" },
+  hydrationHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
+  hydrationTitle: { color: "#FAFAFA", fontSize: 11, fontWeight: "800" },
+  hydrationVal: { color: "#38BDF8", fontSize: 12, fontWeight: "800" },
+  waterTrack: { width: "100%", height: 8, backgroundColor: "#27272A", borderRadius: 4, overflow: "hidden", marginBottom: 12 },
+  waterFill: { height: "100%", backgroundColor: "#38BDF8", borderRadius: 4 },
+  hydrationActions: { flexDirection: "row", gap: 8 },
+  hydroPill: { flex: 1, backgroundColor: "#27272A", paddingVertical: 8, borderRadius: 8, alignItems: "center" },
+  hydroPillText: { color: "#38BDF8", fontSize: 11, fontWeight: "800" },
+  nlpBox: { backgroundColor: "#141418", borderRadius: 18, padding: 14, borderWidth: 1, borderColor: "#27272A" },
+  nlpTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 },
+  nlpTitleRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  nlpTitle: { color: "#F59E0B", fontSize: 10, fontWeight: "800" },
+  scanBtn: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "#27272A", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  scanBtnText: { color: "#FAFAFA", fontSize: 10, fontWeight: "700" },
   nlpInputRow: { flexDirection: "row", gap: 8 },
-  nlpInput: { flex: 1, backgroundColor: "#18181B", borderRadius: 8, paddingHorizontal: 12, height: 42, color: "#FAFAFA", fontSize: 12 },
-  nlpAddBtn: { width: 42, height: 42, backgroundColor: "#E11D48", borderRadius: 8, alignItems: "center", justifyContent: "center" },
-  quickMealsRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 10 },
-  quickMealPill: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "#27272A", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999 },
-  quickMealText: { color: "#FAFAFA", fontSize: 10, fontWeight: "600" },
-  foodHistoryList: { backgroundColor: "#121215", borderRadius: 14, padding: 14, borderWidth: 1, borderColor: "#18181B", marginBottom: 30 },
-  historyHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 },
-  historyTitle: { color: "#71717A", fontSize: 10, fontWeight: "800", letterSpacing: 0.8 },
+  nlpInput: { flex: 1, height: 42, backgroundColor: "#27272A", borderRadius: 10, paddingHorizontal: 12, color: "#FAFAFA", fontSize: 12 },
+  nlpAddBtn: { width: 42, height: 42, borderRadius: 10, backgroundColor: "#E11D48", alignItems: "center", justifyContent: "center" },
+  foodHistoryList: { backgroundColor: "#141418", borderRadius: 18, padding: 14, borderWidth: 1, borderColor: "#27272A" },
+  historyHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
+  historyTitle: { color: "#71717A", fontSize: 10, fontWeight: "800" },
   clearLogsBtn: { flexDirection: "row", alignItems: "center", gap: 4 },
   clearLogsText: { color: "#A1A1AA", fontSize: 10, fontWeight: "600" },
-  emptyFoodBox: { alignItems: "center", paddingVertical: 20 },
-  emptyFoodTitle: { color: "#FAFAFA", fontSize: 13, fontWeight: "700", marginTop: 6 },
-  emptyFoodSub: { color: "#71717A", fontSize: 11, textAlign: "center", marginTop: 4, lineHeight: 16, maxWidth: 260 },
-  foodRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#1A1A1E" },
+  foodItemCard: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#1F1F24" },
   foodName: { color: "#FAFAFA", fontSize: 13, fontWeight: "700" },
-  foodMacros: { color: "#71717A", fontSize: 11, marginTop: 2 },
-  foodCal: { color: "#FAFAFA", fontSize: 13, fontWeight: "800" },
+  foodMacros: { color: "#71717A", fontSize: 10, marginTop: 2 },
+  foodCals: { color: "#10B981", fontSize: 13, fontWeight: "800" },
+  scannerOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.75)", justifyContent: "flex-end" },
+  scannerModal: { backgroundColor: "#18181B", borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, borderWidth: 1, borderColor: "#27272A" },
+  scannerHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 },
+  scannerTitle: { color: "#FAFAFA", fontSize: 12, fontWeight: "800" },
+  scannerClose: { color: "#A1A1AA", fontSize: 13, fontWeight: "600" },
+  viewfinderBox: { height: 160, backgroundColor: "#09090B", borderRadius: 16, borderWidth: 2, borderColor: "#3F3F46", borderStyle: "dashed", alignItems: "center", justifyContent: "center", marginBottom: 16 },
+  viewfinderText: { color: "#71717A", fontSize: 11, marginTop: 8 },
+  scannedResultCard: { backgroundColor: "#27272A", borderRadius: 14, padding: 14 },
+  scannedTitle: { color: "#FAFAFA", fontSize: 14, fontWeight: "800" },
+  scannedSubtitle: { color: "#A1A1AA", fontSize: 11, marginTop: 2, marginBottom: 12 },
+  addScannedBtn: { backgroundColor: "#E11D48", borderRadius: 10, paddingVertical: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 },
+  addScannedText: { color: "#FFFFFF", fontSize: 13, fontWeight: "800" },
 });

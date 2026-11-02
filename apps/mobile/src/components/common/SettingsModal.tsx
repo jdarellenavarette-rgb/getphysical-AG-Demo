@@ -1,15 +1,24 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView, Switch } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowLeft, Watch, Shield, Smartphone, CheckCircle2 } from "lucide-react-native";
+import { ArrowLeft, Watch, Shield, Smartphone, Briefcase, UserCheck, Calendar, ChevronRight } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 
 interface SettingsModalProps {
   visible: boolean;
   onClose: () => void;
+  onOpenStaffDash?: () => void;
+  onOpenCoachDash?: () => void;
+  onOpenOrganizer?: () => void;
 }
 
-export function SettingsModal({ visible, onClose }: SettingsModalProps) {
+export function SettingsModal({
+  visible,
+  onClose,
+  onOpenStaffDash,
+  onOpenCoachDash,
+  onOpenOrganizer,
+}: SettingsModalProps) {
   const insets = useSafeAreaInsets();
   const { profile } = useEcosystemStore();
   const [appleHealthSync, setAppleHealthSync] = useState(true);
@@ -30,7 +39,7 @@ export function SettingsModal({ visible, onClose }: SettingsModalProps) {
             <ArrowLeft size={20} color="#FAFAFA" />
             <Text style={styles.backBtnText}>Back</Text>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>SETTINGS & HARDWARE</Text>
+          <Text style={styles.headerTitle}>SETTINGS & PREFERENCES</Text>
           <View style={{ width: 44 }} />
         </View>
 
@@ -120,6 +129,56 @@ export function SettingsModal({ visible, onClose }: SettingsModalProps) {
             </View>
           </View>
 
+          {/* CONCEALED BUSINESS & OPERATOR WORKSPACES */}
+          <View style={styles.card}>
+            <View style={styles.cardTitleRow}>
+              <Briefcase size={16} color="#71717A" />
+              <Text style={styles.cardHeader}>BUSINESS WORKSPACES (OPERATOR ACCESS)</Text>
+            </View>
+
+            <TouchableOpacity
+              onPress={() => {
+                onClose();
+                onOpenStaffDash?.();
+              }}
+              style={styles.roleSubRow}
+            >
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                <Briefcase size={15} color="#10B981" />
+                <Text style={styles.roleSubTitle}>Staff Turnstile Scanner</Text>
+              </View>
+              <ChevronRight size={14} color="#71717A" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => {
+                onClose();
+                onOpenCoachDash?.();
+              }}
+              style={styles.roleSubRow}
+            >
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                <UserCheck size={15} color="#3B82F6" />
+                <Text style={styles.roleSubTitle}>Coach Floor Roster & Split</Text>
+              </View>
+              <ChevronRight size={14} color="#71717A" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => {
+                onClose();
+                onOpenOrganizer?.();
+              }}
+              style={styles.roleSubRow}
+            >
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                <Calendar size={15} color="#F59E0B" />
+                <Text style={styles.roleSubTitle}>Tournament Organizer Portal</Text>
+              </View>
+              <ChevronRight size={14} color="#71717A" />
+            </TouchableOpacity>
+          </View>
+
           {/* BUILD & RUNTIME INFO */}
           <View style={styles.card}>
             <View style={styles.cardTitleRow}>
@@ -139,12 +198,6 @@ export function SettingsModal({ visible, onClose }: SettingsModalProps) {
               <Text style={styles.value}>v2.4.0 (10-State Envelope)</Text>
             </View>
           </View>
-
-          {/* FOOTER BACK BUTTON */}
-          <TouchableOpacity onPress={onClose} style={styles.fullBackBtn}>
-            <CheckCircle2 size={16} color="#FAFAFA" style={{ marginRight: 6 }} />
-            <Text style={styles.fullBackBtnText}>Save & Return to App</Text>
-          </TouchableOpacity>
         </ScrollView>
       </View>
     </Modal>
@@ -153,20 +206,20 @@ export function SettingsModal({ visible, onClose }: SettingsModalProps) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#09090B" },
-  topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: "#18181B" },
-  backBtn: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 44, minWidth: 60, justifyContent: "center" },
-  backBtnText: { color: "#FAFAFA", fontSize: 14, fontWeight: "700" },
-  headerTitle: { color: "#FAFAFA", fontSize: 13, fontWeight: "900", letterSpacing: 0.8 },
-  scrollContent: { padding: 16 },
-  card: { backgroundColor: "#121215", borderRadius: 14, padding: 14, marginBottom: 14, borderWidth: 1, borderColor: "#18181B" },
-  cardTitleRow: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 10 },
+  topBar: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: "#18181B" },
+  backBtn: { flexDirection: "row", alignItems: "center", minWidth: 44, minHeight: 44 },
+  backBtnText: { color: "#FAFAFA", fontSize: 13, fontWeight: "700", marginLeft: 4 },
+  headerTitle: { color: "#FAFAFA", fontSize: 13, fontWeight: "800", letterSpacing: 0.8 },
+  scrollContent: { padding: 16, paddingBottom: 60, gap: 14 },
+  card: { backgroundColor: "#141418", borderRadius: 16, padding: 16, borderWidth: 1, borderColor: "#27272A" },
+  cardTitleRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 12 },
   cardHeader: { color: "#71717A", fontSize: 10, fontWeight: "800", letterSpacing: 0.8, marginBottom: 8 },
-  row: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: "#1A1A1E" },
-  label: { color: "#A1A1AA", fontSize: 12 },
-  value: { color: "#FAFAFA", fontSize: 12, fontWeight: "700" },
-  switchRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: "#1A1A1E" },
+  row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: "#1E1E24" },
+  label: { color: "#A1A1AA", fontSize: 13 },
+  value: { color: "#FAFAFA", fontSize: 13, fontWeight: "700" },
+  switchRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#1E1E24" },
   switchTitle: { color: "#FAFAFA", fontSize: 13, fontWeight: "700" },
   switchSub: { color: "#71717A", fontSize: 11, marginTop: 2 },
-  fullBackBtn: { backgroundColor: "#E11D48", borderRadius: 12, paddingVertical: 14, flexDirection: "row", alignItems: "center", justifyContent: "center", marginTop: 8, marginBottom: 30 },
-  fullBackBtnText: { color: "#FAFAFA", fontSize: 14, fontWeight: "800" },
+  roleSubRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#1E1E24" },
+  roleSubTitle: { color: "#FAFAFA", fontSize: 13, fontWeight: "700" },
 });

@@ -1,15 +1,16 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView, Image } from "react-native";
-import { X, User, Briefcase, UserCheck, Calendar, RefreshCw, Database, Settings as SettingsIcon, ChevronRight } from "lucide-react-native";
+import { X, User, Home, Compass, Dumbbell, CreditCard, RefreshCw, Database, Settings as SettingsIcon, ChevronRight } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 
 interface MenuDrawerModalProps {
   visible: boolean;
   onClose: () => void;
   onSelectFeed?: () => void;
-  onOpenStaffDash: () => void;
-  onOpenCoachDash: () => void;
-  onOpenOrganizer: () => void;
+  onSelectDiscover?: () => void;
+  onSelectTrack?: () => void;
+  onSelectCards?: () => void;
+  onSelectProfile?: () => void;
   onOpenSettings: () => void;
 }
 
@@ -17,12 +18,13 @@ export function MenuDrawerModal({
   visible,
   onClose,
   onSelectFeed,
-  onOpenStaffDash,
-  onOpenCoachDash,
-  onOpenOrganizer,
+  onSelectDiscover,
+  onSelectTrack,
+  onSelectCards,
+  onSelectProfile,
   onOpenSettings,
 }: MenuDrawerModalProps) {
-  const { profile, currentRole, setRole, loadDemoData, resetToEmpty } = useEcosystemStore();
+  const { profile, currentRole, loadDemoData, resetToEmpty } = useEcosystemStore();
 
   return (
     <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
@@ -30,45 +32,103 @@ export function MenuDrawerModal({
         <View style={styles.drawerContainer}>
           {/* TOP DRAWER HEADER */}
           <View style={styles.header}>
-            <Text style={styles.headerTitle}>NAVIGATION & ROLES</Text>
+            <Text style={styles.headerTitle}>NAVIGATION & MENU</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
               <X size={20} color="#FAFAFA" />
             </TouchableOpacity>
           </View>
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-            {/* USER MINI PROFILE */}
-            <View style={styles.userCard}>
+            {/* 1. TOP ATHLETE PROFILE CARD (ROUTED TO PROFILE HUB) */}
+            <TouchableOpacity
+              onPress={() => {
+                onClose();
+                onSelectProfile?.();
+              }}
+              activeOpacity={0.8}
+              style={styles.userCard}
+            >
               <Image
                 source={{ uri: profile.avatar_url ?? "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80" }}
                 style={styles.avatar}
               />
               <View style={styles.userInfo}>
                 <Text style={styles.userName}>{profile.name ?? "Adam Arête"}</Text>
-                <Text style={styles.userHandle}>@{profile.username}</Text>
+                <Text style={styles.userHandle}>@{profile.username} • View Profile</Text>
                 <View style={styles.activeRoleBadge}>
-                  <Text style={styles.activeRoleText}>ROLE: {currentRole.toUpperCase()}</Text>
+                  <Text style={styles.activeRoleText}>ATHLETE PROFILE</Text>
                 </View>
               </View>
-            </View>
+              <ChevronRight size={18} color="#FAFAFA" />
+            </TouchableOpacity>
 
-            {/* ROLE SWITCHING SECTION */}
-            <Text style={styles.sectionHeader}>SWITCH APP WORKSPACE</Text>
+            {/* 2. CORE APP NAVIGATION */}
+            <Text style={styles.sectionHeader}>APP HUBS</Text>
 
             <TouchableOpacity
               onPress={() => {
-                setRole("individual");
                 onSelectFeed?.();
                 onClose();
               }}
-              style={[styles.roleItem, currentRole === "individual" && styles.roleItemActive]}
+              style={styles.navItem}
             >
-              <View style={styles.roleIconWrap}>
-                <User size={18} color="#FAFAFA" />
+              <View style={styles.navIconWrap}>
+                <Home size={18} color="#FAFAFA" />
               </View>
-              <View style={styles.roleTextWrap}>
-                <Text style={styles.roleTitle}>Athlete Mode</Text>
-                <Text style={styles.roleSubtitle}>Sodia Feed, Passes, Track Hub & Locker</Text>
+              <View style={styles.navTextWrap}>
+                <Text style={styles.navTitle}>Community Feed</Text>
+                <Text style={styles.navSubtitle}>Daily Hustle, stories & workouts</Text>
+              </View>
+              <ChevronRight size={16} color="#71717A" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => {
+                onSelectDiscover?.();
+                onClose();
+              }}
+              style={styles.navItem}
+            >
+              <View style={styles.navIconWrap}>
+                <Compass size={18} color="#FAFAFA" />
+              </View>
+              <View style={styles.navTextWrap}>
+                <Text style={styles.navTitle}>Venues & Coaches</Text>
+                <Text style={styles.navSubtitle}>GPS radar, pickleball & gym drop-in</Text>
+              </View>
+              <ChevronRight size={16} color="#71717A" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => {
+                onSelectTrack?.();
+                onClose();
+              }}
+              style={styles.navItem}
+            >
+              <View style={styles.navIconWrap}>
+                <Dumbbell size={18} color="#FAFAFA" />
+              </View>
+              <View style={styles.navTextWrap}>
+                <Text style={styles.navTitle}>Activity & Nutrition</Text>
+                <Text style={styles.navSubtitle}>Lift, GPS Move, Macros & Journey</Text>
+              </View>
+              <ChevronRight size={16} color="#71717A" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => {
+                onSelectCards?.();
+                onClose();
+              }}
+              style={styles.navItem}
+            >
+              <View style={styles.navIconWrap}>
+                <CreditCard size={18} color="#FAFAFA" />
+              </View>
+              <View style={styles.navTextWrap}>
+                <Text style={styles.navTitle}>Passes & VIP Wallet</Text>
+                <Text style={styles.navSubtitle}>Turnstile TOTP, SOA ledger & billing</Text>
               </View>
               <ChevronRight size={16} color="#71717A" />
             </TouchableOpacity>
@@ -76,56 +136,22 @@ export function MenuDrawerModal({
             <TouchableOpacity
               onPress={() => {
                 onClose();
-                onOpenStaffDash();
+                onOpenSettings();
               }}
-              style={styles.roleItem}
+              style={styles.navItem}
             >
-              <View style={[styles.roleIconWrap, { backgroundColor: "rgba(16, 185, 129, 0.15)" }]}>
-                <Briefcase size={18} color="#10B981" />
+              <View style={[styles.navIconWrap, { backgroundColor: "#27272A" }]}>
+                <SettingsIcon size={18} color="#A1A1AA" />
               </View>
-              <View style={styles.roleTextWrap}>
-                <Text style={styles.roleTitle}>Staff Turnstile Scanner</Text>
-                <Text style={styles.roleSubtitle}>Front Desk GymDash DTR & gate verification</Text>
+              <View style={styles.navTextWrap}>
+                <Text style={styles.navTitle}>Settings & Preferences</Text>
+                <Text style={styles.navSubtitle}>Sensors, security & operator roles</Text>
               </View>
               <ChevronRight size={16} color="#71717A" />
             </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={() => {
-                onClose();
-                onOpenCoachDash();
-              }}
-              style={styles.roleItem}
-            >
-              <View style={[styles.roleIconWrap, { backgroundColor: "rgba(59, 130, 246, 0.15)" }]}>
-                <UserCheck size={18} color="#3B82F6" />
-              </View>
-              <View style={styles.roleTextWrap}>
-                <Text style={styles.roleTitle}>Coach Floor Roster</Text>
-                <Text style={styles.roleSubtitle}>Live clients on floor & auto-split fees</Text>
-              </View>
-              <ChevronRight size={16} color="#71717A" />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => {
-                onClose();
-                onOpenOrganizer();
-              }}
-              style={styles.roleItem}
-            >
-              <View style={[styles.roleIconWrap, { backgroundColor: "rgba(245, 158, 11, 0.15)" }]}>
-                <Calendar size={18} color="#F59E0B" />
-              </View>
-              <View style={styles.roleTextWrap}>
-                <Text style={styles.roleTitle}>Tournament Organizer Pro</Text>
-                <Text style={styles.roleSubtitle}>Clubdash meets, waitlist & split ledger</Text>
-              </View>
-              <ChevronRight size={16} color="#71717A" />
-            </TouchableOpacity>
-
-            {/* QA STATE TESTING TOOLS */}
-            <Text style={styles.sectionHeader}>QA & STATE ENVELOPE TOOLS</Text>
+            {/* 3. QA STATE TESTING TOOLS */}
+            <Text style={styles.sectionHeader}>QA & DEMO CONTROLS</Text>
 
             <TouchableOpacity
               onPress={() => {
@@ -137,7 +163,7 @@ export function MenuDrawerModal({
               <RefreshCw size={16} color="#EC4899" />
               <View style={styles.toolTextWrap}>
                 <Text style={styles.toolTitle}>Reset to Empty State</Text>
-                <Text style={styles.toolDesc}>Clear all active passes, workouts & posts</Text>
+                <Text style={styles.toolDesc}>Clear active passes, workouts & posts</Text>
               </View>
             </TouchableOpacity>
 
@@ -148,36 +174,13 @@ export function MenuDrawerModal({
               }}
               style={styles.toolBtn}
             >
-              <Database size={16} color="#10B981" />
+              <Database size={16} color="#3B82F6" />
               <View style={styles.toolTextWrap}>
-                <Text style={styles.toolTitle}>Load Seeded Demo Data</Text>
-                <Text style={styles.toolDesc}>Populate feed posts, passes & challenges</Text>
+                <Text style={styles.toolTitle}>Load Demo Seed Data</Text>
+                <Text style={styles.toolDesc}>Populate 3 feed posts & BGC passes</Text>
               </View>
-            </TouchableOpacity>
-
-            {/* APP SETTINGS */}
-            <TouchableOpacity
-              onPress={() => {
-                onClose();
-                onOpenSettings();
-              }}
-              style={[styles.toolBtn, { marginTop: 8 }]}
-            >
-              <SettingsIcon size={16} color="#FAFAFA" />
-              <View style={styles.toolTextWrap}>
-                <Text style={styles.toolTitle}>App Settings & Wearables</Text>
-                <Text style={styles.toolDesc}>Manage Apple Health, FaceID & permissions</Text>
-              </View>
-              <ChevronRight size={16} color="#71717A" />
             </TouchableOpacity>
           </ScrollView>
-
-          {/* FOOTER CLOSE BUTTON */}
-          <View style={styles.footer}>
-            <TouchableOpacity onPress={onClose} style={styles.footerCloseBtn}>
-              <Text style={styles.footerCloseText}>Back to App</Text>
-            </TouchableOpacity>
-          </View>
         </View>
       </View>
     </Modal>
@@ -185,31 +188,27 @@ export function MenuDrawerModal({
 }
 
 const styles = StyleSheet.create({
-  overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.75)", justifyContent: "flex-end" },
-  drawerContainer: { backgroundColor: "#121215", borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: "90%", minHeight: "65%", borderWidth: 1, borderColor: "#27272A" },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, paddingTop: 14, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: "#1E1E24" },
-  headerTitle: { color: "#FAFAFA", fontSize: 12, fontWeight: "900", letterSpacing: 1 },
-  closeBtn: { minWidth: 44, minHeight: 44, justifyContent: "center", alignItems: "center" },
-  scrollContent: { padding: 16 },
-  userCard: { flexDirection: "row", alignItems: "center", backgroundColor: "#18181B", borderRadius: 14, padding: 14, marginBottom: 18, borderWidth: 1, borderColor: "#27272A" },
-  avatar: { width: 50, height: 50, borderRadius: 25, borderWidth: 2, borderColor: "#E11D48" },
-  userInfo: { marginLeft: 12, flex: 1 },
-  userName: { color: "#FAFAFA", fontSize: 16, fontWeight: "800" },
-  userHandle: { color: "#A1A1AA", fontSize: 12 },
-  activeRoleBadge: { alignSelf: "flex-start", backgroundColor: "rgba(225, 29, 72, 0.2)", paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, marginTop: 4 },
-  activeRoleText: { color: "#E11D48", fontSize: 10, fontWeight: "800" },
-  sectionHeader: { color: "#71717A", fontSize: 11, fontWeight: "800", letterSpacing: 0.8, marginBottom: 8, marginTop: 10 },
-  roleItem: { flexDirection: "row", alignItems: "center", backgroundColor: "#18181B", borderRadius: 12, padding: 12, marginBottom: 8, borderWidth: 1, borderColor: "#27272A" },
-  roleItemActive: { borderColor: "#E11D48", backgroundColor: "rgba(225, 29, 72, 0.08)" },
-  roleIconWrap: { width: 36, height: 36, borderRadius: 8, backgroundColor: "#27272A", alignItems: "center", justifyContent: "center" },
-  roleTextWrap: { flex: 1, marginLeft: 12 },
-  roleTitle: { color: "#FAFAFA", fontSize: 13, fontWeight: "700" },
-  roleSubtitle: { color: "#71717A", fontSize: 11, marginTop: 1 },
+  overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.75)", flexDirection: "row" },
+  drawerContainer: { width: "82%", backgroundColor: "#141418", height: "100%", paddingHorizontal: 16, paddingTop: 48, borderRightWidth: 1, borderRightColor: "#27272A" },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderBottomWidth: 1, borderBottomColor: "#27272A", paddingBottom: 14, marginBottom: 12 },
+  headerTitle: { color: "#71717A", fontSize: 11, fontWeight: "800", letterSpacing: 0.8 },
+  closeBtn: { minWidth: 40, minHeight: 40, alignItems: "center", justifyContent: "center" },
+  scrollContent: { paddingBottom: 40 },
+  userCard: { flexDirection: "row", alignItems: "center", backgroundColor: "#1C1C22", padding: 12, borderRadius: 16, marginBottom: 20, borderWidth: 1, borderColor: "rgba(225,29,72,0.3)" },
+  avatar: { width: 44, height: 44, borderRadius: 22 },
+  userInfo: { flex: 1, marginLeft: 12 },
+  userName: { color: "#FAFAFA", fontSize: 15, fontWeight: "800" },
+  userHandle: { color: "#A1A1AA", fontSize: 11, marginTop: 1 },
+  activeRoleBadge: { backgroundColor: "rgba(225, 29, 72, 0.15)", alignSelf: "flex-start", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginTop: 4 },
+  activeRoleText: { color: "#E11D48", fontSize: 9, fontWeight: "800" },
+  sectionHeader: { color: "#71717A", fontSize: 10, fontWeight: "800", letterSpacing: 0.8, marginBottom: 8, marginTop: 10 },
+  navItem: { flexDirection: "row", alignItems: "center", backgroundColor: "#18181B", borderRadius: 12, padding: 12, marginBottom: 8, borderWidth: 1, borderColor: "rgba(255,255,255,0.06)" },
+  navIconWrap: { width: 34, height: 34, borderRadius: 17, backgroundColor: "#27272A", alignItems: "center", justifyContent: "center" },
+  navTextWrap: { flex: 1, marginLeft: 10 },
+  navTitle: { color: "#FAFAFA", fontSize: 13, fontWeight: "700" },
+  navSubtitle: { color: "#71717A", fontSize: 10, marginTop: 1 },
   toolBtn: { flexDirection: "row", alignItems: "center", backgroundColor: "#18181B", borderRadius: 12, padding: 12, marginBottom: 8, borderWidth: 1, borderColor: "#27272A" },
-  toolTextWrap: { flex: 1, marginLeft: 12 },
-  toolTitle: { color: "#FAFAFA", fontSize: 13, fontWeight: "700" },
-  toolDesc: { color: "#71717A", fontSize: 11, marginTop: 1 },
-  footer: { padding: 16, borderTopWidth: 1, borderTopColor: "#1E1E24" },
-  footerCloseBtn: { backgroundColor: "#27272A", paddingVertical: 12, borderRadius: 10, alignItems: "center" },
-  footerCloseText: { color: "#FAFAFA", fontSize: 13, fontWeight: "700" },
+  toolTextWrap: { flex: 1, marginLeft: 10 },
+  toolTitle: { color: "#FAFAFA", fontSize: 12, fontWeight: "700" },
+  toolDesc: { color: "#71717A", fontSize: 10, marginTop: 1 },
 });

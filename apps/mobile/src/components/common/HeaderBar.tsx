@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { Menu, MessageSquare, Bell, Settings, Plus } from "lucide-react-native";
+import { Menu, MessageSquare, Bell, Settings } from "lucide-react-native";
 
 interface HeaderBarProps {
   onOpenMenu?: () => void;
@@ -8,7 +8,6 @@ interface HeaderBarProps {
   onOpenActivity?: () => void;
   onOpenInbox?: () => void;
   onPressLogo?: () => void;
-  onPressCreate?: () => void;
 }
 
 export function HeaderBar({
@@ -17,7 +16,6 @@ export function HeaderBar({
   onOpenActivity,
   onOpenInbox,
   onPressLogo,
-  onPressCreate,
 }: HeaderBarProps) {
   return (
     <View style={styles.header}>
@@ -38,16 +36,8 @@ export function HeaderBar({
         </TouchableOpacity>
       </View>
 
-      {/* QUICK ACTIONS */}
+      {/* QUICK ACTIONS: DM, NOTIFICATIONS, SETTINGS */}
       <View style={styles.rightGroup}>
-        <TouchableOpacity
-          onPress={onPressCreate}
-          hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }}
-          style={styles.createPill}
-        >
-          <Plus size={16} color="#FFFFFF" strokeWidth={3} />
-        </TouchableOpacity>
-
         <TouchableOpacity
           onPress={onOpenInbox}
           hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }}
@@ -93,8 +83,7 @@ const styles = StyleSheet.create({
   logoTouch: { paddingVertical: 4 },
   brandTitle: { color: "#FFFFFF", fontSize: 21, fontWeight: "900", letterSpacing: -0.6 },
   brandDot: { color: "#E11D48" },
-  rightGroup: { flexDirection: "row", alignItems: "center", gap: 4 },
-  createPill: { width: 32, height: 32, borderRadius: 16, backgroundColor: "#E11D48", alignItems: "center", justifyContent: "center", marginRight: 4 },
+  rightGroup: { flexDirection: "row", alignItems: "center", gap: 6 },
   iconCircle: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center", position: "relative" },
   notificationDot: { position: "absolute", top: 8, right: 8, width: 7, height: 7, borderRadius: 3.5, backgroundColor: "#E11D48", borderWidth: 1.5, borderColor: "#09090B" },
 });

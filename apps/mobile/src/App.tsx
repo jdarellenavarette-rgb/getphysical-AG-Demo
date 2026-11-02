@@ -59,7 +59,6 @@ export default function App() {
         onOpenActivity={() => setIsActivityOpen(true)}
         onOpenInbox={() => setIsInboxOpen(true)}
         onPressLogo={() => setCurrentTab("sodia")}
-        onPressCreate={() => setIsCreatePostOpen(true)}
       />
 
       {/* ACTIVE TAB CONTENT */}
@@ -138,14 +137,21 @@ export default function App() {
         visible={isMenuOpen}
         onClose={() => setIsMenuOpen(false)}
         onSelectFeed={() => setCurrentTab("sodia")}
-        onOpenStaffDash={() => setIsStaffDashOpen(true)}
-        onOpenCoachDash={() => setIsCoachDashOpen(true)}
-        onOpenOrganizer={() => setIsOrganizerOpen(true)}
+        onSelectDiscover={() => setCurrentTab("discover")}
+        onSelectTrack={() => setCurrentTab("track")}
+        onSelectCards={() => setCurrentTab("cards")}
+        onSelectProfile={() => setCurrentTab("profile")}
         onOpenSettings={() => setIsSettingsOpen(true)}
       />
 
-      {/* SETTINGS MODAL */}
-      <SettingsModal visible={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      {/* SETTINGS MODAL WITH CONCEALED BUSINESS ROLES */}
+      <SettingsModal
+        visible={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        onOpenStaffDash={() => setIsStaffDashOpen(true)}
+        onOpenCoachDash={() => setIsCoachDashOpen(true)}
+        onOpenOrganizer={() => setIsOrganizerOpen(true)}
+      />
 
       {/* BUSINESS ROLE MODALS */}
       <StaffQuickdashModal visible={isStaffDashOpen} onClose={() => setIsStaffDashOpen(false)} />

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { View, Image, StyleSheet, StatusBar, Animated, Text, TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -7,24 +7,24 @@ interface OpeningLoadingScreenProps {
   durationMs?: number;
 }
 
-export function OpeningLoadingScreen({ onFinish, durationMs = 2200 }: OpeningLoadingScreenProps) {
+export function OpeningLoadingScreen({ onFinish, durationMs = 2400 }: OpeningLoadingScreenProps) {
   const insets = useSafeAreaInsets();
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.96)).current;
+  const scaleAnim = useRef(new Animated.Value(0.92)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // 1. Entrance animation (subtle scale & fade in)
+    // 1. Fluid entrance: smooth scale-up & fade-in
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 500,
+        duration: 600,
         useNativeDriver: true,
       }),
       Animated.spring(scaleAnim, {
         toValue: 1,
-        tension: 40,
-        friction: 7,
+        tension: 50,
+        friction: 8,
         useNativeDriver: true,
       }),
       Animated.timing(progressAnim, {
@@ -34,7 +34,7 @@ export function OpeningLoadingScreen({ onFinish, durationMs = 2200 }: OpeningLoa
       }),
     ]).start();
 
-    // 2. Smooth dismissal after durationMs
+    // 2. Smooth dismissal into the app
     const timer = setTimeout(() => {
       Animated.timing(fadeAnim, {
         toValue: 0,
@@ -57,22 +57,27 @@ export function OpeningLoadingScreen({ onFinish, durationMs = 2200 }: OpeningLoa
     <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
       <StatusBar barStyle="light-content" />
 
-      {/* FULLSCREEN MOCKUP ASSET WITH 100% VISUAL FIDELITY */}
-      <Animated.View style={[styles.contentWrapper, { transform: [{ scale: scaleAnim }] }]}>
+      {/* AMBIENT RADIAL LIGHTING BEHIND EMBLEM */}
+      <View style={styles.ambientGlow} />
+
+      {/* HIGH-DEFINITION BRAND COMPOSITION */}
+      <Animated.View style={[styles.centerBrandBlock, { transform: [{ scale: scaleAnim }] }]}>
         <Image
-          source={require("../../../assets/opening_splash.png")}
-          style={styles.splashImage}
+          source={require("../../../assets/gp_emblem_hd.png")}
+          style={styles.gpEmblem}
           resizeMode="contain"
         />
+        <Text style={styles.brandTitle}>getphysical</Text>
+        <Text style={styles.brandSubtitle}>Welcome to GetPhysical</Text>
       </Animated.View>
 
-      {/* SUBTLE BRAND PROGRESS LINE */}
-      <View style={[styles.footerContainer, { paddingBottom: Math.max(insets.bottom, 20) + 16 }]}>
+      {/* REFINED BRAND PROGRESS LINE */}
+      <View style={[styles.footerContainer, { paddingBottom: Math.max(insets.bottom, 24) + 16 }]}>
         <View style={styles.track}>
           <Animated.View style={[styles.fill, { width: progressWidth }]} />
         </View>
-        <TouchableOpacity onPress={onFinish} style={styles.skipBtn}>
-          <Text style={styles.skipText}>Tap to skip</Text>
+        <TouchableOpacity onPress={onFinish} style={styles.skipBtn} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+          <Text style={styles.skipText}>Tap to enter</Text>
         </TouchableOpacity>
       </View>
     </Animated.View>
@@ -91,15 +96,35 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  contentWrapper: {
-    width: "100%",
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
+  ambientGlow: {
+    position: "absolute",
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    backgroundColor: "rgba(225, 29, 72, 0.14)",
   },
-  splashImage: {
-    width: "100%",
-    height: "100%",
+  centerBrandBlock: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  gpEmblem: {
+    width: 154,
+    height: 68,
+  },
+  brandTitle: {
+    color: "#FFFFFF",
+    fontSize: 34,
+    fontWeight: "900",
+    fontStyle: "italic",
+    letterSpacing: -1,
+    marginTop: 14,
+  },
+  brandSubtitle: {
+    color: "#8E8E93",
+    fontSize: 14,
+    fontWeight: "500",
+    letterSpacing: 0.2,
+    marginTop: 8,
   },
   footerContainer: {
     position: "absolute",
@@ -107,7 +132,7 @@ const styles = StyleSheet.create({
     left: 40,
     right: 40,
     alignItems: "center",
-    gap: 10,
+    gap: 12,
   },
   track: {
     width: 140,

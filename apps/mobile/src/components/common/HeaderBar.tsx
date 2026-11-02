@@ -1,20 +1,25 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Menu, MessageSquare, Bell, Settings } from "lucide-react-native";
-import { useEcosystemStore } from "../../store/ecosystemStore";
 
 interface HeaderBarProps {
+  onOpenMenu?: () => void;
   onOpenSettings?: () => void;
   onOpenActivity?: () => void;
   onOpenInbox?: () => void;
 }
 
-export function HeaderBar({ onOpenSettings, onOpenActivity, onOpenInbox }: HeaderBarProps) {
+export function HeaderBar({
+  onOpenMenu,
+  onOpenSettings,
+  onOpenActivity,
+  onOpenInbox,
+}: HeaderBarProps) {
   return (
     <View style={styles.container}>
       {/* LEFT: ☰ getphysical */}
       <View style={styles.leftRow}>
-        <TouchableOpacity style={styles.menuButton}>
+        <TouchableOpacity onPress={onOpenMenu} style={styles.menuButton}>
           <Menu size={22} color="#FAFAFA" />
         </TouchableOpacity>
         <Text style={styles.appName}>getphysical</Text>
@@ -56,7 +61,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   menuButton: {
-    padding: 2,
+    padding: 6,
   },
   appName: {
     color: "#FAFAFA",

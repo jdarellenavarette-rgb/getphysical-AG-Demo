@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Dumbbell, Footprints, Apple } from "lucide-react-native";
 import { LiftTracker } from "./LiftTracker";
+import { MoveTrackerView } from "./MoveTrackerView";
 import { FoodTrackerView } from "./FoodTrackerView";
 
 type TrackSegment = "lift" | "move" | "food";
@@ -14,20 +15,20 @@ export function TrackHub() {
       {/* TODAY'S SUMMARY STRIP */}
       <View style={styles.summaryStrip}>
         <View style={styles.summaryItem}>
-          <Text style={styles.summaryVal}>3</Text>
-          <Text style={styles.summaryLabel}>Workouts This Wk</Text>
+          <Text style={styles.summaryVal}>0</Text>
+          <Text style={styles.summaryLabel}>Workouts Today</Text>
         </View>
         <View style={styles.summaryItem}>
-          <Text style={styles.summaryVal}>842</Text>
-          <Text style={styles.summaryLabel}>Cal Remaining</Text>
+          <Text style={styles.summaryVal}>2600</Text>
+          <Text style={styles.summaryLabel}>Cal Target</Text>
         </View>
         <View style={styles.summaryItem}>
-          <Text style={styles.summaryVal}>14.2 km</Text>
-          <Text style={styles.summaryLabel}>Weekly Distance</Text>
+          <Text style={styles.summaryVal}>0.0 km</Text>
+          <Text style={styles.summaryLabel}>Today's Move</Text>
         </View>
       </View>
 
-      {/* SEGMENTED TOGGLE */}
+      {/* SEGMENTED TOGGLE (LIFT | MOVE | FOOD) */}
       <View style={styles.toggleBar}>
         <TouchableOpacity
           onPress={() => setActiveSegment("lift")}
@@ -63,16 +64,8 @@ export function TrackHub() {
       {/* ACTIVE SEGMENT CONTENT */}
       <View style={{ flex: 1 }}>
         {activeSegment === "lift" && <LiftTracker />}
+        {activeSegment === "move" && <MoveTrackerView />}
         {activeSegment === "food" && <FoodTrackerView />}
-        {activeSegment === "move" && (
-          <View style={styles.movePlaceholder}>
-            <Footprints size={36} color="#10B981" />
-            <Text style={styles.moveTitle}>Move Engine (GPS & Court)</Text>
-            <Text style={styles.moveSub}>
-              Mapbox live trail recording with background tracking & crash recovery.
-            </Text>
-          </View>
-        )}
       </View>
     </View>
   );
@@ -89,7 +82,4 @@ const styles = StyleSheet.create({
   togglePillActive: { backgroundColor: "#E11D48" },
   toggleText: { color: "#71717A", fontSize: 12, fontWeight: "700" },
   toggleTextActive: { color: "#FFFFFF" },
-  movePlaceholder: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24 },
-  moveTitle: { color: "#FAFAFA", fontSize: 16, fontWeight: "800", marginTop: 12 },
-  moveSub: { color: "#71717A", fontSize: 12, textAlign: "center", marginTop: 6, maxWidth: 260 },
 });

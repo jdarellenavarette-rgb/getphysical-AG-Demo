@@ -13,6 +13,12 @@ import { InboxView, type DMThread } from "./components/sodia/InboxView";
 import { DMChatView } from "./components/sodia/DMChatView";
 import { ActivityView } from "./components/sodia/ActivityView";
 import { CreatePostModal } from "./components/sodia/CreatePostModal";
+import { MenuDrawerModal } from "./components/common/MenuDrawerModal";
+import { SettingsModal } from "./components/common/SettingsModal";
+import { StaffQuickdashModal } from "./components/business/StaffQuickdashModal";
+import { CoachQuickdashModal } from "./components/business/CoachQuickdashModal";
+import { OrganizerMeetModal } from "./components/profile/OrganizerMeetModal";
+import { useEcosystemStore } from "./store/ecosystemStore";
 import { calculateHybridServiceFee } from "sodia-core";
 import { Shield } from "lucide-react-native";
 
@@ -25,8 +31,20 @@ export default function App() {
   const [activeChatThread, setActiveChatThread] = useState<DMThread | null>(null);
   const [isActivityOpen, setIsActivityOpen] = useState(false);
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isStaffDashOpen, setIsStaffDashOpen] = useState(false);
+  const [isCoachDashOpen, setIsCoachDashOpen] = useState(false);
+  const [isOrganizerOpen, setIsOrganizerOpen] = useState(false);
 
+  const { provisionPass } = useEcosystemStore();
   const fee = calculateHybridServiceFee(250, "one_time_pass");
+
+  const handleCheckoutConfirm = () => {
+    provisionPass("Metro Core Arena", "one_time_pass", 250);
+    setSelectedFacilityCheckout(null);
+    setCurrentTab("cards");
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -34,6 +52,8 @@ export default function App() {
       <View style={styles.screenContainer}>
         {/* HEADER BAR */}
         <HeaderBar
+          onOpenMenu={() => setIsMenuOpen(true)}
+          onOpenSettings={() => setIsSettingsOpen(true)}
           onOpenActivity={() => setIsActivityOpen(true)}
           onOpenInbox={() => setIsInboxOpen(true)}
         />
@@ -55,7 +75,12 @@ export default function App() {
             <CardsHub onBrowseVenues={() => setCurrentTab("discover")} />
           )}
           {currentTab === "track" && <TrackHub />}
-          {currentTab === "profile" && <ProfileHub />}
+          {currentTab === "profile" && (
+            <ProfileHub
+              onSwitchToBusinessMode={() => setIsStaffDashOpen(true)}
+              onSwitchToCoachDash={() => setIsCoachDashOpen(true)}
+            />
+          )}
         </View>
 
         {/* BOTTOM NAVIGATION */}
@@ -65,7 +90,7 @@ export default function App() {
           onPressCreate={() => setIsCreatePostOpen(true)}
         />
 
-        {/* FULL SCREEN STORY VIEWER MODAL */}
+        {/* STORY VIEWER */}
         <StoryViewerModal
           visible={isStoryViewerOpen}
           onClose={() => setIsStoryViewerOpen(false)}
@@ -76,36 +101,42 @@ export default function App() {
         />
 
         {/* COMMENTS BOTTOM SHEET */}
-        <CommentsBottomSheet
-          visible={isCommentsOpen}
-          onClose={() => setIsCommentsOpen(false)}
-        />
+        <CommentsBottomSheet visible={isCommentsOpen} onClose={() => setIsCommentsOpen(false)} />
 
         {/* CREATE POST MODAL */}
-        <CreatePostModal
-          visible={isCreatePostOpen}
-          onClose={() => setIsCreatePostOpen(false)}
-        />
+        <CreatePostModal visible={isCreatePostOpen} onClose={() => setIsCreatePostOpen(false)} />
 
-        {/* INBOX & DM CHAT MODAL VIEWPORT */}
+        {/* INBOX & DM CHAT MODAL */}
         <Modal visible={isInboxOpen} animationType="slide" onRequestClose={() => setIsInboxOpen(false)}>
           {activeChatThread ? (
-            <DMChatView
-              thread={activeChatThread}
-              onBack={() => setActiveChatThread(null)}
-            />
+            <DMChatView thread={activeChatThread} onBack={() => setActiveChatThread(null)} />
           ) : (
-            <InboxView
-              onBack={() => setIsInboxOpen(false)}
-              onSelectThread={(t) => setActiveChatThread(t)}
-            />
+            <InboxView onBack={() => setIsInboxOpen(false)} onSelectThread={(t) => setActiveChatThread(t)} />
           )}
         </Modal>
 
-        {/* ACTIVITY & NOTIFICATIONS MODAL VIEWPORT */}
+        {/* NOTIFICATIONS & ACTIVITY MODAL */}
         <Modal visible={isActivityOpen} animationType="slide" onRequestClose={() => setIsActivityOpen(false)}>
           <ActivityView onBack={() => setIsActivityOpen(false)} />
         </Modal>
+
+        {/* NAVIGATION DRAWER & ROLE SWITCHER */}
+        <MenuDrawerModal
+          visible={isMenuOpen}
+          onClose={() => setIsMenuOpen(false)}
+          onOpenStaffDash={() => setIsStaffDashOpen(true)}
+          onOpenCoachDash={() => setIsCoachDashOpen(true)}
+          onOpenOrganizer={() => setIsOrganizerOpen(true)}
+          onOpenSettings={() => setIsSettingsOpen(true)}
+        />
+
+        {/* SETTINGS MODAL */}
+        <SettingsModal visible={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+
+        {/* BUSINESS ROLE MODALS */}
+        <StaffQuickdashModal visible={isStaffDashOpen} onClose={() => setIsStaffDashOpen(false)} />
+        <CoachQuickdashModal visible={isCoachDashOpen} onClose={() => setIsCoachDashOpen(false)} />
+        <OrganizerMeetModal visible={isOrganizerOpen} onClose={() => setIsOrganizerOpen(false)} />
 
         {/* UNIVERSAL CHECKOUT BOTTOM SHEET */}
         <Modal
@@ -143,10 +174,7 @@ export default function App() {
                 </View>
               </View>
 
-              <TouchableOpacity
-                onPress={() => setSelectedFacilityCheckout(null)}
-                style={styles.payButton}
-              >
+              <TouchableOpacity onPress={handleCheckoutConfirm} style={styles.payButton}>
                 <Shield size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
                 <Text style={styles.payButtonText}>Confirm & Pay with Biometrics</Text>
               </TouchableOpacity>

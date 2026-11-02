@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image } from "react-native";
-import { Plus, Wallet, ShieldCheck, Ticket } from "lucide-react-native";
+import { Plus, Wallet, Ticket, FileText, ChevronRight } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { ExactVIPCard } from "./ExactVIPCard";
+import { ReceiptModal } from "./ReceiptModal";
+import { StatementOfAccountModal } from "./StatementOfAccountModal";
+import type { PassRow } from "sodia-core";
 
 interface CardsHubProps {
   onBrowseVenues?: () => void;
@@ -10,9 +13,10 @@ interface CardsHubProps {
 
 export function CardsHub({ onBrowseVenues }: CardsHubProps) {
   const { passes, profile } = useEcosystemStore();
-  const [selectedPassIndex] = useState(0);
+  const [selectedPassForReceipt, setSelectedPassForReceipt] = useState<PassRow | null>(null);
+  const [isSoaOpen, setIsSoaOpen] = useState(false);
 
-  const activePass = passes[selectedPassIndex];
+  const activePass = passes[0] ?? null;
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
@@ -53,8 +57,16 @@ export function CardsHub({ onBrowseVenues }: CardsHubProps) {
 
       {/* PURE WHITE CURVED SHEET: TRANSACTION HISTORY */}
       <View style={styles.historySheet}>
-        <Text style={styles.historyTitle}>Transaction History</Text>
-        
+        <View style={styles.historyHeader}>
+          <Text style={styles.historyTitle}>Transaction History</Text>
+          {passes.length > 0 && (
+            <TouchableOpacity onPress={() => setIsSoaOpen(true)} style={styles.soaBtn}>
+              <FileText size={12} color="#E11D48" />
+              <Text style={styles.soaBtnText}>View SOA</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
         {passes.length === 0 ? (
           <View style={styles.emptyLedgerBox}>
             <Ticket size={28} color="#A1A1AA" />
@@ -66,17 +78,42 @@ export function CardsHub({ onBrowseVenues }: CardsHubProps) {
         ) : (
           <View style={styles.txList}>
             {passes.map((p) => (
-              <View key={p.id} style={styles.txRow}>
+              <TouchableOpacity
+                key={p.id}
+                onPress={() => setSelectedPassForReceipt(p)}
+                style={styles.txRow}
+              >
                 <View>
                   <Text style={styles.txName}>{p.pass_type}</Text>
                   <Text style={styles.txTime}>Valid Until: {new Date(p.valid_until).toLocaleDateString()}</Text>
                 </View>
-                <Text style={styles.txStatus}>{p.status.toUpperCase()}</Text>
-              </View>
+                <View style={styles.txRight}>
+                  <Text style={styles.txStatus}>{p.status.toUpperCase()}</Text>
+                  <ChevronRight size={14} color="#A1A1AA" />
+                </View>
+              </TouchableOpacity>
             ))}
           </View>
         )}
       </View>
+
+      {/* RECEIPT MODAL */}
+      <ReceiptModal
+        visible={!!selectedPassForReceipt}
+        pass={selectedPassForReceipt}
+        onClose={() => setSelectedPassForReceipt(null)}
+      />
+
+      {/* STATEMENT OF ACCOUNT MODAL */}
+      <StatementOfAccountModal
+        visible={isSoaOpen}
+        passes={passes}
+        onClose={() => setIsSoaOpen(false)}
+        onSelectPass={(p) => {
+          setIsSoaOpen(false);
+          setSelectedPassForReceipt(p);
+        }}
+      />
     </ScrollView>
   );
 }
@@ -92,20 +129,23 @@ const styles = StyleSheet.create({
   emptyCardContainer: { paddingHorizontal: 16, marginBottom: 16 },
   emptyCardDashed: {
     borderWidth: 2, borderColor: "rgba(236, 72, 153, 0.4)", borderStyle: "dashed", borderRadius: 20,
-    backgroundColor: "rgba(24, 24, 27, 0.7)", padding: 28, alignItems: "center", justifyContent: "center", minHeight: 210
+    backgroundColor: "rgba(24, 24, 27, 0.7)", padding: 28, alignItems: "center", justifyContent: "center", minHeight: 210,
   },
   emptyCardTitle: { fontSize: 18, fontWeight: "800", color: "#FAFAFA", marginTop: 12 },
   emptyCardDesc: { fontSize: 12, color: "#A1A1AA", textAlign: "center", marginTop: 6, lineHeight: 18, maxWidth: 280 },
   getPassButton: {
     flexDirection: "row", alignItems: "center", backgroundColor: "#EC4899", paddingHorizontal: 18, paddingVertical: 10,
-    borderRadius: 999, marginTop: 16
+    borderRadius: 999, marginTop: 16,
   },
   getPassButtonText: { color: "#FFFFFF", fontSize: 12, fontWeight: "800" },
   historySheet: {
     backgroundColor: "#FFFFFF", borderTopLeftRadius: 36, borderTopRightRadius: 36, paddingHorizontal: 20, paddingTop: 20,
-    paddingBottom: 40, minHeight: 320
+    paddingBottom: 40, minHeight: 320,
   },
-  historyTitle: { fontSize: 17, fontWeight: "900", color: "#000000", textAlign: "center", marginBottom: 16 },
+  historyHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 },
+  historyTitle: { fontSize: 17, fontWeight: "900", color: "#000000" },
+  soaBtn: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "#FFF1F2", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 },
+  soaBtnText: { color: "#E11D48", fontSize: 11, fontWeight: "700" },
   emptyLedgerBox: { alignItems: "center", justifyContent: "center", paddingVertical: 36, paddingHorizontal: 20 },
   emptyLedgerTitle: { fontSize: 14, fontWeight: "800", color: "#18181B", marginTop: 10 },
   emptyLedgerSubtitle: { fontSize: 12, color: "#71717A", textAlign: "center", marginTop: 4, lineHeight: 18, maxWidth: 260 },
@@ -113,5 +153,6 @@ const styles = StyleSheet.create({
   txRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 12, backgroundColor: "#F4F4F5", borderRadius: 12 },
   txName: { fontSize: 13, fontWeight: "800", color: "#000000" },
   txTime: { fontSize: 11, color: "#71717A", marginTop: 2 },
+  txRight: { flexDirection: "row", alignItems: "center", gap: 6 },
   txStatus: { fontSize: 11, fontWeight: "800", color: "#EC4899" },
 });

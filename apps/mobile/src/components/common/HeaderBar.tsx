@@ -1,12 +1,14 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { Menu, MessageSquare, Bell, Settings } from "lucide-react-native";
+import { Menu, MessageSquare, Bell, Settings, Plus } from "lucide-react-native";
 
 interface HeaderBarProps {
   onOpenMenu?: () => void;
   onOpenSettings?: () => void;
   onOpenActivity?: () => void;
   onOpenInbox?: () => void;
+  onPressLogo?: () => void;
+  onPressCreate?: () => void;
 }
 
 export function HeaderBar({
@@ -14,6 +16,8 @@ export function HeaderBar({
   onOpenSettings,
   onOpenActivity,
   onOpenInbox,
+  onPressLogo,
+  onPressCreate,
 }: HeaderBarProps) {
   return (
     <View style={styles.container}>
@@ -26,35 +30,48 @@ export function HeaderBar({
         >
           <Menu size={24} color="#FAFAFA" />
         </TouchableOpacity>
-        <Text style={styles.appName}>getphysical</Text>
+        <TouchableOpacity
+          onPress={onPressLogo}
+          hitSlop={{ top: 10, bottom: 10, left: 6, right: 10 }}
+        >
+          <Text style={styles.appName}>getphysical</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* RIGHT: Chat, Bell, Settings */}
+      {/* RIGHT: Create (+), Chat, Bell, Settings */}
       <View style={styles.rightRow}>
         <TouchableOpacity
+          onPress={onPressCreate}
+          hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }}
+          style={styles.createButton}
+        >
+          <Plus size={18} color="#FFFFFF" strokeWidth={2.5} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
           onPress={onOpenInbox}
-          hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}
+          hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }}
           style={styles.iconButton}
         >
-          <MessageSquare size={22} color="#FAFAFA" />
+          <MessageSquare size={21} color="#FAFAFA" />
           <View style={styles.badgeDot} />
         </TouchableOpacity>
 
         <TouchableOpacity
           onPress={onOpenActivity}
-          hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}
+          hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }}
           style={styles.iconButton}
         >
-          <Bell size={22} color="#FAFAFA" />
+          <Bell size={21} color="#FAFAFA" />
           <View style={styles.badgeDot} />
         </TouchableOpacity>
 
         <TouchableOpacity
           onPress={onOpenSettings}
-          hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}
+          hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }}
           style={styles.iconButton}
         >
-          <Settings size={22} color="#FAFAFA" />
+          <Settings size={21} color="#FAFAFA" />
         </TouchableOpacity>
       </View>
     </View>
@@ -77,8 +94,8 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   menuButton: {
-    minWidth: 44,
-    minHeight: 44,
+    minWidth: 40,
+    minHeight: 40,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -91,11 +108,20 @@ const styles = StyleSheet.create({
   rightRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 4,
+  },
+  createButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#E11D48",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 4,
   },
   iconButton: {
-    minWidth: 44,
-    minHeight: 44,
+    minWidth: 38,
+    minHeight: 38,
     alignItems: "center",
     justifyContent: "center",
     position: "relative",

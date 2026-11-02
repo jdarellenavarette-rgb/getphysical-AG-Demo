@@ -6,6 +6,7 @@ import { useEcosystemStore } from "../../store/ecosystemStore";
 interface MenuDrawerModalProps {
   visible: boolean;
   onClose: () => void;
+  onSelectFeed?: () => void;
   onOpenStaffDash: () => void;
   onOpenCoachDash: () => void;
   onOpenOrganizer: () => void;
@@ -15,6 +16,7 @@ interface MenuDrawerModalProps {
 export function MenuDrawerModal({
   visible,
   onClose,
+  onSelectFeed,
   onOpenStaffDash,
   onOpenCoachDash,
   onOpenOrganizer,
@@ -56,6 +58,7 @@ export function MenuDrawerModal({
             <TouchableOpacity
               onPress={() => {
                 setRole("individual");
+                onSelectFeed?.();
                 onClose();
               }}
               style={[styles.roleItem, currentRole === "individual" && styles.roleItemActive]}

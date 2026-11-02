@@ -58,6 +58,8 @@ export default function App() {
         onOpenSettings={() => setIsSettingsOpen(true)}
         onOpenActivity={() => setIsActivityOpen(true)}
         onOpenInbox={() => setIsInboxOpen(true)}
+        onPressLogo={() => setCurrentTab("sodia")}
+        onPressCreate={() => setIsCreatePostOpen(true)}
       />
 
       {/* ACTIVE TAB CONTENT */}
@@ -126,6 +128,7 @@ export default function App() {
       <MenuDrawerModal
         visible={isMenuOpen}
         onClose={() => setIsMenuOpen(false)}
+        onSelectFeed={() => setCurrentTab("sodia")}
         onOpenStaffDash={() => setIsStaffDashOpen(true)}
         onOpenCoachDash={() => setIsCoachDashOpen(true)}
         onOpenOrganizer={() => setIsOrganizerOpen(true)}

@@ -1,9 +1,9 @@
 import React from "react";
-import { View, TouchableOpacity, StyleSheet } from "react-native";
+import { View, TouchableOpacity, StyleSheet, Text } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MapPin, BarChart2, Plus, Wallet, User } from "lucide-react-native";
+import { Home, Compass, Dumbbell, Wallet, User } from "lucide-react-native";
 
-export type MobileTab = "sodia" | "discover" | "cards" | "track" | "profile";
+export type MobileTab = "sodia" | "discover" | "track" | "cards" | "profile";
 
 interface BottomBarProps {
   currentTab: MobileTab;
@@ -11,69 +11,86 @@ interface BottomBarProps {
   onPressCreate?: () => void;
 }
 
-export function BottomBar({ currentTab, onSelectTab, onPressCreate }: BottomBarProps) {
+export function BottomBar({ currentTab, onSelectTab }: BottomBarProps) {
   const insets = useSafeAreaInsets();
   const bottomOffset = Math.max(insets.bottom, 12);
 
   return (
     <View style={[styles.dockWrapper, { bottom: bottomOffset }]}>
       <View style={styles.capsuleDock}>
-        {/* TAB 1: DISCOVER / MAP */}
+        {/* TAB 1: SOCIAL FEED (SODIA) */}
+        <TouchableOpacity
+          onPress={() => onSelectTab("sodia")}
+          style={styles.dockItem}
+          hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+        >
+          <Home
+            size={22}
+            color={currentTab === "sodia" ? "#EC4899" : "#A1A1AA"}
+          />
+          <Text style={[styles.tabLabel, currentTab === "sodia" && styles.tabLabelActive]}>
+            Feed
+          </Text>
+        </TouchableOpacity>
+
+        {/* TAB 2: DISCOVER / VENUES */}
         <TouchableOpacity
           onPress={() => onSelectTab("discover")}
           style={styles.dockItem}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
         >
-          <MapPin
+          <Compass
             size={22}
             color={currentTab === "discover" ? "#EC4899" : "#A1A1AA"}
           />
+          <Text style={[styles.tabLabel, currentTab === "discover" && styles.tabLabelActive]}>
+            Venues
+          </Text>
         </TouchableOpacity>
 
-        {/* TAB 2: JOURNEY / TRACK */}
+        {/* TAB 3: TRACK HUB (LIFT / MOVE / FOOD) */}
         <TouchableOpacity
           onPress={() => onSelectTab("track")}
           style={styles.dockItem}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
         >
-          <BarChart2
+          <Dumbbell
             size={22}
             color={currentTab === "track" ? "#EC4899" : "#A1A1AA"}
           />
+          <Text style={[styles.tabLabel, currentTab === "track" && styles.tabLabelActive]}>
+            Track
+          </Text>
         </TouchableOpacity>
 
-        {/* CENTER ELEVATED FAB (+) */}
-        <View style={styles.centerFabAnchor}>
-          <TouchableOpacity
-            onPress={onPressCreate ? onPressCreate : () => onSelectTab("sodia")}
-            style={styles.centerFab}
-          >
-            <Plus size={24} color="#FFFFFF" strokeWidth={3} />
-          </TouchableOpacity>
-        </View>
-
-        {/* TAB 3: VIP CARDS & WALLET */}
+        {/* TAB 4: VIP CARDS & WALLET */}
         <TouchableOpacity
           onPress={() => onSelectTab("cards")}
           style={styles.dockItem}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
         >
           <Wallet
             size={22}
             color={currentTab === "cards" ? "#EC4899" : "#A1A1AA"}
           />
+          <Text style={[styles.tabLabel, currentTab === "cards" && styles.tabLabelActive]}>
+            Cards
+          </Text>
         </TouchableOpacity>
 
-        {/* TAB 4: PROFILE */}
+        {/* TAB 5: ATHLETE PROFILE */}
         <TouchableOpacity
           onPress={() => onSelectTab("profile")}
           style={styles.dockItem}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
         >
           <User
             size={22}
             color={currentTab === "profile" ? "#EC4899" : "#A1A1AA"}
           />
+          <Text style={[styles.tabLabel, currentTab === "profile" && styles.tabLabelActive]}>
+            Profile
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -83,20 +100,20 @@ export function BottomBar({ currentTab, onSelectTab, onPressCreate }: BottomBarP
 const styles = StyleSheet.create({
   dockWrapper: {
     position: "absolute",
-    left: 16,
-    right: 16,
+    left: 14,
+    right: 14,
     zIndex: 50,
   },
   capsuleDock: {
-    height: 56,
+    height: 58,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
-    backgroundColor: "rgba(28, 28, 30, 0.96)",
-    borderRadius: 999,
+    paddingHorizontal: 8,
+    backgroundColor: "rgba(24, 24, 27, 0.96)",
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.18)",
+    borderColor: "rgba(255, 255, 255, 0.15)",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.6,
@@ -105,29 +122,17 @@ const styles = StyleSheet.create({
   },
   dockItem: {
     flex: 1,
-    height: 56,
+    height: 58,
     alignItems: "center",
     justifyContent: "center",
   },
-  centerFabAnchor: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+  tabLabel: {
+    color: "#71717A",
+    fontSize: 10,
+    fontWeight: "700",
+    marginTop: 3,
   },
-  centerFab: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: "#EC4899",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: -22,
-    borderWidth: 4,
-    borderColor: "#09090B",
-    shadowColor: "#EC4899",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
-    elevation: 8,
+  tabLabelActive: {
+    color: "#EC4899",
   },
 });

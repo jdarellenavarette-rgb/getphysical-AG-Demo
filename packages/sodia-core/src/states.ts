@@ -145,3 +145,16 @@ export function createLoadingState<TData>(
     skeletonCount,
   };
 }
+
+export function createEmptyState<TData = null>(
+  emptyReason: string,
+  primaryActionLabel: string
+): TenStateEnvelope<TData> {
+  return {
+    status: "empty",
+    data: null,
+    emptyReason,
+    primaryActionLabel,
+  };
+}
+

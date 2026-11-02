@@ -10,8 +10,6 @@ import {
   type PRChallengeRow,
   type ProfileRow,
   type UserRole,
-  type TenStateEnvelope,
-  createSuccessState,
 } from "sodia-core";
 
 export interface MobileEcosystemState {
@@ -35,6 +33,11 @@ export interface MobileEcosystemState {
   adjustRestTimer: (deltaSeconds: number) => void;
   stopRestTimer: () => void;
   addPost: (content: string, facilityId?: string) => void;
+  provisionPass: (facilityName: string, kind: "one_time_pass" | "recurring_subscription", price: number) => void;
+  startWorkout: (title?: string) => void;
+  finishWorkout: () => void;
+  loadDemoData: () => void;
+  resetToEmpty: () => void;
 }
 
 const INITIAL_PROFILE: ProfileRow = {
@@ -45,9 +48,9 @@ const INITIAL_PROFILE: ProfileRow = {
   avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
   avatar_url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
   cover_url: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80",
-  bio: "Hyrox athlete & functional weightlifter. Makati & BGC.",
+  bio: "Functional weightlifter & Hyrox athlete.",
   dob: "1998-05-15",
-  home_location: "Metro Core Arena (BGC)",
+  home_location: "Metro Manila",
   user_roles: ["individual", "staff", "coach", "organizer"],
   is_private: false,
   streak_goal_per_week: 3,
@@ -58,11 +61,11 @@ const INITIAL_PROFILE: ProfileRow = {
   active_role: "individual",
   roles: ["individual", "staff", "coach", "organizer"],
   phone_hash: "hash_9171234567",
-  streak_weeks: 5,
+  streak_weeks: 0,
   streak_goal: 3,
   streak_freeze_available: true,
   weights: { weightlifting: 40, running: 30, pickleball: 20, general: 10 },
-  metrics: { followers: 142, following: 89, activeChallenges: 2 },
+  metrics: { followers: 0, following: 0, activeChallenges: 0 },
   name: "Adam Arête",
 };
 
@@ -70,19 +73,22 @@ export const useEcosystemStore = create<MobileEcosystemState>((set) => ({
   currentRole: "individual",
   profile: INITIAL_PROFILE,
   facilities: SEED_FACILITIES,
-  passes: SEED_PASSES,
-  posts: SEED_POSTS,
-  challenges: SEED_CHALLENGES,
+  // START IN EMPTY / DEFAULT CANONICAL STATE
+  passes: [],
+  posts: [],
+  challenges: [],
   isOffline: false,
   activeWorkout: {
-    title: "Heavy Bench & Pull Push",
-    durationSeconds: 1420,
+    title: "",
+    durationSeconds: 0,
     isActive: false,
-    restTimerSeconds: 90,
+    restTimerSeconds: 0,
     isResting: false,
   },
+
   setRole: (role) => set({ currentRole: role }),
   toggleOffline: () => set((state) => ({ isOffline: !state.isOffline })),
+
   startRestTimer: (seconds = 90) =>
     set((state) => ({
       activeWorkout: {
@@ -91,6 +97,7 @@ export const useEcosystemStore = create<MobileEcosystemState>((set) => ({
         isResting: true,
       },
     })),
+
   adjustRestTimer: (delta) =>
     set((state) => ({
       activeWorkout: {
@@ -98,10 +105,50 @@ export const useEcosystemStore = create<MobileEcosystemState>((set) => ({
         restTimerSeconds: Math.max(0, state.activeWorkout.restTimerSeconds + delta),
       },
     })),
+
   stopRestTimer: () =>
     set((state) => ({
       activeWorkout: { ...state.activeWorkout, isResting: false },
     })),
+
+  startWorkout: (title = "Full Body Push/Pull") =>
+    set({
+      activeWorkout: {
+        title,
+        durationSeconds: 1,
+        isActive: true,
+        restTimerSeconds: 0,
+        isResting: false,
+      },
+    }),
+
+  finishWorkout: () =>
+    set({
+      activeWorkout: {
+        title: "",
+        durationSeconds: 0,
+        isActive: false,
+        restTimerSeconds: 0,
+        isResting: false,
+      },
+    }),
+
+  provisionPass: (facilityName, kind, price) =>
+    set((state) => {
+      const newPass: PassRow = {
+        id: `pass_${Date.now()}`,
+        owner_id: state.profile.id,
+        facility_id: "fac_metro_core",
+        sku_id: kind === "recurring_subscription" ? "sku_vip_monthly" : "sku_day_pass",
+        pass_type: kind === "recurring_subscription" ? "VIP Monthly All-Access" : "Day Pass",
+        status: "active",
+        valid_until: new Date(Date.now() + 30 * 86400000).toISOString(),
+        gifted_by_user_id: null,
+        created_at: new Date().toISOString(),
+      };
+      return { passes: [newPass, ...state.passes] };
+    }),
+
   addPost: (content, facilityId) =>
     set((state) => {
       const facility = state.facilities.find((f) => f.id === facilityId);
@@ -112,8 +159,7 @@ export const useEcosystemStore = create<MobileEcosystemState>((set) => ({
         author_avatar: state.profile.avatar_url,
         author_role: state.currentRole,
         content,
-        media_url:
-          "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80",
+        media_url: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80",
         likes_count: 0,
         comments_count: 0,
         facility_tag: facility
@@ -129,5 +175,27 @@ export const useEcosystemStore = create<MobileEcosystemState>((set) => ({
         created_at: new Date().toISOString(),
       };
       return { posts: [newPost, ...state.posts] };
+    }),
+
+  // Helpers to test transitions between Empty and Seeded States
+  loadDemoData: () =>
+    set({
+      passes: SEED_PASSES,
+      posts: SEED_POSTS,
+      challenges: SEED_CHALLENGES,
+    }),
+
+  resetToEmpty: () =>
+    set({
+      passes: [],
+      posts: [],
+      challenges: [],
+      activeWorkout: {
+        title: "",
+        durationSeconds: 0,
+        isActive: false,
+        restTimerSeconds: 0,
+        isResting: false,
+      },
     }),
 }));

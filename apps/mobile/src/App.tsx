@@ -51,7 +51,9 @@ export default function App() {
           {currentTab === "discover" && (
             <DiscoverView onSelectFacility={(fac) => setSelectedFacilityCheckout(fac.id)} />
           )}
-          {currentTab === "cards" && <CardsHub />}
+          {currentTab === "cards" && (
+            <CardsHub onBrowseVenues={() => setCurrentTab("discover")} />
+          )}
           {currentTab === "track" && <TrackHub />}
           {currentTab === "profile" && <ProfileHub />}
         </View>

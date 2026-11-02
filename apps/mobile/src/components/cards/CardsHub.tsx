@@ -1,136 +1,117 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image } from "react-native";
-import { MapPin, Coins, Ticket } from "lucide-react-native";
+import { Plus, Wallet, ShieldCheck, Ticket } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { ExactVIPCard } from "./ExactVIPCard";
-import { TenStateView } from "../common/TenStateView";
-import { createSuccessState } from "sodia-core";
 
-export function CardsHub() {
-  const { passes, profile, isOffline } = useEcosystemStore();
+interface CardsHubProps {
+  onBrowseVenues?: () => void;
+}
+
+export function CardsHub({ onBrowseVenues }: CardsHubProps) {
+  const { passes, profile } = useEcosystemStore();
   const [selectedPassIndex] = useState(0);
 
-  const activePass = passes[selectedPassIndex] ?? passes[0];
-
-  const passesState = isOffline
-    ? {
-        status: "no_internet" as const,
-        data: passes,
-        offline: {
-          cachedAtIso: new Date().toISOString(),
-          queuedMutationsCount: 0,
-          totpFallbackActive: true,
-        },
-      }
-    : createSuccessState(passes);
+  const activePass = passes[selectedPassIndex];
 
   return (
-    <TenStateView state={passesState} onRetry={() => {}}>
-      {() => (
-        <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
-          {/* USER GREETING: AVATAR + ADAM ARÊTE */}
-          <View style={styles.userGreetingRow}>
-            <Image
-              source={{ uri: profile.avatar_url ?? "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80" }}
-              style={styles.userAvatar}
-            />
-            <Text style={styles.userName}>{profile.name ?? "Adam Arête"}</Text>
+    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
+      {/* USER GREETING: AVATAR + ADAM ARÊTE */}
+      <View style={styles.userGreetingRow}>
+        <Image
+          source={{ uri: profile.avatar_url ?? "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80" }}
+          style={styles.userAvatar}
+        />
+        <View>
+          <Text style={styles.userName}>{profile.name ?? "Adam Arête"}</Text>
+          <Text style={styles.userHandle}>@{profile.username} • Athlete</Text>
+        </View>
+      </View>
+
+      {/* 3D VIP CARD STACK OR EMPTY CARD OUTLINE */}
+      {activePass ? (
+        <View style={styles.cardWrapper}>
+          <ExactVIPCard pass={activePass} facilityName="Metro Core Arena" />
+        </View>
+      ) : (
+        <View style={styles.emptyCardContainer}>
+          <View style={styles.emptyCardDashed}>
+            <Wallet size={40} color="#EC4899" />
+            <Text style={styles.emptyCardTitle}>No Active Passes</Text>
+            <Text style={styles.emptyCardDesc}>
+              Add a day pass, court booking, or VIP membership to unlock turnstiles with 60s dynamic TOTP.
+            </Text>
+            {onBrowseVenues && (
+              <TouchableOpacity onPress={onBrowseVenues} style={styles.getPassButton}>
+                <Plus size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+                <Text style={styles.getPassButtonText}>Browse Venues</Text>
+              </TouchableOpacity>
+            )}
           </View>
-
-          {/* 3D VIP CARD STACK */}
-          {activePass && (
-            <View style={styles.cardWrapper}>
-              <ExactVIPCard
-                pass={activePass}
-                facilityName="Metro Core Arena"
-              />
-            </View>
-          )}
-
-          {/* PURE WHITE CURVED SHEET: TRANSACTION HISTORY */}
-          <View style={styles.whiteHistorySheet}>
-            <Text style={styles.historyTitle}>Transaction History</Text>
-
-            {/* Item 1: Sprout Pickleball Club */}
-            <View style={styles.txRow}>
-              <View style={styles.txLeft}>
-                <View style={styles.pinIconCircle}>
-                  <MapPin size={17} color="#F97316" />
-                </View>
-                <View>
-                  <Text style={styles.txTitle}>Sprout Pickleball Club</Text>
-                  <Text style={styles.txSub}>Check-in: Today, 01:32PM</Text>
-                </View>
-              </View>
-              <View style={styles.txRight}>
-                <Text style={styles.txStatus}>FREE/PASS</Text>
-                <Text style={styles.txPrice}>PHP 999</Text>
-              </View>
-            </View>
-
-            {/* Item 2: AMP FITNESS SJDM */}
-            <View style={styles.txRow}>
-              <View style={styles.txLeft}>
-                <View style={styles.pinIconCircle}>
-                  <Coins size={17} color="#F97316" />
-                </View>
-                <View>
-                  <Text style={styles.txTitle}>AMP FITNESS SJDM</Text>
-                  <Text style={styles.txSub}>Membership: Yesterday, 11:01AM</Text>
-                </View>
-              </View>
-              <View style={styles.txRight}>
-                <Text style={styles.txStatus}>MONTHLY</Text>
-                <Text style={styles.txPrice}>PHP 799</Text>
-              </View>
-            </View>
-
-            {/* Item 3: GetPhysical+ */}
-            <View style={styles.txRow}>
-              <View style={styles.txLeft}>
-                <View style={styles.ticketIconCircle}>
-                  <Ticket size={17} color="#9333EA" />
-                </View>
-                <View>
-                  <Text style={styles.txTitle}>GetPhysical+</Text>
-                  <Text style={styles.txSub}>Subscription: Yesterday, 06:48AM</Text>
-                </View>
-              </View>
-              <View style={styles.txRight}>
-                <Text style={styles.txStatus}>MONTHLY</Text>
-                <Text style={styles.txPrice}>PHP 149</Text>
-              </View>
-            </View>
-
-            {/* VIEW FULL HISTORY GRADIENT BUTTON */}
-            <TouchableOpacity style={styles.viewFullHistoryButton}>
-              <Text style={styles.viewFullHistoryText}>VIEW FULL HISTORY</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
+        </View>
       )}
-    </TenStateView>
+
+      {/* PURE WHITE CURVED SHEET: TRANSACTION HISTORY */}
+      <View style={styles.historySheet}>
+        <Text style={styles.historyTitle}>Transaction History</Text>
+        
+        {passes.length === 0 ? (
+          <View style={styles.emptyLedgerBox}>
+            <Ticket size={28} color="#A1A1AA" />
+            <Text style={styles.emptyLedgerTitle}>No transactions recorded</Text>
+            <Text style={styles.emptyLedgerSubtitle}>
+              Check-ins, drop-in receipts, and memberships will appear on your immutable ledger here.
+            </Text>
+          </View>
+        ) : (
+          <View style={styles.txList}>
+            {passes.map((p) => (
+              <View key={p.id} style={styles.txRow}>
+                <View>
+                  <Text style={styles.txName}>{p.pass_type}</Text>
+                  <Text style={styles.txTime}>Valid Until: {new Date(p.valid_until).toLocaleDateString()}</Text>
+                </View>
+                <Text style={styles.txStatus}>{p.status.toUpperCase()}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#000000" },
-  contentContainer: { paddingBottom: 85 },
-  userGreetingRow: { flexDirection: "row", alignItems: "center", gap: 14, paddingHorizontal: 20, paddingTop: 6, paddingBottom: 10 },
-  userAvatar: { width: 56, height: 56, borderRadius: 28, borderWidth: 2, borderColor: "rgba(255,255,255,0.7)" },
-  userName: { fontSize: 24, fontWeight: "900", color: "#FFFFFF", letterSpacing: -0.3 },
-  cardWrapper: { paddingHorizontal: 16, marginBottom: 14 },
-  whiteHistorySheet: { backgroundColor: "#FFFFFF", borderTopLeftRadius: 36, borderTopRightRadius: 36, paddingHorizontal: 18, paddingTop: 18, paddingBottom: 24, gap: 10 },
-  historyTitle: { fontSize: 17, fontWeight: "900", color: "#000000", textAlign: "center", marginBottom: 6, letterSpacing: -0.3 },
-  txRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 12, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E4E4E7", borderRadius: 14 },
-  txLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
-  pinIconCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: "#FFF7ED", borderWidth: 1, borderColor: "#FED7AA", alignItems: "center", justifyContent: "center" },
-  ticketIconCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: "#FAF5FF", borderWidth: 1, borderColor: "#E9D5FF", alignItems: "center", justifyContent: "center" },
-  txTitle: { fontSize: 12, fontWeight: "800", color: "#000000" },
-  txSub: { fontSize: 10, color: "#A1A1AA", marginTop: 2 },
-  txRight: { alignItems: "flex-end" },
-  txStatus: { fontSize: 11, fontWeight: "900", color: "#000000" },
-  txPrice: { fontSize: 10, color: "#A1A1AA", marginTop: 2 },
-  viewFullHistoryButton: { marginTop: 8, width: "100%", paddingVertical: 12, borderRadius: 999, backgroundColor: "#EC4899", alignItems: "center", justifyContent: "center" },
-  viewFullHistoryText: { color: "#FFFFFF", fontSize: 11, fontWeight: "900", letterSpacing: 0.8 },
+  container: { flex: 1, backgroundColor: "#09090B" },
+  contentContainer: { paddingBottom: 100 },
+  userGreetingRow: { flexDirection: "row", alignItems: "center", gap: 14, paddingHorizontal: 20, paddingTop: 10, paddingBottom: 14 },
+  userAvatar: { width: 56, height: 56, borderRadius: 28, borderWidth: 2, borderColor: "#EC4899" },
+  userName: { fontSize: 22, fontWeight: "900", color: "#FAFAFA", letterSpacing: -0.3 },
+  userHandle: { fontSize: 11, color: "#A1A1AA", marginTop: 1 },
+  cardWrapper: { paddingHorizontal: 16, marginBottom: 12 },
+  emptyCardContainer: { paddingHorizontal: 16, marginBottom: 16 },
+  emptyCardDashed: {
+    borderWidth: 2, borderColor: "rgba(236, 72, 153, 0.4)", borderStyle: "dashed", borderRadius: 20,
+    backgroundColor: "rgba(24, 24, 27, 0.7)", padding: 28, alignItems: "center", justifyContent: "center", minHeight: 210
+  },
+  emptyCardTitle: { fontSize: 18, fontWeight: "800", color: "#FAFAFA", marginTop: 12 },
+  emptyCardDesc: { fontSize: 12, color: "#A1A1AA", textAlign: "center", marginTop: 6, lineHeight: 18, maxWidth: 280 },
+  getPassButton: {
+    flexDirection: "row", alignItems: "center", backgroundColor: "#EC4899", paddingHorizontal: 18, paddingVertical: 10,
+    borderRadius: 999, marginTop: 16
+  },
+  getPassButtonText: { color: "#FFFFFF", fontSize: 12, fontWeight: "800" },
+  historySheet: {
+    backgroundColor: "#FFFFFF", borderTopLeftRadius: 36, borderTopRightRadius: 36, paddingHorizontal: 20, paddingTop: 20,
+    paddingBottom: 40, minHeight: 320
+  },
+  historyTitle: { fontSize: 17, fontWeight: "900", color: "#000000", textAlign: "center", marginBottom: 16 },
+  emptyLedgerBox: { alignItems: "center", justifyContent: "center", paddingVertical: 36, paddingHorizontal: 20 },
+  emptyLedgerTitle: { fontSize: 14, fontWeight: "800", color: "#18181B", marginTop: 10 },
+  emptyLedgerSubtitle: { fontSize: 12, color: "#71717A", textAlign: "center", marginTop: 4, lineHeight: 18, maxWidth: 260 },
+  txList: { gap: 10 },
+  txRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 12, backgroundColor: "#F4F4F5", borderRadius: 12 },
+  txName: { fontSize: 13, fontWeight: "800", color: "#000000" },
+  txTime: { fontSize: 11, color: "#71717A", marginTop: 2 },
+  txStatus: { fontSize: 11, fontWeight: "800", color: "#EC4899" },
 });

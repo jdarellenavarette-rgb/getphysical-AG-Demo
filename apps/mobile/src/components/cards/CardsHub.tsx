@@ -29,10 +29,10 @@ export function CardsHub({ onBrowseVenues }: CardsHubProps) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
-      {/* USER GREETING (INSPIRATION PHOTO 2: MORNING CAT, VIP ACCOUNT) */}
+      {/* USER GREETING */}
       <View style={styles.userGreetingRow}>
         <View>
-          <Text style={styles.userName}>Morning Cat,</Text>
+          <Text style={styles.userName}>Hello, {profile.first_name},</Text>
           <Text style={styles.userHandle}>VIP Account</Text>
         </View>
         <TouchableOpacity style={styles.bellBtn}>

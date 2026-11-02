@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
-import { Play, Pause, Square, MapPin, Footprints, Flame, CheckCircle2, RotateCcw, Activity } from "lucide-react-native";
+import { Play, Pause, Square, MapPin, Footprints, Flame, CheckCircle2, RotateCcw, Activity, Send } from "lucide-react-native";
+import { useEcosystemStore } from "../../store/ecosystemStore";
 
 export function MoveTrackerView() {
+  const { addPost } = useEcosystemStore();
   const [isActive, setIsActive] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const [distanceKm, setDistanceKm] = useState(0.0);
   const [isFinished, setIsFinished] = useState(false);
   const [stampSaved, setStampSaved] = useState(false);
+  const [sharedToFeed, setSharedToFeed] = useState(false);
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | null = null;
@@ -139,13 +142,36 @@ export function MoveTrackerView() {
               <Text style={styles.stampActionText}>Mint Verified Move Stamp</Text>
             </TouchableOpacity>
           ) : (
-            <View style={styles.stampConfirmedRow}>
-              <CheckCircle2 size={16} color="#10B981" />
-              <Text style={styles.stampConfirmedText}>Verified Move Stamp Saved to Profile</Text>
+            <View style={{ alignItems: "center", width: "100%", gap: 10, marginTop: 12 }}>
+              <View style={styles.stampConfirmedRow}>
+                <CheckCircle2 size={16} color="#10B981" />
+                <Text style={styles.stampConfirmedText}>Verified Move Stamp Saved to Profile</Text>
+              </View>
+              {!sharedToFeed ? (
+                <TouchableOpacity
+                  onPress={() => {
+                    addPost("Outdoor run completed on BGC Greenway Trail! 🏃💨", undefined, {
+                      id: `stamp_move_${Date.now()}`,
+                      type: "move",
+                      title: "BGC 5K Run",
+                      primaryMetric: `${distanceKm.toFixed(2)} km`,
+                      isVerified: true,
+                      isPR: false,
+                    });
+                    setSharedToFeed(true);
+                  }}
+                  style={styles.shareFeedRunBtn}
+                >
+                  <Send size={14} color="#FFFFFF" style={{ marginRight: 6 }} />
+                  <Text style={styles.shareFeedRunText}>Share Run to Sodia Feed</Text>
+                </TouchableOpacity>
+              ) : (
+                <Text style={{ color: "#38BDF8", fontSize: 12, fontWeight: "700" }}>Shared to Sodia Feed ✓</Text>
+              )}
             </View>
           )}
 
-          <TouchableOpacity onPress={handleReset} style={styles.resetBtn}>
+          <TouchableOpacity onPress={() => { handleReset(); setSharedToFeed(false); }} style={styles.resetBtn}>
             <RotateCcw size={14} color="#A1A1AA" style={{ marginRight: 6 }} />
             <Text style={styles.resetBtnText}>New Run</Text>
           </TouchableOpacity>
@@ -195,6 +221,8 @@ const styles = StyleSheet.create({
   stampActionText: { color: "#FFFFFF", fontSize: 13, fontWeight: "800" },
   stampConfirmedRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 16 },
   stampConfirmedText: { color: "#10B981", fontSize: 12, fontWeight: "800" },
+  shareFeedRunBtn: { flexDirection: "row", alignItems: "center", backgroundColor: "#27272A", paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999, borderWidth: 1, borderColor: "#3F3F46" },
+  shareFeedRunText: { color: "#FAFAFA", fontSize: 12, fontWeight: "700" },
   resetBtn: { flexDirection: "row", alignItems: "center", marginTop: 14, padding: 8 },
   resetBtnText: { color: "#8E8E93", fontSize: 12, fontWeight: "700" },
 });

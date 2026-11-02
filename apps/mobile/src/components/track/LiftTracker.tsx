@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
-import { Check, Plus, Dumbbell, RotateCcw, Award, Flame, Zap } from "lucide-react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Modal } from "react-native";
+import { Check, Plus, Dumbbell, Award, Flame, Send, CheckCircle2 } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 
 interface WorkoutSet {
@@ -11,33 +11,44 @@ interface WorkoutSet {
 }
 
 export function LiftTracker() {
-  const { activeWorkout, startWorkout, finishWorkout, startRestTimer, adjustRestTimer, stopRestTimer } =
+  const { activeWorkout, startWorkout, finishWorkout, startRestTimer, adjustRestTimer, stopRestTimer, addPost } =
     useEcosystemStore();
 
   const [sets, setSets] = useState<WorkoutSet[]>([
-    { setNumber: 1, weight: 140, reps: 5, isCompleted: false },
-    { setNumber: 2, weight: 180, reps: 3, isCompleted: false },
-    { setNumber: 3, weight: 225, reps: 1, isCompleted: false },
+    { setNumber: 1, weight: 140, reps: 5, isCompleted: true },
+    { setNumber: 2, weight: 180, reps: 3, isCompleted: true },
+    { setNumber: 3, weight: 225, reps: 1, isCompleted: true },
   ]);
+  const [isFinishModalOpen, setIsFinishModalOpen] = useState(false);
 
   const toggleSet = (idx: number) => {
-    setSets((prev) =>
-      prev.map((s, i) => {
-        if (i === idx) {
-          const nextState = !s.isCompleted;
-          if (nextState) startRestTimer(90);
-          return { ...s, isCompleted: nextState };
-        }
-        return s;
-      })
-    );
+    setSets((prev) => prev.map((s, i) => {
+      if (i === idx) {
+        if (!s.isCompleted) startRestTimer(90);
+        return { ...s, isCompleted: !s.isCompleted };
+      }
+      return s;
+    }));
   };
 
   const addSet = () => {
     const last = sets[sets.length - 1];
-    const newWeight = last ? last.weight : 100;
-    const newReps = last ? last.reps : 5;
-    setSets((prev) => [...prev, { setNumber: prev.length + 1, weight: newWeight, reps: newReps, isCompleted: false }]);
+    setSets((prev) => [...prev, { setNumber: prev.length + 1, weight: last?.weight ?? 100, reps: last?.reps ?? 5, isCompleted: false }]);
+  };
+
+  const totalVolume = sets.filter((s) => s.isCompleted).reduce((acc, s) => acc + s.weight * s.reps, 0);
+
+  const handleShareToFeed = () => {
+    addPost("Deadlift session crushed! Verified PR stamp attached.", "fac_metro_core", {
+      id: `stamp_pr_${Date.now()}`,
+      type: "lift",
+      title: "Deadlift 1RM",
+      primaryMetric: "225 kg",
+      isVerified: true,
+      isPR: true,
+    });
+    setIsFinishModalOpen(false);
+    finishWorkout();
   };
 
   if (!activeWorkout.isActive) {
@@ -53,29 +64,19 @@ export function LiftTracker() {
         </View>
 
         <View style={styles.prRingsRow}>
-          <View style={styles.prRingItem}>
-            <View style={styles.prRingCircle}>
-              <Text style={styles.prRingWeight}>225</Text>
-              <Text style={styles.prRingUnit}>KG</Text>
+          {[
+            { label: "Deadlift", val: 225, color: "#E11D48" },
+            { label: "Squat", val: 160, color: "#EC4899" },
+            { label: "Bench Press", val: 120, color: "#3B82F6" },
+          ].map((item) => (
+            <View key={item.label} style={styles.prRingItem}>
+              <View style={[styles.prRingCircle, { borderColor: item.color }]}>
+                <Text style={styles.prRingWeight}>{item.val}</Text>
+                <Text style={styles.prRingUnit}>KG</Text>
+              </View>
+              <Text style={styles.prRingLabel}>{item.label}</Text>
             </View>
-            <Text style={styles.prRingLabel}>Deadlift</Text>
-          </View>
-
-          <View style={styles.prRingItem}>
-            <View style={[styles.prRingCircle, { borderColor: "#EC4899" }]}>
-              <Text style={styles.prRingWeight}>160</Text>
-              <Text style={styles.prRingUnit}>KG</Text>
-            </View>
-            <Text style={styles.prRingLabel}>Squat</Text>
-          </View>
-
-          <View style={styles.prRingItem}>
-            <View style={[styles.prRingCircle, { borderColor: "#3B82F6" }]}>
-              <Text style={styles.prRingWeight}>120</Text>
-              <Text style={styles.prRingUnit}>KG</Text>
-            </View>
-            <Text style={styles.prRingLabel}>Bench Press</Text>
-          </View>
+          ))}
         </View>
 
         {/* WORKOUT LAUNCHPAD */}
@@ -84,13 +85,8 @@ export function LiftTracker() {
             <Dumbbell size={28} color="#FAFAFA" />
           </View>
           <Text style={styles.launchpadTitle}>Ready to Train?</Text>
-          <Text style={styles.launchpadSubtitle}>
-            Log sets with live RPE velocity feedback and automated rest timer recovery.
-          </Text>
-          <TouchableOpacity
-            onPress={() => startWorkout("Conventional Deadlift Session")}
-            style={styles.startWorkoutButton}
-          >
+          <Text style={styles.launchpadSubtitle}>Log sets with live RPE velocity feedback and automated rest timer recovery.</Text>
+          <TouchableOpacity onPress={() => startWorkout("Conventional Deadlift Session")} style={styles.startWorkoutButton}>
             <Plus size={16} color="#FFFFFF" strokeWidth={2.5} style={{ marginRight: 6 }} />
             <Text style={styles.startWorkoutText}>Start Blank Workout</Text>
           </TouchableOpacity>
@@ -107,7 +103,7 @@ export function LiftTracker() {
           <Text style={styles.title}>{activeWorkout.title}</Text>
           <Text style={styles.timerText}>In Progress • Live Logging</Text>
         </View>
-        <TouchableOpacity onPress={finishWorkout} style={styles.finishButton}>
+        <TouchableOpacity onPress={() => setIsFinishModalOpen(true)} style={styles.finishButton}>
           <Text style={styles.finishText}>Finish</Text>
         </TouchableOpacity>
       </View>
@@ -120,17 +116,14 @@ export function LiftTracker() {
             <TouchableOpacity onPress={() => adjustRestTimer(-15)} style={styles.timerAdjustBtn}>
               <Text style={styles.timerAdjustText}>-15s</Text>
             </TouchableOpacity>
-
             <View style={styles.circularClock}>
               <Text style={styles.secondsBig}>{activeWorkout.restTimerSeconds}</Text>
               <Text style={styles.secondsLabel}>SEC</Text>
             </View>
-
             <TouchableOpacity onPress={() => adjustRestTimer(15)} style={styles.timerAdjustBtn}>
               <Text style={styles.timerAdjustText}>+15s</Text>
             </TouchableOpacity>
           </View>
-
           <TouchableOpacity onPress={stopRestTimer} style={styles.skipBtn}>
             <Text style={styles.skipText}>Skip Rest</Text>
           </TouchableOpacity>
@@ -169,6 +162,26 @@ export function LiftTracker() {
           <Text style={styles.addSetText}>Add Set</Text>
         </TouchableOpacity>
       </View>
+
+      {/* WORKOUT COMPLETION MODAL */}
+      <Modal visible={isFinishModalOpen} transparent animationType="slide" onRequestClose={() => setIsFinishModalOpen(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.finishSummaryCard}>
+            <CheckCircle2 size={36} color="#10B981" />
+            <Text style={styles.finishModalTitle}>Workout Complete!</Text>
+            <Text style={styles.finishModalSubtitle}>
+              {sets.filter((s) => s.isCompleted).length} sets logged • {totalVolume || 1465} kg total volume
+            </Text>
+            <TouchableOpacity onPress={handleShareToFeed} style={styles.shareFeedBtn}>
+              <Send size={15} color="#FFFFFF" style={{ marginRight: 6 }} />
+              <Text style={styles.shareFeedText}>Share PR Stamp to Feed</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => { setIsFinishModalOpen(false); finishWorkout(); }} style={styles.saveQuietlyBtn}>
+              <Text style={styles.saveQuietlyText}>Save to Private Log</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -221,4 +234,12 @@ const styles = StyleSheet.create({
   checkCircleCompleted: { borderColor: "#10B981", backgroundColor: "#10B981" },
   addSetBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 12, marginTop: 10 },
   addSetText: { color: "#A1A1AA", fontSize: 13, fontWeight: "700" },
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.75)", justifyContent: "center", alignItems: "center", padding: 24 },
+  finishSummaryCard: { backgroundColor: "#18181B", borderRadius: 24, padding: 24, alignItems: "center", width: "100%", borderWidth: 1, borderColor: "#27272A" },
+  finishModalTitle: { color: "#FAFAFA", fontSize: 20, fontWeight: "900", marginTop: 12 },
+  finishModalSubtitle: { color: "#A1A1AA", fontSize: 13, textAlign: "center", marginTop: 6, marginBottom: 20 },
+  shareFeedBtn: { backgroundColor: "#E11D48", borderRadius: 12, paddingVertical: 13, paddingHorizontal: 20, flexDirection: "row", alignItems: "center", width: "100%", justifyContent: "center" },
+  shareFeedText: { color: "#FFFFFF", fontSize: 13, fontWeight: "800" },
+  saveQuietlyBtn: { marginTop: 12, paddingVertical: 10 },
+  saveQuietlyText: { color: "#71717A", fontSize: 12, fontWeight: "700" },
 });

@@ -1,11 +1,13 @@
 import React, { useState } from "react";
-import { View, StyleSheet, StatusBar, Modal, Text, TouchableOpacity } from "react-native";
+import { View, StyleSheet, StatusBar, Modal } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { HeaderBar } from "./components/common/HeaderBar";
 import { BottomBar, type MobileTab } from "./components/common/BottomBar";
 import { SodiaFeed } from "./components/sodia/SodiaFeed";
 import { CardsHub } from "./components/cards/CardsHub";
-import { DiscoverView } from "./components/discover/DiscoverView";
+import { DiscoverView, type CheckoutRequest } from "./components/discover/DiscoverView";
+import { FacilityDetailSheet } from "./components/discover/FacilityDetailSheet";
+import { UniversalCheckoutModal } from "./components/common/UniversalCheckoutModal";
 import { TrackHub } from "./components/track/TrackHub";
 import { ProfileHub } from "./components/profile/ProfileHub";
 import { StoryViewerModal } from "./components/sodia/StoryViewerModal";
@@ -20,14 +22,14 @@ import { StaffQuickdashModal } from "./components/business/StaffQuickdashModal";
 import { CoachQuickdashModal } from "./components/business/CoachQuickdashModal";
 import { OrganizerMeetModal } from "./components/profile/OrganizerMeetModal";
 import { useEcosystemStore } from "./store/ecosystemStore";
-import { calculateHybridServiceFee } from "sodia-core";
-import { Shield } from "lucide-react-native";
+import type { FacilityRow } from "sodia-core";
 import { OpeningLoadingScreen } from "./components/common/OpeningLoadingScreen";
 
 export default function App() {
   const insets = useSafeAreaInsets();
   const [currentTab, setCurrentTab] = useState<MobileTab>("sodia");
-  const [selectedFacilityCheckout, setSelectedFacilityCheckout] = useState<string | null>(null);
+  const [activeCheckoutItem, setActiveCheckoutItem] = useState<CheckoutRequest | null>(null);
+  const [selectedFacilityForModal, setSelectedFacilityForModal] = useState<FacilityRow | null>(null);
   const [isStoryViewerOpen, setIsStoryViewerOpen] = useState(false);
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
   const [isInboxOpen, setIsInboxOpen] = useState(false);
@@ -41,12 +43,11 @@ export default function App() {
   const [isOrganizerOpen, setIsOrganizerOpen] = useState(false);
   const [isOpeningLoading, setIsOpeningLoading] = useState(true);
 
-  const { provisionPass } = useEcosystemStore();
-  const fee = calculateHybridServiceFee(250, "one_time_pass");
+  const { provisionPass, facilities } = useEcosystemStore();
 
-  const handleCheckoutConfirm = () => {
-    provisionPass("Metro Core Arena", "one_time_pass", 250);
-    setSelectedFacilityCheckout(null);
+  const handleCheckoutConfirm = (item: CheckoutRequest) => {
+    provisionPass(item.facilityName, item.billingKind, item.baseAmountPhp, item.title, item.facilityId);
+    setActiveCheckoutItem(null);
     setCurrentTab("cards");
   };
 
@@ -72,14 +73,17 @@ export default function App() {
       <View style={styles.contentArea}>
         {currentTab === "sodia" && (
           <SodiaFeed
-            onPressFacilityCTA={(id) => setSelectedFacilityCheckout(id)}
+            onPressFacilityCTA={(id) => {
+              const fac = facilities.find((f) => f.id === id);
+              if (fac) setSelectedFacilityForModal(fac);
+            }}
             onOpenCreatePost={() => setIsCreatePostOpen(true)}
             onOpenStory={() => setIsStoryViewerOpen(true)}
             onOpenComments={() => setIsCommentsOpen(true)}
           />
         )}
         {currentTab === "discover" && (
-          <DiscoverView onSelectFacility={(fac) => setSelectedFacilityCheckout(fac.id)} />
+          <DiscoverView onCheckoutItem={(item) => setActiveCheckoutItem(item)} />
         )}
         {currentTab === "cards" && (
           <CardsHub onBrowseVenues={() => setCurrentTab("discover")} />
@@ -87,6 +91,7 @@ export default function App() {
         {currentTab === "track" && <TrackHub />}
         {currentTab === "profile" && (
           <ProfileHub
+            onBack={() => setCurrentTab("sodia")}
             onSwitchToBusinessMode={() => setIsStaffDashOpen(true)}
             onSwitchToCoachDash={() => setIsCoachDashOpen(true)}
             onOpenMessages={() => setIsInboxOpen(true)}
@@ -109,7 +114,8 @@ export default function App() {
         onOpenComments={() => setIsCommentsOpen(true)}
         onTapLocationTag={(facId) => {
           setIsStoryViewerOpen(false);
-          setSelectedFacilityCheckout(facId);
+          const fac = facilities.find((f) => f.id === facId);
+          if (fac) setSelectedFacilityForModal(fac);
         }}
       />
 
@@ -165,49 +171,33 @@ export default function App() {
       <CoachQuickdashModal visible={isCoachDashOpen} onClose={() => setIsCoachDashOpen(false)} />
       <OrganizerMeetModal visible={isOrganizerOpen} onClose={() => setIsOrganizerOpen(false)} />
 
-      {/* UNIVERSAL CHECKOUT BOTTOM SHEET */}
-      <Modal
-        visible={!!selectedFacilityCheckout}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setSelectedFacilityCheckout(null)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.checkoutSheet}>
-            <View style={styles.sheetHeader}>
-              <Text style={styles.sheetTitle}>UNIVERSAL CHECKOUT</Text>
-              <TouchableOpacity onPress={() => setSelectedFacilityCheckout(null)}>
-                <Text style={styles.closeBtn}>Close</Text>
-              </TouchableOpacity>
-            </View>
+      {/* FACILITY DETAIL SHEET */}
+      <FacilityDetailSheet
+        facility={selectedFacilityForModal}
+        visible={!!selectedFacilityForModal}
+        onClose={() => setSelectedFacilityForModal(null)}
+        onSelectPass={(passOpt, fac) => {
+          setSelectedFacilityForModal(null);
+          setActiveCheckoutItem({
+            id: passOpt.id,
+            title: `${passOpt.title} • ${fac.name}`,
+            subtitle: passOpt.subtitle,
+            facilityId: fac.id,
+            facilityName: fac.name,
+            baseAmountPhp: passOpt.pricePhp,
+            billingKind: passOpt.billingKind,
+            splitNote: passOpt.splitNote,
+          });
+        }}
+      />
 
-            <View style={styles.inventoryItem}>
-              <Text style={styles.invTitle}>Metro Core All-Access Day Pass</Text>
-              <Text style={styles.invPrice}>₱{fee.baseAmountPhp.toFixed(2)}</Text>
-            </View>
-
-            <View style={styles.feeBreakdown}>
-              <View style={styles.feeRow}>
-                <Text style={styles.feeLabel}>Subtotal</Text>
-                <Text style={styles.feeVal}>₱{fee.baseAmountPhp.toFixed(2)}</Text>
-              </View>
-              <View style={styles.feeRow}>
-                <Text style={styles.feeLabel}>Service Fee (Hybrid Model)</Text>
-                <Text style={styles.feeVal}>₱{fee.serviceFeePhp.toFixed(2)}</Text>
-              </View>
-              <View style={[styles.feeRow, styles.totalRow]}>
-                <Text style={styles.totalLabel}>Total Charge</Text>
-                <Text style={styles.totalVal}>₱{fee.totalChargePhp.toFixed(2)}</Text>
-              </View>
-            </View>
-
-            <TouchableOpacity onPress={handleCheckoutConfirm} style={styles.payButton}>
-              <Shield size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
-              <Text style={styles.payButtonText}>Confirm & Pay with Biometrics</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      {/* UNIVERSAL CHECKOUT MODAL */}
+      <UniversalCheckoutModal
+        item={activeCheckoutItem}
+        visible={!!activeCheckoutItem}
+        onClose={() => setActiveCheckoutItem(null)}
+        onConfirm={handleCheckoutConfirm}
+      />
     </View>
   );
 }
@@ -215,21 +205,4 @@ export default function App() {
 const styles = StyleSheet.create({
   screenContainer: { flex: 1, backgroundColor: "#09090B" },
   contentArea: { flex: 1 },
-  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.7)", justifyContent: "flex-end" },
-  checkoutSheet: { backgroundColor: "#18181B", borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, borderWidth: 1, borderColor: "#27272A" },
-  sheetHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 },
-  sheetTitle: { color: "#FAFAFA", fontSize: 13, fontWeight: "800", letterSpacing: 0.8 },
-  closeBtn: { color: "#A1A1AA", fontSize: 13, fontWeight: "600" },
-  inventoryItem: { backgroundColor: "#27272A", borderRadius: 12, padding: 14, marginBottom: 16 },
-  invTitle: { color: "#FAFAFA", fontSize: 15, fontWeight: "700" },
-  invPrice: { color: "#10B981", fontSize: 16, fontWeight: "800", marginTop: 4 },
-  feeBreakdown: { borderTopWidth: 1, borderTopColor: "#27272A", paddingTop: 12, marginBottom: 16 },
-  feeRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 6 },
-  feeLabel: { color: "#A1A1AA", fontSize: 12 },
-  feeVal: { color: "#FAFAFA", fontSize: 12, fontWeight: "600" },
-  totalRow: { borderTopWidth: 1, borderTopColor: "#27272A", paddingTop: 8, marginTop: 4 },
-  totalLabel: { color: "#FAFAFA", fontSize: 14, fontWeight: "800" },
-  totalVal: { color: "#FAFAFA", fontSize: 18, fontWeight: "900" },
-  payButton: { backgroundColor: "#E11D48", borderRadius: 12, paddingVertical: 14, flexDirection: "row", alignItems: "center", justifyContent: "center" },
-  payButtonText: { color: "#FFFFFF", fontSize: 14, fontWeight: "700" },
 });

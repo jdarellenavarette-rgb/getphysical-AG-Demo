@@ -4,19 +4,33 @@ import { Search, Users, Navigation, X, Map as MapIcon, List } from "lucide-react
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { DiscoverMapCanvas } from "./DiscoverMapCanvas";
 import { DiscoverEntitySheet, type DiscoverEntityType } from "./DiscoverEntitySheet";
+import { FacilityDetailSheet, type FacilityPassOption } from "./FacilityDetailSheet";
 import type { FacilityRow } from "sodia-core";
+
+export interface CheckoutRequest {
+  id: string;
+  title: string;
+  subtitle: string;
+  facilityId: string;
+  facilityName: string;
+  baseAmountPhp: number;
+  billingKind: "one_time_pass" | "recurring_subscription";
+  splitNote?: string;
+}
 
 interface DiscoverViewProps {
   onSelectFacility?: (facility: FacilityRow) => void;
+  onCheckoutItem?: (item: CheckoutRequest) => void;
 }
 
-export function DiscoverView({ onSelectFacility }: DiscoverViewProps) {
+export function DiscoverView({ onSelectFacility, onCheckoutItem }: DiscoverViewProps) {
   const { facilities } = useEcosystemStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("All");
   const [viewMode, setViewMode] = useState<"map" | "list">("map");
   const [selectedFacilityId, setSelectedFacilityId] = useState<string | null>(facilities[0]?.id ?? null);
   const [activeSheetEntity, setActiveSheetEntity] = useState<DiscoverEntityType>(null);
+  const [selectedFacilityForDetail, setSelectedFacilityForDetail] = useState<FacilityRow | null>(null);
 
   const filters = ["All", "Commercial Gyms", "Pickleball & Courts", "Coaches", "Meets"];
 
@@ -84,7 +98,11 @@ export function DiscoverView({ onSelectFacility }: DiscoverViewProps) {
           <DiscoverMapCanvas
             facilities={filteredFacilities}
             selectedId={selectedFacilityId}
-            onSelectPin={(id) => setSelectedFacilityId(id)}
+            onSelectPin={(id) => {
+              setSelectedFacilityId(id);
+              const fac = facilities.find((f) => f.id === id);
+              if (fac) setSelectedFacilityForDetail(fac);
+            }}
             onSelectCoach={() => setActiveSheetEntity("coach")}
             onSelectMeet={() => setActiveSheetEntity("meet")}
           />
@@ -99,7 +117,7 @@ export function DiscoverView({ onSelectFacility }: DiscoverViewProps) {
                     key={fac.id}
                     onPress={() => {
                       setSelectedFacilityId(fac.id);
-                      onSelectFacility?.(fac);
+                      setSelectedFacilityForDetail(fac);
                     }}
                     style={[styles.grabCard, isSelected && styles.grabCardActive]}
                   >
@@ -120,8 +138,8 @@ export function DiscoverView({ onSelectFacility }: DiscoverViewProps) {
                         <Text style={styles.grabPrice}>
                           {fac.registry === "A" ? `₱${fac.day_pass_price_php} Day Pass` : `₱${fac.court_hourly_price_php}/hr Court`}
                         </Text>
-                        <TouchableOpacity onPress={() => onSelectFacility?.(fac)} style={styles.grabBookCTA}>
-                          <Text style={styles.grabBookText}>Instant Book</Text>
+                        <TouchableOpacity onPress={() => setSelectedFacilityForDetail(fac)} style={styles.grabBookCTA}>
+                          <Text style={styles.grabBookText}>View Passes</Text>
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -134,7 +152,7 @@ export function DiscoverView({ onSelectFacility }: DiscoverViewProps) {
       ) : (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 110, gap: 12 }}>
           {filteredFacilities.map((fac) => (
-            <TouchableOpacity key={fac.id} onPress={() => onSelectFacility?.(fac)} style={styles.listCard}>
+            <TouchableOpacity key={fac.id} onPress={() => setSelectedFacilityForDetail(fac)} style={styles.listCard}>
               <Image source={{ uri: fac.cover_image ?? "" }} style={styles.listImage} />
               <View style={{ flex: 1, marginLeft: 12 }}>
                 <Text style={styles.listName}>{fac.name}</Text>
@@ -146,13 +164,43 @@ export function DiscoverView({ onSelectFacility }: DiscoverViewProps) {
         </ScrollView>
       )}
 
+      {/* FACILITY DETAIL SHEET */}
+      <FacilityDetailSheet
+        facility={selectedFacilityForDetail}
+        visible={!!selectedFacilityForDetail}
+        onClose={() => setSelectedFacilityForDetail(null)}
+        onSelectPass={(passOpt, fac) => {
+          setSelectedFacilityForDetail(null);
+          onCheckoutItem?.({
+            id: passOpt.id,
+            title: `${passOpt.title} • ${fac.name}`,
+            subtitle: passOpt.subtitle,
+            facilityId: fac.id,
+            facilityName: fac.name,
+            baseAmountPhp: passOpt.pricePhp,
+            billingKind: passOpt.billingKind,
+            splitNote: passOpt.splitNote,
+          });
+        }}
+      />
+
       {/* DISCOVER ENTITY SHEET (COACH / TOURNAMENT) */}
       <DiscoverEntitySheet
         entityType={activeSheetEntity}
         visible={!!activeSheetEntity}
         onClose={() => setActiveSheetEntity(null)}
-        onConfirmBooking={(title, price) => {
-          if (facilities[0]) onSelectFacility?.(facilities[0]);
+        onConfirmBooking={() => {
+          const isC = activeSheetEntity === "coach";
+          onCheckoutItem?.({
+            id: isC ? "coach_miguel_pt" : "meet_sunset_open",
+            title: isC ? "1-on-1 PT Session with Miguel Ramos" : "BGC Sunset Pickleball Open Roster Entry",
+            subtitle: isC ? "Metro Core Arena • Strength & Plyometrics" : "Nexus Court Club • DUPR 3.0 - 4.0 Bracket",
+            facilityId: isC ? "fac_metro_core" : "fac_nexus_club",
+            facilityName: isC ? "Metro Core Arena" : "Nexus Racket & Court Club",
+            baseAmountPhp: isC ? 1350 : 500,
+            billingKind: "one_time_pass",
+            splitNote: isC ? "₱1,200 Coach Payout + ₱150 Floor Access Fee" : "Direct Bracket Prize Pool Escrow",
+          });
         }}
       />
     </View>

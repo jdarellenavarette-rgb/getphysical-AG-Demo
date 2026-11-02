@@ -1,16 +1,17 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView } from "react-native";
-import { Award, Shield, Eye, Briefcase, UserCheck, Calendar, CheckCircle2, MessageSquare, UserPlus } from "lucide-react-native";
+import { Award, Shield, Eye, Calendar, CheckCircle2, MessageSquare, UserPlus, ArrowLeft } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { OrganizerMeetModal } from "./OrganizerMeetModal";
 
 interface ProfileHubProps {
+  onBack?: () => void;
   onSwitchToBusinessMode?: () => void;
   onSwitchToCoachDash?: () => void;
   onOpenMessages?: () => void;
 }
 
-export function ProfileHub({ onSwitchToBusinessMode, onSwitchToCoachDash, onOpenMessages }: ProfileHubProps) {
+export function ProfileHub({ onBack, onSwitchToBusinessMode, onSwitchToCoachDash, onOpenMessages }: ProfileHubProps) {
   const { profile, passes, currentRole, setRole } = useEcosystemStore();
   const [activeTab, setActiveTab] = useState<"trophy" | "locker">("trophy");
   const [isOrganizerModalOpen, setIsOrganizerModalOpen] = useState(false);
@@ -22,6 +23,12 @@ export function ProfileHub({ onSwitchToBusinessMode, onSwitchToCoachDash, onOpen
       <View style={styles.coverContainer}>
         <Image source={{ uri: profile.cover_url ?? "" }} style={styles.coverPhoto} />
         <View style={styles.coverGradient} />
+        {onBack && (
+          <TouchableOpacity onPress={onBack} style={styles.backButtonPill}>
+            <ArrowLeft size={16} color="#FAFAFA" />
+            <Text style={styles.backButtonText}>Feed</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <View style={styles.profileHeader}>
@@ -76,43 +83,6 @@ export function ProfileHub({ onSwitchToBusinessMode, onSwitchToCoachDash, onOpen
             <Text style={styles.metricVal}>18</Text>
             <Text style={styles.metricLabel}>PR Stamps</Text>
           </View>
-        </View>
-
-        {/* ROLE PORTAL SWITCHING */}
-        <Text style={styles.portalSectionTitle}>BUSINESS WORKSPACES</Text>
-        <View style={styles.portalRow}>
-          <TouchableOpacity
-            onPress={() => {
-              setRole(currentRole === "staff" ? "individual" : "staff");
-              onSwitchToBusinessMode?.();
-            }}
-            style={[styles.portalButton, currentRole === "staff" && styles.portalButtonActive]}
-          >
-            <Briefcase size={13} color="#FAFAFA" />
-            <Text style={styles.portalButtonText}>Staff Scanner</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => {
-              setRole("organizer");
-              setIsOrganizerModalOpen(true);
-            }}
-            style={[styles.portalButton, currentRole === "organizer" && styles.portalButtonActive]}
-          >
-            <Calendar size={13} color="#FAFAFA" />
-            <Text style={styles.portalButtonText}>Organizer Pro</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => {
-              setRole(currentRole === "coach" ? "individual" : "coach");
-              onSwitchToCoachDash?.();
-            }}
-            style={[styles.portalButton, currentRole === "coach" && styles.portalButtonActive]}
-          >
-            <UserCheck size={13} color="#FAFAFA" />
-            <Text style={styles.portalButtonText}>Coach Roster</Text>
-          </TouchableOpacity>
         </View>
 
         {/* TABS */}
@@ -208,15 +178,12 @@ const styles = StyleSheet.create({
   primaryActionText: { color: "#FFFFFF", fontSize: 13, fontWeight: "800" },
   secondaryActionBtn: { flex: 1, backgroundColor: "#18181B", borderRadius: 12, paddingVertical: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "#27272A" },
   secondaryActionText: { color: "#FAFAFA", fontSize: 13, fontWeight: "800" },
+  backButtonPill: { position: "absolute", top: 12, left: 16, flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "rgba(9, 9, 11, 0.75)", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: "#27272A" },
+  backButtonText: { color: "#FAFAFA", fontSize: 12, fontWeight: "700" },
   metricsRow: { flexDirection: "row", justifyContent: "space-around", backgroundColor: "#121215", borderRadius: 14, paddingVertical: 14, marginTop: 16, borderWidth: 1, borderColor: "#18181B" },
   metricItem: { alignItems: "center" },
   metricVal: { color: "#FAFAFA", fontSize: 18, fontWeight: "900" },
   metricLabel: { color: "#71717A", fontSize: 10, fontWeight: "700", marginTop: 2 },
-  portalSectionTitle: { color: "#71717A", fontSize: 10, fontWeight: "800", letterSpacing: 0.8, marginTop: 18, marginBottom: 8 },
-  portalRow: { flexDirection: "row", gap: 8 },
-  portalButton: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: "#18181B", borderWidth: 1, borderColor: "#27272A", paddingVertical: 11, borderRadius: 10 },
-  portalButtonActive: { backgroundColor: "#E11D48", borderColor: "#E11D48" },
-  portalButtonText: { color: "#FAFAFA", fontSize: 11, fontWeight: "700" },
   tabsHeader: { flexDirection: "row", borderBottomWidth: 1, borderBottomColor: "#18181B", marginTop: 20 },
   tabItem: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 12 },
   tabItemActive: { borderBottomWidth: 2, borderBottomColor: "#E11D48" },

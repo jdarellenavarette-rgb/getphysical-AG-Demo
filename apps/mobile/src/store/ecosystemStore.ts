@@ -32,8 +32,14 @@ export interface MobileEcosystemState {
   startRestTimer: (seconds?: number) => void;
   adjustRestTimer: (deltaSeconds: number) => void;
   stopRestTimer: () => void;
-  addPost: (content: string, facilityId?: string) => void;
-  provisionPass: (facilityName: string, kind: "one_time_pass" | "recurring_subscription", price: number) => void;
+  addPost: (content: string, facilityId?: string, stamp?: SodiaPostRow["stamp"]) => void;
+  provisionPass: (
+    facilityName: string,
+    kind: "one_time_pass" | "recurring_subscription",
+    price: number,
+    customTitle?: string,
+    facilityId?: string
+  ) => void;
   startWorkout: (title?: string) => void;
   finishWorkout: () => void;
   loadDemoData: () => void;
@@ -133,14 +139,14 @@ export const useEcosystemStore = create<MobileEcosystemState>((set) => ({
       },
     }),
 
-  provisionPass: (facilityName, kind, price) =>
+  provisionPass: (facilityName, kind, price, customTitle, facilityId) =>
     set((state) => {
       const newPass: PassRow = {
         id: `pass_${Date.now()}`,
         owner_id: state.profile.id,
-        facility_id: "fac_metro_core",
+        facility_id: (facilityId as any) ?? "fac_metro_core",
         sku_id: kind === "recurring_subscription" ? "sku_vip_monthly" : "sku_day_pass",
-        pass_type: kind === "recurring_subscription" ? "VIP Monthly All-Access" : "Day Pass",
+        pass_type: customTitle ?? (kind === "recurring_subscription" ? "VIP Monthly All-Access" : "Day Pass"),
         status: "active",
         valid_until: new Date(Date.now() + 30 * 86400000).toISOString(),
         gifted_by_user_id: null,
@@ -149,7 +155,7 @@ export const useEcosystemStore = create<MobileEcosystemState>((set) => ({
       return { passes: [newPass, ...state.passes] };
     }),
 
-  addPost: (content, facilityId) =>
+  addPost: (content, facilityId, stamp) =>
     set((state) => {
       const facility = state.facilities.find((f) => f.id === facilityId);
       const newPost: SodiaPostRow = {
@@ -171,7 +177,7 @@ export const useEcosystemStore = create<MobileEcosystemState>((set) => ({
               price: facility.day_pass_price_php ?? facility.court_hourly_price_php ?? 0,
             }
           : null,
-        stamp: null,
+        stamp: stamp ?? null,
         created_at: new Date().toISOString(),
       };
       return { posts: [newPost, ...state.posts] };

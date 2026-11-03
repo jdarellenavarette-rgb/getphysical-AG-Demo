@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowLeft, Heart, MessageCircle, Award, UserPlus, Flame } from "lucide-react-native";
+import { ArrowLeft, Flame } from "lucide-react-native";
+import { useThemeStore } from "../../theme/theme";
 
 interface ActivityViewProps {
   onBack: () => void;
@@ -10,6 +11,7 @@ interface ActivityViewProps {
 
 export function ActivityView({ onBack, onNavigateToLift }: ActivityViewProps) {
   const insets = useSafeAreaInsets();
+  const { colors } = useThemeStore();
   const [activeTab, setActiveTab] = useState<"all" | "requests">("all");
   const [followedMap, setFollowedMap] = useState<Record<string, boolean>>({});
   const [acceptedChallenge, setAcceptedChallenge] = useState(false);
@@ -47,27 +49,27 @@ export function ActivityView({ onBack, onNavigateToLift }: ActivityViewProps) {
   ];
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       {/* HEADER WITH SAFE NOTCH INSET */}
-      <View style={[styles.header, { paddingTop: Math.max(insets.top, 50) + 6, height: Math.max(insets.top, 50) + 54 }]}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 50) + 6, height: Math.max(insets.top, 50) + 54, backgroundColor: colors.bgHeader, borderBottomColor: colors.borderColor }]}>
         <TouchableOpacity
           onPress={onBack}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           style={styles.backBtn}
         >
-          <ArrowLeft size={22} color="#FAFAFA" />
+          <ArrowLeft size={22} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Activity</Text>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Activity</Text>
         <View style={{ width: 44 }} />
       </View>
 
       {/* SEGMENTED TABS */}
-      <View style={styles.tabRow}>
+      <View style={[styles.tabRow, { borderBottomColor: colors.borderColor }]}>
         <TouchableOpacity
           onPress={() => setActiveTab("all")}
           style={[styles.tabItem, activeTab === "all" && styles.tabItemActive]}
         >
-          <Text style={[styles.tabText, activeTab === "all" && styles.tabTextActive]}>
+          <Text style={[styles.tabText, { color: activeTab === "all" ? colors.textPrimary : colors.textMuted }, activeTab === "all" && styles.tabTextActive]}>
             All Activity
           </Text>
         </TouchableOpacity>
@@ -75,7 +77,7 @@ export function ActivityView({ onBack, onNavigateToLift }: ActivityViewProps) {
           onPress={() => setActiveTab("requests")}
           style={[styles.tabItem, activeTab === "requests" && styles.tabItemActive]}
         >
-          <Text style={[styles.tabText, activeTab === "requests" && styles.tabTextActive]}>
+          <Text style={[styles.tabText, { color: activeTab === "requests" ? colors.textPrimary : colors.textMuted }, activeTab === "requests" && styles.tabTextActive]}>
             Follow Requests (1)
           </Text>
         </TouchableOpacity>
@@ -83,7 +85,7 @@ export function ActivityView({ onBack, onNavigateToLift }: ActivityViewProps) {
 
       {/* ACTIVITY LIST */}
       <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
-        <Text style={styles.sectionHeader}>TODAY</Text>
+        <Text style={[styles.sectionHeader, { color: colors.textMuted }]}>TODAY</Text>
         {activities
           .filter((a) => a.section === "Today")
           .map((a) => (
@@ -100,11 +102,11 @@ export function ActivityView({ onBack, onNavigateToLift }: ActivityViewProps) {
               )}
 
               <View style={styles.meta}>
-                <Text style={styles.titleText}>
-                  {a.user ? <Text style={styles.userName}>{a.user} </Text> : null}
+                <Text style={[styles.titleText, { color: colors.textSecondary }]}>
+                  {a.user ? <Text style={[styles.userName, { color: colors.textPrimary }]}>{a.user} </Text> : null}
                   {a.text}
                 </Text>
-                <Text style={styles.timeText}>{a.time}</Text>
+                <Text style={[styles.timeText, { color: colors.textMuted }]}>{a.time}</Text>
               </View>
 
               {a.type === "challenge_alert" && (
@@ -127,25 +129,25 @@ export function ActivityView({ onBack, onNavigateToLift }: ActivityViewProps) {
             </View>
           ))}
 
-        <Text style={[styles.sectionHeader, { marginTop: 24 }]}>THIS WEEK</Text>
+        <Text style={[styles.sectionHeader, { marginTop: 24, color: colors.textMuted }]}>THIS WEEK</Text>
         {activities
           .filter((a) => a.section === "This Week")
           .map((a) => (
             <View key={a.id} style={styles.activityRow}>
               <Image source={{ uri: a.avatar }} style={styles.avatar} />
               <View style={styles.meta}>
-                <Text style={styles.titleText}>
-                  <Text style={styles.userName}>{a.user} </Text>
+                <Text style={[styles.titleText, { color: colors.textSecondary }]}>
+                  <Text style={[styles.userName, { color: colors.textPrimary }]}>{a.user} </Text>
                   {a.text}
                 </Text>
-                <Text style={styles.timeText}>{a.time}</Text>
+                <Text style={[styles.timeText, { color: colors.textMuted }]}>{a.time}</Text>
               </View>
               {a.hasFollowBack && (
                 <TouchableOpacity
                   onPress={() => setFollowedMap((prev) => ({ ...prev, [a.id]: !prev[a.id] }))}
-                  style={[styles.followBackBtn, followedMap[a.id] && { backgroundColor: "#27272A" }]}
+                  style={[styles.followBackBtn, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }, followedMap[a.id] && { backgroundColor: colors.bgInput }]}
                 >
-                  <Text style={styles.followBackText}>
+                  <Text style={[styles.followBackText, { color: colors.textPrimary }]}>
                     {followedMap[a.id] ? "Following" : "Follow Back"}
                   </Text>
                 </TouchableOpacity>
@@ -158,28 +160,28 @@ export function ActivityView({ onBack, onNavigateToLift }: ActivityViewProps) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#09090B" },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: "#18181B" },
+  container: { flex: 1 },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, borderBottomWidth: 1 },
   backBtn: { minWidth: 44, minHeight: 44, justifyContent: "center", alignItems: "center" },
-  headerTitle: { color: "#FAFAFA", fontSize: 16, fontWeight: "800" },
-  tabRow: { flexDirection: "row", paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: "#18181B", gap: 16 },
+  headerTitle: { fontSize: 16, fontWeight: "800" },
+  tabRow: { flexDirection: "row", paddingHorizontal: 16, borderBottomWidth: 1, gap: 16 },
   tabItem: { paddingVertical: 12 },
   tabItemActive: { borderBottomWidth: 2, borderBottomColor: "#E11D48" },
-  tabText: { color: "#71717A", fontSize: 13, fontWeight: "600" },
-  tabTextActive: { color: "#FAFAFA", fontWeight: "700" },
+  tabText: { fontSize: 13, fontWeight: "600" },
+  tabTextActive: { fontWeight: "700" },
   list: { flex: 1, padding: 16 },
-  sectionHeader: { color: "#71717A", fontSize: 11, fontWeight: "800", letterSpacing: 0.8, marginBottom: 12 },
+  sectionHeader: { fontSize: 11, fontWeight: "800", letterSpacing: 0.8, marginBottom: 12 },
   activityRow: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
   urgentCard: { backgroundColor: "rgba(249, 115, 22, 0.12)", borderWidth: 1, borderColor: "rgba(249, 115, 22, 0.3)", borderRadius: 12, padding: 12 },
   alertIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(249, 115, 22, 0.2)", alignItems: "center", justifyContent: "center" },
   avatar: { width: 38, height: 38, borderRadius: 19 },
   meta: { flex: 1, marginLeft: 12 },
-  titleText: { color: "#D4D4D8", fontSize: 12, lineHeight: 17 },
-  userName: { color: "#FAFAFA", fontWeight: "700" },
-  timeText: { color: "#71717A", fontSize: 10, marginTop: 2 },
+  titleText: { fontSize: 12, lineHeight: 17 },
+  userName: { fontWeight: "700" },
+  timeText: { fontSize: 10, marginTop: 2 },
   viewChallengeBtn: { backgroundColor: "#E11D48", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, marginLeft: 8 },
   viewChallengeText: { color: "#FFFFFF", fontSize: 11, fontWeight: "700" },
-  followBackBtn: { backgroundColor: "#27272A", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, marginLeft: 8 },
-  followBackText: { color: "#FAFAFA", fontSize: 11, fontWeight: "700" },
+  followBackBtn: { borderWidth: 1, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, marginLeft: 8 },
+  followBackText: { fontSize: 11, fontWeight: "700" },
   postThumb: { width: 44, height: 44, borderRadius: 8, marginLeft: 8 },
 });

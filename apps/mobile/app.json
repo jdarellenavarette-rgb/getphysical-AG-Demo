@@ -10,7 +10,7 @@
     "splash": {
       "image": "./assets/gp_splash_native.png",
       "resizeMode": "contain",
-      "backgroundColor": "#121214"
+      "backgroundColor": "#151517"
     },
     "ios": {
       "supportsTablet": true,

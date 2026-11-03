@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowLeft, QrCode, CheckCircle2, XCircle, Clock, Shield, Sparkles } from "lucide-react-native";
+import { ArrowLeft, QrCode, CheckCircle2, XCircle, Clock, Shield } from "lucide-react-native";
+import { useThemeStore } from "../../theme/theme";
 
 interface StaffQuickdashModalProps {
   visible: boolean;
@@ -18,6 +19,7 @@ interface ScanLog {
 
 export function StaffQuickdashModal({ visible, onClose }: StaffQuickdashModalProps) {
   const insets = useSafeAreaInsets();
+  const { colors } = useThemeStore();
   const [lastScanResult, setLastScanResult] = useState<"GREEN" | "BLUE" | "RED" | null>(null);
   const [scanLogs, setScanLogs] = useState<ScanLog[]>([]);
 
@@ -49,96 +51,93 @@ export function StaffQuickdashModal({ visible, onClose }: StaffQuickdashModalPro
         name: "Guest (Pass Expired)",
         type: "ACCESS_DENIED",
         time: timeStr,
-        detail: "Denied • Pass expired 2 days ago. Prompting desk payment.",
+        detail: "Entry Denied: Expired Single-Day Pass",
       };
     }
 
-    setScanLogs((prev) => [newLog, ...prev]);
+    setScanLogs((prev) => [newLog, ...prev.slice(0, 19)]);
   };
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <View style={styles.container}>
-        {/* HEADER BAR WITH SAFE NOTCH INSET */}
-        <View style={[styles.topBar, { paddingTop: Math.max(insets.top, 50) + 10 }]}>
-          <TouchableOpacity
-            onPress={onClose}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-            style={styles.backBtn}
-          >
-            <ArrowLeft size={20} color="#FAFAFA" />
-            <Text style={styles.backBtnText}>Back to Athlete App</Text>
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
+        {/* HEADER BAR */}
+        <View style={[styles.topBar, { paddingTop: Math.max(insets.top, 50) + 10, backgroundColor: colors.bgHeader, borderBottomColor: colors.borderColor }]}>
+          <TouchableOpacity onPress={onClose} style={styles.backBtn}>
+            <ArrowLeft size={20} color={colors.textPrimary} />
+            <Text style={[styles.backBtnText, { color: colors.textPrimary }]}>Settings</Text>
           </TouchableOpacity>
           <View style={styles.badge}>
-            <Sparkles size={12} color="#10B981" />
-            <Text style={styles.badgeText}>STAFF SCANNER</Text>
+            <Shield size={12} color="#10B981" />
+            <Text style={styles.badgeText}>STAFF SCANNER ACTIVE</Text>
           </View>
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-          {/* VENUE STATION BANNER */}
-          <View style={styles.venueCard}>
-            <Text style={styles.venueTitle}>Metro Core Arena • Front Desk Turnstile #1</Text>
-            <Text style={styles.venueSub}>Hardware Scanner Mode • 60s Dynamic Rolling TOTP Check</Text>
+          {/* VENUE CARD */}
+          <View style={[styles.venueCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
+            <Text style={[styles.venueTitle, { color: colors.textPrimary }]}>Metro Core Arena • Turnstile Station #1</Text>
+            <Text style={[styles.venueSub, { color: colors.textMuted }]}>Hardware TOTP & DTR Attendance Validator</Text>
           </View>
 
-          {/* SIMULATED CAMERA / SCANNER VIEWPORT */}
+          {/* SIMULATED CAMERA SCANNER VIEWPORT */}
           <View
             style={[
               styles.viewportBox,
+              { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor },
               lastScanResult === "GREEN" && styles.viewportGreen,
               lastScanResult === "BLUE" && styles.viewportBlue,
               lastScanResult === "RED" && styles.viewportRed,
             ]}
           >
-            <QrCode size={56} color={lastScanResult === "GREEN" ? "#10B981" : lastScanResult === "BLUE" ? "#3B82F6" : lastScanResult === "RED" ? "#E11D48" : "#71717A"} />
-            <Text style={styles.viewportStatus}>
-              {lastScanResult === "GREEN"
-                ? "✓ ACCESS GRANTED — GATE UNLOCKED"
-                : lastScanResult === "BLUE"
-                ? "✓ STAFF DTR CLOCK-IN RECORDED"
-                : lastScanResult === "RED"
-                ? "✕ ACCESS DENIED — EXPIRED / INVALID"
-                : "READY TO SCAN DYNAMIC TOTP QR"}
+            {lastScanResult === "GREEN" && <CheckCircle2 size={44} color="#10B981" />}
+            {lastScanResult === "BLUE" && <Clock size={44} color="#3B82F6" />}
+            {lastScanResult === "RED" && <XCircle size={44} color="#E11D48" />}
+            {!lastScanResult && <QrCode size={44} color={colors.textMuted} />}
+
+            <Text style={[styles.viewportStatus, { color: colors.textPrimary }]}>
+              {lastScanResult === "GREEN" && "GATE UNLOCKED • ACCESS GRANTED"}
+              {lastScanResult === "BLUE" && "STAFF CLOCKED IN (DTR RECORDED)"}
+              {lastScanResult === "RED" && "ACCESS DENIED • EXPIRED PASS"}
+              {!lastScanResult && "POINT CAMERA AT MEMBER TOTP QR"}
             </Text>
-            <View style={styles.laserLine} />
           </View>
 
-          {/* QUICK TRIGGER BUTTONS FOR DEMO / QA */}
-          <Text style={styles.sectionHeader}>SIMULATE SCAN EVENTS</Text>
+          {/* SIMULATOR QUICK ACTIONS */}
+          <Text style={[styles.sectionHeader, { color: colors.textMuted }]}>TEST TURNSTILE TRIGGERS</Text>
           <View style={styles.actionRow}>
-            <TouchableOpacity onPress={() => handleSimulateScan("GREEN")} style={[styles.scanTriggerBtn, { backgroundColor: "rgba(16, 185, 129, 0.2)", borderColor: "#10B981" }]}>
+            <TouchableOpacity onPress={() => handleSimulateScan("GREEN")} style={[styles.scanTriggerBtn, { backgroundColor: "rgba(16, 185, 129, 0.15)", borderColor: "#10B981" }]}>
               <CheckCircle2 size={16} color="#10B981" />
-              <Text style={[styles.scanTriggerText, { color: "#10B981" }]}>Member Access (Green)</Text>
+              <Text style={[styles.scanTriggerText, { color: "#10B981" }]}>Member Access (Gate Unlock)</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => handleSimulateScan("BLUE")} style={[styles.scanTriggerBtn, { backgroundColor: "rgba(59, 130, 246, 0.2)", borderColor: "#3B82F6" }]}>
+            <TouchableOpacity onPress={() => handleSimulateScan("BLUE")} style={[styles.scanTriggerBtn, { backgroundColor: "rgba(59, 130, 246, 0.15)", borderColor: "#3B82F6" }]}>
               <Clock size={16} color="#3B82F6" />
-              <Text style={[styles.scanTriggerText, { color: "#3B82F6" }]}>Staff DTR Clock (Blue)</Text>
+              <Text style={[styles.scanTriggerText, { color: "#3B82F6" }]}>Staff DTR Clock-In</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => handleSimulateScan("RED")} style={[styles.scanTriggerBtn, { backgroundColor: "rgba(225, 29, 72, 0.2)", borderColor: "#E11D48" }]}>
+            <TouchableOpacity onPress={() => handleSimulateScan("RED")} style={[styles.scanTriggerBtn, { backgroundColor: "rgba(225, 29, 72, 0.15)", borderColor: "#E11D48" }]}>
               <XCircle size={16} color="#E11D48" />
               <Text style={[styles.scanTriggerText, { color: "#E11D48" }]}>Invalid Pass (Red)</Text>
             </TouchableOpacity>
           </View>
 
           {/* SCAN LOGS */}
-          <Text style={styles.sectionHeader}>RECENT TURNSTILE EVENTS ({scanLogs.length})</Text>
+          <Text style={[styles.sectionHeader, { color: colors.textMuted }]}>RECENT TURNSTILE EVENTS ({scanLogs.length})</Text>
           {scanLogs.length === 0 ? (
-            <View style={styles.emptyLogBox}>
-              <Shield size={28} color="#71717A" />
-              <Text style={styles.emptyLogTitle}>No scan events yet</Text>
-              <Text style={styles.emptyLogSub}>Tap one of the simulate buttons above to test gate unlocking.</Text>
+            <View style={[styles.emptyLogBox, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
+              <Shield size={28} color={colors.textMuted} />
+              <Text style={[styles.emptyLogTitle, { color: colors.textPrimary }]}>No scan events yet</Text>
+              <Text style={[styles.emptyLogSub, { color: colors.textMuted }]}>Tap one of the simulate buttons above to test gate unlocking.</Text>
             </View>
           ) : (
             scanLogs.map((log) => (
-              <View key={log.id} style={styles.logRow}>
+              <View key={log.id} style={[styles.logRow, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
                 <View style={styles.logLeft}>
-                  <Text style={styles.logName}>{log.name}</Text>
-                  <Text style={styles.logDetail}>{log.detail}</Text>
+                  <Text style={[styles.logName, { color: colors.textPrimary }]}>{log.name}</Text>
+                  <Text style={[styles.logDetail, { color: colors.textMuted }]}>{log.detail}</Text>
                 </View>
-                <Text style={styles.logTime}>{log.time}</Text>
+                <Text style={[styles.logTime, { color: colors.textMuted }]}>{log.time}</Text>
               </View>
             ))
           )}
@@ -149,32 +148,31 @@ export function StaffQuickdashModal({ visible, onClose }: StaffQuickdashModalPro
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#09090B" },
-  topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: "#18181B" },
+  container: { flex: 1 },
+  topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingBottom: 14, borderBottomWidth: 1 },
   backBtn: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 44, paddingVertical: 4 },
-  backBtnText: { color: "#FAFAFA", fontSize: 13, fontWeight: "700" },
+  backBtnText: { fontSize: 13, fontWeight: "700" },
   badge: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(16, 185, 129, 0.15)", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
   badgeText: { color: "#10B981", fontSize: 10, fontWeight: "800" },
   content: { padding: 16 },
-  venueCard: { backgroundColor: "#121215", borderRadius: 12, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: "#18181B" },
-  venueTitle: { color: "#FAFAFA", fontSize: 14, fontWeight: "800" },
-  venueSub: { color: "#71717A", fontSize: 11, marginTop: 4 },
-  viewportBox: { height: 180, backgroundColor: "#18181B", borderRadius: 16, alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: "#27272A", borderStyle: "dashed", position: "relative", overflow: "hidden", marginBottom: 16 },
-  viewportGreen: { borderColor: "#10B981", backgroundColor: "rgba(16, 185, 129, 0.05)" },
-  viewportBlue: { borderColor: "#3B82F6", backgroundColor: "rgba(59, 130, 246, 0.05)" },
-  viewportRed: { borderColor: "#E11D48", backgroundColor: "rgba(225, 29, 72, 0.05)" },
-  viewportStatus: { color: "#FAFAFA", fontSize: 12, fontWeight: "800", marginTop: 12, letterSpacing: 0.5 },
-  laserLine: { position: "absolute", width: "80%", height: 2, backgroundColor: "#E11D48", top: "50%" },
-  sectionHeader: { color: "#71717A", fontSize: 11, fontWeight: "800", letterSpacing: 0.8, marginBottom: 8, marginTop: 4 },
+  venueCard: { borderRadius: 12, padding: 14, marginBottom: 16, borderWidth: 1 },
+  venueTitle: { fontSize: 14, fontWeight: "800" },
+  venueSub: { fontSize: 11, marginTop: 4 },
+  viewportBox: { height: 180, borderRadius: 16, alignItems: "center", justifyContent: "center", borderWidth: 2, borderStyle: "dashed", overflow: "hidden", marginBottom: 16 },
+  viewportGreen: { borderColor: "#10B981", backgroundColor: "rgba(16, 185, 129, 0.08)" },
+  viewportBlue: { borderColor: "#3B82F6", backgroundColor: "rgba(59, 130, 246, 0.08)" },
+  viewportRed: { borderColor: "#E11D48", backgroundColor: "rgba(225, 29, 72, 0.08)" },
+  viewportStatus: { fontSize: 12, fontWeight: "800", marginTop: 12, letterSpacing: 0.5 },
+  sectionHeader: { fontSize: 11, fontWeight: "800", letterSpacing: 0.8, marginBottom: 8, marginTop: 4 },
   actionRow: { gap: 8, marginBottom: 16 },
   scanTriggerBtn: { flexDirection: "row", alignItems: "center", gap: 8, borderWidth: 1, borderRadius: 10, padding: 12 },
   scanTriggerText: { fontSize: 13, fontWeight: "700" },
-  emptyLogBox: { backgroundColor: "#121215", borderRadius: 12, padding: 24, alignItems: "center", borderWidth: 1, borderColor: "#18181B" },
-  emptyLogTitle: { color: "#FAFAFA", fontSize: 13, fontWeight: "700", marginTop: 8 },
-  emptyLogSub: { color: "#71717A", fontSize: 11, textAlign: "center", marginTop: 4 },
-  logRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: "#121215", borderRadius: 10, padding: 12, marginBottom: 8, borderWidth: 1, borderColor: "#18181B" },
+  emptyLogBox: { borderRadius: 12, padding: 24, alignItems: "center", borderWidth: 1 },
+  emptyLogTitle: { fontSize: 13, fontWeight: "700", marginTop: 8 },
+  emptyLogSub: { fontSize: 11, textAlign: "center", marginTop: 4 },
+  logRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderRadius: 10, padding: 12, marginBottom: 8, borderWidth: 1 },
   logLeft: { flex: 1, marginRight: 8 },
-  logName: { color: "#FAFAFA", fontSize: 13, fontWeight: "700" },
-  logDetail: { color: "#71717A", fontSize: 11, marginTop: 2 },
-  logTime: { color: "#A1A1AA", fontSize: 11, fontWeight: "600" },
+  logName: { fontSize: 13, fontWeight: "700" },
+  logDetail: { fontSize: 11, marginTop: 2 },
+  logTime: { fontSize: 11, fontWeight: "600" },
 });

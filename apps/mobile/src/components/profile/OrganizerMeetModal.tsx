@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Users, Clock, Trophy, CheckCircle2, Flame, Shield, ArrowLeft, Sparkles } from "lucide-react-native";
-import { REGISTRY_HARD_LIMITS } from "sodia-core";
+import { useThemeStore } from "../../theme/theme";
 
 interface OrganizerMeetModalProps { visible: boolean; onClose: () => void; }
 interface RosterPlayer { id: string; name: string; dupr: string; paidStatus: "AUTO_PAID_SPLIT" | "HOLD_180S"; gateCheckedIn: boolean; kudosGiven: boolean; }
@@ -21,6 +21,7 @@ const INITIAL_WAITLIST = [
 
 export function OrganizerMeetModal({ visible, onClose }: OrganizerMeetModalProps) {
   const insets = useSafeAreaInsets();
+  const { colors } = useThemeStore();
   const [subTab, setSubTab] = useState<"roster" | "waitlist" | "courts">("roster");
   const [roster, setRoster] = useState<RosterPlayer[]>(INITIAL_ROSTER);
   const [waitlist, setWaitlist] = useState(INITIAL_WAITLIST);
@@ -31,16 +32,12 @@ export function OrganizerMeetModal({ visible, onClose }: OrganizerMeetModalProps
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         {/* TOP HEADER WITH SAFE NOTCH PADDING */}
-        <View style={[styles.topBar, { paddingTop: Math.max(insets.top, 50) + 10 }]}>
-          <TouchableOpacity
-            onPress={onClose}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-            style={styles.backBtn}
-          >
-            <ArrowLeft size={20} color="#FAFAFA" />
-            <Text style={styles.backText}>Profile</Text>
+        <View style={[styles.topBar, { paddingTop: Math.max(insets.top, 50) + 10, backgroundColor: colors.bgHeader, borderBottomColor: colors.borderColor }]}>
+          <TouchableOpacity onPress={onClose} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }} style={styles.backBtn}>
+            <ArrowLeft size={20} color={colors.textPrimary} />
+            <Text style={[styles.backText, { color: colors.textPrimary }]}>Profile</Text>
           </TouchableOpacity>
           <View style={styles.rolePill}>
             <Sparkles size={12} color="#10B981" />
@@ -48,88 +45,59 @@ export function OrganizerMeetModal({ visible, onClose }: OrganizerMeetModalProps
           </View>
         </View>
 
-        <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
-          {/* RECLUB-STYLE MEET BANNER + VENUE AFFILIATION */}
-          <View style={styles.meetCard}>
+        <ScrollView showsVerticalScrollIndicator={false} style={styles.body}>
+          {/* TOURNAMENT SUMMARY CARD */}
+          <View style={[styles.meetCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
             <View style={styles.meetBadgeRow}>
-              <Text style={styles.sportTag}>PICKLEBALL OPEN PLAY • DUPR 3.4 - 4.0</Text>
-              <Text style={styles.slotCount}>24 / 24 FULL</Text>
+              <Text style={styles.sportTag}>PICKLEBALL 3.5+ OPEN PLAY</Text>
+              <Text style={styles.slotCount}>12 / 16 SLOTS CONFIRMED</Text>
             </View>
-            <Text style={styles.meetTitle}>Thursday Night BGC Dink & Drive</Text>
-            <Text style={styles.venueSub}>
-              Affiliated Venue: Nexus Club — Courts A, B, C (6:00 PM – 9:00 PM)
-            </Text>
-
-            {/* SPLIT LEDGER ADVANTAGE OVER RECLUB */}
-            <View style={styles.splitLedgerBox}>
+            <Text style={[styles.meetTitle, { color: colors.textPrimary }]}>Sunset Doubles Ladder (Court A & B)</Text>
+            <Text style={[styles.venueSub, { color: colors.textMuted }]}>Twins Fitness Court Club • Sat, 4:00 PM</Text>
+            <View style={[styles.splitLedgerBox, { backgroundColor: colors.bgCardSecondary }]}>
               <Shield size={14} color="#10B981" />
-              <Text style={styles.splitLedgerText}>
-                ₱350/head (+₱15 fee) • Auto-Split Ledger: ₱150 to Venue / ₱200 Net to Organizer (0 manual GCash screenshots)
-              </Text>
+              <Text style={[styles.splitLedgerText, { color: colors.textSecondary }]}>Escrow Active: ₱150/player fee collected automatically via Sodia Split.</Text>
             </View>
           </View>
 
-          {/* 3-TAB SWITCHER: ROSTER | WAITLIST | LIVE COURTS */}
+          {/* 3-SEGMENT SUB TABS */}
           <View style={styles.tabRow}>
-            <TouchableOpacity
-              onPress={() => setSubTab("roster")}
-              style={[styles.tabBtn, subTab === "roster" && styles.tabBtnActive]}
-            >
-              <Users size={13} color={subTab === "roster" ? "#FFFFFF" : "#A1A1AA"} />
-              <Text style={[styles.tabText, subTab === "roster" && styles.tabTextActive]}>
-                Confirmed (24)
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => setSubTab("waitlist")}
-              style={[styles.tabBtn, subTab === "waitlist" && styles.tabBtnActive]}
-            >
-              <Clock size={13} color={subTab === "waitlist" ? "#FFFFFF" : "#A1A1AA"} />
-              <Text style={[styles.tabText, subTab === "waitlist" && styles.tabTextActive]}>
-                Waitlist ({waitlist.length})
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => setSubTab("courts")}
-              style={[styles.tabBtn, subTab === "courts" && styles.tabBtnActive]}
-            >
-              <Trophy size={13} color={subTab === "courts" ? "#FFFFFF" : "#A1A1AA"} />
-              <Text style={[styles.tabText, subTab === "courts" && styles.tabTextActive]}>
-                Courts & Kudos
-              </Text>
-            </TouchableOpacity>
+            {(["roster", "waitlist", "courts"] as const).map((tab) => (
+              <TouchableOpacity
+                key={tab}
+                onPress={() => setSubTab(tab)}
+                style={[styles.tabBtn, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }, subTab === tab && styles.tabBtnActive]}
+              >
+                {tab === "roster" && <Users size={12} color={subTab === "roster" ? "#FFFFFF" : colors.textMuted} />}
+                {tab === "waitlist" && <Clock size={12} color={subTab === "waitlist" ? "#FFFFFF" : colors.textMuted} />}
+                {tab === "courts" && <Trophy size={12} color={subTab === "courts" ? "#FFFFFF" : colors.textMuted} />}
+                <Text style={[styles.tabText, { color: colors.textMuted }, subTab === tab && styles.tabTextActive]}>
+                  {tab === "roster" ? `Roster (${roster.length})` : tab === "waitlist" ? `Waitlist (${waitlist.length})` : "Live Courts"}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
 
-          {/* TAB 1: CONFIRMED ROSTER */}
+          {/* TAB 1: ROSTER */}
           {subTab === "roster" && (
             <View style={styles.sectionList}>
               {roster.map((player) => (
-                <View key={player.id} style={styles.playerRow}>
+                <View key={player.id} style={[styles.playerRow, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
                   <View>
                     <View style={styles.nameRow}>
-                      <Text style={styles.playerName}>{player.name}</Text>
-                      <View style={styles.duprBadge}>
+                      <Text style={[styles.playerName, { color: colors.textPrimary }]}>{player.name}</Text>
+                      <View style={[styles.duprBadge, { backgroundColor: colors.bgInput }]}>
                         <Text style={styles.duprText}>DUPR {player.dupr}</Text>
                       </View>
                     </View>
-                    <Text style={styles.playerSub}>
-                      {player.paidStatus === "AUTO_PAID_SPLIT"
-                        ? "✓ Auto-Paid via Sodia Split"
-                        : `⏳ Checkout Lock (${REGISTRY_HARD_LIMITS.INVENTORY_PESSIMISTIC_LOCK_SECONDS}s)`}
-                      {" • "}
-                      {player.gateCheckedIn ? "Scanned at Turnstile" : "Not at Venue Yet"}
+                    <Text style={[styles.playerSub, { color: colors.textMuted }]}>
+                      {player.gateCheckedIn ? "✓ Checked in at Gate" : "Hold reserved"} • {player.paidStatus}
                     </Text>
                   </View>
-
-                  <TouchableOpacity
-                    onPress={() => toggleKudos(player.id)}
-                    style={[styles.kudosBtn, player.kudosGiven && styles.kudosBtnActive]}
-                  >
-                    <Flame size={13} color={player.kudosGiven ? "#F59E0B" : "#A1A1AA"} />
-                    <Text style={[styles.kudosText, player.kudosGiven && { color: "#F59E0B" }]}>
-                      {player.kudosGiven ? "Kudos Sent" : "Kudos"}
+                  <TouchableOpacity onPress={() => toggleKudos(player.id)} style={[styles.kudosBtn, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }, player.kudosGiven && styles.kudosBtnActive]}>
+                    <Flame size={12} color={player.kudosGiven ? "#F59E0B" : colors.textMuted} />
+                    <Text style={[styles.kudosText, { color: colors.textMuted }, player.kudosGiven && { color: "#F59E0B" }]}>
+                      {player.kudosGiven ? "Hyped" : "Hype"}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -137,62 +105,38 @@ export function OrganizerMeetModal({ visible, onClose }: OrganizerMeetModalProps
             </View>
           )}
 
-          {/* TAB 2: WAITLIST (15-MINUTE EXCLUSIVE CLAIM) */}
+          {/* TAB 2: WAITLIST */}
           {subTab === "waitlist" && (
             <View style={styles.sectionList}>
               <View style={styles.infoBanner}>
-                <Text style={styles.infoBannerText}>
-                  Spec Rule: Dropping a slot grants #1 on the waitlist an exclusive{" "}
-                  {REGISTRY_HARD_LIMITS.WAITLIST_EXCLUSIVE_CLAIM_MINUTES}-minute checkout claim window.
-                </Text>
+                <Text style={styles.infoBannerText}>180s Auto-Drop Rule: When a slot opens, waitlist #1 has 3 minutes to confirm before passing to #2.</Text>
               </View>
               {waitlist.map((w) => (
-                <View key={w.id} style={styles.playerRow}>
+                <View key={w.id} style={[styles.playerRow, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
                   <View>
-                    <Text style={styles.playerName}>
-                      #{w.position} {w.name} (DUPR {w.dupr})
-                    </Text>
-                    <Text style={styles.playerSub}>
-                      {w.claimActive ? "⚡ 15:00 Exclusive Claim Push Sent" : "Waiting for open slot"}
-                    </Text>
+                    <Text style={[styles.playerName, { color: colors.textPrimary }]}>#{w.position} • {w.name}</Text>
+                    <Text style={[styles.playerSub, { color: colors.textMuted }]}>DUPR {w.dupr} • {w.claimActive ? "Claim link active (180s)" : "Standing by"}</Text>
                   </View>
-                  <TouchableOpacity
-                    disabled={w.claimActive}
-                    onPress={() => triggerWaitlistClaim(w.id)}
-                    style={[styles.claimBtn, w.claimActive && { backgroundColor: "#27272A" }]}
-                  >
-                    <Text style={styles.claimBtnText}>
-                      {w.claimActive ? "Claim Active" : "Offer Slot (15m)"}
-                    </Text>
+                  <TouchableOpacity onPress={() => triggerWaitlistClaim(w.id)} style={[styles.claimBtn, w.claimActive && { backgroundColor: "#10B981" }]}>
+                    <Text style={styles.claimBtnText}>{w.claimActive ? "Pinged ✓" : "Call Up"}</Text>
                   </TouchableOpacity>
                 </View>
               ))}
             </View>
           )}
 
-          {/* TAB 3: LIVE COURT ROTATOR & MATCH STAMPS */}
+          {/* TAB 3: LIVE COURTS */}
           {subTab === "courts" && (
             <View style={styles.sectionList}>
-              <View style={styles.courtCard}>
+              <View style={[styles.courtCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
                 <View style={styles.courtHeader}>
-                  <Text style={styles.courtTitle}>COURT A • ROUND ROBIN ROTATION #4</Text>
-                  <Text style={styles.courtLiveBadge}>
-                    {courtAScore.finalized ? "STAMPED TO SODIA" : "IN PROGRESS"}
-                  </Text>
+                  <Text style={[styles.courtTitle, { color: colors.textMuted }]}>COURT A • GAME 1 (FINAL)</Text>
+                  <Text style={styles.courtLiveBadge}>{courtAScore.finalized ? "OFFICIAL" : "LIVE"}</Text>
                 </View>
-                <Text style={styles.matchupText}>
-                  Marco V. / Tina S. ({courtAScore.a}) vs Enzo L. / Bianca S. ({courtAScore.b})
-                </Text>
-                <TouchableOpacity
-                  onPress={() => setCourtAScore((s) => ({ ...s, finalized: true }))}
-                  style={[styles.stampBtn, courtAScore.finalized && { backgroundColor: "#10B981" }]}
-                >
+                <Text style={[styles.matchupText, { color: colors.textPrimary }]}>Marco & Tina ({courtAScore.a}) vs Enzo & Bianca ({courtAScore.b})</Text>
+                <TouchableOpacity onPress={() => setCourtAScore((p) => ({ ...p, finalized: true }))} disabled={courtAScore.finalized} style={[styles.stampBtn, courtAScore.finalized && { backgroundColor: "#10B981" }]}>
                   <CheckCircle2 size={14} color="#FFFFFF" />
-                  <Text style={styles.stampBtnText}>
-                    {courtAScore.finalized
-                      ? "Verified Match Stamp Pushed to Players' Profiles"
-                      : "Finalize Score & Mint Verified Court Stamp"}
-                  </Text>
+                  <Text style={styles.stampBtnText}>{courtAScore.finalized ? "Scores Synced to DUPR Roster" : "Sign Off & Post Results"}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -204,45 +148,45 @@ export function OrganizerMeetModal({ visible, onClose }: OrganizerMeetModalProps
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#09090B" },
-  topBar: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 16, borderBottomWidth: 1, borderBottomColor: "#18181B" },
+  container: { flex: 1 },
+  topBar: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 16, borderBottomWidth: 1 },
   backBtn: { flexDirection: "row", alignItems: "center", gap: 6 },
-  backText: { color: "#FAFAFA", fontSize: 14, fontWeight: "700" },
+  backText: { fontSize: 14, fontWeight: "700" },
   rolePill: { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "rgba(16,185,129,0.15)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
   rolePillText: { color: "#10B981", fontSize: 10, fontWeight: "800" },
   body: { flex: 1, padding: 16 },
-  meetCard: { backgroundColor: "#121215", borderRadius: 14, padding: 16, borderWidth: 1, borderColor: "#27272A" },
+  meetCard: { borderRadius: 14, padding: 16, borderWidth: 1 },
   meetBadgeRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   sportTag: { color: "#38BDF8", fontSize: 10, fontWeight: "800" },
   slotCount: { color: "#F59E0B", fontSize: 11, fontWeight: "800" },
-  meetTitle: { color: "#FAFAFA", fontSize: 18, fontWeight: "900", marginTop: 6 },
-  venueSub: { color: "#A1A1AA", fontSize: 12, marginTop: 4 },
-  splitLedgerBox: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "#18181B", padding: 10, borderRadius: 8, marginTop: 12 },
-  splitLedgerText: { color: "#D4D4D8", fontSize: 11, flex: 1, lineHeight: 16 },
+  meetTitle: { fontSize: 18, fontWeight: "900", marginTop: 6 },
+  venueSub: { fontSize: 12, marginTop: 4 },
+  splitLedgerBox: { flexDirection: "row", alignItems: "center", gap: 8, padding: 10, borderRadius: 8, marginTop: 12 },
+  splitLedgerText: { fontSize: 11, flex: 1, lineHeight: 16 },
   tabRow: { flexDirection: "row", gap: 8, marginTop: 16, marginBottom: 12 },
-  tabBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, backgroundColor: "#18181B", paddingVertical: 10, borderRadius: 10 },
-  tabBtnActive: { backgroundColor: "#E11D48" },
-  tabText: { color: "#A1A1AA", fontSize: 11, fontWeight: "700" },
+  tabBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, paddingVertical: 10, borderRadius: 10, borderWidth: 1 },
+  tabBtnActive: { backgroundColor: "#E11D48", borderColor: "#E11D48" },
+  tabText: { fontSize: 11, fontWeight: "700" },
   tabTextActive: { color: "#FFFFFF" },
   sectionList: { gap: 10, paddingBottom: 30 },
-  playerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: "#121215", padding: 12, borderRadius: 10, borderWidth: 1, borderColor: "#27272A" },
+  playerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 12, borderRadius: 10, borderWidth: 1 },
   nameRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  playerName: { color: "#FAFAFA", fontSize: 14, fontWeight: "700" },
-  duprBadge: { backgroundColor: "#27272A", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  playerName: { fontSize: 14, fontWeight: "700" },
+  duprBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
   duprText: { color: "#38BDF8", fontSize: 10, fontWeight: "700" },
-  playerSub: { color: "#71717A", fontSize: 11, marginTop: 4 },
-  kudosBtn: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "#18181B", paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: "#27272A" },
+  playerSub: { fontSize: 11, marginTop: 4 },
+  kudosBtn: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, borderWidth: 1 },
   kudosBtnActive: { borderColor: "#F59E0B", backgroundColor: "rgba(245,158,11,0.1)" },
-  kudosText: { color: "#A1A1AA", fontSize: 11, fontWeight: "700" },
+  kudosText: { fontSize: 11, fontWeight: "700" },
   infoBanner: { backgroundColor: "rgba(56,189,248,0.1)", padding: 10, borderRadius: 8, borderWidth: 1, borderColor: "rgba(56,189,248,0.3)" },
   infoBannerText: { color: "#7DD3FC", fontSize: 11, lineHeight: 16 },
   claimBtn: { backgroundColor: "#0284C7", paddingHorizontal: 10, paddingVertical: 7, borderRadius: 8 },
   claimBtnText: { color: "#FFFFFF", fontSize: 11, fontWeight: "700" },
-  courtCard: { backgroundColor: "#121215", padding: 14, borderRadius: 12, borderWidth: 1, borderColor: "#27272A" },
+  courtCard: { padding: 14, borderRadius: 12, borderWidth: 1 },
   courtHeader: { flexDirection: "row", justifyContent: "space-between", marginBottom: 8 },
-  courtTitle: { color: "#A1A1AA", fontSize: 11, fontWeight: "800" },
+  courtTitle: { fontSize: 11, fontWeight: "800" },
   courtLiveBadge: { color: "#10B981", fontSize: 10, fontWeight: "800" },
-  matchupText: { color: "#FAFAFA", fontSize: 14, fontWeight: "800", marginBottom: 12 },
+  matchupText: { fontSize: 14, fontWeight: "800", marginBottom: 12 },
   stampBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: "#E11D48", paddingVertical: 10, borderRadius: 8 },
   stampBtnText: { color: "#FFFFFF", fontSize: 12, fontWeight: "700" },
 });

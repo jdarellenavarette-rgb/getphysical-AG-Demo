@@ -67,8 +67,8 @@ interface ThemeState {
 }
 
 export const useThemeStore = create<ThemeState>((set) => ({
-  themeMode: "dark",
-  colors: darkTheme,
+  themeMode: "light",
+  colors: lightTheme,
   setThemeMode: (mode) =>
     set({
       themeMode: mode,
@@ -76,7 +76,7 @@ export const useThemeStore = create<ThemeState>((set) => ({
     }),
   toggleTheme: () =>
     set((state) => {
-      const nextMode = state.themeMode === "dark" ? "light" : "dark";
+      const nextMode = state.themeMode === "light" ? "dark" : "light";
       return {
         themeMode: nextMode,
         colors: nextMode === "light" ? lightTheme : darkTheme,

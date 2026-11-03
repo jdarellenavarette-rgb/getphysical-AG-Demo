@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { Menu, MessageSquare, Bell, Settings, Sun, Moon } from "lucide-react-native";
+import { Menu, MessageSquare, Bell, Settings } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 
 interface HeaderBarProps {
@@ -18,7 +18,7 @@ export function HeaderBar({
   onOpenInbox,
   onPressLogo,
 }: HeaderBarProps) {
-  const { colors, themeMode, toggleTheme } = useThemeStore();
+  const { colors } = useThemeStore();
 
   return (
     <View style={[styles.header, { backgroundColor: colors.bgHeader, borderBottomColor: colors.borderColor }]}>
@@ -39,20 +39,8 @@ export function HeaderBar({
         </TouchableOpacity>
       </View>
 
-      {/* QUICK ACTIONS: THEME TOGGLE, DM, NOTIFICATIONS, SETTINGS */}
+      {/* QUICK ACTIONS: DM, NOTIFICATIONS, SETTINGS */}
       <View style={styles.rightGroup}>
-        <TouchableOpacity
-          onPress={toggleTheme}
-          hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }}
-          style={styles.iconCircle}
-        >
-          {themeMode === "dark" ? (
-            <Sun size={19} color="#F59E0B" strokeWidth={2} />
-          ) : (
-            <Moon size={19} color="#6366F1" strokeWidth={2} />
-          )}
-        </TouchableOpacity>
-
         <TouchableOpacity
           onPress={onOpenInbox}
           hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }}

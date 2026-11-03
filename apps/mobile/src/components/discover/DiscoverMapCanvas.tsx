@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { MapPin, Navigation, UserCheck, Award, Flame } from "lucide-react-native";
 import type { FacilityRow } from "sodia-core";
+import { useThemeStore } from "../../theme/theme";
 
 interface DiscoverMapCanvasProps {
   facilities: readonly FacilityRow[];
@@ -18,6 +19,17 @@ export function DiscoverMapCanvas({
   onSelectCoach,
   onSelectMeet,
 }: DiscoverMapCanvasProps) {
+  const { colors, themeMode } = useThemeStore();
+  const isLight = themeMode === "light";
+
+  const mapBg = isLight ? "#E5E7EB" : "#0C0C0F";
+  const roadBg = isLight ? "#FFFFFF" : "#191922";
+  const minorRoadBg = isLight ? "#F3F4F6" : "#16161E";
+  const roadLabelColor = isLight ? "#6B7280" : "#3F3F4E";
+  const defaultPinBg = isLight ? "#FFFFFF" : "#141418";
+  const defaultPinTextColor = isLight ? "#111827" : "#FFFFFF";
+  const defaultPinBorder = isLight ? "#D1D5DB" : "rgba(255, 255, 255, 0.15)";
+
   const pinPositions: Record<string, { left: number; top: number; road: string }> = {
     fac_metro_core: { left: 56, top: 38, road: "28th St Avenue" },
     fac_nexus_club: { left: 24, top: 58, road: "7th Avenue" },
@@ -25,34 +37,33 @@ export function DiscoverMapCanvas({
   };
 
   return (
-    <View style={styles.mapCanvas}>
-      {/* 1. REALISTIC DARK CARTOGRAPHY (GRAB / APPLE MAPS DARK) */}
-      {/* Background Park / Green Zones */}
+    <View style={[styles.mapCanvas, { backgroundColor: mapBg }]}>
+      {/* 1. REALISTIC CARTOGRAPHY */}
       <View style={styles.parkZone1} />
       <View style={styles.parkZone2} />
 
       {/* Road Network Arteries */}
-      <View style={styles.majorAvenueHorizontal} />
-      <View style={styles.majorAvenueDiagonal} />
-      <View style={styles.avenueVertical1} />
-      <View style={styles.avenueVertical2} />
-      <View style={styles.streetHorizontal} />
+      <View style={[styles.majorAvenueHorizontal, { backgroundColor: roadBg }]} />
+      <View style={[styles.majorAvenueDiagonal, { backgroundColor: roadBg }]} />
+      <View style={[styles.avenueVertical1, { backgroundColor: minorRoadBg }]} />
+      <View style={[styles.avenueVertical2, { backgroundColor: minorRoadBg }]} />
+      <View style={[styles.streetHorizontal, { backgroundColor: minorRoadBg }]} />
 
-      {/* Road Labels (Grab-style subtle typography) */}
-      <Text style={styles.roadLabelBGC}>BGC 28TH ST</Text>
-      <Text style={styles.roadLabel7th}>7TH AVE</Text>
-      <Text style={styles.roadLabelHighStreet}>BONIFACIO HIGH STREET</Text>
+      {/* Road Labels */}
+      <Text style={[styles.roadLabelBGC, { color: roadLabelColor }]}>BGC 28TH ST</Text>
+      <Text style={[styles.roadLabel7th, { color: roadLabelColor }]}>7TH AVE</Text>
+      <Text style={[styles.roadLabelHighStreet, { color: roadLabelColor }]}>BONIFACIO HIGH STREET</Text>
 
-      {/* 2. USER GPS LOCATION BEACON (Grab Blue Pulse) */}
+      {/* 2. USER GPS LOCATION BEACON */}
       <View style={styles.userBeaconContainer}>
         <View style={styles.userPulseHalo} />
         <View style={styles.userDotCore} />
-        <View style={styles.userCalloutPill}>
-          <Text style={styles.userCalloutText}>You • 28th St</Text>
+        <View style={[styles.userCalloutPill, { backgroundColor: defaultPinBg, borderColor: defaultPinBorder }]}>
+          <Text style={[styles.userCalloutText, { color: defaultPinTextColor }]}>You • 28th St</Text>
         </View>
       </View>
 
-      {/* 3. VENUE PRICE PINS (Grab / Airbnb Style) */}
+      {/* 3. VENUE PRICE PINS */}
       {facilities.map((fac) => {
         const pos = pinPositions[fac.id] ?? { left: 50, top: 50, road: "BGC" };
         const isSelected = selectedId === fac.id;
@@ -68,18 +79,36 @@ export function DiscoverMapCanvas({
               isSelected && styles.pinWrapperActive,
             ]}
           >
-            <View style={[styles.pinCapsule, isSelected && styles.pinCapsuleActive]}>
+            <View
+              style={[
+                styles.pinCapsule,
+                { backgroundColor: defaultPinBg, borderColor: defaultPinBorder },
+                isSelected && styles.pinCapsuleActive,
+              ]}
+            >
               <View style={[styles.statusDot, isSelected && { backgroundColor: "#FFFFFF" }]} />
-              <Text style={[styles.pinPriceText, isSelected && styles.pinPriceTextActive]}>
+              <Text
+                style={[
+                  styles.pinPriceText,
+                  { color: defaultPinTextColor },
+                  isSelected && styles.pinPriceTextActive,
+                ]}
+              >
                 ₱{price}
               </Text>
             </View>
-            <View style={[styles.pinAnchor, isSelected && styles.pinAnchorActive]} />
+            <View
+              style={[
+                styles.pinAnchor,
+                { borderTopColor: defaultPinBg },
+                isSelected && styles.pinAnchorActive,
+              ]}
+            />
           </TouchableOpacity>
         );
       })}
 
-      {/* 4. VERIFIED COACH PIN (Blue Pro Marker) */}
+      {/* 4. VERIFIED COACH PIN */}
       <TouchableOpacity
         onPress={() => onSelectCoach?.()}
         style={[styles.pinWrapper, { left: "68%", top: "26%" }]}
@@ -91,7 +120,7 @@ export function DiscoverMapCanvas({
         <View style={[styles.pinAnchor, { borderTopColor: "#3B82F6" }]} />
       </TouchableOpacity>
 
-      {/* 5. TOURNAMENT MEET PIN (Amber Gold Marker) */}
+      {/* 5. TOURNAMENT MEET PIN */}
       <TouchableOpacity
         onPress={() => onSelectMeet?.()}
         style={[styles.pinWrapper, { left: "18%", top: "32%" }]}

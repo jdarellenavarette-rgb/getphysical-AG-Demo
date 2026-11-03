@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Modal, ScrollView } from "react-native";
-import { X, MapPin, Award, Image as ImageIcon, Flame, Sparkles, ChevronRight, Check } from "lucide-react-native";
+import { X, MapPin, Award, Check } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
-import { SODIA_FIELD_LIMITS, type UserRole } from "sodia-core";
+import { useThemeStore } from "../../theme/theme";
+import { SODIA_FIELD_LIMITS } from "sodia-core";
 
 interface CreatePostModalProps {
   visible: boolean;
   onClose: () => void;
-  defaultMode?: "post" | "story";
+  defaultMode?: "post" | "status" | "story";
 }
 
 const BG_GRADIENTS = [
@@ -19,7 +20,8 @@ const BG_GRADIENTS = [
 
 export function CreatePostModal({ visible, onClose, defaultMode = "post" }: CreatePostModalProps) {
   const { profile, facilities, addPost, addUserStory } = useEcosystemStore();
-  const [activeTab, setActiveTab] = useState<"post" | "status" | "story">(defaultMode === "story" ? "story" : "post");
+  const { colors, themeMode } = useThemeStore();
+  const [activeTab, setActiveTab] = useState<"post" | "status" | "story">(defaultMode);
   const [caption, setCaption] = useState("");
   const [selectedBgColor, setSelectedBgColor] = useState(BG_GRADIENTS[0]!.color);
   const [selectedFacilityId, setSelectedFacilityId] = useState<string | null>("fac_metro_core");
@@ -32,28 +34,17 @@ export function CreatePostModal({ visible, onClose, defaultMode = "post" }: Crea
     if (!caption.trim() && activeTab !== "story") return;
 
     if (activeTab === "story") {
-      addUserStory(
-        "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80",
-        caption.trim() || "Crushing early session in BGC! ⚡"
-      );
+      addUserStory("https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80", caption.trim() || "Crushing early session in BGC! ⚡");
     } else if (activeTab === "status") {
-      addPost(
-        caption.trim(),
-        selectedFacilityId ?? undefined,
-        undefined,
-        null // null indicates Facebook-style colored status post
-      );
+      addPost(caption.trim(), selectedFacilityId ?? undefined, undefined, null);
     } else {
       addPost(
         caption.trim(),
         selectedFacilityId ?? undefined,
-        hasStampAttached
-          ? { id: `stamp_${Date.now()}`, type: "lift", title: "Deadlift 1RM", primaryMetric: "225 kg", isVerified: true, isPR: true }
-          : undefined,
+        hasStampAttached ? { id: `stamp_${Date.now()}`, type: "lift", title: "Deadlift 1RM", primaryMetric: "225 kg", isVerified: true, isPR: true } : undefined,
         "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80"
       );
     }
-
     setCaption("");
     onClose();
   };
@@ -61,23 +52,21 @@ export function CreatePostModal({ visible, onClose, defaultMode = "post" }: Crea
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.bgCard, borderColor: colors.borderColor, borderWidth: 1 }]}>
           {/* TOP BAR WITH MODE SEGMENTS */}
-          <View style={styles.header}>
+          <View style={[styles.header, { borderBottomColor: colors.borderColor }]}>
             <TouchableOpacity onPress={onClose} style={styles.cancelBtn}>
-              <Text style={styles.cancelText}>Cancel</Text>
+              <Text style={[styles.cancelText, { color: colors.textMuted }]}>Cancel</Text>
             </TouchableOpacity>
 
-            <View style={styles.modeTabs}>
-              <TouchableOpacity onPress={() => setActiveTab("post")} style={[styles.modeTab, activeTab === "post" && styles.modeTabActive]}>
-                <Text style={[styles.modeTabText, activeTab === "post" && styles.modeTabTextActive]}>Post</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => setActiveTab("status")} style={[styles.modeTab, activeTab === "status" && styles.modeTabActive]}>
-                <Text style={[styles.modeTabText, activeTab === "status" && styles.modeTabTextActive]}>Status</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => setActiveTab("story")} style={[styles.modeTab, activeTab === "story" && styles.modeTabActive]}>
-                <Text style={[styles.modeTabText, activeTab === "story" && styles.modeTabTextActive]}>Story</Text>
-              </TouchableOpacity>
+            <View style={[styles.modeTabs, { backgroundColor: colors.bgInput }]}>
+              {(["post", "status", "story"] as const).map((m) => (
+                <TouchableOpacity key={m} onPress={() => setActiveTab(m)} style={[styles.modeTab, activeTab === m && { backgroundColor: colors.bgCard }]}>
+                  <Text style={[styles.modeTabText, { color: activeTab === m ? colors.textPrimary : colors.textMuted }]}>
+                    {m.charAt(0).toUpperCase() + m.slice(1)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </View>
 
             <TouchableOpacity
@@ -94,7 +83,7 @@ export function CreatePostModal({ visible, onClose, defaultMode = "post" }: Crea
             <View style={styles.authorRow}>
               <Image source={{ uri: profile.avatar_url ?? "" }} style={styles.avatar} />
               <View style={styles.authorMeta}>
-                <Text style={styles.authorName}>{profile.first_name} {profile.last_name}</Text>
+                <Text style={[styles.authorName, { color: colors.textPrimary }]}>{profile.first_name} {profile.last_name}</Text>
                 <Text style={styles.privacyPill}>{activeTab === "story" ? "Your Story • 24 Hours" : "Public • Sodia Feed"}</Text>
               </View>
             </View>
@@ -103,9 +92,9 @@ export function CreatePostModal({ visible, onClose, defaultMode = "post" }: Crea
             {activeTab === "post" && (
               <>
                 <TextInput
-                  style={styles.captionInput}
-                  placeholder="What did you crush today? Share lift metrics or thoughts..."
-                  placeholderTextColor="#71717A"
+                  style={[styles.captionInput, { color: colors.textPrimary }]}
+                  placeholder="What did you crush today? Share lift metrics..."
+                  placeholderTextColor={colors.textMuted}
                   multiline
                   value={caption}
                   onChangeText={setCaption}
@@ -117,10 +106,10 @@ export function CreatePostModal({ visible, onClose, defaultMode = "post" }: Crea
                     <Award size={16} color="#10B981" />
                     <View style={{ flex: 1, marginLeft: 8 }}>
                       <Text style={styles.stampTitle}>VERIFIED LIFT STAMP</Text>
-                      <Text style={styles.stampVal}>Conventional Deadlift: 225 kg x 1 rep</Text>
+                      <Text style={[styles.stampVal, { color: colors.textPrimary }]}>Conventional Deadlift: 225 kg x 1 rep</Text>
                     </View>
                     <TouchableOpacity onPress={() => setHasStampAttached(false)}>
-                      <X size={15} color="#71717A" />
+                      <X size={15} color={colors.textMuted} />
                     </TouchableOpacity>
                   </View>
                 )}
@@ -129,24 +118,24 @@ export function CreatePostModal({ visible, onClose, defaultMode = "post" }: Crea
                   <View style={styles.venueCard}>
                     <MapPin size={16} color="#E11D48" />
                     <View style={{ flex: 1, marginLeft: 8 }}>
-                      <Text style={styles.venueName}>{selectedFac.name}</Text>
+                      <Text style={[styles.venueName, { color: colors.textPrimary }]}>{selectedFac.name}</Text>
                       <Text style={styles.venueSub}>Auto-attaches Drop-in POS Pill (₱{selectedFac.day_pass_price_php})</Text>
                     </View>
                     <TouchableOpacity onPress={() => setSelectedFacilityId(null)}>
-                      <X size={15} color="#71717A" />
+                      <X size={15} color={colors.textMuted} />
                     </TouchableOpacity>
                   </View>
                 )}
               </>
             )}
 
-            {/* MODE 2: FACEBOOK STATUS THOUGHT (COLOR BACKGROUND) */}
+            {/* MODE 2: FACEBOOK STATUS THOUGHT */}
             {activeTab === "status" && (
               <View style={styles.statusBox}>
                 <View style={[styles.statusCanvas, { backgroundColor: selectedBgColor }]}>
                   <TextInput
                     style={styles.statusTextInput}
-                    placeholder="What's on your athletic mind, Adam?"
+                    placeholder="What's on your athletic mind?"
                     placeholderTextColor="rgba(255,255,255,0.6)"
                     multiline
                     value={caption}
@@ -168,7 +157,7 @@ export function CreatePostModal({ visible, onClose, defaultMode = "post" }: Crea
               </View>
             )}
 
-            {/* MODE 3: 24H STORY COMPOSER */}
+            {/* MODE 3: STORY COMPOSER */}
             {activeTab === "story" && (
               <View style={styles.storyCanvas}>
                 <Image
@@ -198,16 +187,14 @@ export function CreatePostModal({ visible, onClose, defaultMode = "post" }: Crea
 }
 
 const styles = StyleSheet.create({
-  overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.75)", justifyContent: "flex-end" },
-  container: { backgroundColor: "#18181B", borderTopLeftRadius: 24, borderTopRightRadius: 24, height: "86%", padding: 18 },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderBottomWidth: 1, borderBottomColor: "#27272A", paddingBottom: 12 },
+  overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.65)", justifyContent: "flex-end" },
+  container: { borderTopLeftRadius: 24, borderTopRightRadius: 24, height: "86%", padding: 18 },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderBottomWidth: 1, paddingBottom: 12 },
   cancelBtn: { padding: 4 },
-  cancelText: { color: "#A1A1AA", fontSize: 13, fontWeight: "600" },
-  modeTabs: { flexDirection: "row", backgroundColor: "#121215", borderRadius: 10, padding: 3, gap: 4 },
+  cancelText: { fontSize: 13, fontWeight: "600" },
+  modeTabs: { flexDirection: "row", borderRadius: 10, padding: 3, gap: 4 },
   modeTab: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 8 },
-  modeTabActive: { backgroundColor: "#27272A" },
-  modeTabText: { color: "#71717A", fontSize: 12, fontWeight: "700" },
-  modeTabTextActive: { color: "#FAFAFA" },
+  modeTabText: { fontSize: 12, fontWeight: "700" },
   publishBtn: { backgroundColor: "#E11D48", paddingHorizontal: 16, paddingVertical: 7, borderRadius: 8 },
   publishBtnDisabled: { opacity: 0.5 },
   publishText: { color: "#FFFFFF", fontSize: 13, fontWeight: "800" },
@@ -215,14 +202,14 @@ const styles = StyleSheet.create({
   authorRow: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
   avatar: { width: 42, height: 42, borderRadius: 21 },
   authorMeta: { marginLeft: 12 },
-  authorName: { color: "#FAFAFA", fontSize: 14, fontWeight: "800" },
+  authorName: { fontSize: 14, fontWeight: "800" },
   privacyPill: { color: "#10B981", fontSize: 11, marginTop: 2, fontWeight: "600" },
-  captionInput: { color: "#FAFAFA", fontSize: 15, minHeight: 80, textAlignVertical: "top", lineHeight: 22 },
+  captionInput: { fontSize: 15, minHeight: 80, textAlignVertical: "top", lineHeight: 22 },
   stampCard: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(16, 185, 129, 0.12)", borderWidth: 1, borderColor: "rgba(16, 185, 129, 0.3)", borderRadius: 12, padding: 12, marginVertical: 8 },
   stampTitle: { color: "#10B981", fontSize: 10, fontWeight: "800" },
-  stampVal: { color: "#FAFAFA", fontSize: 12, fontWeight: "700", marginTop: 2 },
+  stampVal: { fontSize: 12, fontWeight: "700", marginTop: 2 },
   venueCard: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(225, 29, 72, 0.1)", borderWidth: 1, borderColor: "rgba(225, 29, 72, 0.25)", borderRadius: 12, padding: 12, marginVertical: 8 },
-  venueName: { color: "#FAFAFA", fontSize: 13, fontWeight: "800" },
+  venueName: { fontSize: 13, fontWeight: "800" },
   venueSub: { color: "#E11D48", fontSize: 11, marginTop: 2 },
   statusBox: { alignItems: "center", marginVertical: 12 },
   statusCanvas: { width: "100%", height: 180, borderRadius: 18, justifyContent: "center", alignItems: "center", padding: 20 },

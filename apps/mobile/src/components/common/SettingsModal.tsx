@@ -48,7 +48,7 @@ export function SettingsModal({
               {themeMode === "dark" ? <Moon size={15} color="#6366F1" /> : <Sun size={15} color="#F59E0B" />}
               <Text style={styles.cardHeader}>APPEARANCE & THEME</Text>
             </View>
-            <View style={styles.themeToggleRow}>
+            <View style={[styles.themeToggleRow, { backgroundColor: colors.bgInput }]}>
               <TouchableOpacity
                 onPress={() => setThemeMode("dark")}
                 style={[styles.themeOptionBtn, themeMode === "dark" && styles.themeOptionBtnActive]}

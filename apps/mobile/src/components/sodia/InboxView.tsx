@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Search, Edit3, ArrowLeft, Camera, Plus } from "lucide-react-native";
+import { useThemeStore } from "../../theme/theme";
 
 export interface DMThread {
   id: string;
@@ -22,6 +23,7 @@ interface InboxViewProps {
 
 export function InboxView({ onBack, onSelectThread }: InboxViewProps) {
   const insets = useSafeAreaInsets();
+  const { colors } = useThemeStore();
   const [activeTab, setActiveTab] = useState<"primary" | "requests">("primary");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -79,89 +81,89 @@ export function InboxView({ onBack, onSelectThread }: InboxViewProps) {
   ];
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       {/* HEADER */}
-      <View style={[styles.header, { paddingTop: Math.max(insets.top, 50) + 6, height: Math.max(insets.top, 50) + 54 }]}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 50) + 6, height: Math.max(insets.top, 50) + 54, backgroundColor: colors.bgHeader, borderBottomColor: colors.borderColor }]}>
         <TouchableOpacity onPress={onBack} style={styles.backBtn}>
-          <ArrowLeft size={22} color="#FAFAFA" />
+          <ArrowLeft size={22} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Messages</Text>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Messages</Text>
         <TouchableOpacity onPress={() => threads[0] && onSelectThread(threads[0])} style={styles.newMsgBtn}>
-          <Edit3 size={18} color="#FAFAFA" />
+          <Edit3 size={18} color={colors.textPrimary} />
         </TouchableOpacity>
       </View>
 
       {/* SEARCH BOX */}
-      <View style={styles.searchBox}>
-        <Search size={15} color="#71717A" />
+      <View style={[styles.searchBox, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
+        <Search size={15} color={colors.textMuted} />
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { color: colors.textPrimary }]}
           placeholder="Search messages..."
-          placeholderTextColor="#71717A"
+          placeholderTextColor={colors.textMuted}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
       </View>
 
       {/* INSTAGRAM DIRECT NOTES / ACTIVE TRAY */}
-      <View style={styles.notesTray}>
+      <View style={[styles.notesTray, { borderBottomColor: colors.borderColor }]}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.notesScroll}>
           {athleteNotes.map((n) => (
             <View key={n.id} style={styles.noteItem}>
-              <View style={styles.bubbleCloud}>
-                <Text numberOfLines={1} style={styles.bubbleCloudText}>{n.note}</Text>
+              <View style={[styles.bubbleCloud, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor, borderWidth: 1 }]}>
+                <Text numberOfLines={1} style={[styles.bubbleCloudText, { color: colors.textPrimary }]}>{n.note}</Text>
               </View>
               <View style={styles.noteAvatarWrap}>
                 <Image source={{ uri: n.avatar }} style={styles.noteAvatar} />
                 {n.isMe && (
-                  <View style={styles.noteAddPill}>
+                  <View style={[styles.noteAddPill, { borderColor: colors.bgScreen }]}>
                     <Plus size={10} color="#FFFFFF" strokeWidth={3} />
                   </View>
                 )}
               </View>
-              <Text numberOfLines={1} style={styles.noteName}>{n.name}</Text>
+              <Text numberOfLines={1} style={[styles.noteName, { color: colors.textMuted }]}>{n.name}</Text>
             </View>
           ))}
         </ScrollView>
       </View>
 
       {/* TABS */}
-      <View style={styles.tabRow}>
+      <View style={[styles.tabRow, { borderBottomColor: colors.borderColor }]}>
         <TouchableOpacity onPress={() => setActiveTab("primary")} style={[styles.tabPill, activeTab === "primary" && styles.tabPillActive]}>
-          <Text style={[styles.tabText, activeTab === "primary" && styles.tabTextActive]}>Primary</Text>
+          <Text style={[styles.tabText, { color: activeTab === "primary" ? colors.textPrimary : colors.textMuted }, activeTab === "primary" && styles.tabTextActive]}>Primary</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => setActiveTab("requests")} style={[styles.tabPill, activeTab === "requests" && styles.tabPillActive]}>
-          <Text style={[styles.tabText, activeTab === "requests" && styles.tabTextActive]}>Requests (2)</Text>
+          <Text style={[styles.tabText, { color: activeTab === "requests" ? colors.textPrimary : colors.textMuted }, activeTab === "requests" && styles.tabTextActive]}>Requests (2)</Text>
         </TouchableOpacity>
       </View>
 
       {/* THREADS LIST */}
       <ScrollView style={styles.threadList} showsVerticalScrollIndicator={false}>
         {threads.map((t) => (
-          <TouchableOpacity key={t.id} onPress={() => onSelectThread(t)} style={styles.threadItem}>
+          <TouchableOpacity key={t.id} onPress={() => onSelectThread(t)} style={[styles.threadItem, { borderBottomColor: colors.borderColor }]}>
             <View style={styles.avatarContainer}>
               <Image source={{ uri: t.avatar }} style={styles.avatar} />
-              {t.isOnline && <View style={styles.onlineBadge} />}
+              {t.isOnline && <View style={[styles.onlineBadge, { borderColor: colors.bgScreen }]} />}
             </View>
 
             <View style={styles.threadMeta}>
               <View style={styles.topMetaRow}>
-                <Text style={styles.threadName}>{t.name}</Text>
+                <Text style={[styles.threadName, { color: colors.textPrimary }]}>{t.name}</Text>
                 {t.badgeText && (
                   <View style={styles.badgePill}>
                     <Text style={styles.badgePillText}>{t.badgeText}</Text>
                   </View>
                 )}
-                <Text style={styles.threadTime}>{t.timeAgo}</Text>
+                <Text style={[styles.threadTime, { color: colors.textMuted }]}>{t.timeAgo}</Text>
               </View>
               <View style={styles.snippetRow}>
-                <Text numberOfLines={1} style={[styles.lastMessage, t.unreadCount > 0 && styles.lastMessageUnread]}>
+                <Text numberOfLines={1} style={[styles.lastMessage, { color: colors.textSecondary }, t.unreadCount > 0 && { color: colors.textPrimary, fontWeight: "700" }]}>
                   {t.lastMessage}
                 </Text>
                 {t.unreadCount > 0 ? (
                   <View style={styles.unreadDot} />
                 ) : (
-                  <Camera size={16} color="#71717A" />
+                  <Camera size={16} color={colors.textMuted} />
                 )}
               </View>
             </View>
@@ -173,40 +175,39 @@ export function InboxView({ onBack, onSelectThread }: InboxViewProps) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#09090B" },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: "#18181B" },
+  container: { flex: 1 },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, borderBottomWidth: 1 },
   backBtn: { minWidth: 44, minHeight: 44, justifyContent: "center", alignItems: "center" },
-  headerTitle: { color: "#FAFAFA", fontSize: 16, fontWeight: "800" },
+  headerTitle: { fontSize: 16, fontWeight: "800" },
   newMsgBtn: { padding: 4 },
-  searchBox: { flexDirection: "row", alignItems: "center", backgroundColor: "#141418", borderRadius: 10, marginHorizontal: 16, marginTop: 10, paddingHorizontal: 12, height: 38, gap: 8, borderWidth: 1, borderColor: "#27272A" },
-  searchInput: { flex: 1, color: "#FAFAFA", fontSize: 13 },
-  notesTray: { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#18181B" },
+  searchBox: { flexDirection: "row", alignItems: "center", borderRadius: 10, marginHorizontal: 16, marginTop: 10, paddingHorizontal: 12, height: 38, gap: 8, borderWidth: 1 },
+  searchInput: { flex: 1, fontSize: 13 },
+  notesTray: { paddingVertical: 12, borderBottomWidth: 1 },
   notesScroll: { paddingHorizontal: 16, gap: 14 },
   noteItem: { alignItems: "center", width: 72 },
-  bubbleCloud: { backgroundColor: "#27272A", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, marginBottom: 4, maxWidth: 74 },
-  bubbleCloudText: { color: "#FAFAFA", fontSize: 9, fontWeight: "600", textAlign: "center" },
+  bubbleCloud: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, marginBottom: 4, maxWidth: 74 },
+  bubbleCloudText: { fontSize: 9, fontWeight: "600", textAlign: "center" },
   noteAvatarWrap: { position: "relative", width: 50, height: 50 },
   noteAvatar: { width: "100%", height: "100%", borderRadius: 25 },
-  noteAddPill: { position: "absolute", bottom: 0, right: 0, width: 18, height: 18, borderRadius: 9, backgroundColor: "#E11D48", alignItems: "center", justifyContent: "center", borderWidth: 1.5, borderColor: "#09090B" },
-  noteName: { color: "#A1A1AA", fontSize: 10, fontWeight: "600", marginTop: 4, textAlign: "center" },
-  tabRow: { flexDirection: "row", paddingHorizontal: 16, marginTop: 10, borderBottomWidth: 1, borderBottomColor: "#18181B", gap: 16 },
+  noteAddPill: { position: "absolute", bottom: 0, right: 0, width: 18, height: 18, borderRadius: 9, backgroundColor: "#E11D48", alignItems: "center", justifyContent: "center", borderWidth: 1.5 },
+  noteName: { fontSize: 10, fontWeight: "600", marginTop: 4, textAlign: "center" },
+  tabRow: { flexDirection: "row", paddingHorizontal: 16, marginTop: 10, borderBottomWidth: 1, gap: 16 },
   tabPill: { paddingBottom: 10 },
   tabPillActive: { borderBottomWidth: 2, borderBottomColor: "#E11D48" },
-  tabText: { color: "#71717A", fontSize: 13, fontWeight: "600" },
-  tabTextActive: { color: "#FAFAFA", fontWeight: "700" },
+  tabText: { fontSize: 13, fontWeight: "600" },
+  tabTextActive: { fontWeight: "700" },
   threadList: { flex: 1, paddingHorizontal: 16, paddingTop: 4 },
-  threadItem: { flexDirection: "row", alignItems: "center", paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#121215" },
+  threadItem: { flexDirection: "row", alignItems: "center", paddingVertical: 12, borderBottomWidth: 1 },
   avatarContainer: { position: "relative" },
   avatar: { width: 50, height: 50, borderRadius: 25 },
-  onlineBadge: { position: "absolute", bottom: 2, right: 2, width: 12, height: 12, borderRadius: 6, backgroundColor: "#10B981", borderWidth: 2, borderColor: "#09090B" },
+  onlineBadge: { position: "absolute", bottom: 2, right: 2, width: 12, height: 12, borderRadius: 6, backgroundColor: "#10B981", borderWidth: 2 },
   threadMeta: { flex: 1, marginLeft: 12 },
   topMetaRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  threadName: { color: "#FAFAFA", fontSize: 14, fontWeight: "700", flex: 1 },
+  threadName: { fontSize: 14, fontWeight: "700", flex: 1 },
   badgePill: { backgroundColor: "rgba(225, 29, 72, 0.15)", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginRight: 6 },
   badgePillText: { color: "#E11D48", fontSize: 9, fontWeight: "800" },
-  threadTime: { color: "#71717A", fontSize: 11 },
+  threadTime: { fontSize: 11 },
   snippetRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 4 },
-  lastMessage: { color: "#A1A1AA", fontSize: 12, flex: 1 },
-  lastMessageUnread: { color: "#FAFAFA", fontWeight: "700" },
+  lastMessage: { fontSize: 12, flex: 1 },
   unreadDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: "#E11D48", marginLeft: 8 },
 });

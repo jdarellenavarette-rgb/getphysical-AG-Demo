@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView } from "react-native";
 import { Award, Shield, Eye, CheckCircle2, MessageSquare, UserPlus, ArrowLeft, Grid, Film } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
+import { useThemeStore } from "../../theme/theme";
 import { OrganizerMeetModal } from "./OrganizerMeetModal";
 
 interface ProfileHubProps {
@@ -13,6 +14,7 @@ interface ProfileHubProps {
 
 export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
   const { profile, passes, posts } = useEcosystemStore();
+  const { colors } = useThemeStore();
   const [activeTab, setActiveTab] = useState<"grid" | "trophy" | "locker">("grid");
   const [isFollowing, setIsFollowing] = useState(false);
 
@@ -33,7 +35,7 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
   ];
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 110 }} showsVerticalScrollIndicator={false}>
+    <ScrollView style={[styles.container, { backgroundColor: colors.bgScreen }]} contentContainerStyle={{ paddingBottom: 110 }} showsVerticalScrollIndicator={false}>
       {/* COVER & HEADER WITH RETURN PILL */}
       <View style={styles.coverContainer}>
         <Image source={{ uri: profile.cover_url ?? "" }} style={styles.coverPhoto} />
@@ -48,7 +50,7 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
 
       <View style={styles.profileHeader}>
         <View style={styles.avatarRow}>
-          <Image source={{ uri: profile.avatar_url ?? "" }} style={styles.avatar} />
+          <Image source={{ uri: profile.avatar_url ?? "" }} style={[styles.avatar, { borderColor: colors.bgScreen }]} />
           <View style={styles.liveTrainingBadge}>
             <View style={styles.liveGreenDot} />
             <Text style={styles.liveTrainingText}>ACTIVE ATHLETE</Text>
@@ -57,11 +59,11 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
 
         <View style={styles.nameRow}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-            <Text style={styles.fullName}>{profile.first_name} {profile.last_name}</Text>
+            <Text style={[styles.fullName, { color: colors.textPrimary }]}>{profile.first_name} {profile.last_name}</Text>
             <CheckCircle2 size={16} color="#38BDF8" fill="#38BDF8" />
           </View>
-          <Text style={styles.username}>@{profile.username} • Strength & Hyrox</Text>
-          <Text style={styles.bioText}>{profile.bio}</Text>
+          <Text style={[styles.username, { color: colors.textSecondary }]}>@{profile.username} • Strength & Hyrox</Text>
+          <Text style={[styles.bioText, { color: colors.textPrimary }]}>{profile.bio}</Text>
         </View>
 
         {/* PRO DUAL ACTION BUTTONS */}
@@ -70,18 +72,18 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
             <UserPlus size={15} color="#FFFFFF" style={{ marginRight: 6 }} />
             <Text style={styles.primaryActionText}>{isFollowing ? "Following" : "Follow Athlete"}</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={onOpenMessages} style={styles.secondaryActionBtn}>
-            <MessageSquare size={15} color="#FAFAFA" style={{ marginRight: 6 }} />
-            <Text style={styles.secondaryActionText}>Message</Text>
+          <TouchableOpacity onPress={onOpenMessages} style={[styles.secondaryActionBtn, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
+            <MessageSquare size={15} color={colors.textPrimary} style={{ marginRight: 6 }} />
+            <Text style={[styles.secondaryActionText, { color: colors.textPrimary }]}>Message</Text>
           </TouchableOpacity>
         </View>
 
         {/* STATS STRIP */}
-        <View style={styles.metricsRow}>
-          <View style={styles.metricItem}><Text style={styles.metricVal}>2.3k</Text><Text style={styles.metricLabel}>Followers</Text></View>
-          <View style={styles.metricItem}><Text style={styles.metricVal}>142</Text><Text style={styles.metricLabel}>Following</Text></View>
-          <View style={styles.metricItem}><Text style={styles.metricVal}>342</Text><Text style={styles.metricLabel}>Workouts</Text></View>
-          <View style={styles.metricItem}><Text style={styles.metricVal}>18</Text><Text style={styles.metricLabel}>PR Stamps</Text></View>
+        <View style={[styles.metricsRow, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
+          <View style={styles.metricItem}><Text style={[styles.metricVal, { color: colors.textPrimary }]}>2.3k</Text><Text style={styles.metricLabel}>Followers</Text></View>
+          <View style={styles.metricItem}><Text style={[styles.metricVal, { color: colors.textPrimary }]}>142</Text><Text style={styles.metricLabel}>Following</Text></View>
+          <View style={styles.metricItem}><Text style={[styles.metricVal, { color: colors.textPrimary }]}>342</Text><Text style={styles.metricLabel}>Workouts</Text></View>
+          <View style={styles.metricItem}><Text style={[styles.metricVal, { color: colors.textPrimary }]}>18</Text><Text style={styles.metricLabel}>PR Stamps</Text></View>
         </View>
 
         {/* INSTAGRAM-STYLE STORY HIGHLIGHTS TRAY */}
@@ -89,17 +91,17 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.highlightsScroll}>
             {highlights.map((h) => (
               <View key={h.id} style={styles.highlightItem}>
-                <View style={styles.highlightRing}>
+                <View style={[styles.highlightRing, { borderColor: colors.borderColor }]}>
                   <Image source={{ uri: h.image }} style={styles.highlightThumb} />
                 </View>
-                <Text numberOfLines={1} style={styles.highlightLabel}>{h.title}</Text>
+                <Text numberOfLines={1} style={[styles.highlightLabel, { color: colors.textSecondary }]}>{h.title}</Text>
               </View>
             ))}
           </ScrollView>
         </View>
 
         {/* INSTAGRAM TABS (GRID / TROPHY CASE / LOCKER) */}
-        <View style={styles.tabsHeader}>
+        <View style={[styles.tabsHeader, { borderBottomColor: colors.borderColor }]}>
           <TouchableOpacity onPress={() => setActiveTab("grid")} style={[styles.tabItem, activeTab === "grid" && styles.tabItemActive]}>
             <Grid size={16} color={activeTab === "grid" ? "#E11D48" : "#71717A"} />
           </TouchableOpacity>
@@ -125,21 +127,21 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
         {/* TAB CONTENT: TROPHY CASE */}
         {activeTab === "trophy" && (
           <View style={styles.trophyGrid}>
-            <View style={styles.stampCard}>
+            <View style={[styles.stampCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
               <View style={styles.stampHeader}>
                 <Text style={styles.stampType}>LIFT STAMP • VERIFIED PR</Text>
                 <Eye size={13} color="#10B981" />
               </View>
-              <Text style={styles.stampMetric}>225 KG</Text>
-              <Text style={styles.stampSub}>Conventional Deadlift 1RM • Metro Core Arena</Text>
+              <Text style={[styles.stampMetric, { color: colors.textPrimary }]}>225 KG</Text>
+              <Text style={[styles.stampSub, { color: colors.textSecondary }]}>Conventional Deadlift 1RM • Metro Core Arena</Text>
             </View>
-            <View style={styles.stampCard}>
+            <View style={[styles.stampCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
               <View style={styles.stampHeader}>
                 <Text style={styles.stampType}>MOVE STAMP • GPS VERIFIED</Text>
                 <Eye size={13} color="#10B981" />
               </View>
-              <Text style={styles.stampMetric}>21:45</Text>
-              <Text style={styles.stampSub}>5.00 km Outdoor Pace • BGC Track 30th</Text>
+              <Text style={[styles.stampMetric, { color: colors.textPrimary }]}>21:45</Text>
+              <Text style={[styles.stampSub, { color: colors.textSecondary }]}>5.00 km Outdoor Pace • BGC Track 30th</Text>
             </View>
           </View>
         )}
@@ -148,11 +150,11 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
         {activeTab === "locker" && (
           <View style={styles.lockerList}>
             {passes.length === 0 ? (
-              <View style={styles.emptyLocker}><Text style={styles.emptyLockerText}>No active passes in locker</Text></View>
+              <View style={styles.emptyLocker}><Text style={[styles.emptyLockerText, { color: colors.textMuted }]}>No active passes in locker</Text></View>
             ) : (
               passes.map((p) => (
-                <View key={p.id} style={styles.lockerRow}>
-                  <Text style={styles.lockerPassType}>{p.pass_type}</Text>
+                <View key={p.id} style={[styles.lockerRow, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
+                  <Text style={[styles.lockerPassType, { color: colors.textPrimary }]}>{p.pass_type}</Text>
                   <Text style={styles.lockerStatus}>{p.status.toUpperCase()}</Text>
                 </View>
               ))

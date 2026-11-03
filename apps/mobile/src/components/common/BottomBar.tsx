@@ -2,6 +2,7 @@ import React from "react";
 import { View, TouchableOpacity, StyleSheet, Text } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Home, Compass, Plus, Dumbbell, CreditCard } from "lucide-react-native";
+import { useThemeStore } from "../../theme/theme";
 
 export type MobileTab = "sodia" | "discover" | "track" | "cards" | "profile";
 
@@ -14,10 +15,23 @@ interface BottomBarProps {
 export function BottomBar({ currentTab, onSelectTab, onPressCreate }: BottomBarProps) {
   const insets = useSafeAreaInsets();
   const bottomOffset = Math.max(insets.bottom, 10);
+  const { colors, themeMode } = useThemeStore();
+
+  const isLight = themeMode === "light";
 
   return (
     <View style={[styles.dockContainer, { bottom: bottomOffset }]}>
-      <View style={styles.dockSurface}>
+      <View
+        style={[
+          styles.dockSurface,
+          {
+            backgroundColor: colors.bgDock,
+            borderColor: colors.borderColor,
+            shadowColor: isLight ? "#64748B" : "#000000",
+            shadowOpacity: isLight ? 0.2 : 0.55,
+          },
+        ]}
+      >
         {/* 1. FEED (SODIA) */}
         <TouchableOpacity
           onPress={() => onSelectTab("sodia")}
@@ -26,10 +40,12 @@ export function BottomBar({ currentTab, onSelectTab, onPressCreate }: BottomBarP
         >
           <Home
             size={21}
-            color={currentTab === "sodia" ? "#E11D48" : "#8E8E93"}
+            color={currentTab === "sodia" ? "#E11D48" : colors.textMuted}
             strokeWidth={currentTab === "sodia" ? 2.4 : 1.8}
           />
-          <Text style={[styles.label, currentTab === "sodia" && styles.labelActive]}>Feed</Text>
+          <Text style={[styles.label, { color: currentTab === "sodia" ? "#E11D48" : colors.textMuted }, currentTab === "sodia" && styles.labelActive]}>
+            Feed
+          </Text>
         </TouchableOpacity>
 
         {/* 2. DISCOVER / VENUES */}
@@ -40,25 +56,27 @@ export function BottomBar({ currentTab, onSelectTab, onPressCreate }: BottomBarP
         >
           <Compass
             size={21}
-            color={currentTab === "discover" ? "#E11D48" : "#8E8E93"}
+            color={currentTab === "discover" ? "#E11D48" : colors.textMuted}
             strokeWidth={currentTab === "discover" ? 2.4 : 1.8}
           />
-          <Text style={[styles.label, currentTab === "discover" && styles.labelActive]}>Venues</Text>
+          <Text style={[styles.label, { color: currentTab === "discover" ? "#E11D48" : colors.textMuted }, currentTab === "discover" && styles.labelActive]}>
+            Venues
+          </Text>
         </TouchableOpacity>
 
-        {/* 3. ORIGINAL CENTER CIRCLED (+) POST BUTTON */}
+        {/* 3. CENTER CIRCLED (+) POST BUTTON */}
         <View style={styles.centerBtnContainer}>
           <TouchableOpacity
             onPress={onPressCreate}
             activeOpacity={0.85}
-            style={styles.centerCircledBtn}
+            style={[styles.centerCircledBtn, { borderColor: colors.bgDock }]}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <Plus size={24} color="#FFFFFF" strokeWidth={3} />
           </TouchableOpacity>
         </View>
 
-        {/* 4. TRACK (LIFT / MOVE / FOOD / JOURNEY) */}
+        {/* 4. TRACK (LIFT / MOVE / FOOD) */}
         <TouchableOpacity
           onPress={() => onSelectTab("track")}
           style={styles.tabButton}
@@ -66,10 +84,12 @@ export function BottomBar({ currentTab, onSelectTab, onPressCreate }: BottomBarP
         >
           <Dumbbell
             size={21}
-            color={currentTab === "track" ? "#E11D48" : "#8E8E93"}
+            color={currentTab === "track" ? "#E11D48" : colors.textMuted}
             strokeWidth={currentTab === "track" ? 2.4 : 1.8}
           />
-          <Text style={[styles.label, currentTab === "track" && styles.labelActive]}>Track</Text>
+          <Text style={[styles.label, { color: currentTab === "track" ? "#E11D48" : colors.textMuted }, currentTab === "track" && styles.labelActive]}>
+            Track
+          </Text>
         </TouchableOpacity>
 
         {/* 5. WALLET / CARDS */}
@@ -80,10 +100,12 @@ export function BottomBar({ currentTab, onSelectTab, onPressCreate }: BottomBarP
         >
           <CreditCard
             size={21}
-            color={currentTab === "cards" ? "#E11D48" : "#8E8E93"}
+            color={currentTab === "cards" ? "#E11D48" : colors.textMuted}
             strokeWidth={currentTab === "cards" ? 2.4 : 1.8}
           />
-          <Text style={[styles.label, currentTab === "cards" && styles.labelActive]}>Wallet</Text>
+          <Text style={[styles.label, { color: currentTab === "cards" ? "#E11D48" : colors.textMuted }, currentTab === "cards" && styles.labelActive]}>
+            Wallet
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -103,14 +125,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 8,
-    backgroundColor: "#16161A",
     borderRadius: 32,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.08)",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.55,
-    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 10 },
+    shadowRadius: 20,
     elevation: 16,
   },
   tabButton: {
@@ -134,14 +152,12 @@ const styles = StyleSheet.create({
     marginTop: -16,
     shadowColor: "#E11D48",
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.55,
+    shadowOpacity: 0.5,
     shadowRadius: 10,
     elevation: 10,
     borderWidth: 3,
-    borderColor: "#09090B",
   },
   label: {
-    color: "#71717A",
     fontSize: 10,
     fontWeight: "600",
     marginTop: 2,

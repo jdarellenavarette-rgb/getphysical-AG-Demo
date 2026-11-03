@@ -6,6 +6,7 @@ import { ExactVIPCard } from "./ExactVIPCard";
 import { ReceiptModal } from "./ReceiptModal";
 import { StatementOfAccountModal } from "./StatementOfAccountModal";
 import { TurnstileQRModal } from "./TurnstileQRModal";
+import { useThemeStore } from "../../theme/theme";
 import type { PassRow } from "sodia-core";
 
 interface CardsHubProps {
@@ -14,6 +15,7 @@ interface CardsHubProps {
 
 export function CardsHub({ onBrowseVenues }: CardsHubProps) {
   const { passes, profile } = useEcosystemStore();
+  const { colors } = useThemeStore();
   const [selectedPassForReceipt, setSelectedPassForReceipt] = useState<PassRow | null>(null);
   const [isSoaOpen, setIsSoaOpen] = useState(false);
   const [isQrOpen, setIsQrOpen] = useState(false);
@@ -28,15 +30,15 @@ export function CardsHub({ onBrowseVenues }: CardsHubProps) {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
+    <ScrollView style={[styles.container, { backgroundColor: colors.bgScreen }]} contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
       {/* USER GREETING */}
       <View style={styles.userGreetingRow}>
         <View>
-          <Text style={styles.userName}>Hello, {profile.first_name},</Text>
-          <Text style={styles.userHandle}>VIP Account</Text>
+          <Text style={[styles.userName, { color: colors.textPrimary }]}>Hello, {profile.first_name},</Text>
+          <Text style={[styles.userHandle, { color: colors.textMuted }]}>VIP Account</Text>
         </View>
-        <TouchableOpacity style={styles.bellBtn}>
-          <Bell size={20} color="#FAFAFA" />
+        <TouchableOpacity style={[styles.bellBtn, { backgroundColor: colors.bgCardSecondary }]}>
+          <Bell size={20} color={colors.textPrimary} />
         </TouchableOpacity>
       </View>
 
@@ -65,14 +67,14 @@ export function CardsHub({ onBrowseVenues }: CardsHubProps) {
 
       {/* QUICK ACTION PILLS (INSPIRATION PHOTO 2: ADD, SEND, PAY) */}
       <View style={styles.actionPillsRow}>
-        <TouchableOpacity onPress={onBrowseVenues} style={styles.actionPill}>
+        <TouchableOpacity onPress={onBrowseVenues} style={[styles.actionPill, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}>
           <Plus size={16} color="#EC4899" />
-          <Text style={styles.actionPillText}>Add +</Text>
+          <Text style={[styles.actionPillText, { color: colors.textPrimary }]}>Add +</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => setIsSoaOpen(true)} style={styles.actionPill}>
+        <TouchableOpacity onPress={() => setIsSoaOpen(true)} style={[styles.actionPill, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}>
           <Send size={15} color="#EC4899" />
-          <Text style={styles.actionPillText}>Send ↗</Text>
+          <Text style={[styles.actionPillText, { color: colors.textPrimary }]}>Send ↗</Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => setIsQrOpen(true)} style={[styles.actionPill, styles.actionPillPrimary]}>
@@ -82,9 +84,9 @@ export function CardsHub({ onBrowseVenues }: CardsHubProps) {
       </View>
 
       {/* PURE WHITE CURVED SHEET: RECENT TRANSACTIONS & CARD DETAILS */}
-      <View style={styles.historySheet}>
+      <View style={[styles.historySheet, { backgroundColor: colors.bgCard }]}>
         <View style={styles.historyHeader}>
-          <Text style={styles.historyTitle}>Recent Transaction</Text>
+          <Text style={[styles.historyTitle, { color: colors.textPrimary }]}>Recent Transaction</Text>
           {passes.length > 0 && (
             <TouchableOpacity onPress={() => setIsSoaOpen(true)}>
               <Text style={styles.viewAllText}>View All</Text>
@@ -94,9 +96,9 @@ export function CardsHub({ onBrowseVenues }: CardsHubProps) {
 
         {passes.length === 0 ? (
           <View style={styles.emptyLedgerBox}>
-            <Ticket size={28} color="#A1A1AA" />
-            <Text style={styles.emptyLedgerTitle}>No transactions recorded</Text>
-            <Text style={styles.emptyLedgerSubtitle}>
+            <Ticket size={28} color={colors.textMuted} />
+            <Text style={[styles.emptyLedgerTitle, { color: colors.textPrimary }]}>No transactions recorded</Text>
+            <Text style={[styles.emptyLedgerSubtitle, { color: colors.textMuted }]}>
               Check-ins, drop-in receipts, and memberships will appear on your immutable ledger here.
             </Text>
           </View>
@@ -106,15 +108,15 @@ export function CardsHub({ onBrowseVenues }: CardsHubProps) {
               <TouchableOpacity
                 key={p.id}
                 onPress={() => setSelectedPassForReceipt(p)}
-                style={styles.txRow}
+                style={[styles.txRow, { backgroundColor: colors.bgCardSecondary }]}
               >
                 <View>
-                  <Text style={styles.txName}>₱265.00</Text>
-                  <Text style={styles.txTime}>{p.pass_type} • Metro Core Arena</Text>
+                  <Text style={[styles.txName, { color: colors.textPrimary }]}>₱265.00</Text>
+                  <Text style={[styles.txTime, { color: colors.textMuted }]}>{p.pass_type} • Metro Core Arena</Text>
                 </View>
                 <View style={styles.txRight}>
                   <Text style={styles.txStatus}>{p.status.toUpperCase()}</Text>
-                  <ChevronRight size={14} color="#A1A1AA" />
+                  <ChevronRight size={14} color={colors.textMuted} />
                 </View>
               </TouchableOpacity>
             ))}
@@ -122,30 +124,30 @@ export function CardsHub({ onBrowseVenues }: CardsHubProps) {
         )}
 
         {/* CARD DETAIL CREDENTIALS (INSPIRATION PHOTO 2) */}
-        <View style={styles.cardDetailSection}>
+        <View style={[styles.cardDetailSection, { borderTopColor: colors.borderColor }]}>
           <View style={styles.cardDetailHeader}>
-            <Text style={styles.cardDetailTitle}>Card Detail</Text>
+            <Text style={[styles.cardDetailTitle, { color: colors.textPrimary }]}>Card Detail</Text>
             <TouchableOpacity onPress={handleCopyCard} style={styles.copyRow}>
-              {copied ? <Check size={12} color="#10B981" /> : <Copy size={12} color="#71717A" />}
-              <Text style={[styles.copyText, copied && { color: "#10B981" }]}>
+              {copied ? <Check size={12} color="#10B981" /> : <Copy size={12} color={colors.textMuted} />}
+              <Text style={[styles.copyText, { color: colors.textMuted }, copied && { color: "#10B981" }]}>
                 {copied ? "Copied" : "Copy"}
               </Text>
             </TouchableOpacity>
           </View>
 
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Holder Name</Text>
-            <Text style={styles.detailVal}>{profile.name ?? "Adam Arête"}</Text>
+          <View style={[styles.detailRow, { borderBottomColor: colors.borderColor }]}>
+            <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Holder Name</Text>
+            <Text style={[styles.detailVal, { color: colors.textPrimary }]}>{profile.name ?? "Adam Arête"}</Text>
           </View>
 
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Card Number</Text>
+          <View style={[styles.detailRow, { borderBottomColor: colors.borderColor }]}>
+            <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Card Number</Text>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-              <Text style={styles.detailValMono}>
+              <Text style={[styles.detailValMono, { color: colors.textPrimary }]}>
                 {showFullCardNum ? "2781 8191 6671 3160" : "2781 •••• •••• 3160"}
               </Text>
               <TouchableOpacity onPress={() => setShowFullCardNum(!showFullCardNum)}>
-                {showFullCardNum ? <EyeOff size={15} color="#71717A" /> : <Eye size={15} color="#71717A" />}
+                {showFullCardNum ? <EyeOff size={15} color={colors.textMuted} /> : <Eye size={15} color={colors.textMuted} />}
               </TouchableOpacity>
             </View>
           </View>

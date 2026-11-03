@@ -5,38 +5,40 @@ import { LiftTracker } from "./LiftTracker";
 import { MoveTrackerView } from "./MoveTrackerView";
 import { FoodTrackerView } from "./FoodTrackerView";
 import { JourneyView } from "./JourneyView";
+import { useThemeStore } from "../../theme/theme";
 
 type TrackSegment = "lift" | "move" | "food" | "journey";
 
 export function TrackHub() {
   const [activeSegment, setActiveSegment] = useState<TrackSegment>("lift");
+  const { colors } = useThemeStore();
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       {/* TODAY'S SUMMARY STRIP */}
-      <View style={styles.summaryStrip}>
+      <View style={[styles.summaryStrip, { backgroundColor: colors.bgCard, borderBottomColor: colors.borderColor }]}>
         <View style={styles.summaryItem}>
-          <Text style={styles.summaryVal}>1</Text>
-          <Text style={styles.summaryLabel}>Workouts</Text>
+          <Text style={[styles.summaryVal, { color: colors.textPrimary }]}>1</Text>
+          <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>Workouts</Text>
         </View>
         <View style={styles.summaryItem}>
-          <Text style={styles.summaryVal}>873.6 kcal</Text>
-          <Text style={styles.summaryLabel}>Burned</Text>
+          <Text style={[styles.summaryVal, { color: colors.textPrimary }]}>873.6 kcal</Text>
+          <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>Burned</Text>
         </View>
         <View style={styles.summaryItem}>
-          <Text style={styles.summaryVal}>4.02 km</Text>
-          <Text style={styles.summaryLabel}>GPS Move</Text>
+          <Text style={[styles.summaryVal, { color: colors.textPrimary }]}>4.02 km</Text>
+          <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>GPS Move</Text>
         </View>
       </View>
 
       {/* 4-SEGMENT DOCK (LIFT | MOVE | FOOD | JOURNEY) */}
-      <View style={styles.toggleBar}>
+      <View style={[styles.toggleBar, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}>
         <TouchableOpacity
           onPress={() => setActiveSegment("lift")}
           style={[styles.togglePill, activeSegment === "lift" && styles.togglePillActive]}
         >
-          <Dumbbell size={13} color={activeSegment === "lift" ? "#FFFFFF" : "#71717A"} />
-          <Text style={[styles.toggleText, activeSegment === "lift" && styles.toggleTextActive]}>
+          <Dumbbell size={13} color={activeSegment === "lift" ? "#FFFFFF" : colors.textMuted} />
+          <Text style={[styles.toggleText, { color: colors.textMuted }, activeSegment === "lift" && styles.toggleTextActive]}>
             Lift
           </Text>
         </TouchableOpacity>
@@ -45,8 +47,8 @@ export function TrackHub() {
           onPress={() => setActiveSegment("move")}
           style={[styles.togglePill, activeSegment === "move" && styles.togglePillActive]}
         >
-          <Footprints size={13} color={activeSegment === "move" ? "#FFFFFF" : "#71717A"} />
-          <Text style={[styles.toggleText, activeSegment === "move" && styles.toggleTextActive]}>
+          <Footprints size={13} color={activeSegment === "move" ? "#FFFFFF" : colors.textMuted} />
+          <Text style={[styles.toggleText, { color: colors.textMuted }, activeSegment === "move" && styles.toggleTextActive]}>
             Move
           </Text>
         </TouchableOpacity>
@@ -55,8 +57,8 @@ export function TrackHub() {
           onPress={() => setActiveSegment("food")}
           style={[styles.togglePill, activeSegment === "food" && styles.togglePillActive]}
         >
-          <Apple size={13} color={activeSegment === "food" ? "#FFFFFF" : "#71717A"} />
-          <Text style={[styles.toggleText, activeSegment === "food" && styles.toggleTextActive]}>
+          <Apple size={13} color={activeSegment === "food" ? "#FFFFFF" : colors.textMuted} />
+          <Text style={[styles.toggleText, { color: colors.textMuted }, activeSegment === "food" && styles.toggleTextActive]}>
             Food
           </Text>
         </TouchableOpacity>
@@ -65,8 +67,8 @@ export function TrackHub() {
           onPress={() => setActiveSegment("journey")}
           style={[styles.togglePill, activeSegment === "journey" && styles.togglePillActive]}
         >
-          <TrendingUp size={13} color={activeSegment === "journey" ? "#FFFFFF" : "#71717A"} />
-          <Text style={[styles.toggleText, activeSegment === "journey" && styles.toggleTextActive]}>
+          <TrendingUp size={13} color={activeSegment === "journey" ? "#FFFFFF" : colors.textMuted} />
+          <Text style={[styles.toggleText, { color: colors.textMuted }, activeSegment === "journey" && styles.toggleTextActive]}>
             Journey
           </Text>
         </TouchableOpacity>
@@ -89,7 +91,7 @@ const styles = StyleSheet.create({
   summaryItem: { alignItems: "center" },
   summaryVal: { color: "#FAFAFA", fontSize: 13, fontWeight: "800" },
   summaryLabel: { color: "#71717A", fontSize: 10, marginTop: 2 },
-  toggleBar: { flexDirection: "row", backgroundColor: "#18181B", marginHorizontal: 12, marginVertical: 8, borderRadius: 12, padding: 3 },
+  toggleBar: { flexDirection: "row", backgroundColor: "#18181B", marginHorizontal: 12, marginVertical: 8, borderRadius: 12, padding: 3, borderWidth: 1 },
   togglePill: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, paddingVertical: 8, borderRadius: 10 },
   togglePillActive: { backgroundColor: "#E11D48" },
   toggleText: { color: "#71717A", fontSize: 11, fontWeight: "700" },

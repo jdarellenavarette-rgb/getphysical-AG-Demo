@@ -22,6 +22,7 @@ import { StaffQuickdashModal } from "./components/business/StaffQuickdashModal";
 import { CoachQuickdashModal } from "./components/business/CoachQuickdashModal";
 import { OrganizerMeetModal } from "./components/profile/OrganizerMeetModal";
 import { useEcosystemStore } from "./store/ecosystemStore";
+import { useThemeStore } from "./theme/theme";
 import type { FacilityRow } from "sodia-core";
 import { OpeningLoadingScreen } from "./components/common/OpeningLoadingScreen";
 
@@ -44,6 +45,7 @@ export default function App() {
   const [isOpeningLoading, setIsOpeningLoading] = useState(true);
 
   const { provisionPass, facilities } = useEcosystemStore();
+  const { colors } = useThemeStore();
 
   const handleCheckoutConfirm = (item: CheckoutRequest) => {
     provisionPass(item.facilityName, item.billingKind, item.baseAmountPhp, item.title, item.facilityId);
@@ -52,8 +54,8 @@ export default function App() {
   };
 
   return (
-    <View style={[styles.screenContainer, { paddingTop: Math.max(insets.top, 48) }]}>
-      <StatusBar barStyle="light-content" />
+    <View style={[styles.screenContainer, { paddingTop: Math.max(insets.top, 48), backgroundColor: colors.bgScreen }]}>
+      <StatusBar barStyle={colors.statusBarStyle} />
 
       {/* OPENING LOADING SCREEN */}
       {isOpeningLoading && (

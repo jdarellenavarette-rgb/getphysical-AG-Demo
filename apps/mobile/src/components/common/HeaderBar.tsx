@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { Menu, MessageSquare, Bell, Settings } from "lucide-react-native";
+import { Menu, MessageSquare, Bell, Settings, Sun, Moon } from "lucide-react-native";
+import { useThemeStore } from "../../theme/theme";
 
 interface HeaderBarProps {
   onOpenMenu?: () => void;
@@ -17,8 +18,10 @@ export function HeaderBar({
   onOpenInbox,
   onPressLogo,
 }: HeaderBarProps) {
+  const { colors, themeMode, toggleTheme } = useThemeStore();
+
   return (
-    <View style={styles.header}>
+    <View style={[styles.header, { backgroundColor: colors.bgHeader, borderBottomColor: colors.borderColor }]}>
       {/* BRAND & DRAWER MENU */}
       <View style={styles.leftGroup}>
         <TouchableOpacity
@@ -26,25 +29,37 @@ export function HeaderBar({
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           style={styles.menuIconBtn}
         >
-          <Menu size={22} color="#FAFAFA" strokeWidth={2.2} />
+          <Menu size={22} color={colors.textPrimary} strokeWidth={2.2} />
         </TouchableOpacity>
 
         <TouchableOpacity onPress={onPressLogo} style={styles.logoTouch}>
-          <Text style={styles.brandTitle}>
+          <Text style={[styles.brandTitle, { color: colors.textPrimary }]}>
             getphysical<Text style={styles.brandDot}>.</Text>
           </Text>
         </TouchableOpacity>
       </View>
 
-      {/* QUICK ACTIONS: DM, NOTIFICATIONS, SETTINGS */}
+      {/* QUICK ACTIONS: THEME TOGGLE, DM, NOTIFICATIONS, SETTINGS */}
       <View style={styles.rightGroup}>
+        <TouchableOpacity
+          onPress={toggleTheme}
+          hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }}
+          style={styles.iconCircle}
+        >
+          {themeMode === "dark" ? (
+            <Sun size={19} color="#F59E0B" strokeWidth={2} />
+          ) : (
+            <Moon size={19} color="#6366F1" strokeWidth={2} />
+          )}
+        </TouchableOpacity>
+
         <TouchableOpacity
           onPress={onOpenInbox}
           hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }}
           style={styles.iconCircle}
         >
-          <MessageSquare size={19} color="#FAFAFA" strokeWidth={2} />
-          <View style={styles.notificationDot} />
+          <MessageSquare size={19} color={colors.textPrimary} strokeWidth={2} />
+          <View style={[styles.notificationDot, { borderColor: colors.bgHeader }]} />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -52,8 +67,8 @@ export function HeaderBar({
           hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }}
           style={styles.iconCircle}
         >
-          <Bell size={19} color="#FAFAFA" strokeWidth={2} />
-          <View style={styles.notificationDot} />
+          <Bell size={19} color={colors.textPrimary} strokeWidth={2} />
+          <View style={[styles.notificationDot, { borderColor: colors.bgHeader }]} />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -61,7 +76,7 @@ export function HeaderBar({
           hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }}
           style={styles.iconCircle}
         >
-          <Settings size={19} color="#A1A1AA" strokeWidth={2} />
+          <Settings size={19} color={colors.textSecondary} strokeWidth={2} />
         </TouchableOpacity>
       </View>
     </View>
@@ -75,15 +90,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    backgroundColor: "#09090B",
+    borderBottomWidth: 1,
     zIndex: 40,
   },
   leftGroup: { flexDirection: "row", alignItems: "center", gap: 10 },
   menuIconBtn: { minWidth: 40, minHeight: 40, alignItems: "center", justifyContent: "center" },
   logoTouch: { paddingVertical: 4 },
-  brandTitle: { color: "#FFFFFF", fontSize: 21, fontWeight: "900", letterSpacing: -0.6 },
+  brandTitle: { fontSize: 21, fontWeight: "900", letterSpacing: -0.6 },
   brandDot: { color: "#E11D48" },
-  rightGroup: { flexDirection: "row", alignItems: "center", gap: 6 },
+  rightGroup: { flexDirection: "row", alignItems: "center", gap: 4 },
   iconCircle: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center", position: "relative" },
-  notificationDot: { position: "absolute", top: 8, right: 8, width: 7, height: 7, borderRadius: 3.5, backgroundColor: "#E11D48", borderWidth: 1.5, borderColor: "#09090B" },
+  notificationDot: { position: "absolute", top: 8, right: 8, width: 7, height: 7, borderRadius: 3.5, backgroundColor: "#E11D48", borderWidth: 1.5 },
 });

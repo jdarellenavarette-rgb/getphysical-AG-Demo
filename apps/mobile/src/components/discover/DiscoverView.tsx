@@ -5,6 +5,7 @@ import { useEcosystemStore } from "../../store/ecosystemStore";
 import { DiscoverMapCanvas } from "./DiscoverMapCanvas";
 import { DiscoverEntitySheet, type DiscoverEntityType } from "./DiscoverEntitySheet";
 import { FacilityDetailSheet, type FacilityPassOption } from "./FacilityDetailSheet";
+import { useThemeStore } from "../../theme/theme";
 import type { FacilityRow } from "sodia-core";
 
 export interface CheckoutRequest {
@@ -25,6 +26,7 @@ interface DiscoverViewProps {
 
 export function DiscoverView({ onSelectFacility, onCheckoutItem }: DiscoverViewProps) {
   const { facilities } = useEcosystemStore();
+  const { colors } = useThemeStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("All");
   const [viewMode, setViewMode] = useState<"map" | "list">("map");
@@ -53,27 +55,27 @@ export function DiscoverView({ onSelectFacility, onCheckoutItem }: DiscoverViewP
   });
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       {/* 1. FLOATING SEARCH HEADER */}
       <View style={styles.searchHeader}>
-        <View style={styles.searchBox}>
-          <Search size={16} color="#71717A" />
+        <View style={[styles.searchBox, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
+          <Search size={16} color={colors.textMuted} />
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { color: colors.textPrimary }]}
             placeholder="Search BGC, Makati, clubs or coaches..."
-            placeholderTextColor="#71717A"
+            placeholderTextColor={colors.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => setSearchQuery("")}>
-              <X size={16} color="#71717A" />
+              <X size={16} color={colors.textMuted} />
             </TouchableOpacity>
           )}
         </View>
 
-        <TouchableOpacity onPress={() => setViewMode(viewMode === "map" ? "list" : "map")} style={styles.viewToggleBtn}>
-          {viewMode === "map" ? <List size={18} color="#FAFAFA" /> : <MapIcon size={18} color="#FAFAFA" />}
+        <TouchableOpacity onPress={() => setViewMode(viewMode === "map" ? "list" : "map")} style={[styles.viewToggleBtn, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
+          {viewMode === "map" ? <List size={18} color={colors.textPrimary} /> : <MapIcon size={18} color={colors.textPrimary} />}
         </TouchableOpacity>
       </View>
 

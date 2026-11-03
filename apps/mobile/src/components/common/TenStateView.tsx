@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet } from "react-native";
 import { AlertCircle, WifiOff, Clock, Search, ShieldAlert, CheckCircle, RefreshCw } from "lucide-react-native";
 import type { TenStateEnvelope } from "sodia-core";
+import { useThemeStore } from "../../theme/theme";
 
 interface TenStateViewProps<T> {
   state: TenStateEnvelope<T>;
@@ -10,21 +11,23 @@ interface TenStateViewProps<T> {
 }
 
 export function TenStateView<T>({ state, onRetry, children }: TenStateViewProps<T>) {
+  const { colors } = useThemeStore();
+
   switch (state.status) {
     case "loading":
       return (
-        <View style={styles.centerContainer}>
+        <View style={[styles.centerContainer, { backgroundColor: colors.bgScreen }]}>
           <ActivityIndicator size="large" color="#E11D48" />
-          <Text style={styles.loadingText}>Syncing GetPhysical state...</Text>
+          <Text style={[styles.loadingText, { color: colors.textMuted }]}>Syncing GetPhysical state...</Text>
         </View>
       );
 
     case "empty":
       return (
-        <View style={styles.centerContainer}>
-          <AlertCircle size={44} color="#94A3B8" />
-          <Text style={styles.stateTitle}>Nothing here yet</Text>
-          <Text style={styles.stateSubtitle}>{state.emptyReason}</Text>
+        <View style={[styles.centerContainer, { backgroundColor: colors.bgScreen }]}>
+          <AlertCircle size={44} color={colors.textMuted} />
+          <Text style={[styles.stateTitle, { color: colors.textPrimary }]}>Nothing here yet</Text>
+          <Text style={[styles.stateSubtitle, { color: colors.textSecondary }]}>{state.emptyReason}</Text>
           {onRetry && (
             <TouchableOpacity style={styles.primaryButton} onPress={onRetry}>
               <Text style={styles.primaryButtonText}>{state.primaryActionLabel}</Text>
@@ -35,14 +38,14 @@ export function TenStateView<T>({ state, onRetry, children }: TenStateViewProps<
 
     case "error":
       return (
-        <View style={styles.centerContainer}>
+        <View style={[styles.centerContainer, { backgroundColor: colors.bgScreen }]}>
           <AlertCircle size={44} color="#EF4444" />
-          <Text style={styles.stateTitle}>Unable to Load Data</Text>
-          <Text style={styles.stateSubtitle}>{state.userMessage}</Text>
+          <Text style={[styles.stateTitle, { color: colors.textPrimary }]}>Unable to Load Data</Text>
+          <Text style={[styles.stateSubtitle, { color: colors.textSecondary }]}>{state.userMessage}</Text>
           {state.retryable && onRetry && (
-            <TouchableOpacity style={styles.retryButton} onPress={onRetry}>
-              <RefreshCw size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
-              <Text style={styles.primaryButtonText}>Retry</Text>
+            <TouchableOpacity style={[styles.retryButton, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor, borderWidth: 1 }]} onPress={onRetry}>
+              <RefreshCw size={16} color={colors.textPrimary} style={{ marginRight: 6 }} />
+              <Text style={[styles.primaryButtonText, { color: colors.textPrimary }]}>Retry</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -50,14 +53,14 @@ export function TenStateView<T>({ state, onRetry, children }: TenStateViewProps<
 
     case "no_internet":
       return (
-        <View style={{ flex: 1 }}>
-          <View style={styles.offlineBanner}>
+        <View style={{ flex: 1, backgroundColor: colors.bgScreen }}>
+          <View style={[styles.offlineBanner, { backgroundColor: colors.bgCard, borderColor: "#F59E0B" }]}>
             <WifiOff size={16} color="#F59E0B" />
             <Text style={styles.offlineText}>Offline Mode • Viewing Cached Content</Text>
           </View>
           {state.data ? children(state.data) : (
-            <View style={styles.centerContainer}>
-              <Text style={styles.stateSubtitle}>Connect to the internet to fetch fresh records.</Text>
+            <View style={[styles.centerContainer, { backgroundColor: colors.bgScreen }]}>
+              <Text style={[styles.stateSubtitle, { color: colors.textSecondary }]}>Connect to the internet to fetch fresh records.</Text>
             </View>
           )}
         </View>
@@ -65,8 +68,8 @@ export function TenStateView<T>({ state, onRetry, children }: TenStateViewProps<
 
     case "slow_network":
       return (
-        <View style={{ flex: 1 }}>
-          <View style={styles.slowBanner}>
+        <View style={{ flex: 1, backgroundColor: colors.bgScreen }}>
+          <View style={[styles.slowBanner, { backgroundColor: colors.bgCard, borderColor: "#EAB308" }]}>
             <Clock size={16} color="#EAB308" />
             <Text style={styles.slowText}>Slow network detected ({state.network.latencyMs}ms). Optimistic mode active.</Text>
           </View>
@@ -76,10 +79,10 @@ export function TenStateView<T>({ state, onRetry, children }: TenStateViewProps<
 
     case "no_search_results":
       return (
-        <View style={styles.centerContainer}>
-          <Search size={44} color="#64748B" />
-          <Text style={styles.stateTitle}>No Results Found</Text>
-          <Text style={styles.stateSubtitle}>No matches found for "{state.search.query}".</Text>
+        <View style={[styles.centerContainer, { backgroundColor: colors.bgScreen }]}>
+          <Search size={44} color={colors.textMuted} />
+          <Text style={[styles.stateTitle, { color: colors.textPrimary }]}>No Results Found</Text>
+          <Text style={[styles.stateSubtitle, { color: colors.textSecondary }]}>No matches found for "{state.search.query}".</Text>
           {onRetry && (
             <TouchableOpacity style={styles.primaryButton} onPress={onRetry}>
               <Text style={styles.primaryButtonText}>Clear Search & Filters</Text>
@@ -90,10 +93,10 @@ export function TenStateView<T>({ state, onRetry, children }: TenStateViewProps<
 
     case "permission_denied":
       return (
-        <View style={styles.centerContainer}>
+        <View style={[styles.centerContainer, { backgroundColor: colors.bgScreen }]}>
           <ShieldAlert size={44} color="#F97316" />
-          <Text style={styles.stateTitle}>Permission Required</Text>
-          <Text style={styles.stateSubtitle}>
+          <Text style={[styles.stateTitle, { color: colors.textPrimary }]}>Permission Required</Text>
+          <Text style={[styles.stateSubtitle, { color: colors.textSecondary }]}>
             Access to {state.permissionMeta.permission} was denied. Enable it in device settings to use this feature.
           </Text>
           {onRetry && (
@@ -106,10 +109,10 @@ export function TenStateView<T>({ state, onRetry, children }: TenStateViewProps<
 
     case "session_expired":
       return (
-        <View style={styles.centerContainer}>
+        <View style={[styles.centerContainer, { backgroundColor: colors.bgScreen }]}>
           <ShieldAlert size={44} color="#E11D48" />
-          <Text style={styles.stateTitle}>Session Stale</Text>
-          <Text style={styles.stateSubtitle}>Authenticate with biometrics or PIN to resume.</Text>
+          <Text style={[styles.stateTitle, { color: colors.textPrimary }]}>Session Stale</Text>
+          <Text style={[styles.stateSubtitle, { color: colors.textSecondary }]}>Authenticate with biometrics or PIN to resume.</Text>
           {onRetry && (
             <TouchableOpacity style={styles.primaryButton} onPress={onRetry}>
               <Text style={styles.primaryButtonText}>Unlock with FaceID / Biometrics</Text>
@@ -120,9 +123,9 @@ export function TenStateView<T>({ state, onRetry, children }: TenStateViewProps<
 
     case "form_validation":
       return (
-        <View style={styles.centerContainer}>
+        <View style={[styles.centerContainer, { backgroundColor: colors.bgScreen }]}>
           <AlertCircle size={44} color="#EF4444" />
-          <Text style={styles.stateTitle}>Validation Required</Text>
+          <Text style={[styles.stateTitle, { color: colors.textPrimary }]}>Validation Required</Text>
           {state.issues.map((iss, idx) => (
             <Text key={idx} style={styles.issueText}>• {iss.field}: {iss.message}</Text>
           ))}
@@ -140,24 +143,20 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 24,
-    backgroundColor: "#09090B",
   },
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    color: "#A1A1AA",
     fontWeight: "500",
   },
   stateTitle: {
     marginTop: 16,
     fontSize: 18,
     fontWeight: "700",
-    color: "#FAFAFA",
   },
   stateSubtitle: {
     marginTop: 8,
     fontSize: 14,
-    color: "#A1A1AA",
     textAlign: "center",
     maxWidth: 280,
     lineHeight: 20,
@@ -171,7 +170,6 @@ const styles = StyleSheet.create({
   },
   retryButton: {
     marginTop: 20,
-    backgroundColor: "#27272A",
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 18,
@@ -184,8 +182,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   offlineBanner: {
-    backgroundColor: "#18181B",
-    borderColor: "#F59E0B",
     borderBottomWidth: 1,
     paddingVertical: 8,
     paddingHorizontal: 16,
@@ -200,9 +196,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   slowBanner: {
-    backgroundColor: "#18181B",
     borderBottomWidth: 1,
-    borderColor: "#EAB308",
     paddingVertical: 6,
     paddingHorizontal: 16,
     flexDirection: "row",

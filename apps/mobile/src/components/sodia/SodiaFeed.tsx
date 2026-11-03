@@ -112,7 +112,7 @@ export function SodiaFeed({
                       <Text style={styles.statusPostText}>{post.content}</Text>
                     </View>
                   ) : (
-                    <TouchableOpacity activeOpacity={0.9} onPress={() => toggleLike(post.id)} style={styles.mediaContainer}>
+                    <TouchableOpacity activeOpacity={0.9} onPress={() => toggleLike(post.id)} style={[styles.mediaContainer, { backgroundColor: colors.bgCardSecondary }]}>
                       <Image source={{ uri: post.media_url ?? "" }} style={styles.mediaPhoto} resizeMode="cover" />
                       {stampObj && (
                         <View style={styles.floatingStamp}>
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
   postAuthorName: { fontSize: 13, fontWeight: "800" },
   postSubtitle: { fontSize: 11, marginTop: 1 },
   moreBtn: { minWidth: 36, minHeight: 36, alignItems: "center", justifyContent: "center" },
-  mediaContainer: { position: "relative", width: "100%", height: 320, backgroundColor: "#18181B" },
+  mediaContainer: { position: "relative", width: "100%", height: 320 },
   mediaPhoto: { width: "100%", height: "100%" },
   floatingStamp: { position: "absolute", top: 12, right: 12, flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "rgba(9,9,11,0.85)", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, borderWidth: 1, borderColor: "#10B981" },
   floatingStampText: { color: "#10B981", fontSize: 10, fontWeight: "900" },

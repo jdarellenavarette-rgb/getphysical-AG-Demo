@@ -205,6 +205,6 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  screenContainer: { flex: 1, backgroundColor: "#09090B" },
+  screenContainer: { flex: 1 },
   contentArea: { flex: 1 },
 });

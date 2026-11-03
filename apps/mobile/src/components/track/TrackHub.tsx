@@ -86,14 +86,14 @@ export function TrackHub() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#09090B" },
-  summaryStrip: { flexDirection: "row", justifyContent: "space-around", backgroundColor: "#121215", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#18181B" },
+  container: { flex: 1 },
+  summaryStrip: { flexDirection: "row", justifyContent: "space-around", paddingVertical: 10, borderBottomWidth: 1 },
   summaryItem: { alignItems: "center" },
-  summaryVal: { color: "#FAFAFA", fontSize: 13, fontWeight: "800" },
-  summaryLabel: { color: "#71717A", fontSize: 10, marginTop: 2 },
-  toggleBar: { flexDirection: "row", backgroundColor: "#18181B", marginHorizontal: 12, marginVertical: 8, borderRadius: 12, padding: 3, borderWidth: 1 },
+  summaryVal: { fontSize: 13, fontWeight: "800" },
+  summaryLabel: { fontSize: 10, marginTop: 2 },
+  toggleBar: { flexDirection: "row", marginHorizontal: 12, marginVertical: 8, borderRadius: 12, padding: 3, borderWidth: 1 },
   togglePill: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, paddingVertical: 8, borderRadius: 10 },
   togglePillActive: { backgroundColor: "#E11D48" },
-  toggleText: { color: "#71717A", fontSize: 11, fontWeight: "700" },
+  toggleText: { fontSize: 11, fontWeight: "700" },
   toggleTextActive: { color: "#FFFFFF" },
 });

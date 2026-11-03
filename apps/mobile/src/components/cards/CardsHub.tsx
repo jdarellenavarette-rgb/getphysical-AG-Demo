@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
 import { Plus, Wallet, Ticket, FileText, ChevronRight, Send, QrCode, Eye, EyeOff, Copy, Check, Bell } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { ExactVIPCard } from "./ExactVIPCard";
 import { ReceiptModal } from "./ReceiptModal";
 import { StatementOfAccountModal } from "./StatementOfAccountModal";
 import { TurnstileQRModal } from "./TurnstileQRModal";
+import { GiftPassModal } from "./GiftPassModal";
 import { useThemeStore } from "../../theme/theme";
 import type { PassRow } from "sodia-core";
 
@@ -19,6 +20,7 @@ export function CardsHub({ onBrowseVenues }: CardsHubProps) {
   const [selectedPassForReceipt, setSelectedPassForReceipt] = useState<PassRow | null>(null);
   const [isSoaOpen, setIsSoaOpen] = useState(false);
   const [isQrOpen, setIsQrOpen] = useState(false);
+  const [isGiftOpen, setIsGiftOpen] = useState(false);
   const [showFullCardNum, setShowFullCardNum] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -65,14 +67,14 @@ export function CardsHub({ onBrowseVenues }: CardsHubProps) {
         </View>
       )}
 
-      {/* QUICK ACTION PILLS (INSPIRATION PHOTO 2: ADD, SEND, PAY) */}
+      {/* QUICK ACTION PILLS (ADD, SEND/GIFT, PAY) */}
       <View style={styles.actionPillsRow}>
         <TouchableOpacity onPress={onBrowseVenues} style={[styles.actionPill, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}>
           <Plus size={16} color="#EC4899" />
           <Text style={[styles.actionPillText, { color: colors.textPrimary }]}>Add +</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => setIsSoaOpen(true)} style={[styles.actionPill, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}>
+        <TouchableOpacity onPress={() => setIsGiftOpen(true)} style={[styles.actionPill, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}>
           <Send size={15} color="#EC4899" />
           <Text style={[styles.actionPillText, { color: colors.textPrimary }]}>Send ↗</Text>
         </TouchableOpacity>
@@ -83,7 +85,7 @@ export function CardsHub({ onBrowseVenues }: CardsHubProps) {
         </TouchableOpacity>
       </View>
 
-      {/* PURE WHITE CURVED SHEET: RECENT TRANSACTIONS & CARD DETAILS */}
+      {/* RECENT TRANSACTIONS SHEET */}
       <View style={[styles.historySheet, { backgroundColor: colors.bgCard }]}>
         <View style={styles.historyHeader}>
           <Text style={[styles.historyTitle, { color: colors.textPrimary }]}>Recent Transaction</Text>
@@ -99,7 +101,7 @@ export function CardsHub({ onBrowseVenues }: CardsHubProps) {
             <Ticket size={28} color={colors.textMuted} />
             <Text style={[styles.emptyLedgerTitle, { color: colors.textPrimary }]}>No transactions recorded</Text>
             <Text style={[styles.emptyLedgerSubtitle, { color: colors.textMuted }]}>
-              Check-ins, drop-in receipts, and memberships will appear on your immutable ledger here.
+              Purchases, passes, and statements will automatically record here.
             </Text>
           </View>
         ) : (
@@ -111,40 +113,32 @@ export function CardsHub({ onBrowseVenues }: CardsHubProps) {
                 style={[styles.txRow, { backgroundColor: colors.bgCardSecondary }]}
               >
                 <View>
-                  <Text style={[styles.txName, { color: colors.textPrimary }]}>₱265.00</Text>
-                  <Text style={[styles.txTime, { color: colors.textMuted }]}>{p.pass_type} • Metro Core Arena</Text>
+                  <Text style={[styles.txName, { color: colors.textPrimary }]}>{p.pass_type}</Text>
+                  <Text style={[styles.txTime, { color: colors.textMuted }]}>Metro Core Arena • Turnstile Valid</Text>
                 </View>
                 <View style={styles.txRight}>
-                  <Text style={styles.txStatus}>{p.status.toUpperCase()}</Text>
-                  <ChevronRight size={14} color={colors.textMuted} />
+                  <Text style={styles.txStatus}>ACTIVE</Text>
+                  <ChevronRight size={16} color={colors.textMuted} />
                 </View>
               </TouchableOpacity>
             ))}
           </View>
         )}
 
-        {/* CARD DETAIL CREDENTIALS (INSPIRATION PHOTO 2) */}
+        {/* CARD NUMBER METADATA */}
         <View style={[styles.cardDetailSection, { borderTopColor: colors.borderColor }]}>
           <View style={styles.cardDetailHeader}>
-            <Text style={[styles.cardDetailTitle, { color: colors.textPrimary }]}>Card Detail</Text>
+            <Text style={[styles.cardDetailTitle, { color: colors.textPrimary }]}>Card Details</Text>
             <TouchableOpacity onPress={handleCopyCard} style={styles.copyRow}>
-              {copied ? <Check size={12} color="#10B981" /> : <Copy size={12} color={colors.textMuted} />}
-              <Text style={[styles.copyText, { color: colors.textMuted }, copied && { color: "#10B981" }]}>
-                {copied ? "Copied" : "Copy"}
-              </Text>
+              {copied ? <Check size={13} color="#10B981" /> : <Copy size={13} color={colors.textMuted} />}
+              <Text style={[styles.copyText, { color: copied ? "#10B981" : colors.textMuted }]}>{copied ? "Copied" : "Copy ID"}</Text>
             </TouchableOpacity>
           </View>
-
           <View style={[styles.detailRow, { borderBottomColor: colors.borderColor }]}>
-            <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Holder Name</Text>
-            <Text style={[styles.detailVal, { color: colors.textPrimary }]}>{profile.name ?? "Adam Arête"}</Text>
-          </View>
-
-          <View style={[styles.detailRow, { borderBottomColor: colors.borderColor }]}>
-            <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Card Number</Text>
+            <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Digital Pass ID</Text>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
               <Text style={[styles.detailValMono, { color: colors.textPrimary }]}>
-                {showFullCardNum ? "2781 8191 6671 3160" : "2781 •••• •••• 3160"}
+                {showFullCardNum ? "4912 • 8820 • 3014 • 9901" : "•••• •••• •••• 9901"}
               </Text>
               <TouchableOpacity onPress={() => setShowFullCardNum(!showFullCardNum)}>
                 {showFullCardNum ? <EyeOff size={15} color={colors.textMuted} /> : <Eye size={15} color={colors.textMuted} />}
@@ -154,30 +148,10 @@ export function CardsHub({ onBrowseVenues }: CardsHubProps) {
         </View>
       </View>
 
-      {/* RECEIPT MODAL */}
-      <ReceiptModal
-        visible={!!selectedPassForReceipt}
-        pass={selectedPassForReceipt}
-        onClose={() => setSelectedPassForReceipt(null)}
-      />
-
-      {/* STATEMENT OF ACCOUNT MODAL */}
-      <StatementOfAccountModal
-        visible={isSoaOpen}
-        passes={passes}
-        onClose={() => setIsSoaOpen(false)}
-        onSelectPass={(p) => {
-          setIsSoaOpen(false);
-          setSelectedPassForReceipt(p);
-        }}
-      />
-
-      {/* DYNAMIC TURNSTILE QR MODAL */}
-      <TurnstileQRModal
-        visible={isQrOpen}
-        onClose={() => setIsQrOpen(false)}
-        facilityName="Metro Core Arena"
-      />
+      <ReceiptModal visible={!!selectedPassForReceipt} pass={selectedPassForReceipt} onClose={() => setSelectedPassForReceipt(null)} />
+      <StatementOfAccountModal visible={isSoaOpen} passes={passes} onClose={() => setIsSoaOpen(false)} onSelectPass={(p) => { setIsSoaOpen(false); setSelectedPassForReceipt(p); }} />
+      <TurnstileQRModal visible={isQrOpen} onClose={() => setIsQrOpen(false)} facilityName="Metro Core Arena" />
+      <GiftPassModal visible={isGiftOpen} passes={passes} onClose={() => setIsGiftOpen(false)} onSendPass={(passId, rec, msg) => { setIsGiftOpen(false); }} />
     </ScrollView>
   );
 }
@@ -191,25 +165,16 @@ const styles = StyleSheet.create({
   userHandle: { fontSize: 12, marginTop: 2, fontWeight: "600" },
   cardWrapper: { paddingHorizontal: 16, marginBottom: 12 },
   emptyCardContainer: { paddingHorizontal: 16, marginBottom: 16 },
-  emptyCardDashed: {
-    borderWidth: 2, borderStyle: "dashed", borderRadius: 20,
-    padding: 28, alignItems: "center", justifyContent: "center", minHeight: 210,
-  },
+  emptyCardDashed: { borderWidth: 2, borderStyle: "dashed", borderRadius: 20, padding: 28, alignItems: "center", justifyContent: "center", minHeight: 210 },
   emptyCardTitle: { fontSize: 18, fontWeight: "800", marginTop: 12 },
   emptyCardDesc: { fontSize: 12, textAlign: "center", marginTop: 6, lineHeight: 18, maxWidth: 280 },
-  getPassButton: {
-    flexDirection: "row", alignItems: "center", backgroundColor: "#EC4899", paddingHorizontal: 18, paddingVertical: 10,
-    borderRadius: 999, marginTop: 16,
-  },
+  getPassButton: { flexDirection: "row", alignItems: "center", backgroundColor: "#EC4899", paddingHorizontal: 18, paddingVertical: 10, borderRadius: 999, marginTop: 16 },
   getPassButtonText: { color: "#FFFFFF", fontSize: 12, fontWeight: "800" },
   actionPillsRow: { flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 20, marginBottom: 18, gap: 10 },
   actionPill: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, borderWidth: 1, paddingVertical: 11, borderRadius: 12 },
   actionPillPrimary: { backgroundColor: "#E11D48", borderColor: "#E11D48" },
   actionPillText: { fontSize: 12, fontWeight: "800" },
-  historySheet: {
-    borderTopLeftRadius: 36, borderTopRightRadius: 36, paddingHorizontal: 20, paddingTop: 22,
-    paddingBottom: 40, minHeight: 320,
-  },
+  historySheet: { borderTopLeftRadius: 36, borderTopRightRadius: 36, paddingHorizontal: 20, paddingTop: 22, paddingBottom: 40, minHeight: 320 },
   historyHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 },
   historyTitle: { fontSize: 17, fontWeight: "900" },
   viewAllText: { color: "#E11D48", fontSize: 12, fontWeight: "700" },
@@ -229,6 +194,5 @@ const styles = StyleSheet.create({
   copyText: { fontSize: 11, fontWeight: "700" },
   detailRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 8, borderBottomWidth: 1 },
   detailLabel: { fontSize: 12 },
-  detailVal: { fontSize: 13, fontWeight: "700" },
   detailValMono: { fontSize: 13, fontWeight: "800", letterSpacing: 0.5 },
 });

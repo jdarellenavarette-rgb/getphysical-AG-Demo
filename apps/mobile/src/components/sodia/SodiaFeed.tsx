@@ -13,6 +13,7 @@ interface SodiaFeedProps {
   onOpenStoryCamera?: () => void;
   onOpenStory?: (index: number) => void;
   onOpenComments?: () => void;
+  onPressAuthor?: (userId: string, name: string, avatar?: string | null) => void;
 }
 
 export function SodiaFeed({
@@ -21,6 +22,7 @@ export function SodiaFeed({
   onOpenStoryCamera,
   onOpenStory,
   onOpenComments,
+  onPressAuthor,
 }: SodiaFeedProps) {
   const { posts, profile, userStory } = useEcosystemStore();
   const { colors } = useThemeStore();
@@ -99,6 +101,7 @@ export function SodiaFeed({
                 onShare={handleShare}
                 onOpenComments={onOpenComments}
                 onPressFacilityCTA={onPressFacilityCTA}
+                onPressAuthor={onPressAuthor}
               />
             ))}
           </View>

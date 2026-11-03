@@ -22,6 +22,8 @@ import { SettingsModal } from "./components/common/SettingsModal";
 import { StaffQuickdashModal } from "./components/business/StaffQuickdashModal";
 import { CoachQuickdashModal } from "./components/business/CoachQuickdashModal";
 import { OrganizerMeetModal } from "./components/profile/OrganizerMeetModal";
+import { AthleteProfileModal, type AthleteProfileData } from "./components/profile/AthleteProfileModal";
+import { getAthleteProfile } from "./data/athleteRosterData";
 import { useEcosystemStore } from "./store/ecosystemStore";
 import { useThemeStore } from "./theme/theme";
 import type { FacilityRow } from "sodia-core";
@@ -32,6 +34,7 @@ export default function App() {
   const [currentTab, setCurrentTab] = useState<MobileTab>("sodia");
   const [activeCheckoutItem, setActiveCheckoutItem] = useState<CheckoutRequest | null>(null);
   const [selectedFacilityForModal, setSelectedFacilityForModal] = useState<FacilityRow | null>(null);
+  const [selectedAthlete, setSelectedAthlete] = useState<AthleteProfileData | null>(null);
   const [isStoryViewerOpen, setIsStoryViewerOpen] = useState(false);
   const [isStoryCameraOpen, setIsStoryCameraOpen] = useState(false);
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
@@ -59,12 +62,8 @@ export default function App() {
     <View style={[styles.screenContainer, { paddingTop: Math.max(insets.top, 48), backgroundColor: colors.bgScreen }]}>
       <StatusBar barStyle={colors.statusBarStyle} />
 
-      {/* OPENING LOADING SCREEN */}
-      {isOpeningLoading && (
-        <OpeningLoadingScreen onFinish={() => setIsOpeningLoading(false)} />
-      )}
+      {isOpeningLoading && <OpeningLoadingScreen onFinish={() => setIsOpeningLoading(false)} />}
 
-      {/* HEADER BAR */}
       <HeaderBar
         onOpenMenu={() => setIsMenuOpen(true)}
         onOpenSettings={() => setIsSettingsOpen(true)}
@@ -73,7 +72,6 @@ export default function App() {
         onPressLogo={() => setCurrentTab("sodia")}
       />
 
-      {/* ACTIVE TAB CONTENT */}
       <View style={styles.contentArea}>
         {currentTab === "sodia" && (
           <SodiaFeed
@@ -85,14 +83,11 @@ export default function App() {
             onOpenStoryCamera={() => setIsStoryCameraOpen(true)}
             onOpenStory={() => setIsStoryViewerOpen(true)}
             onOpenComments={() => setIsCommentsOpen(true)}
+            onPressAuthor={(userId, name, avatar) => setSelectedAthlete(getAthleteProfile(name, avatar))}
           />
         )}
-        {currentTab === "discover" && (
-          <DiscoverView onCheckoutItem={(item) => setActiveCheckoutItem(item)} />
-        )}
-        {currentTab === "cards" && (
-          <CardsHub onBrowseVenues={() => setCurrentTab("discover")} />
-        )}
+        {currentTab === "discover" && <DiscoverView onCheckoutItem={(item) => setActiveCheckoutItem(item)} />}
+        {currentTab === "cards" && <CardsHub onBrowseVenues={() => setCurrentTab("discover")} />}
         {currentTab === "track" && <TrackHub />}
         {currentTab === "profile" && (
           <ProfileHub
@@ -104,14 +99,8 @@ export default function App() {
         )}
       </View>
 
-      {/* BOTTOM NAVIGATION */}
-      <BottomBar
-        currentTab={currentTab}
-        onSelectTab={setCurrentTab}
-        onPressCreate={() => setIsCreatePostOpen(true)}
-      />
+      <BottomBar currentTab={currentTab} onSelectTab={setCurrentTab} onPressCreate={() => setIsCreatePostOpen(true)} />
 
-      {/* STORY VIEWER */}
       <StoryViewerModal
         visible={isStoryViewerOpen}
         onClose={() => setIsStoryViewerOpen(false)}
@@ -124,23 +113,10 @@ export default function App() {
         }}
       />
 
-      {/* COMMENTS BOTTOM SHEET */}
       <CommentsBottomSheet visible={isCommentsOpen} onClose={() => setIsCommentsOpen(false)} />
+      <CreatePostModal visible={isCreatePostOpen} onClose={() => setIsCreatePostOpen(false)} onOpenStoryCamera={() => setIsStoryCameraOpen(true)} />
+      <InstagramStoryCameraModal visible={isStoryCameraOpen} onClose={() => setIsStoryCameraOpen(false)} />
 
-      {/* CREATE POST MODAL */}
-      <CreatePostModal
-        visible={isCreatePostOpen}
-        onClose={() => setIsCreatePostOpen(false)}
-        onOpenStoryCamera={() => setIsStoryCameraOpen(true)}
-      />
-
-      {/* INSTAGRAM STORY CAMERA MODAL */}
-      <InstagramStoryCameraModal
-        visible={isStoryCameraOpen}
-        onClose={() => setIsStoryCameraOpen(false)}
-      />
-
-      {/* INBOX & DM CHAT MODAL */}
       <Modal visible={isInboxOpen} animationType="slide" onRequestClose={() => setIsInboxOpen(false)}>
         {activeChatThread ? (
           <DMChatView thread={activeChatThread} onBack={() => setActiveChatThread(null)} />
@@ -149,18 +125,10 @@ export default function App() {
         )}
       </Modal>
 
-      {/* NOTIFICATIONS & ACTIVITY MODAL */}
       <Modal visible={isActivityOpen} animationType="slide" onRequestClose={() => setIsActivityOpen(false)}>
-        <ActivityView
-          onBack={() => setIsActivityOpen(false)}
-          onNavigateToLift={() => {
-            setIsActivityOpen(false);
-            setCurrentTab("track");
-          }}
-        />
+        <ActivityView onBack={() => setIsActivityOpen(false)} onNavigateToLift={() => { setIsActivityOpen(false); setCurrentTab("track"); }} />
       </Modal>
 
-      {/* NAVIGATION DRAWER & ROLE SWITCHER */}
       <MenuDrawerModal
         visible={isMenuOpen}
         onClose={() => setIsMenuOpen(false)}
@@ -172,7 +140,6 @@ export default function App() {
         onOpenSettings={() => setIsSettingsOpen(true)}
       />
 
-      {/* SETTINGS MODAL WITH CONCEALED BUSINESS ROLES */}
       <SettingsModal
         visible={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
@@ -181,12 +148,10 @@ export default function App() {
         onOpenOrganizer={() => setIsOrganizerOpen(true)}
       />
 
-      {/* BUSINESS ROLE MODALS */}
       <StaffQuickdashModal visible={isStaffDashOpen} onClose={() => setIsStaffDashOpen(false)} />
       <CoachQuickdashModal visible={isCoachDashOpen} onClose={() => setIsCoachDashOpen(false)} />
       <OrganizerMeetModal visible={isOrganizerOpen} onClose={() => setIsOrganizerOpen(false)} />
 
-      {/* FACILITY DETAIL SHEET */}
       <FacilityDetailSheet
         facility={selectedFacilityForModal}
         visible={!!selectedFacilityForModal}
@@ -206,13 +171,25 @@ export default function App() {
         }}
       />
 
-      {/* UNIVERSAL CHECKOUT MODAL */}
-      <UniversalCheckoutModal
-        item={activeCheckoutItem}
-        visible={!!activeCheckoutItem}
-        onClose={() => setActiveCheckoutItem(null)}
-        onConfirm={handleCheckoutConfirm}
+      <AthleteProfileModal
+        visible={!!selectedAthlete}
+        athlete={selectedAthlete}
+        onClose={() => setSelectedAthlete(null)}
+        onMessageAthlete={(ath) => {
+          setActiveChatThread({
+            id: `thread_${ath.userId}`,
+            name: ath.name,
+            avatar: ath.avatar,
+            lastMessage: "Direct message started",
+            timeAgo: "Just now",
+            unreadCount: 0,
+            type: "direct",
+          });
+          setIsInboxOpen(true);
+        }}
       />
+
+      <UniversalCheckoutModal item={activeCheckoutItem} visible={!!activeCheckoutItem} onClose={() => setActiveCheckoutItem(null)} onConfirm={handleCheckoutConfirm} />
     </View>
   );
 }

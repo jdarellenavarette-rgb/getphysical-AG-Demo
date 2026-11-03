@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Modal, ScrollView, Alert } from "react-native";
-import { X, MapPin, Award, Check, Camera, Video, Image as ImageIcon, Sparkles } from "lucide-react-native";
+import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Modal, ScrollView } from "react-native";
+import { X, MapPin, Award, Check } from "lucide-react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { useThemeStore } from "../../theme/theme";
 import { SODIA_FIELD_LIMITS } from "sodia-core";
+import { PostMediaAttachmentBar } from "./PostMediaAttachmentBar";
 
 interface CreatePostModalProps {
   visible: boolean;
@@ -14,10 +15,10 @@ interface CreatePostModalProps {
 }
 
 const BG_GRADIENTS = [
-  { id: "carbon", color: "#18181B", name: "Dark" },
-  { id: "crimson", color: "#BE123C", name: "Crimson" },
-  { id: "emerald", color: "#047857", name: "Emerald" },
-  { id: "indigo", color: "#4338CA", name: "Indigo" },
+  { id: "carbon", color: "#18181B" },
+  { id: "crimson", color: "#BE123C" },
+  { id: "emerald", color: "#047857" },
+  { id: "indigo", color: "#4338CA" },
 ];
 
 export function CreatePostModal({
@@ -82,7 +83,6 @@ export function CreatePostModal({
 
   const handlePublish = () => {
     if (!caption.trim() && !attachedMediaUri) return;
-
     if (activeTab === "status") {
       addPost(caption.trim(), selectedFacilityId ?? undefined, undefined, null);
     } else {
@@ -101,12 +101,8 @@ export function CreatePostModal({
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={[styles.container, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
-          {/* TOP BAR */}
           <View style={[styles.header, { borderBottomColor: colors.borderColor }]}>
-            <TouchableOpacity onPress={onClose} style={styles.cancelBtn}>
-              <Text style={[styles.cancelText, { color: colors.textMuted }]}>Cancel</Text>
-            </TouchableOpacity>
-
+            <TouchableOpacity onPress={onClose} style={styles.cancelBtn}><Text style={[styles.cancelText, { color: colors.textMuted }]}>Cancel</Text></TouchableOpacity>
             <View style={[styles.modeTabs, { backgroundColor: colors.bgInput }]}>
               <TouchableOpacity onPress={() => setActiveTab("post")} style={[styles.modeTab, activeTab === "post" && { backgroundColor: colors.bgCard }]}>
                 <Text style={[styles.modeTabText, { color: activeTab === "post" ? colors.textPrimary : colors.textMuted }]}>Post</Text>
@@ -118,18 +114,12 @@ export function CreatePostModal({
                 <Text style={[styles.modeTabText, { color: "#E11D48" }]}>Story 📷</Text>
               </TouchableOpacity>
             </View>
-
-            <TouchableOpacity
-              onPress={handlePublish}
-              disabled={(!caption.trim() && !attachedMediaUri) || remainingChars < 0}
-              style={[styles.publishBtn, (!caption.trim() && !attachedMediaUri) && styles.publishBtnDisabled]}
-            >
+            <TouchableOpacity onPress={handlePublish} disabled={(!caption.trim() && !attachedMediaUri) || remainingChars < 0} style={[styles.publishBtn, (!caption.trim() && !attachedMediaUri) && styles.publishBtnDisabled]}>
               <Text style={styles.publishText}>Post</Text>
             </TouchableOpacity>
           </View>
 
           <ScrollView style={styles.formContent} showsVerticalScrollIndicator={false}>
-            {/* AUTHOR PREVIEW */}
             <View style={styles.authorRow}>
               <Image source={{ uri: profile.avatar_url ?? "" }} style={styles.avatar} />
               <View style={styles.authorMeta}>
@@ -138,7 +128,6 @@ export function CreatePostModal({
               </View>
             </View>
 
-            {/* REGULAR POST MODE */}
             {activeTab === "post" && (
               <>
                 <TextInput
@@ -150,39 +139,14 @@ export function CreatePostModal({
                   onChangeText={setCaption}
                   maxLength={SODIA_FIELD_LIMITS.POST_CAPTION_MAX_CHARS}
                 />
-
-                {/* ATTACHED MEDIA PREVIEW */}
                 {attachedMediaUri && (
                   <View style={styles.mediaPreviewCard}>
                     <Image source={{ uri: attachedMediaUri }} style={styles.previewImage} />
-                    <View style={styles.mediaKindBadge}>
-                      <Text style={styles.mediaKindText}>{mediaKind.toUpperCase()}</Text>
-                    </View>
-                    <TouchableOpacity onPress={() => setAttachedMediaUri(null)} style={styles.removeMediaBtn}>
-                      <X size={14} color="#FFF" />
-                    </TouchableOpacity>
+                    <View style={styles.mediaKindBadge}><Text style={styles.mediaKindText}>{mediaKind.toUpperCase()}</Text></View>
+                    <TouchableOpacity onPress={() => setAttachedMediaUri(null)} style={styles.removeMediaBtn}><X size={14} color="#FFF" /></TouchableOpacity>
                   </View>
                 )}
-
-                {/* ATTACH OPTIONS BAR */}
-                <View style={[styles.attachmentBar, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}>
-                  <Text style={[styles.attachTitle, { color: colors.textMuted }]}>ATTACH MEDIA:</Text>
-                  <View style={styles.attachBtnRow}>
-                    <TouchableOpacity onPress={handleTakePhoto} style={styles.attachBtn}>
-                      <Camera size={18} color="#E11D48" />
-                      <Text style={[styles.attachBtnText, { color: colors.textPrimary }]}>Take Photo</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={handleRecordVideo} style={styles.attachBtn}>
-                      <Video size={18} color="#3B82F6" />
-                      <Text style={[styles.attachBtnText, { color: colors.textPrimary }]}>Record Video</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={handlePickLibrary} style={styles.attachBtn}>
-                      <ImageIcon size={18} color="#10B981" />
-                      <Text style={[styles.attachBtnText, { color: colors.textPrimary }]}>Library</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
+                <PostMediaAttachmentBar onTakePhoto={handleTakePhoto} onRecordVideo={handleRecordVideo} onPickLibrary={handlePickLibrary} />
                 {hasStampAttached && (
                   <View style={styles.stampCard}>
                     <Award size={16} color="#10B981" />
@@ -193,7 +157,6 @@ export function CreatePostModal({
                     <TouchableOpacity onPress={() => setHasStampAttached(false)}><X size={15} color={colors.textMuted} /></TouchableOpacity>
                   </View>
                 )}
-
                 {selectedFac && (
                   <View style={styles.venueCard}>
                     <MapPin size={16} color="#E11D48" />
@@ -207,27 +170,14 @@ export function CreatePostModal({
               </>
             )}
 
-            {/* STATUS POST MODE */}
             {activeTab === "status" && (
               <View style={styles.statusBox}>
                 <View style={[styles.statusCanvas, { backgroundColor: selectedBgColor }]}>
-                  <TextInput
-                    style={styles.statusTextInput}
-                    placeholder="What's on your athletic mind?"
-                    placeholderTextColor="rgba(255,255,255,0.6)"
-                    multiline
-                    value={caption}
-                    onChangeText={setCaption}
-                    maxLength={200}
-                  />
+                  <TextInput style={styles.statusTextInput} placeholder="What's on your athletic mind?" placeholderTextColor="rgba(255,255,255,0.6)" multiline value={caption} onChangeText={setCaption} maxLength={200} />
                 </View>
                 <View style={styles.paletteRow}>
                   {BG_GRADIENTS.map((bg) => (
-                    <TouchableOpacity
-                      key={bg.id}
-                      onPress={() => setSelectedBgColor(bg.color)}
-                      style={[styles.colorDot, { backgroundColor: bg.color }, selectedBgColor === bg.color && styles.colorDotActive]}
-                    >
+                    <TouchableOpacity key={bg.id} onPress={() => setSelectedBgColor(bg.color)} style={[styles.colorDot, { backgroundColor: bg.color }, selectedBgColor === bg.color && styles.colorDotActive]}>
                       {selectedBgColor === bg.color && <Check size={12} color="#FFFFFF" strokeWidth={3} />}
                     </TouchableOpacity>
                   ))}
@@ -265,11 +215,6 @@ const styles = StyleSheet.create({
   mediaKindBadge: { position: "absolute", top: 8, left: 8, backgroundColor: "rgba(0,0,0,0.7)", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
   mediaKindText: { color: "#FFF", fontSize: 9, fontWeight: "800" },
   removeMediaBtn: { position: "absolute", top: 8, right: 8, width: 24, height: 24, borderRadius: 12, backgroundColor: "rgba(0,0,0,0.75)", justifyContent: "center", alignItems: "center" },
-  attachmentBar: { borderRadius: 14, padding: 12, borderWidth: 1, marginVertical: 8 },
-  attachTitle: { fontSize: 10, fontWeight: "800", letterSpacing: 0.6, marginBottom: 8 },
-  attachBtnRow: { flexDirection: "row", justifyContent: "space-around" },
-  attachBtn: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8 },
-  attachBtnText: { fontSize: 12, fontWeight: "700" },
   stampCard: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(16, 185, 129, 0.12)", borderWidth: 1, borderColor: "rgba(16, 185, 129, 0.3)", borderRadius: 12, padding: 12, marginVertical: 6 },
   stampTitle: { color: "#10B981", fontSize: 10, fontWeight: "800" },
   stampVal: { fontSize: 12, fontWeight: "700", marginTop: 2 },

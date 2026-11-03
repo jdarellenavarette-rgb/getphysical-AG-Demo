@@ -16,6 +16,7 @@ interface SodiaPostCardProps {
   onShare: (id: string) => void;
   onOpenComments?: () => void;
   onPressFacilityCTA?: (facilityId: string) => void;
+  onPressAuthor?: (userId: string, name: string, avatar?: string | null) => void;
 }
 
 export function SodiaPostCard({
@@ -29,6 +30,7 @@ export function SodiaPostCard({
   onShare,
   onOpenComments,
   onPressFacilityCTA,
+  onPressAuthor,
 }: SodiaPostCardProps) {
   const { colors } = useThemeStore();
 
@@ -50,22 +52,27 @@ export function SodiaPostCard({
     <View style={[styles.postCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
       {/* 1. AUTHOR ROW */}
       <View style={styles.postTopBar}>
-        <View style={[styles.authorAvatarRing, isAd && { borderColor: "#F59E0B" }]}>
-          <Image source={{ uri: post.author_avatar ?? profileAvatar ?? "" }} style={styles.postAvatar} />
-        </View>
-        <View style={styles.postAuthorInfo}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-            <Text style={[styles.postAuthorName, { color: colors.textPrimary }]}>{post.author_name}</Text>
-            {isAd ? (
-              <View style={styles.sponsoredBadge}><Text style={styles.sponsoredText}>SPONSORED</Text></View>
-            ) : (
-              <CheckCircle2 size={12} color="#38BDF8" fill="#38BDF8" />
-            )}
+        <TouchableOpacity
+          onPress={() => onPressAuthor?.(post.user_id ?? "", post.author_name ?? "Athlete", post.author_avatar)}
+          style={{ flexDirection: "row", alignItems: "center", flex: 1 }}
+        >
+          <View style={[styles.authorAvatarRing, isAd && { borderColor: "#F59E0B" }]}>
+            <Image source={{ uri: post.author_avatar ?? profileAvatar ?? "" }} style={styles.postAvatar} />
           </View>
-          <Text style={[styles.postSubtitle, { color: colors.textMuted }]}>
-            {facTag ? String(facTag.name) : "Metro Manila"} • {isAd ? "Promoted" : "2h ago"}
-          </Text>
-        </View>
+          <View style={styles.postAuthorInfo}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+              <Text style={[styles.postAuthorName, { color: colors.textPrimary }]}>{post.author_name}</Text>
+              {isAd ? (
+                <View style={styles.sponsoredBadge}><Text style={styles.sponsoredText}>SPONSORED</Text></View>
+              ) : (
+                <CheckCircle2 size={12} color="#38BDF8" fill="#38BDF8" />
+              )}
+            </View>
+            <Text style={[styles.postSubtitle, { color: colors.textMuted }]}>
+              {facTag ? String(facTag.name) : "Metro Manila"} • {isAd ? "Promoted" : "2h ago"}
+            </Text>
+          </View>
+        </TouchableOpacity>
         <TouchableOpacity onPress={() => Alert.alert("Post Options", "Post link copied to clipboard.")} style={styles.moreBtn}>
           <MoreHorizontal size={18} color={colors.textMuted} />
         </TouchableOpacity>
@@ -201,8 +208,7 @@ const styles = StyleSheet.create({
   postTopBar: { flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 10 },
   authorAvatarRing: { width: 38, height: 38, borderRadius: 19, borderWidth: 1.5, borderColor: "#E11D48", padding: 1 },
   postAvatar: { width: "100%", height: "100%", borderRadius: 18 },
-  postAuthorInfo: { flex: 1, marginLeft: 10 },
-  postAuthorName: { fontSize: 13, fontWeight: "800" },
+  postAuthorInfo: { flex: 1, marginLeft: 10 }, postAuthorName: { fontSize: 13, fontWeight: "800" },
   postSubtitle: { fontSize: 11, marginTop: 1 },
   sponsoredBadge: { backgroundColor: "rgba(245,158,11,0.15)", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
   sponsoredText: { color: "#F59E0B", fontSize: 9, fontWeight: "900", letterSpacing: 0.5 },
@@ -215,8 +221,7 @@ const styles = StyleSheet.create({
   reelCenterPlay: { position: "absolute", top: "42%", left: "44%" },
   playIconCircle: { width: 48, height: 48, borderRadius: 24, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "center", alignItems: "center", borderWidth: 2, borderColor: "#FFF" },
   reelAudioTicker: { position: "absolute", bottom: 12, left: 12, flexDirection: "row", alignItems: "center", backgroundColor: "rgba(0,0,0,0.7)", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
-  reelAudioText: { color: "#FFF", fontSize: 10, fontWeight: "700" },
-  reelViewsText: { color: "#94A3B8", fontSize: 10, marginLeft: 4 },
+  reelAudioText: { color: "#FFF", fontSize: 10, fontWeight: "700" }, reelViewsText: { color: "#94A3B8", fontSize: 10, marginLeft: 4 },
   challengeFloatingStamp: { position: "absolute", top: 12, right: 12, flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "rgba(9,9,11,0.85)", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, borderWidth: 1, borderColor: "#F59E0B" },
   challengeFloatingText: { color: "#FBBF24", fontSize: 10, fontWeight: "900" },
   adFloatingPill: { position: "absolute", top: 12, right: 12, flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "rgba(9,9,11,0.85)", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, borderWidth: 1, borderColor: "#10B981" },
@@ -229,20 +234,16 @@ const styles = StyleSheet.create({
   statusPostText: { color: "#FFFFFF", fontSize: 17, fontWeight: "800", textAlign: "center", lineHeight: 26 },
   statusAuthorSign: { color: "rgba(255,255,255,0.7)", fontSize: 12, fontWeight: "700", marginTop: 10 },
   challengeBanner: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 14, paddingVertical: 12, borderWidth: 1, borderTopWidth: 0 },
-  challengeBannerTitle: { fontSize: 13, fontWeight: "800" },
-  challengeBannerMeta: { fontSize: 11, marginTop: 2 },
+  challengeBannerTitle: { fontSize: 13, fontWeight: "800" }, challengeBannerMeta: { fontSize: 11, marginTop: 2 },
   challengeJoinBtn: { backgroundColor: "#E11D48", paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8 },
   challengeJoinBtnText: { color: "#FFF", fontSize: 11, fontWeight: "800" },
   adCtaBanner: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 14, paddingVertical: 12, borderTopWidth: 1 },
-  adCtaTitle: { fontSize: 13, fontWeight: "800" },
-  adCtaSub: { fontSize: 11, marginTop: 2 },
+  adCtaTitle: { fontSize: 13, fontWeight: "800" }, adCtaSub: { fontSize: 11, marginTop: 2 },
   adClaimBtn: { backgroundColor: "#10B981", paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8 },
   adClaimBtnText: { color: "#FFF", fontSize: 11, fontWeight: "800" },
   postFooter: { paddingHorizontal: 14, paddingTop: 10, paddingBottom: 14 },
   interactionRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
   likesCountText: { fontSize: 13, fontWeight: "800", marginBottom: 6 },
-  captionBody: { fontSize: 13, lineHeight: 18, marginBottom: 4 },
-  captionAuthor: { fontWeight: "800" },
-  commentTeaserRow: { marginTop: 3 },
-  commentTeaserText: { fontSize: 12, fontWeight: "600" },
+  captionBody: { fontSize: 13, lineHeight: 18, marginBottom: 4 }, captionAuthor: { fontWeight: "800" },
+  commentTeaserRow: { marginTop: 3 }, commentTeaserText: { fontSize: 12, fontWeight: "600" },
 });

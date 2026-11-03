@@ -3,12 +3,14 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-nati
 import { Flame, Sparkles } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import { useTrackingStore } from "../../store/trackingStore";
+import { MemoryDetailModal, type JourneyMemoryItem } from "./MemoryDetailModal";
 
 export function JourneyView() {
   const { colors } = useThemeStore();
   const { liftSessions, moveActivities, foodMeals } = useTrackingStore();
   const [activeTab, setActiveTab] = useState<"active" | "recovery">("active");
   const [showAllActivities, setShowAllActivities] = useState(false);
+  const [selectedMemory, setSelectedMemory] = useState<JourneyMemoryItem | null>(null);
 
   const weeklyBars = [
     { day: "Sun", height: 45, isPeak: false },
@@ -24,7 +26,7 @@ export function JourneyView() {
     moveActivities.reduce((s, a) => s + a.caloriesBurned, 0) +
     liftSessions.reduce((s, l) => s + Math.round((l.durationSeconds / 60) * 6.5), 0);
 
-  const memories = [
+  const memories: JourneyMemoryItem[] = [
     ...moveActivities.map((m) => ({
       id: m.id,
       title: m.title,
@@ -116,7 +118,12 @@ export function JourneyView() {
 
       <View style={styles.activitiesList}>
         {displayedMemories.map((act) => (
-          <View key={act.id} style={[styles.activityCard, { backgroundColor: colors.bgCard, borderColor: colors.borderLight }]}>
+          <TouchableOpacity
+            key={act.id}
+            onPress={() => setSelectedMemory(act)}
+            activeOpacity={0.8}
+            style={[styles.activityCard, { backgroundColor: colors.bgCard, borderColor: colors.borderLight }]}
+          >
             <View style={styles.actLeft}>
               <View style={[styles.actBadge, { backgroundColor: colors.bgCardSecondary }]}>
                 <Text style={[styles.actBadgeText, { color: colors.textPrimary }]}>{act.badge}</Text>
@@ -129,9 +136,11 @@ export function JourneyView() {
               <Text style={[styles.actTime, { color: colors.textMuted }]}>{act.time}</Text>
               <Text style={styles.actCals}>{act.cals}</Text>
             </View>
-          </View>
+          </TouchableOpacity>
         ))}
       </View>
+
+      <MemoryDetailModal visible={!!selectedMemory} item={selectedMemory} onClose={() => setSelectedMemory(null)} />
     </ScrollView>
   );
 }

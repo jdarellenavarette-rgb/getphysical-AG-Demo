@@ -1,9 +1,8 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView } from "react-native";
-import { Award, Shield, Eye, CheckCircle2, MessageSquare, UserPlus, ArrowLeft, Grid, Film } from "lucide-react-native";
+import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView, Modal } from "react-native";
+import { Award, Shield, Eye, CheckCircle2, MessageSquare, UserPlus, ArrowLeft, Grid, X, Heart } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { useThemeStore } from "../../theme/theme";
-import { OrganizerMeetModal } from "./OrganizerMeetModal";
 
 interface ProfileHubProps {
   onBack?: () => void;
@@ -13,10 +12,11 @@ interface ProfileHubProps {
 }
 
 export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
-  const { profile, passes, posts } = useEcosystemStore();
+  const { profile, passes } = useEcosystemStore();
   const { colors } = useThemeStore();
   const [activeTab, setActiveTab] = useState<"grid" | "trophy" | "locker">("grid");
   const [isFollowing, setIsFollowing] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
 
   const highlights = [
     { id: "h1", title: "225kg PR", image: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=200&q=80" },
@@ -36,7 +36,6 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.bgScreen }]} contentContainerStyle={{ paddingBottom: 110 }} showsVerticalScrollIndicator={false}>
-      {/* COVER & HEADER WITH RETURN PILL */}
       <View style={styles.coverContainer}>
         <Image source={{ uri: profile.cover_url ?? "" }} style={styles.coverPhoto} />
         <View style={styles.coverGradient} />
@@ -66,7 +65,6 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
           <Text style={[styles.bioText, { color: colors.textPrimary }]}>{profile.bio}</Text>
         </View>
 
-        {/* PRO DUAL ACTION BUTTONS */}
         <View style={styles.actionBtnRow}>
           <TouchableOpacity onPress={() => setIsFollowing(!isFollowing)} style={[styles.primaryActionBtn, isFollowing && styles.followingActive]}>
             <UserPlus size={15} color="#FFFFFF" style={{ marginRight: 6 }} />
@@ -78,7 +76,6 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
           </TouchableOpacity>
         </View>
 
-        {/* STATS STRIP */}
         <View style={[styles.metricsRow, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
           <View style={styles.metricItem}><Text style={[styles.metricVal, { color: colors.textPrimary }]}>2.3k</Text><Text style={styles.metricLabel}>Followers</Text></View>
           <View style={styles.metricItem}><Text style={[styles.metricVal, { color: colors.textPrimary }]}>142</Text><Text style={styles.metricLabel}>Following</Text></View>
@@ -86,21 +83,19 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
           <View style={styles.metricItem}><Text style={[styles.metricVal, { color: colors.textPrimary }]}>18</Text><Text style={styles.metricLabel}>PR Stamps</Text></View>
         </View>
 
-        {/* INSTAGRAM-STYLE STORY HIGHLIGHTS TRAY */}
         <View style={styles.highlightsTray}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.highlightsScroll}>
             {highlights.map((h) => (
-              <View key={h.id} style={styles.highlightItem}>
+              <TouchableOpacity key={h.id} onPress={() => setSelectedPhoto(h.image)} style={styles.highlightItem}>
                 <View style={[styles.highlightRing, { borderColor: colors.borderColor }]}>
                   <Image source={{ uri: h.image }} style={styles.highlightThumb} />
                 </View>
                 <Text numberOfLines={1} style={[styles.highlightLabel, { color: colors.textSecondary }]}>{h.title}</Text>
-              </View>
+              </TouchableOpacity>
             ))}
           </ScrollView>
         </View>
 
-        {/* INSTAGRAM TABS (GRID / TROPHY CASE / LOCKER) */}
         <View style={[styles.tabsHeader, { borderBottomColor: colors.borderColor }]}>
           <TouchableOpacity onPress={() => setActiveTab("grid")} style={[styles.tabItem, activeTab === "grid" && styles.tabItemActive]}>
             <Grid size={16} color={activeTab === "grid" ? "#E11D48" : "#71717A"} />
@@ -113,18 +108,16 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
           </TouchableOpacity>
         </View>
 
-        {/* TAB CONTENT: 3-COLUMN INSTAGRAM GRID */}
         {activeTab === "grid" && (
           <View style={styles.photoGrid}>
             {gridPhotos.map((photo, i) => (
-              <View key={i} style={styles.gridPhotoWrap}>
+              <TouchableOpacity key={i} onPress={() => setSelectedPhoto(photo)} style={styles.gridPhotoWrap}>
                 <Image source={{ uri: photo }} style={styles.gridPhoto} />
-              </View>
+              </TouchableOpacity>
             ))}
           </View>
         )}
 
-        {/* TAB CONTENT: TROPHY CASE */}
         {activeTab === "trophy" && (
           <View style={styles.trophyGrid}>
             <View style={[styles.stampCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
@@ -146,7 +139,6 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
           </View>
         )}
 
-        {/* TAB CONTENT: ATHLETE LOCKER */}
         {activeTab === "locker" && (
           <View style={styles.lockerList}>
             {passes.length === 0 ? (
@@ -162,6 +154,13 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
           </View>
         )}
       </View>
+
+      <Modal visible={!!selectedPhoto} transparent animationType="fade" onRequestClose={() => setSelectedPhoto(null)}>
+        <View style={styles.photoModalOverlay}>
+          <TouchableOpacity onPress={() => setSelectedPhoto(null)} style={styles.closePhotoBtn}><X size={22} color="#FFF" /></TouchableOpacity>
+          {selectedPhoto && <Image source={{ uri: selectedPhoto }} style={styles.fullPhoto} resizeMode="contain" />}
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -217,4 +216,7 @@ const styles = StyleSheet.create({
   lockerRow: { flexDirection: "row", justifyContent: "space-between", padding: 12, borderRadius: 10, borderWidth: 1 },
   lockerPassType: { fontSize: 13, fontWeight: "600" },
   lockerStatus: { color: "#10B981", fontSize: 11, fontWeight: "700" },
+  photoModalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.9)", justifyContent: "center", alignItems: "center" },
+  closePhotoBtn: { position: "absolute", top: 48, right: 20, zIndex: 10, width: 44, height: 44, justifyContent: "center", alignItems: "center" },
+  fullPhoto: { width: "90%", height: "70%", borderRadius: 16 },
 });

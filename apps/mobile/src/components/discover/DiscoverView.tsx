@@ -1,12 +1,20 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, ScrollView } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, TextInput, TouchableOpacity, Image, ScrollView } from "react-native";
 import { Search, Users, Navigation, X, Map as MapIcon, List } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { DiscoverMapCanvas } from "./DiscoverMapCanvas";
 import { DiscoverEntitySheet, type DiscoverEntityType } from "./DiscoverEntitySheet";
-import { FacilityDetailSheet, type FacilityPassOption } from "./FacilityDetailSheet";
+import { FacilityDetailSheet } from "./FacilityDetailSheet";
 import { useThemeStore } from "../../theme/theme";
 import type { FacilityRow } from "sodia-core";
+import { styles } from "./DiscoverView.styles";
+import {
+  requestAndFetchUserLocation,
+  DEFAULT_BGC_COORDS,
+  calculateHaversineKm,
+  formatWalkingEta,
+  type UserCoordinates,
+} from "../../services/locationService";
 
 export interface CheckoutRequest {
   id: string;
@@ -33,6 +41,15 @@ export function DiscoverView({ onSelectFacility, onCheckoutItem }: DiscoverViewP
   const [selectedFacilityId, setSelectedFacilityId] = useState<string | null>(facilities[0]?.id ?? null);
   const [activeSheetEntity, setActiveSheetEntity] = useState<DiscoverEntityType>(null);
   const [selectedFacilityForDetail, setSelectedFacilityForDetail] = useState<FacilityRow | null>(null);
+  const [userCoords, setUserCoords] = useState<UserCoordinates>(DEFAULT_BGC_COORDS);
+
+  useEffect(() => {
+    let active = true;
+    requestAndFetchUserLocation().then((loc) => {
+      if (active) setUserCoords(loc);
+    });
+    return () => { active = false; };
+  }, []);
 
   const filters = ["All", "Commercial Gyms", "Pickleball & Courts", "Coaches", "Meets"];
 
@@ -98,6 +115,7 @@ export function DiscoverView({ onSelectFacility, onCheckoutItem }: DiscoverViewP
           <DiscoverMapCanvas
             facilities={filteredFacilities}
             selectedId={selectedFacilityId}
+            userCoords={userCoords}
             onSelectPin={(id) => {
               setSelectedFacilityId(id);
               const fac = facilities.find((f) => f.id === id);
@@ -105,6 +123,7 @@ export function DiscoverView({ onSelectFacility, onCheckoutItem }: DiscoverViewP
             }}
             onSelectCoach={() => setActiveSheetEntity("coach")}
             onSelectMeet={() => setActiveSheetEntity("meet")}
+            onRefreshLocation={() => requestAndFetchUserLocation().then(setUserCoords)}
           />
 
           <View style={styles.carouselSection}>
@@ -112,6 +131,7 @@ export function DiscoverView({ onSelectFacility, onCheckoutItem }: DiscoverViewP
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carouselScroll}>
               {filteredFacilities.map((fac) => {
                 const isSelected = fac.id === selectedFacilityId;
+                const distKm = calculateHaversineKm(userCoords.latitude, userCoords.longitude, fac.lat ?? 14.549, fac.lng ?? 121.05);
                 return (
                   <TouchableOpacity
                     key={fac.id}
@@ -129,7 +149,7 @@ export function DiscoverView({ onSelectFacility, onCheckoutItem }: DiscoverViewP
                       </View>
                       <View style={styles.grabLocationRow}>
                         <Navigation size={11} color={colors.textMuted} />
-                        <Text style={[styles.grabDistanceText, { color: colors.textMuted }]}>{fac.distance} • 12 min walk</Text>
+                        <Text style={[styles.grabDistanceText, { color: colors.textMuted }]}>{distKm} km • {formatWalkingEta(distKm)}</Text>
                       </View>
                       <View style={[styles.grabFooter, { borderTopColor: colors.borderColor }]}>
                         <Text style={[styles.grabPrice, { color: colors.textPrimary }]}>
@@ -148,20 +168,23 @@ export function DiscoverView({ onSelectFacility, onCheckoutItem }: DiscoverViewP
         </View>
       ) : (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 110, gap: 12 }}>
-          {filteredFacilities.map((fac) => (
-            <TouchableOpacity
-              key={fac.id}
-              onPress={() => setSelectedFacilityForDetail(fac)}
-              style={[styles.listCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}
-            >
-              <Image source={{ uri: fac.cover_image ?? "" }} style={styles.listImage} />
-              <View style={{ flex: 1, marginLeft: 12 }}>
-                <Text style={[styles.listName, { color: colors.textPrimary }]}>{fac.name}</Text>
-                <Text style={[styles.listMeta, { color: colors.textSecondary }]}>{fac.distance} • {fac.category}</Text>
-                <Text style={styles.listPrice}>₱{fac.day_pass_price_php ?? fac.court_hourly_price_php}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
+          {filteredFacilities.map((fac) => {
+            const distKm = calculateHaversineKm(userCoords.latitude, userCoords.longitude, fac.lat ?? 14.549, fac.lng ?? 121.05);
+            return (
+              <TouchableOpacity
+                key={fac.id}
+                onPress={() => setSelectedFacilityForDetail(fac)}
+                style={[styles.listCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}
+              >
+                <Image source={{ uri: fac.cover_image ?? "" }} style={styles.listImage} />
+                <View style={{ flex: 1, marginLeft: 12 }}>
+                  <Text style={[styles.listName, { color: colors.textPrimary }]}>{fac.name}</Text>
+                  <Text style={[styles.listMeta, { color: colors.textSecondary }]}>{distKm} km away • {formatWalkingEta(distKm)}</Text>
+                  <Text style={styles.listPrice}>₱{fac.day_pass_price_php ?? fac.court_hourly_price_php}</Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
       )}
 
@@ -206,40 +229,3 @@ export function DiscoverView({ onSelectFacility, onCheckoutItem }: DiscoverViewP
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  searchHeader: { flexDirection: "row", paddingHorizontal: 16, paddingTop: 10, paddingBottom: 6, gap: 10 },
-  searchBox: { flex: 1, flexDirection: "row", alignItems: "center", borderRadius: 12, paddingHorizontal: 12, height: 44, borderWidth: 1 },
-  searchInput: { flex: 1, fontSize: 13, marginLeft: 8 },
-  viewToggleBtn: { width: 44, height: 44, borderRadius: 12, borderWidth: 1, alignItems: "center", justifyContent: "center" },
-  filtersWrapper: { paddingVertical: 8 },
-  filtersScroll: { paddingHorizontal: 16, gap: 8 },
-  filterChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, borderWidth: 1 },
-  filterChipActive: { backgroundColor: "#E11D48", borderColor: "#E11D48" },
-  filterText: { fontSize: 12, fontWeight: "600" },
-  filterTextActive: { color: "#FFFFFF", fontWeight: "800" },
-  mapViewport: { flex: 1, position: "relative" },
-  carouselSection: { position: "absolute", bottom: 100, left: 0, right: 0 },
-  carouselHeaderTitle: { fontSize: 10, fontWeight: "800", letterSpacing: 0.8, marginLeft: 16, marginBottom: 8 },
-  carouselScroll: { paddingHorizontal: 16, gap: 12 },
-  grabCard: { width: 260, borderRadius: 16, overflow: "hidden", borderWidth: 1.5 },
-  grabCardActive: { borderColor: "#E11D48" },
-  grabCover: { width: "100%", height: 95 },
-  grabBody: { padding: 12 },
-  grabTopRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  grabName: { fontSize: 13, fontWeight: "800", flex: 1, marginRight: 6 },
-  capacityPill: { flexDirection: "row", alignItems: "center", gap: 3, backgroundColor: "rgba(16, 185, 129, 0.15)", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  capacityPillText: { color: "#10B981", fontSize: 9, fontWeight: "800" },
-  grabLocationRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4 },
-  grabDistanceText: { fontSize: 10 },
-  grabFooter: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 10, paddingTop: 8, borderTopWidth: 1 },
-  grabPrice: { fontSize: 12, fontWeight: "800" },
-  grabBookCTA: { backgroundColor: "#E11D48", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
-  grabBookText: { color: "#FFFFFF", fontSize: 11, fontWeight: "800" },
-  listCard: { flexDirection: "row", borderRadius: 14, padding: 12, borderWidth: 1 },
-  listImage: { width: 70, height: 70, borderRadius: 10 },
-  listName: { fontSize: 14, fontWeight: "800" },
-  listMeta: { fontSize: 11, marginTop: 3 },
-  listPrice: { color: "#10B981", fontSize: 13, fontWeight: "800", marginTop: 4 },
-});

@@ -10,6 +10,7 @@ import { SodiaPostCard } from "./SodiaPostCard";
 interface SodiaFeedProps {
   onPressFacilityCTA?: (facilityId: string) => void;
   onOpenCreatePost?: () => void;
+  onOpenStoryCamera?: () => void;
   onOpenStory?: (index: number) => void;
   onOpenComments?: () => void;
 }
@@ -17,6 +18,7 @@ interface SodiaFeedProps {
 export function SodiaFeed({
   onPressFacilityCTA,
   onOpenCreatePost,
+  onOpenStoryCamera,
   onOpenStory,
   onOpenComments,
 }: SodiaFeedProps) {
@@ -54,7 +56,7 @@ export function SodiaFeed({
             key={st.id}
             onPress={() => {
               if (st.isMe && !st.hasStory) {
-                onOpenCreatePost?.();
+                onOpenStoryCamera?.();
               } else {
                 onOpenStory?.(st.isMe ? 0 : idx - 1);
               }
@@ -63,10 +65,16 @@ export function SodiaFeed({
           >
             <View style={[styles.storyRing, { borderColor: colors.borderColor }, st.hasStory && styles.storyRingActive, st.isMe && !st.hasStory && { borderColor: colors.borderLight }]}>
               <Image source={{ uri: st.image ?? "" }} style={styles.storyAvatar} />
-              {st.isMe && !st.hasStory && (
-                <View style={[styles.storyAddBadge, { borderColor: colors.bgScreen }]}>
+              {st.isMe && (
+                <TouchableOpacity
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    onOpenStoryCamera?.();
+                  }}
+                  style={[styles.storyAddBadge, { borderColor: colors.bgScreen }]}
+                >
                   <Plus size={11} color="#FFFFFF" strokeWidth={3.5} />
-                </View>
+                </TouchableOpacity>
               )}
             </View>
             <Text numberOfLines={1} style={[styles.storyLabel, { color: colors.textSecondary }]}>{st.name}</Text>

@@ -23,7 +23,9 @@
       "expo-router",
       "expo-secure-store",
       "expo-location",
-      "expo-camera"
+      "expo-camera",
+      "expo-image-picker",
+      "expo-video"
     ],
     "extra": {
       "mapsApiKey": "d797ff206eda4d1a804ab31d002f0f41"

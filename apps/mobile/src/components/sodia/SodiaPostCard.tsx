@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Image, Alert } from "react-na
 import { Heart, MessageCircle, Bookmark, Send, MapPin, MoreHorizontal, CheckCircle2, Award, Play, Trophy, Sparkles, Tag } from "lucide-react-native";
 import type { SodiaPostRow } from "sodia-core";
 import { useThemeStore } from "../../theme/theme";
+import { PlayableVideoView } from "./PlayableVideoView";
 
 interface SodiaPostCardProps {
   post: SodiaPostRow;
@@ -76,26 +77,25 @@ export function SodiaPostCard({
           <Text style={styles.statusPostText}>"{post.content}"</Text>
           <Text style={styles.statusAuthorSign}>— {post.author_name}</Text>
         </View>
+      ) : isReel ? (
+        <View style={[styles.mediaContainer, styles.reelMediaContainer]}>
+          <PlayableVideoView
+            videoUrl={String(stampObj?.videoUrl ?? "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4")}
+            posterUrl={post.media_url ?? undefined}
+            autoPlay={false}
+          />
+          <View style={styles.reelBadge}>
+            <Play size={11} color="#FFF" fill="#FFF" />
+            <Text style={styles.reelBadgeText}>REEL • {String(stampObj?.duration ?? "0:38")}</Text>
+          </View>
+          <View style={styles.reelAudioTicker}>
+            <Text style={styles.reelAudioText}>{String(stampObj?.audioTrack ?? "Original Audio • sofia.pilates")}</Text>
+            <Text style={styles.reelViewsText}>• {String(stampObj?.viewsCount ?? "14.8k")} views</Text>
+          </View>
+        </View>
       ) : (
-        <TouchableOpacity activeOpacity={0.9} onPress={() => onToggleLike(post.id)} style={[styles.mediaContainer, isReel && styles.reelMediaContainer]}>
+        <TouchableOpacity activeOpacity={0.9} onPress={() => onToggleLike(post.id)} style={styles.mediaContainer}>
           <Image source={{ uri: post.media_url ?? "" }} style={styles.mediaPhoto} resizeMode="cover" />
-
-          {/* REEL OVERLAYS */}
-          {isReel && (
-            <>
-              <View style={styles.reelBadge}>
-                <Play size={11} color="#FFF" fill="#FFF" />
-                <Text style={styles.reelBadgeText}>REEL • {String(stampObj?.duration ?? "0:30")}</Text>
-              </View>
-              <View style={styles.reelCenterPlay}>
-                <View style={styles.playIconCircle}><Play size={22} color="#FFF" fill="#FFF" /></View>
-              </View>
-              <View style={styles.reelAudioTicker}>
-                <Text style={styles.reelAudioText}>{String(stampObj?.audioTrack ?? "Original Audio")}</Text>
-                <Text style={styles.reelViewsText}>• {String(stampObj?.viewsCount ?? "12k")} views</Text>
-              </View>
-            </>
-          )}
 
           {/* PR CHALLENGE FLOATING BADGE */}
           {isChallenge && (

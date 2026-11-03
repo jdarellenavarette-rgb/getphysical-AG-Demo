@@ -133,6 +133,7 @@ export const SEED_POSTS: readonly SodiaPostRow[] = [
     stamp: {
       type: "reel",
       duration: "0:38",
+      videoUrl: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
       audioTrack: "Original Audio • sofia.pilates",
       viewsCount: "14.8k",
     },

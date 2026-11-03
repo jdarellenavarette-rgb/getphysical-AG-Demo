@@ -16,6 +16,7 @@ import { InboxView, type DMThread } from "./components/sodia/InboxView";
 import { DMChatView } from "./components/sodia/DMChatView";
 import { ActivityView } from "./components/sodia/ActivityView";
 import { CreatePostModal } from "./components/sodia/CreatePostModal";
+import { InstagramStoryCameraModal } from "./components/sodia/InstagramStoryCameraModal";
 import { MenuDrawerModal } from "./components/common/MenuDrawerModal";
 import { SettingsModal } from "./components/common/SettingsModal";
 import { StaffQuickdashModal } from "./components/business/StaffQuickdashModal";
@@ -32,6 +33,7 @@ export default function App() {
   const [activeCheckoutItem, setActiveCheckoutItem] = useState<CheckoutRequest | null>(null);
   const [selectedFacilityForModal, setSelectedFacilityForModal] = useState<FacilityRow | null>(null);
   const [isStoryViewerOpen, setIsStoryViewerOpen] = useState(false);
+  const [isStoryCameraOpen, setIsStoryCameraOpen] = useState(false);
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
   const [isInboxOpen, setIsInboxOpen] = useState(false);
   const [activeChatThread, setActiveChatThread] = useState<DMThread | null>(null);
@@ -80,6 +82,7 @@ export default function App() {
               if (fac) setSelectedFacilityForModal(fac);
             }}
             onOpenCreatePost={() => setIsCreatePostOpen(true)}
+            onOpenStoryCamera={() => setIsStoryCameraOpen(true)}
             onOpenStory={() => setIsStoryViewerOpen(true)}
             onOpenComments={() => setIsCommentsOpen(true)}
           />
@@ -125,7 +128,17 @@ export default function App() {
       <CommentsBottomSheet visible={isCommentsOpen} onClose={() => setIsCommentsOpen(false)} />
 
       {/* CREATE POST MODAL */}
-      <CreatePostModal visible={isCreatePostOpen} onClose={() => setIsCreatePostOpen(false)} />
+      <CreatePostModal
+        visible={isCreatePostOpen}
+        onClose={() => setIsCreatePostOpen(false)}
+        onOpenStoryCamera={() => setIsStoryCameraOpen(true)}
+      />
+
+      {/* INSTAGRAM STORY CAMERA MODAL */}
+      <InstagramStoryCameraModal
+        visible={isStoryCameraOpen}
+        onClose={() => setIsStoryCameraOpen(false)}
+      />
 
       {/* INBOX & DM CHAT MODAL */}
       <Modal visible={isInboxOpen} animationType="slide" onRequestClose={() => setIsInboxOpen(false)}>

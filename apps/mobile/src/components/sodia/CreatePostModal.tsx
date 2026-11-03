@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Modal, ScrollView } from "react-native";
-import { X, MapPin, Award, Check } from "lucide-react-native";
+import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Modal, ScrollView, Alert } from "react-native";
+import { X, MapPin, Award, Check, Camera, Video, Image as ImageIcon, Sparkles } from "lucide-react-native";
+import * as ImagePicker from "expo-image-picker";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { useThemeStore } from "../../theme/theme";
 import { SODIA_FIELD_LIMITS } from "sodia-core";
@@ -8,7 +9,8 @@ import { SODIA_FIELD_LIMITS } from "sodia-core";
 interface CreatePostModalProps {
   visible: boolean;
   onClose: () => void;
-  defaultMode?: "post" | "status" | "story";
+  onOpenStoryCamera?: () => void;
+  defaultMode?: "post" | "status";
 }
 
 const BG_GRADIENTS = [
@@ -18,31 +20,77 @@ const BG_GRADIENTS = [
   { id: "indigo", color: "#4338CA", name: "Indigo" },
 ];
 
-export function CreatePostModal({ visible, onClose, defaultMode = "post" }: CreatePostModalProps) {
-  const { profile, facilities, addPost, addUserStory } = useEcosystemStore();
-  const { colors, themeMode } = useThemeStore();
-  const [activeTab, setActiveTab] = useState<"post" | "status" | "story">(defaultMode);
+export function CreatePostModal({
+  visible,
+  onClose,
+  onOpenStoryCamera,
+  defaultMode = "post",
+}: CreatePostModalProps) {
+  const { profile, facilities, addPost } = useEcosystemStore();
+  const { colors } = useThemeStore();
+  const [activeTab, setActiveTab] = useState<"post" | "status">(defaultMode);
   const [caption, setCaption] = useState("");
   const [selectedBgColor, setSelectedBgColor] = useState(BG_GRADIENTS[0]!.color);
   const [selectedFacilityId, setSelectedFacilityId] = useState<string | null>("fac_metro_core");
   const [hasStampAttached, setHasStampAttached] = useState(true);
+  const [attachedMediaUri, setAttachedMediaUri] = useState<string | null>(
+    "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80"
+  );
+  const [mediaKind, setMediaKind] = useState<"photo" | "video">("photo");
 
   const selectedFac = facilities.find((f) => f.id === selectedFacilityId);
   const remainingChars = SODIA_FIELD_LIMITS.POST_CAPTION_MAX_CHARS - caption.length;
 
-  const handlePublish = () => {
-    if (!caption.trim() && activeTab !== "story") return;
+  const handleTakePhoto = async () => {
+    try {
+      const res = await ImagePicker.launchCameraAsync({ mediaTypes: ["images"], quality: 0.8 });
+      if (!res.canceled && res.assets[0]?.uri) {
+        setAttachedMediaUri(res.assets[0].uri);
+        setMediaKind("photo");
+      }
+    } catch (e) {
+      setAttachedMediaUri("https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=800&q=80");
+      setMediaKind("photo");
+    }
+  };
 
-    if (activeTab === "story") {
-      addUserStory("https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80", caption.trim() || "Crushing early session in BGC! ⚡");
-    } else if (activeTab === "status") {
+  const handleRecordVideo = async () => {
+    try {
+      const res = await ImagePicker.launchCameraAsync({ mediaTypes: ["videos"] });
+      if (!res.canceled && res.assets[0]?.uri) {
+        setAttachedMediaUri(res.assets[0].uri);
+        setMediaKind("video");
+      }
+    } catch (e) {
+      setAttachedMediaUri("https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4");
+      setMediaKind("video");
+    }
+  };
+
+  const handlePickLibrary = async () => {
+    try {
+      const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images", "videos"], quality: 0.8 });
+      if (!res.canceled && res.assets[0]?.uri) {
+        setAttachedMediaUri(res.assets[0].uri);
+        setMediaKind(res.assets[0].type === "video" ? "video" : "photo");
+      }
+    } catch (e) {
+      setAttachedMediaUri("https://images.unsplash.com/photo-1540497077202-7c8a3999166f?auto=format&fit=crop&w=800&q=80");
+      setMediaKind("photo");
+    }
+  };
+
+  const handlePublish = () => {
+    if (!caption.trim() && !attachedMediaUri) return;
+
+    if (activeTab === "status") {
       addPost(caption.trim(), selectedFacilityId ?? undefined, undefined, null);
     } else {
       addPost(
-        caption.trim(),
+        caption.trim() || "Crushing the training block! 🔥",
         selectedFacilityId ?? undefined,
         hasStampAttached ? { id: `stamp_${Date.now()}`, type: "lift", title: "Deadlift 1RM", primaryMetric: "225 kg", isVerified: true, isPR: true } : undefined,
-        "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80"
+        attachedMediaUri
       );
     }
     setCaption("");
@@ -52,29 +100,31 @@ export function CreatePostModal({ visible, onClose, defaultMode = "post" }: Crea
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
-        <View style={[styles.container, { backgroundColor: colors.bgCard, borderColor: colors.borderColor, borderWidth: 1 }]}>
-          {/* TOP BAR WITH MODE SEGMENTS */}
+        <View style={[styles.container, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
+          {/* TOP BAR */}
           <View style={[styles.header, { borderBottomColor: colors.borderColor }]}>
             <TouchableOpacity onPress={onClose} style={styles.cancelBtn}>
               <Text style={[styles.cancelText, { color: colors.textMuted }]}>Cancel</Text>
             </TouchableOpacity>
 
             <View style={[styles.modeTabs, { backgroundColor: colors.bgInput }]}>
-              {(["post", "status", "story"] as const).map((m) => (
-                <TouchableOpacity key={m} onPress={() => setActiveTab(m)} style={[styles.modeTab, activeTab === m && { backgroundColor: colors.bgCard }]}>
-                  <Text style={[styles.modeTabText, { color: activeTab === m ? colors.textPrimary : colors.textMuted }]}>
-                    {m.charAt(0).toUpperCase() + m.slice(1)}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+              <TouchableOpacity onPress={() => setActiveTab("post")} style={[styles.modeTab, activeTab === "post" && { backgroundColor: colors.bgCard }]}>
+                <Text style={[styles.modeTabText, { color: activeTab === "post" ? colors.textPrimary : colors.textMuted }]}>Post</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setActiveTab("status")} style={[styles.modeTab, activeTab === "status" && { backgroundColor: colors.bgCard }]}>
+                <Text style={[styles.modeTabText, { color: activeTab === "status" ? colors.textPrimary : colors.textMuted }]}>Status</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => { onClose(); onOpenStoryCamera?.(); }} style={styles.modeTab}>
+                <Text style={[styles.modeTabText, { color: "#E11D48" }]}>Story 📷</Text>
+              </TouchableOpacity>
             </View>
 
             <TouchableOpacity
               onPress={handlePublish}
-              disabled={(!caption.trim() && activeTab !== "story") || remainingChars < 0}
-              style={[styles.publishBtn, (!caption.trim() && activeTab !== "story") && styles.publishBtnDisabled]}
+              disabled={(!caption.trim() && !attachedMediaUri) || remainingChars < 0}
+              style={[styles.publishBtn, (!caption.trim() && !attachedMediaUri) && styles.publishBtnDisabled]}
             >
-              <Text style={styles.publishText}>{activeTab === "story" ? "Share" : "Post"}</Text>
+              <Text style={styles.publishText}>Post</Text>
             </TouchableOpacity>
           </View>
 
@@ -84,11 +134,11 @@ export function CreatePostModal({ visible, onClose, defaultMode = "post" }: Crea
               <Image source={{ uri: profile.avatar_url ?? "" }} style={styles.avatar} />
               <View style={styles.authorMeta}>
                 <Text style={[styles.authorName, { color: colors.textPrimary }]}>{profile.first_name} {profile.last_name}</Text>
-                <Text style={styles.privacyPill}>{activeTab === "story" ? "Your Story • 24 Hours" : "Public • Sodia Feed"}</Text>
+                <Text style={styles.privacyPill}>Public • Sodia Feed</Text>
               </View>
             </View>
 
-            {/* MODE 1: MEDIA POST */}
+            {/* REGULAR POST MODE */}
             {activeTab === "post" && (
               <>
                 <TextInput
@@ -101,6 +151,38 @@ export function CreatePostModal({ visible, onClose, defaultMode = "post" }: Crea
                   maxLength={SODIA_FIELD_LIMITS.POST_CAPTION_MAX_CHARS}
                 />
 
+                {/* ATTACHED MEDIA PREVIEW */}
+                {attachedMediaUri && (
+                  <View style={styles.mediaPreviewCard}>
+                    <Image source={{ uri: attachedMediaUri }} style={styles.previewImage} />
+                    <View style={styles.mediaKindBadge}>
+                      <Text style={styles.mediaKindText}>{mediaKind.toUpperCase()}</Text>
+                    </View>
+                    <TouchableOpacity onPress={() => setAttachedMediaUri(null)} style={styles.removeMediaBtn}>
+                      <X size={14} color="#FFF" />
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                {/* ATTACH OPTIONS BAR */}
+                <View style={[styles.attachmentBar, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}>
+                  <Text style={[styles.attachTitle, { color: colors.textMuted }]}>ATTACH MEDIA:</Text>
+                  <View style={styles.attachBtnRow}>
+                    <TouchableOpacity onPress={handleTakePhoto} style={styles.attachBtn}>
+                      <Camera size={18} color="#E11D48" />
+                      <Text style={[styles.attachBtnText, { color: colors.textPrimary }]}>Take Photo</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={handleRecordVideo} style={styles.attachBtn}>
+                      <Video size={18} color="#3B82F6" />
+                      <Text style={[styles.attachBtnText, { color: colors.textPrimary }]}>Record Video</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={handlePickLibrary} style={styles.attachBtn}>
+                      <ImageIcon size={18} color="#10B981" />
+                      <Text style={[styles.attachBtnText, { color: colors.textPrimary }]}>Library</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
                 {hasStampAttached && (
                   <View style={styles.stampCard}>
                     <Award size={16} color="#10B981" />
@@ -108,9 +190,7 @@ export function CreatePostModal({ visible, onClose, defaultMode = "post" }: Crea
                       <Text style={styles.stampTitle}>VERIFIED LIFT STAMP</Text>
                       <Text style={[styles.stampVal, { color: colors.textPrimary }]}>Conventional Deadlift: 225 kg x 1 rep</Text>
                     </View>
-                    <TouchableOpacity onPress={() => setHasStampAttached(false)}>
-                      <X size={15} color={colors.textMuted} />
-                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => setHasStampAttached(false)}><X size={15} color={colors.textMuted} /></TouchableOpacity>
                   </View>
                 )}
 
@@ -121,15 +201,13 @@ export function CreatePostModal({ visible, onClose, defaultMode = "post" }: Crea
                       <Text style={[styles.venueName, { color: colors.textPrimary }]}>{selectedFac.name}</Text>
                       <Text style={styles.venueSub}>Auto-attaches Drop-in POS Pill (₱{selectedFac.day_pass_price_php})</Text>
                     </View>
-                    <TouchableOpacity onPress={() => setSelectedFacilityId(null)}>
-                      <X size={15} color={colors.textMuted} />
-                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => setSelectedFacilityId(null)}><X size={15} color={colors.textMuted} /></TouchableOpacity>
                   </View>
                 )}
               </>
             )}
 
-            {/* MODE 2: FACEBOOK STATUS THOUGHT */}
+            {/* STATUS POST MODE */}
             {activeTab === "status" && (
               <View style={styles.statusBox}>
                 <View style={[styles.statusCanvas, { backgroundColor: selectedBgColor }]}>
@@ -156,29 +234,6 @@ export function CreatePostModal({ visible, onClose, defaultMode = "post" }: Crea
                 </View>
               </View>
             )}
-
-            {/* MODE 3: STORY COMPOSER */}
-            {activeTab === "story" && (
-              <View style={styles.storyCanvas}>
-                <Image
-                  source={{ uri: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80" }}
-                  style={styles.storyCoverImage}
-                />
-                <View style={styles.storyOverlayStickers}>
-                  <View style={styles.storyLocationSticker}>
-                    <MapPin size={12} color="#FFFFFF" />
-                    <Text style={styles.storyLocationText}>Metro Core Arena</Text>
-                  </View>
-                  <TextInput
-                    style={styles.storyOverlayInput}
-                    placeholder="Type story text..."
-                    placeholderTextColor="rgba(255,255,255,0.7)"
-                    value={caption}
-                    onChangeText={setCaption}
-                  />
-                </View>
-              </View>
-            )}
           </ScrollView>
         </View>
       </View>
@@ -188,7 +243,7 @@ export function CreatePostModal({ visible, onClose, defaultMode = "post" }: Crea
 
 const styles = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.65)", justifyContent: "flex-end" },
-  container: { borderTopLeftRadius: 24, borderTopRightRadius: 24, height: "86%", padding: 18 },
+  container: { borderTopLeftRadius: 24, borderTopRightRadius: 24, height: "88%", padding: 18, borderWidth: 1 },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderBottomWidth: 1, paddingBottom: 12 },
   cancelBtn: { padding: 4 },
   cancelText: { fontSize: 13, fontWeight: "600" },
@@ -204,11 +259,21 @@ const styles = StyleSheet.create({
   authorMeta: { marginLeft: 12 },
   authorName: { fontSize: 14, fontWeight: "800" },
   privacyPill: { color: "#10B981", fontSize: 11, marginTop: 2, fontWeight: "600" },
-  captionInput: { fontSize: 15, minHeight: 80, textAlignVertical: "top", lineHeight: 22 },
-  stampCard: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(16, 185, 129, 0.12)", borderWidth: 1, borderColor: "rgba(16, 185, 129, 0.3)", borderRadius: 12, padding: 12, marginVertical: 8 },
+  captionInput: { fontSize: 15, minHeight: 65, textAlignVertical: "top", lineHeight: 22 },
+  mediaPreviewCard: { width: "100%", height: 160, borderRadius: 14, overflow: "hidden", position: "relative", marginVertical: 8 },
+  previewImage: { width: "100%", height: "100%" },
+  mediaKindBadge: { position: "absolute", top: 8, left: 8, backgroundColor: "rgba(0,0,0,0.7)", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
+  mediaKindText: { color: "#FFF", fontSize: 9, fontWeight: "800" },
+  removeMediaBtn: { position: "absolute", top: 8, right: 8, width: 24, height: 24, borderRadius: 12, backgroundColor: "rgba(0,0,0,0.75)", justifyContent: "center", alignItems: "center" },
+  attachmentBar: { borderRadius: 14, padding: 12, borderWidth: 1, marginVertical: 8 },
+  attachTitle: { fontSize: 10, fontWeight: "800", letterSpacing: 0.6, marginBottom: 8 },
+  attachBtnRow: { flexDirection: "row", justifyContent: "space-around" },
+  attachBtn: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8 },
+  attachBtnText: { fontSize: 12, fontWeight: "700" },
+  stampCard: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(16, 185, 129, 0.12)", borderWidth: 1, borderColor: "rgba(16, 185, 129, 0.3)", borderRadius: 12, padding: 12, marginVertical: 6 },
   stampTitle: { color: "#10B981", fontSize: 10, fontWeight: "800" },
   stampVal: { fontSize: 12, fontWeight: "700", marginTop: 2 },
-  venueCard: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(225, 29, 72, 0.1)", borderWidth: 1, borderColor: "rgba(225, 29, 72, 0.25)", borderRadius: 12, padding: 12, marginVertical: 8 },
+  venueCard: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(225, 29, 72, 0.1)", borderWidth: 1, borderColor: "rgba(225, 29, 72, 0.25)", borderRadius: 12, padding: 12, marginVertical: 6 },
   venueName: { fontSize: 13, fontWeight: "800" },
   venueSub: { color: "#E11D48", fontSize: 11, marginTop: 2 },
   statusBox: { alignItems: "center", marginVertical: 12 },
@@ -217,10 +282,4 @@ const styles = StyleSheet.create({
   paletteRow: { flexDirection: "row", gap: 12, marginTop: 14 },
   colorDot: { width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center" },
   colorDotActive: { borderWidth: 2.5, borderColor: "#FAFAFA" },
-  storyCanvas: { width: "100%", height: 260, borderRadius: 20, overflow: "hidden", position: "relative", marginTop: 10 },
-  storyCoverImage: { width: "100%", height: "100%", resizeMode: "cover" },
-  storyOverlayStickers: { position: "absolute", top: 16, left: 16, right: 16, bottom: 16, justifyContent: "space-between" },
-  storyLocationSticker: { alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(0,0,0,0.65)", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
-  storyLocationText: { color: "#FFFFFF", fontSize: 11, fontWeight: "800" },
-  storyOverlayInput: { backgroundColor: "rgba(0,0,0,0.5)", borderRadius: 10, padding: 12, color: "#FFFFFF", fontSize: 15, fontWeight: "700", textAlign: "center" },
 });

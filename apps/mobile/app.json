@@ -14,16 +14,33 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.getphysical.sodia"
+      "bundleIdentifier": "com.getphysical.sodia",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Sodia needs camera access to capture workout stories, PR challenges, and reels.",
+        "NSMicrophoneUsageDescription": "Sodia needs microphone access to record audio with workout reels.",
+        "NSPhotoLibraryUsageDescription": "Sodia needs photo library access to attach workout media."
+      }
     },
     "android": {
-      "package": "com.getphysical.sodia"
+      "package": "com.getphysical.sodia",
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "plugins": [
       "expo-router",
       "expo-secure-store",
       "expo-location",
-      "expo-camera",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Sodia to access your camera to capture workout stories and reels.",
+          "microphonePermission": "Allow Sodia to access your microphone to record workout audio."
+        }
+      ],
       "expo-image-picker",
       "expo-video"
     ],

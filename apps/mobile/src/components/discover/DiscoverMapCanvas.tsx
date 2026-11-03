@@ -5,25 +5,30 @@ import { Navigation, Plus, Minus, Compass } from "lucide-react-native";
 import type { FacilityRow } from "sodia-core";
 import { useThemeStore } from "../../theme/theme";
 import type { UserCoordinates } from "../../services/locationService";
+import type { DiscoverCoach, DiscoverCommunityClub } from "../../data/discoverData";
 import { buildLeafletMapHtml } from "./mapHtmlBuilder";
 
 interface DiscoverMapCanvasProps {
   facilities: readonly FacilityRow[];
+  coaches?: readonly DiscoverCoach[];
+  clubs?: readonly DiscoverCommunityClub[];
   selectedId: string | null;
   userCoords: UserCoordinates;
   onSelectPin: (id: string) => void;
-  onSelectCoach?: () => void;
-  onSelectMeet?: () => void;
+  onSelectCoach?: (id: string) => void;
+  onSelectClub?: (id: string) => void;
   onRefreshLocation?: () => void;
 }
 
 export function DiscoverMapCanvas({
   facilities,
+  coaches = [],
+  clubs = [],
   selectedId,
   userCoords,
   onSelectPin,
   onSelectCoach,
-  onSelectMeet,
+  onSelectClub,
   onRefreshLocation,
 }: DiscoverMapCanvasProps) {
   const { colors, themeMode } = useThemeStore();
@@ -32,6 +37,8 @@ export function DiscoverMapCanvas({
 
   const mapHtml = buildLeafletMapHtml({
     facilities,
+    coaches,
+    clubs,
     selectedId,
     userCoords,
     isLight,
@@ -43,10 +50,10 @@ export function DiscoverMapCanvas({
       const data = JSON.parse(event.nativeEvent.data);
       if (data.type === "SELECT_VENUE" && data.id) {
         onSelectPin(data.id);
-      } else if (data.type === "SELECT_COACH") {
-        onSelectCoach?.();
-      } else if (data.type === "SELECT_MEET") {
-        onSelectMeet?.();
+      } else if (data.type === "SELECT_COACH" && data.id) {
+        onSelectCoach?.(data.id);
+      } else if (data.type === "SELECT_CLUB" && data.id) {
+        onSelectClub?.(data.id);
       }
     } catch (e) {
       console.warn("Map message parse error:", e);

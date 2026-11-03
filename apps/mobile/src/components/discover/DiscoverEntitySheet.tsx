@@ -1,27 +1,42 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Modal, Image, ScrollView } from "react-native";
-import { X, Star, Clock, MapPin, ShieldCheck, UserCheck, Award, Zap } from "lucide-react-native";
+import { X, Star, Clock, MapPin, ShieldCheck, UserCheck, Users, Award, Sparkles } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
+import type { DiscoverCoach, DiscoverCommunityClub } from "../../data/discoverData";
 
-export type DiscoverEntityType = "coach" | "meet" | null;
+export type DiscoverSelectedEntity =
+  | { kind: "coach"; data: DiscoverCoach }
+  | { kind: "club"; data: DiscoverCommunityClub }
+  | null;
 
 interface DiscoverEntitySheetProps {
-  entityType: DiscoverEntityType;
+  entity: DiscoverSelectedEntity;
   visible: boolean;
   onClose: () => void;
-  onConfirmBooking: (itemTitle: string, pricePhp: number) => void;
+  onConfirmBooking: (itemTitle: string, pricePhp: number, facilityId?: string, facilityName?: string) => void;
 }
 
 export function DiscoverEntitySheet({
-  entityType,
+  entity,
   visible,
   onClose,
   onConfirmBooking,
 }: DiscoverEntitySheetProps) {
   const { colors } = useThemeStore();
-  if (!visible || !entityType) return null;
+  if (!visible || !entity) return null;
 
-  const isCoach = entityType === "coach";
+  const isCoach = entity.kind === "coach";
+  const coach = isCoach ? entity.data : null;
+  const club = !isCoach ? entity.data : null;
+
+  const title = isCoach ? coach!.name : club!.name;
+  const subtitle = isCoach ? coach!.title : `${club!.category} • ${club!.sport}`;
+  const avatarUrl = isCoach ? coach!.avatar : club!.coverImage;
+  const ratingOrLevel = isCoach ? `${coach!.rating} (${coach!.reviewCount} Reviews)` : club!.paceOrLevel;
+  const locationText = isCoach ? `${coach!.homeFacilityName} • ${coach!.address}` : club!.meetingPoint;
+  const scheduleText = isCoach ? coach!.schedule : club!.schedule;
+  const pricePhp = isCoach ? coach!.hourlyRatePhp : club!.dropInFeePhp;
+  const priceDisplay = pricePhp === 0 ? "Free Drop-In" : `₱${pricePhp.toLocaleString()}`;
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -33,12 +48,14 @@ export function DiscoverEntitySheet({
               {isCoach ? (
                 <View style={styles.coachBadge}>
                   <UserCheck size={12} color="#3B82F6" />
-                  <Text style={styles.coachBadgeText}>VERIFIED COACH</Text>
+                  <Text style={styles.coachBadgeText}>{coach!.specialty.toUpperCase()}</Text>
                 </View>
               ) : (
                 <View style={styles.meetBadge}>
-                  <Award size={12} color="#F59E0B" />
-                  <Text style={styles.meetBadgeText}>OFFICIAL TOURNAMENT</Text>
+                  {club!.dropInFeePhp > 0 ? <Award size={12} color="#F59E0B" /> : <Users size={12} color="#10B981" />}
+                  <Text style={[styles.meetBadgeText, club!.dropInFeePhp === 0 && { color: "#10B981" }]}>
+                    {club!.category.toUpperCase()}
+                  </Text>
                 </View>
               )}
             </View>
@@ -49,61 +66,46 @@ export function DiscoverEntitySheet({
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.sheetContent}>
             {/* HERO SECTION */}
-            {isCoach ? (
-              <View style={styles.heroSection}>
-                <Image
-                  source={{ uri: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80" }}
-                  style={styles.avatar}
-                />
-                <View style={{ flex: 1, marginLeft: 14 }}>
-                  <Text style={[styles.entityName, { color: colors.textPrimary }]}>Coach Miguel Ramos</Text>
-                  <Text style={[styles.entityRole, { color: colors.textMuted }]}>NASM CPT • Strength & Plyometrics</Text>
-                  <View style={styles.ratingRow}>
-                    <Star size={12} color="#F59E0B" fill="#F59E0B" />
-                    <Text style={[styles.ratingText, { color: colors.textPrimary }]}>4.98 (142 Sessions Completed)</Text>
-                  </View>
+            <View style={styles.heroSection}>
+              <Image source={{ uri: avatarUrl }} style={styles.avatar} />
+              <View style={{ flex: 1, marginLeft: 14 }}>
+                <Text style={[styles.entityName, { color: colors.textPrimary }]}>{title}</Text>
+                <Text style={[styles.entityRole, { color: colors.textMuted }]}>{subtitle}</Text>
+                <View style={styles.ratingRow}>
+                  {isCoach ? <Star size={12} color="#F59E0B" fill="#F59E0B" /> : <Sparkles size={12} color="#10B981" />}
+                  <Text style={[styles.ratingText, { color: isCoach ? colors.textPrimary : "#10B981" }]}>
+                    {ratingOrLevel}
+                  </Text>
                 </View>
               </View>
-            ) : (
-              <View style={styles.heroSection}>
-                <Image
-                  source={{ uri: "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?auto=format&fit=crop&w=300&q=80" }}
-                  style={styles.avatar}
-                />
-                <View style={{ flex: 1, marginLeft: 14 }}>
-                  <Text style={[styles.entityName, { color: colors.textPrimary }]}>BGC Sunset Open 2026</Text>
-                  <Text style={[styles.entityRole, { color: colors.textMuted }]}>Nexus Court Club • DUPR 3.0 - 4.0</Text>
-                  <View style={styles.ratingRow}>
-                    <Zap size={12} color="#10B981" />
-                    <Text style={[styles.ratingText, { color: "#10B981" }]}>12 / 16 Pairs Registered (4 Left)</Text>
-                  </View>
-                </View>
-              </View>
-            )}
+            </View>
+
+            {/* BIO / DESCRIPTION */}
+            <Text style={[styles.bioText, { color: colors.textSecondary }]}>
+              {isCoach ? coach!.bio : club!.description}
+            </Text>
 
             {/* DETAILS ACCORDION */}
             <View style={[styles.detailsBox, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}>
               <View style={styles.detailRow}>
                 <Clock size={14} color={colors.textMuted} />
                 <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Schedule</Text>
-                <Text style={[styles.detailValue, { color: colors.textPrimary }]}>
-                  {isCoach ? "Today • 4:00 PM, 5:30 PM, 7:00 PM" : "Tonight • 6:00 PM - 9:30 PM"}
-                </Text>
+                <Text style={[styles.detailValue, { color: colors.textPrimary }]}>{scheduleText}</Text>
               </View>
 
               <View style={styles.detailRow}>
                 <MapPin size={14} color={colors.textMuted} />
                 <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Location</Text>
-                <Text style={[styles.detailValue, { color: colors.textPrimary }]}>
-                  {isCoach ? "Metro Core Arena (BGC 28th St)" : "Nexus Court Club (Makati)"}
-                </Text>
+                <Text style={[styles.detailValue, { color: colors.textPrimary }]}>{locationText}</Text>
               </View>
 
               <View style={styles.detailRow}>
                 <ShieldCheck size={14} color={colors.textMuted} />
-                <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Split Model</Text>
+                <Text style={[styles.detailLabel, { color: colors.textMuted }]}>
+                  {isCoach ? "Credentials" : "Organizer"}
+                </Text>
                 <Text style={[styles.detailValue, { color: colors.textPrimary }]}>
-                  {isCoach ? "₱1,200/hr + ₱150 Floor Access" : "Direct Bracket Escrow"}
+                  {isCoach ? coach!.credentials.join(" • ") : club!.organizer}
                 </Text>
               </View>
             </View>
@@ -111,9 +113,11 @@ export function DiscoverEntitySheet({
             {/* PRICING & BOOKING CTA */}
             <View style={[styles.footerPricing, { borderTopColor: colors.borderColor }]}>
               <View>
-                <Text style={[styles.totalPriceLabel, { color: colors.textMuted }]}>Total Entry / Fee</Text>
-                <Text style={[styles.totalPriceVal, { color: colors.accentGreen }]}>
-                  {isCoach ? "₱1,350.00" : "₱500.00"}
+                <Text style={[styles.totalPriceLabel, { color: colors.textMuted }]}>
+                  {isCoach ? "1-on-1 Session Rate" : "Community Drop-In Fee"}
+                </Text>
+                <Text style={[styles.totalPriceVal, { color: pricePhp === 0 ? "#10B981" : colors.accentGreen }]}>
+                  {priceDisplay}
                 </Text>
               </View>
 
@@ -121,14 +125,16 @@ export function DiscoverEntitySheet({
                 onPress={() => {
                   onClose();
                   onConfirmBooking(
-                    isCoach ? "1-on-1 PT Session with Miguel Ramos" : "BGC Sunset Pickleball Open Roster Entry",
-                    isCoach ? 1350 : 500
+                    isCoach ? `Session with ${coach!.name}` : `Entry to ${club!.name}`,
+                    pricePhp,
+                    isCoach ? coach!.homeFacilityId : undefined,
+                    isCoach ? coach!.homeFacilityName : club!.meetingPoint
                   );
                 }}
                 style={styles.bookCtaBtn}
               >
                 <Text style={styles.bookCtaText}>
-                  {isCoach ? "Instant Book Coach" : "Join Bracket"}
+                  {isCoach ? "Book Session" : pricePhp === 0 ? "RSVP Free" : "Join & Register"}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -141,7 +147,7 @@ export function DiscoverEntitySheet({
 
 const styles = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.65)", justifyContent: "flex-end" },
-  sheetCard: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, maxHeight: "80%", borderWidth: 1 },
+  sheetCard: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, maxHeight: "85%", borderWidth: 1 },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 },
   badgeRow: { flexDirection: "row" },
   coachBadge: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "rgba(59,130,246,0.15)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
@@ -150,19 +156,20 @@ const styles = StyleSheet.create({
   meetBadgeText: { color: "#FBBF24", fontSize: 10, fontWeight: "800" },
   closeBtn: { minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" },
   sheetContent: { paddingBottom: 24 },
-  heroSection: { flexDirection: "row", alignItems: "center", marginBottom: 18 },
+  heroSection: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
   avatar: { width: 56, height: 56, borderRadius: 28 },
   entityName: { fontSize: 16, fontWeight: "800" },
   entityRole: { fontSize: 12, marginTop: 2 },
   ratingRow: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 4 },
   ratingText: { fontSize: 11, fontWeight: "700" },
+  bioText: { fontSize: 13, lineHeight: 18, marginBottom: 14 },
   detailsBox: { borderRadius: 14, padding: 14, gap: 12, marginBottom: 20, borderWidth: 1 },
   detailRow: { flexDirection: "row", alignItems: "center", gap: 10 },
-  detailLabel: { fontSize: 12, width: 80 },
+  detailLabel: { fontSize: 12, width: 85 },
   detailValue: { fontSize: 12, fontWeight: "600", flex: 1 },
   footerPricing: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderTopWidth: 1, paddingTop: 16 },
   totalPriceLabel: { fontSize: 11, fontWeight: "700" },
-  totalPriceVal: { fontSize: 20, fontWeight: "900" },
-  bookCtaBtn: { backgroundColor: "#E11D48", paddingHorizontal: 22, paddingVertical: 12, borderRadius: 12 },
+  totalPriceVal: { fontSize: 18, fontWeight: "900" },
+  bookCtaBtn: { backgroundColor: "#E11D48", paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12 },
   bookCtaText: { color: "#FFFFFF", fontSize: 13, fontWeight: "800" },
 });

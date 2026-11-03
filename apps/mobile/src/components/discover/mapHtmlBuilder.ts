@@ -6,6 +6,7 @@ interface BuildMapHtmlOptions {
   selectedId: string | null;
   userCoords: UserCoordinates;
   isLight: boolean;
+  apiKey?: string;
 }
 
 export function buildLeafletMapHtml({
@@ -13,10 +14,19 @@ export function buildLeafletMapHtml({
   selectedId,
   userCoords,
   isLight,
+  apiKey,
 }: BuildMapHtmlOptions): string {
-  const tileUrl = isLight
-    ? "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-    : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+  const effectiveKey = apiKey || process.env.EXPO_PUBLIC_MAPS_API_KEY || "d797ff206eda4d1a804ab31d002f0f41";
+
+  // Free-source Geoapify OpenStreetMap tiles with API key
+  const primaryTileUrl = isLight
+    ? `https://maps.geoapify.com/v1/tile/osm-bright-smooth/{z}/{x}/{y}.png?apiKey=${effectiveKey}`
+    : `https://maps.geoapify.com/v1/tile/dark-matter-purple-roads/{z}/{x}/{y}.png?apiKey=${effectiveKey}`;
+
+  // Resilient fallback tile layer (CARTO / OpenStreetMap)
+  const fallbackTileUrl = isLight
+    ? "https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png"
+    : "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png";
 
   const markersJson = JSON.stringify(
     facilities.map((f) => ({
@@ -83,7 +93,15 @@ export function buildLeafletMapHtml({
     const userLng = ${userCoords.longitude};
     const map = L.map('map', { zoomControl:false }).setView([userLat, userLng], 14);
 
-    L.tileLayer('${tileUrl}', { maxZoom: 19 }).addTo(map);
+    const primaryUrl = '${primaryTileUrl}';
+    const fallbackUrl = '${fallbackTileUrl}';
+    const tiles = L.tileLayer(primaryUrl, { maxZoom: 19 }).addTo(map);
+    tiles.on('tileerror', function() {
+      if (!this._fallbackApplied) {
+        this._fallbackApplied = true;
+        this.setUrl(fallbackUrl);
+      }
+    });
 
     // User GPS Marker
     const userIcon = L.divIcon({

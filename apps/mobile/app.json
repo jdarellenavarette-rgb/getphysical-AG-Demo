@@ -24,6 +24,9 @@
       "expo-secure-store",
       "expo-location",
       "expo-camera"
-    ]
+    ],
+    "extra": {
+      "mapsApiKey": "d797ff206eda4d1a804ab31d002f0f41"
+    }
   }
 }

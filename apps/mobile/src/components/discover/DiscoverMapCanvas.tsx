@@ -35,6 +35,7 @@ export function DiscoverMapCanvas({
     selectedId,
     userCoords,
     isLight,
+    apiKey: process.env.EXPO_PUBLIC_MAPS_API_KEY,
   });
 
   const handleMessage = (event: WebViewMessageEvent) => {

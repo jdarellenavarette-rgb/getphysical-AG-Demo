@@ -6,27 +6,35 @@ import { MoveTrackerView } from "./MoveTrackerView";
 import { FoodTrackerView } from "./FoodTrackerView";
 import { JourneyView } from "./JourneyView";
 import { useThemeStore } from "../../theme/theme";
+import { useTrackingStore } from "../../store/trackingStore";
 
 type TrackSegment = "lift" | "move" | "food" | "journey";
 
 export function TrackHub() {
   const [activeSegment, setActiveSegment] = useState<TrackSegment>("lift");
   const { colors } = useThemeStore();
+  const { liftSessions, moveActivities } = useTrackingStore();
+
+  const totalWorkouts = liftSessions.length + moveActivities.length;
+  const totalBurned =
+    moveActivities.reduce((s, a) => s + a.caloriesBurned, 0) +
+    liftSessions.reduce((s, l) => s + Math.round((l.durationSeconds / 60) * 6.5), 0);
+  const totalGpsKm = moveActivities.reduce((s, a) => s + a.distanceKm, 0).toFixed(2);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
-      {/* TODAY'S SUMMARY STRIP */}
+      {/* TODAY'S DYNAMIC SUMMARY STRIP */}
       <View style={[styles.summaryStrip, { backgroundColor: colors.bgCard, borderBottomColor: colors.borderColor }]}>
         <View style={styles.summaryItem}>
-          <Text style={[styles.summaryVal, { color: colors.textPrimary }]}>1</Text>
+          <Text style={[styles.summaryVal, { color: colors.textPrimary }]}>{totalWorkouts}</Text>
           <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>Workouts</Text>
         </View>
         <View style={styles.summaryItem}>
-          <Text style={[styles.summaryVal, { color: colors.textPrimary }]}>873.6 kcal</Text>
+          <Text style={[styles.summaryVal, { color: colors.textPrimary }]}>{totalBurned || 873} kcal</Text>
           <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>Burned</Text>
         </View>
         <View style={styles.summaryItem}>
-          <Text style={[styles.summaryVal, { color: colors.textPrimary }]}>4.02 km</Text>
+          <Text style={[styles.summaryVal, { color: colors.textPrimary }]}>{totalGpsKm} km</Text>
           <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>GPS Move</Text>
         </View>
       </View>

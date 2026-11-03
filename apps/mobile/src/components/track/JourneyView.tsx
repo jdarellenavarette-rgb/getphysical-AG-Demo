@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
-import { Flame, Activity, Trophy, Calendar, Sparkles, TrendingUp, ChevronRight } from "lucide-react-native";
+import { Flame, Sparkles } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
+import { useTrackingStore } from "../../store/trackingStore";
 
 export function JourneyView() {
   const { colors } = useThemeStore();
+  const { liftSessions, moveActivities, foodMeals } = useTrackingStore();
   const [activeTab, setActiveTab] = useState<"active" | "recovery">("active");
   const [showAllActivities, setShowAllActivities] = useState(false);
 
@@ -18,46 +20,52 @@ export function JourneyView() {
     { day: "Sat", height: 35, isPeak: false },
   ];
 
-  const activities = [
-    {
-      id: "act_1",
-      title: "Doubles Match",
-      venue: "Nexus Pickleball Club",
-      duration: "2 hours",
-      time: "Today • 4:30 PM",
-      cals: "420 kcal",
-      badge: "🎾 Pickleball",
-    },
-    {
-      id: "act_2",
-      title: "Leg Day (Squats & RDLs)",
-      venue: "Twins Fitness SJDM",
-      duration: "1 hour 30 Mins",
-      time: "Today • 11:00 AM",
-      cals: "510 kcal",
-      badge: "🏋️ Strength",
-    },
-    {
-      id: "act_3",
-      title: "BGC Greenway 5K Run",
-      venue: "BGC Track 30th",
-      duration: "28 mins",
-      time: "Yesterday • 6:30 AM",
-      cals: "340 kcal",
-      badge: "🏃 Move",
-    },
+  const totalBurned =
+    moveActivities.reduce((s, a) => s + a.caloriesBurned, 0) +
+    liftSessions.reduce((s, l) => s + Math.round((l.durationSeconds / 60) * 6.5), 0);
+
+  const memories = [
+    ...moveActivities.map((m) => ({
+      id: m.id,
+      title: m.title,
+      venue: "Strava GPS • Outdoor Route",
+      duration: `${Math.floor(m.durationSeconds / 60)} mins`,
+      time: "Recorded GPS",
+      cals: `${m.caloriesBurned} kcal`,
+      badge: `${m.sport === "cycling" ? "🚴" : m.sport === "pickleball" ? "🎾" : "🏃"} ${m.sport.toUpperCase()}`,
+    })),
+    ...liftSessions.map((l) => ({
+      id: l.id,
+      title: l.title,
+      venue: `${l.exercises[0]?.name || "Strength"} (${l.totalVolumeKg.toLocaleString()} kg)`,
+      duration: `${Math.floor(l.durationSeconds / 60)} mins`,
+      time: "Strength Session",
+      cals: `${Math.round((l.durationSeconds / 60) * 6.5)} kcal`,
+      badge: "🏋️ STRENGTH",
+    })),
+    ...foodMeals.map((f) => ({
+      id: f.id,
+      title: f.name,
+      venue: `P: ${f.totalP}g • C: ${f.totalC}g • F: ${f.totalF}g`,
+      duration: `${f.items.length} items`,
+      time: "Oracle AI Meal",
+      cals: `${f.totalCal} kcal`,
+      badge: "🥗 ORACLE FOOD",
+    })),
   ];
+
+  const displayedMemories = showAllActivities ? memories : memories.slice(0, 4);
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.bgScreen }]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-      {/* 1. MY JOURNEY HERO HEADER (Photo 2 Right Screen) */}
+      {/* 1. MY JOURNEY HERO HEADER */}
       <View style={[styles.heroCard, { backgroundColor: colors.bgCard, borderColor: colors.borderLight, borderWidth: 1 }]}>
         <View style={styles.heroTopRow}>
           <View>
             <Text style={[styles.heroTitle, { color: colors.textPrimary }]}>My Journey</Text>
             <View style={styles.progressSubtitleRow}>
               <Sparkles size={13} color="#E11D48" />
-              <Text style={styles.progressSubtitle}>Personal Progress</Text>
+              <Text style={styles.progressSubtitle}>Personal Progress & Memories</Text>
             </View>
           </View>
           <View style={styles.streakBadge}>
@@ -69,27 +77,19 @@ export function JourneyView() {
         {/* KCAL TOTAL BURNED */}
         <View style={styles.calHeroBlock}>
           <Text style={styles.calUnit}>Kcal </Text>
-          <Text style={[styles.calValue, { color: colors.textPrimary }]}>873.67</Text>
+          <Text style={[styles.calValue, { color: colors.textPrimary }]}>{totalBurned || 873}</Text>
         </View>
-        <Text style={[styles.calSublabel, { color: colors.textSecondary }]}>Total Calories Burned Today</Text>
+        <Text style={[styles.calSublabel, { color: colors.textSecondary }]}>Total Calories Burned Recorded</Text>
 
-        {/* WEEKLY BAR CHART (Photo 2 Right Screen) */}
+        {/* WEEKLY BAR CHART */}
         <View style={styles.chartWrapper}>
           <View style={styles.barsContainer}>
             {weeklyBars.map((bar) => (
               <View key={bar.day} style={styles.barColumn}>
                 <View style={[styles.barTrack, { backgroundColor: colors.bgCardSecondary }]}>
-                  <View
-                    style={[
-                      styles.barFill,
-                      { height: `${bar.height}%`, backgroundColor: colors.borderLight },
-                      bar.isPeak && styles.barFillPeak,
-                    ]}
-                  />
+                  <View style={[styles.barFill, { height: `${bar.height}%`, backgroundColor: colors.borderLight }, bar.isPeak && styles.barFillPeak]} />
                 </View>
-                <Text style={[styles.barDayText, { color: colors.textMuted }, bar.isPeak && styles.barDayTextPeak]}>
-                  {bar.day}
-                </Text>
+                <Text style={[styles.barDayText, { color: colors.textMuted }, bar.isPeak && styles.barDayTextPeak]}>{bar.day}</Text>
               </View>
             ))}
           </View>
@@ -97,35 +97,25 @@ export function JourneyView() {
 
         {/* ACTIVE / RECOVERY PILLS */}
         <View style={[styles.pillsRow, { backgroundColor: colors.bgCardSecondary }]}>
-          <TouchableOpacity
-            onPress={() => setActiveTab("active")}
-            style={[styles.modePill, activeTab === "active" && [styles.modePillActive, { backgroundColor: colors.bgCard }]]}
-          >
-            <Text style={[styles.modePillText, { color: colors.textSecondary }, activeTab === "active" && [styles.modePillTextActive, { color: colors.textPrimary }]]}>
-              Active
-            </Text>
+          <TouchableOpacity onPress={() => setActiveTab("active")} style={[styles.modePill, activeTab === "active" && [styles.modePillActive, { backgroundColor: colors.bgCard }]]}>
+            <Text style={[styles.modePillText, { color: colors.textSecondary }, activeTab === "active" && [styles.modePillTextActive, { color: colors.textPrimary }]]}>Active</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setActiveTab("recovery")}
-            style={[styles.modePill, activeTab === "recovery" && [styles.modePillActive, { backgroundColor: colors.bgCard }]]}
-          >
-            <Text style={[styles.modePillText, { color: colors.textSecondary }, activeTab === "recovery" && [styles.modePillTextActive, { color: colors.textPrimary }]]}>
-              Recovery
-            </Text>
+          <TouchableOpacity onPress={() => setActiveTab("recovery")} style={[styles.modePill, activeTab === "recovery" && [styles.modePillActive, { backgroundColor: colors.bgCard }]]}>
+            <Text style={[styles.modePillText, { color: colors.textSecondary }, activeTab === "recovery" && [styles.modePillTextActive, { color: colors.textPrimary }]]}>Recovery</Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* 2. ACTIVITY HISTORY LIST */}
+      {/* 2. ACTIVITY HISTORY & MEMORIES LIST */}
       <View style={styles.sectionHeaderRow}>
-        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>ACTIVITY HISTORY</Text>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>TRACK MEMORIES & HISTORY ({memories.length})</Text>
         <TouchableOpacity onPress={() => setShowAllActivities(!showAllActivities)}>
           <Text style={styles.viewAllText}>{showAllActivities ? "Show Less" : "View All"}</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.activitiesList}>
-        {activities.map((act) => (
+        {displayedMemories.map((act) => (
           <View key={act.id} style={[styles.activityCard, { backgroundColor: colors.bgCard, borderColor: colors.borderLight }]}>
             <View style={styles.actLeft}>
               <View style={[styles.actBadge, { backgroundColor: colors.bgCardSecondary }]}>

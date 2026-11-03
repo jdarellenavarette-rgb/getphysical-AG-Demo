@@ -81,9 +81,8 @@ export const useEcosystemStore = create<MobileEcosystemState>((set) => ({
   currentRole: "individual",
   profile: INITIAL_PROFILE,
   facilities: SEED_FACILITIES,
-  // START IN EMPTY / DEFAULT CANONICAL STATE
   passes: [],
-  posts: [],
+  posts: SEED_POSTS,
   challenges: [],
   userStory: null,
   isOffline: false,

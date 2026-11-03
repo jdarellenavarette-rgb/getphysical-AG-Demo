@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
+import { X } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import type { DiscoverCategory } from "../../data/discoverData";
 
@@ -19,15 +20,6 @@ const CATEGORIES: DiscoverCategory[] = [
   "Community Clubs",
 ];
 
-const SUB_FILTERS: Record<DiscoverCategory, string[]> = {
-  All: ["All", "Pickleball", "Reformer", "Swimming", "Badminton", "Basketball", "Strength", "Climbing"],
-  Gyms: ["All Gyms", "Commercial", "Powerlifting", "Hyrox"],
-  "Pilates Studios": ["All Pilates", "Reformer", "Cadillac", "Lagree & Mat"],
-  "Sports Facilities": ["All Sports", "Pickleball", "Basketball", "Tennis", "Badminton", "Swimming", "Climbing", "Football"],
-  Coaches: ["All Coaches", "Strength & Conditioning", "Pilates & Mobility", "Racket Sports", "Hyrox & Endurance", "Boxing & Combat"],
-  "Community Clubs": ["All Clubs", "Running Crew", "Cycling Peloton", "Basketball Guild", "Tournaments"],
-};
-
 export function DiscoverFilterBar({
   selectedCategory,
   onSelectCategory,
@@ -35,22 +27,38 @@ export function DiscoverFilterBar({
   onSelectSport,
 }: DiscoverFilterBarProps) {
   const { colors } = useThemeStore();
-  const subOptions = SUB_FILTERS[selectedCategory] || [];
+  const hasSportFilter = selectedSport !== "All";
 
   return (
     <View style={styles.container}>
-      {/* 1. PRIMARY CATEGORY PILLS */}
+      {/* SINGLE CLEAN HORIZONTAL PILL ROW */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.categoryScroll}
       >
+        {/* Active Sport Badge if set from Filter Modal */}
+        {hasSportFilter && (
+          <TouchableOpacity
+            onPress={() => onSelectSport("All")}
+            activeOpacity={0.7}
+            style={[styles.activeSportChip, { backgroundColor: colors.accent, borderColor: colors.accent }]}
+          >
+            <Text style={styles.activeSportText}>{selectedSport}</Text>
+            <X size={13} color="#FFFFFF" />
+          </TouchableOpacity>
+        )}
+
+        {/* Category Pills */}
         {CATEGORIES.map((cat) => {
-          const isActive = selectedCategory === cat;
+          const isActive = selectedCategory === cat && !hasSportFilter;
           return (
             <TouchableOpacity
               key={cat}
-              onPress={() => onSelectCategory(cat)}
+              onPress={() => {
+                if (hasSportFilter) onSelectSport("All");
+                onSelectCategory(cat);
+              }}
               activeOpacity={0.7}
               style={[
                 styles.categoryChip,
@@ -72,50 +80,14 @@ export function DiscoverFilterBar({
           );
         })}
       </ScrollView>
-
-      {/* 2. SUB-FILTER SPORT / SPECIALIZATION CHIPS */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.subFilterScroll}
-      >
-        {subOptions.map((sub) => {
-          const isActive =
-            selectedSport === sub ||
-            (selectedSport === "All" && (sub === "All" || sub.startsWith("All ")));
-          return (
-            <TouchableOpacity
-              key={sub}
-              onPress={() => onSelectSport(sub.startsWith("All ") ? "All" : sub)}
-              activeOpacity={0.7}
-              style={[
-                styles.subChip,
-                {
-                  backgroundColor: isActive ? colors.accent : colors.bgCardSecondary,
-                  borderColor: isActive ? colors.accent : colors.borderColor,
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.subChipText,
-                  { color: isActive ? "#FFFFFF" : colors.textSecondary },
-                ]}
-              >
-                {sub}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    gap: 8,
-    marginBottom: 8,
+    paddingVertical: 6,
+    marginBottom: 4,
   },
   categoryScroll: {
     paddingHorizontal: 16,
@@ -123,7 +95,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   categoryChip: {
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     minHeight: 44,
     justifyContent: "center",
     alignItems: "center",
@@ -134,21 +106,18 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "700",
   },
-  subFilterScroll: {
-    paddingHorizontal: 16,
+  activeSportChip: {
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
-    alignItems: "center",
+    paddingHorizontal: 14,
+    minHeight: 44,
+    borderRadius: 22,
+    borderWidth: 1.5,
   },
-  subChip: {
-    paddingHorizontal: 12,
-    minHeight: 34,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 17,
-    borderWidth: 1,
-  },
-  subChipText: {
-    fontSize: 11,
-    fontWeight: "600",
+  activeSportText: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "800",
   },
 });

@@ -115,109 +115,69 @@ function BusinessSuiteInner() {
             boxShadow: '0 1px 4px rgba(0, 0, 0, 0.03)',
           }}
         >
-          {/* 4-Suite Unified Selector (GymDash | Clubdash | CoachDash | OrganizerDash) */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          {/* Role Pill & Branch Portfolio Switcher */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            {/* Active Role Indicator (Clicking switches to Settings > Select Role) */}
             <div
+              onClick={() => setActiveTab('SETTINGS')}
+              title="Click to Switch Role in Settings"
               style={{
                 display: 'flex',
-                backgroundColor: theme.bgCardTertiary,
-                padding: '4px',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '6px 14px',
                 borderRadius: '12px',
+                backgroundColor: theme.bgCardSecondary,
                 border: `1px solid ${theme.borderColor}`,
-                gap: '2px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = theme.accent;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = theme.borderColor;
               }}
             >
-              {/* 1. GymDash */}
-              <button
-                onClick={() => setSuiteMode('GYMDASH')}
+              <div
                 style={{
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '8px',
+                  backgroundColor: theme.accent,
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px',
-                  padding: '7px 12px',
-                  borderRadius: '9px',
-                  fontSize: '12px',
-                  fontWeight: 800,
-                  transition: 'all 0.2s',
-                  backgroundColor: suiteMode === 'GYMDASH' ? theme.accent : 'transparent',
-                  color: suiteMode === 'GYMDASH' ? '#FFFFFF' : theme.textMuted,
-                  boxShadow: suiteMode === 'GYMDASH' ? theme.shadowPill : 'none',
-                  cursor: 'pointer',
-                  border: 'none',
+                  justifyContent: 'center',
+                  color: '#FFFFFF',
+                  boxShadow: theme.shadowPill,
                 }}
               >
-                <Dumbbell size={14} />
-                <span>GymDash</span>
-              </button>
-
-              {/* 2. Clubdash */}
-              <button
-                onClick={() => setSuiteMode('CLUBDASH')}
+                {suiteMode === 'GYMDASH' && <Dumbbell size={14} />}
+                {suiteMode === 'CLUBDASH' && <Compass size={14} />}
+                {suiteMode === 'COACHDASH' && <UserCheck size={14} />}
+                {suiteMode === 'ORGANIZERDASH' && <Trophy size={14} />}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: '9px', fontWeight: 800, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Role:
+                </span>
+                <span style={{ fontSize: '13px', fontWeight: 900, color: theme.textPrimary, letterSpacing: '-0.3px' }}>
+                  {suiteMode === 'GYMDASH' ? 'GymDash' : suiteMode === 'CLUBDASH' ? 'Clubdash' : suiteMode === 'COACHDASH' ? 'CoachDash' : 'OrganizerDash'}
+                </span>
+              </div>
+              <span
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '7px 12px',
-                  borderRadius: '9px',
-                  fontSize: '12px',
+                  fontSize: '10px',
                   fontWeight: 800,
-                  transition: 'all 0.2s',
-                  backgroundColor: suiteMode === 'CLUBDASH' ? theme.accent : 'transparent',
-                  color: suiteMode === 'CLUBDASH' ? '#FFFFFF' : theme.textMuted,
-                  boxShadow: suiteMode === 'CLUBDASH' ? theme.shadowPill : 'none',
-                  cursor: 'pointer',
-                  border: 'none',
+                  color: theme.accent,
+                  backgroundColor: theme.accentMuted,
+                  padding: '3px 8px',
+                  borderRadius: '6px',
+                  marginLeft: '4px',
                 }}
               >
-                <Compass size={14} />
-                <span>Clubdash</span>
-              </button>
-
-              {/* 3. CoachDash */}
-              <button
-                onClick={() => setSuiteMode('COACHDASH')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '7px 12px',
-                  borderRadius: '9px',
-                  fontSize: '12px',
-                  fontWeight: 800,
-                  transition: 'all 0.2s',
-                  backgroundColor: suiteMode === 'COACHDASH' ? theme.accent : 'transparent',
-                  color: suiteMode === 'COACHDASH' ? '#FFFFFF' : theme.textMuted,
-                  boxShadow: suiteMode === 'COACHDASH' ? theme.shadowPill : 'none',
-                  cursor: 'pointer',
-                  border: 'none',
-                }}
-              >
-                <UserCheck size={14} />
-                <span>CoachDash</span>
-              </button>
-
-              {/* 4. OrganizerDash */}
-              <button
-                onClick={() => setSuiteMode('ORGANIZERDASH')}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '7px 12px',
-                  borderRadius: '9px',
-                  fontSize: '12px',
-                  fontWeight: 800,
-                  transition: 'all 0.2s',
-                  backgroundColor: suiteMode === 'ORGANIZERDASH' ? theme.accent : 'transparent',
-                  color: suiteMode === 'ORGANIZERDASH' ? '#FFFFFF' : theme.textMuted,
-                  boxShadow: suiteMode === 'ORGANIZERDASH' ? theme.shadowPill : 'none',
-                  cursor: 'pointer',
-                  border: 'none',
-                }}
-              >
-                <Trophy size={14} />
-                <span>OrganizerDash</span>
-              </button>
+                Change Role ›
+              </span>
             </div>
 
             {/* Architecture Guide Tooltip Toggle */}
@@ -474,16 +434,143 @@ function BusinessSuiteInner() {
                 boxShadow: theme.shadowCard,
               }}
             >
-              <h2 style={{ fontSize: '18px', fontWeight: 900, marginBottom: '8px', color: theme.textPrimary }}>
-                {suiteMode === 'COACHDASH'
-                  ? 'Coach Profile & Client Capacity Settings'
-                  : suiteMode === 'ORGANIZERDASH'
-                  ? 'Organizer Tournament & League Settings'
-                  : 'Facility Settings & Hardware Keys'}
+              <h2 style={{ fontSize: '18px', fontWeight: 900, marginBottom: '4px', color: theme.textPrimary, letterSpacing: '-0.3px' }}>
+                Settings & Workspace Role
               </h2>
               <p style={{ fontSize: '12px', color: theme.textMuted, marginBottom: '24px', fontWeight: 500 }}>
-                Configure operating parameters, payout credentials, and hardware keys.
+                Configure operating parameters, active role persona, and hardware integrations.
               </p>
+
+              {/* 1. SELECT ROLE SECTION (GymDash, Clubdash, CoachDash, OrganizerDash) */}
+              <div style={{ marginBottom: '28px', paddingBottom: '24px', borderBottom: `1px solid ${theme.borderColor}` }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: 800, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Select Role (Active Workspace Persona)
+                  </label>
+                  <span style={{ fontSize: '11px', fontWeight: 800, color: theme.accent }}>
+                    Active: {suiteMode}
+                  </span>
+                </div>
+                <p style={{ fontSize: '12px', color: theme.textMuted, marginBottom: '14px', fontWeight: 500 }}>
+                  Switch between operational modes. Switching roles adapts real-time dashboards, booking workflows, and athlete CRM.
+                </p>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+                  {/* Option 1: GymDash */}
+                  <div
+                    onClick={() => setSuiteMode('GYMDASH')}
+                    style={{
+                      padding: '16px',
+                      borderRadius: '14px',
+                      backgroundColor: suiteMode === 'GYMDASH' ? theme.accentMuted : theme.bgCardSecondary,
+                      border: `2px solid ${suiteMode === 'GYMDASH' ? theme.accent : theme.borderColor}`,
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Dumbbell size={18} color={suiteMode === 'GYMDASH' ? theme.accent : theme.textPrimary} />
+                        <span style={{ fontSize: '14px', fontWeight: 900, color: theme.textPrimary }}>GymDash</span>
+                      </div>
+                      {suiteMode === 'GYMDASH' && (
+                        <span style={{ fontSize: '10px', fontWeight: 900, color: '#FFFFFF', backgroundColor: theme.accent, padding: '2px 8px', borderRadius: '999px' }}>
+                          SELECTED
+                        </span>
+                      )}
+                    </div>
+                    <p style={{ fontSize: '11px', color: theme.textMuted, margin: 0, lineHeight: '16px', fontWeight: 500 }}>
+                      Commercial Gym OS with turnstiles, 60s TOTP gate telemetry, cashier till float, and member density.
+                    </p>
+                  </div>
+
+                  {/* Option 2: Clubdash */}
+                  <div
+                    onClick={() => setSuiteMode('CLUBDASH')}
+                    style={{
+                      padding: '16px',
+                      borderRadius: '14px',
+                      backgroundColor: suiteMode === 'CLUBDASH' ? theme.accentMuted : theme.bgCardSecondary,
+                      border: `2px solid ${suiteMode === 'CLUBDASH' ? theme.accent : theme.borderColor}`,
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Compass size={18} color={suiteMode === 'CLUBDASH' ? theme.accent : theme.textPrimary} />
+                        <span style={{ fontSize: '14px', fontWeight: 900, color: theme.textPrimary }}>Clubdash</span>
+                      </div>
+                      {suiteMode === 'CLUBDASH' && (
+                        <span style={{ fontSize: '10px', fontWeight: 900, color: '#FFFFFF', backgroundColor: theme.accent, padding: '2px 8px', borderRadius: '999px' }}>
+                          SELECTED
+                        </span>
+                      )}
+                    </div>
+                    <p style={{ fontSize: '11px', color: theme.textMuted, margin: 0, lineHeight: '16px', fontWeight: 500 }}>
+                      GymDash plus spatial court booking allocator, parent-child mutual exclusion, and club league affiliations.
+                    </p>
+                  </div>
+
+                  {/* Option 3: CoachDash */}
+                  <div
+                    onClick={() => setSuiteMode('COACHDASH')}
+                    style={{
+                      padding: '16px',
+                      borderRadius: '14px',
+                      backgroundColor: suiteMode === 'COACHDASH' ? theme.accentMuted : theme.bgCardSecondary,
+                      border: `2px solid ${suiteMode === 'COACHDASH' ? theme.accent : theme.borderColor}`,
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <UserCheck size={18} color={suiteMode === 'COACHDASH' ? theme.accent : theme.textPrimary} />
+                        <span style={{ fontSize: '14px', fontWeight: 900, color: theme.textPrimary }}>CoachDash</span>
+                      </div>
+                      {suiteMode === 'COACHDASH' && (
+                        <span style={{ fontSize: '10px', fontWeight: 900, color: '#FFFFFF', backgroundColor: theme.accent, padding: '2px 8px', borderRadius: '999px' }}>
+                          SELECTED
+                        </span>
+                      )}
+                    </div>
+                    <p style={{ fontSize: '11px', color: theme.textMuted, margin: 0, lineHeight: '16px', fontWeight: 500 }}>
+                      Coach dashboard to organize workout programs & cycles, manage athlete roster, and triage morning compliance CRM.
+                    </p>
+                  </div>
+
+                  {/* Option 4: OrganizerDash */}
+                  <div
+                    onClick={() => setSuiteMode('ORGANIZERDASH')}
+                    style={{
+                      padding: '16px',
+                      borderRadius: '14px',
+                      backgroundColor: suiteMode === 'ORGANIZERDASH' ? theme.accentMuted : theme.bgCardSecondary,
+                      border: `2px solid ${suiteMode === 'ORGANIZERDASH' ? theme.accent : theme.borderColor}`,
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Trophy size={18} color={suiteMode === 'ORGANIZERDASH' ? theme.accent : theme.textPrimary} />
+                        <span style={{ fontSize: '14px', fontWeight: 900, color: theme.textPrimary }}>OrganizerDash</span>
+                      </div>
+                      {suiteMode === 'ORGANIZERDASH' && (
+                        <span style={{ fontSize: '10px', fontWeight: 900, color: '#FFFFFF', backgroundColor: theme.accent, padding: '2px 8px', borderRadius: '999px' }}>
+                          SELECTED
+                        </span>
+                      )}
+                    </div>
+                    <p style={{ fontSize: '11px', color: theme.textMuted, margin: 0, lineHeight: '16px', fontWeight: 500 }}>
+                      Tournament OS to organize bracket seeds, division participants, escrow prize pools, and verify digital passes.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. OPERATIONAL PARAMETERS */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div>
                   <label style={{ fontSize: '11px', fontWeight: 800, color: theme.textMuted, textTransform: 'uppercase' }}>

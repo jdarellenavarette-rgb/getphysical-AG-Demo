@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Modal, Image, ScrollView } fr
 import { X, MapPin, Star, Sparkles, ChevronRight, Check } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import type { FacilityRow } from "sodia-core";
+import { PickleballBookingGrid } from "./PickleballBookingGrid";
 
 export interface FacilityPassOption {
   id: string;
@@ -118,6 +119,26 @@ export function FacilityDetailSheet({
                 ))}
               </View>
             </View>
+
+            {/* COURT BOOKING GRID (FOR PICKLEBALL / COURT FACILITIES) */}
+            {!isGym && (
+              <PickleballBookingGrid
+                hourlyRate={facility.court_hourly_price_php ?? 200}
+                onConfirmBooking={(slot) => {
+                  onSelectPass(
+                    {
+                      id: `court_${slot.courtId}_${Date.now()}`,
+                      title: `${slot.courtName} Reservation`,
+                      subtitle: `${slot.timeSlot} • Instant Gate Pass`,
+                      pricePhp: slot.pricePhp,
+                      billingKind: "one_time_pass",
+                      splitNote: "Includes court reservation buffer",
+                    },
+                    facility
+                  );
+                }}
+              />
+            )}
 
             {/* PASS & PRICING SELECTOR */}
             <View style={styles.pricingSection}>

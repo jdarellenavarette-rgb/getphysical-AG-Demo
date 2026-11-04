@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Calendar, Layers, ShieldCheck, AlertCircle, Clock, Check } from 'lucide-react';
+import { Layers, Clock, ShieldCheck, AlertCircle, Check } from 'lucide-react';
+import { useSuiteTheme } from '../suite/theme';
 
 interface SlotBooking {
   id: string;
-  timeSlot: string; // e.g. "09:00 - 10:00"
+  timeSlot: string;
   parentLockedByChild: boolean;
-  childBookings: { [childCourtId: string]: string | null }; // courtId -> bookedBy
+  childBookings: { [childCourtId: string]: string | null };
   parentBookedBy: string | null;
 }
 
@@ -18,6 +19,8 @@ const TIME_SLOTS = [
   '11:00 - 12:00',
   '13:00 - 14:00',
   '14:00 - 15:00',
+  '17:00 - 18:00',
+  '18:00 - 19:00',
 ];
 
 const INITIAL_SCHEDULE: SlotBooking[] = [
@@ -39,7 +42,7 @@ const INITIAL_SCHEDULE: SlotBooking[] = [
     id: 's3',
     timeSlot: '10:00 - 11:00',
     parentLockedByChild: true,
-    childBookings: { 'A': 'Mark D. (Pickleball)', 'B': null, 'C': 'Coach Sarah (Drill)' },
+    childBookings: { 'A': 'Mark D. (Pickleball)', 'B': null, 'C': 'Coach Rafael (Drill)' },
     parentBookedBy: null,
   },
   {
@@ -63,11 +66,26 @@ const INITIAL_SCHEDULE: SlotBooking[] = [
     childBookings: { 'A': 'Tournament Heat 1', 'B': 'Tournament Heat 2', 'C': 'Tournament Heat 3' },
     parentBookedBy: null,
   },
+  {
+    id: 's7',
+    timeSlot: '17:00 - 18:00',
+    parentLockedByChild: true,
+    childBookings: { 'A': 'DUPR Ladder Alpha', 'B': 'DUPR Ladder Beta', 'C': null },
+    parentBookedBy: null,
+  },
+  {
+    id: 's8',
+    timeSlot: '18:00 - 19:00',
+    parentLockedByChild: false,
+    childBookings: { 'A': null, 'B': null, 'C': null },
+    parentBookedBy: null,
+  },
 ];
 
 export function SpatialCalendar() {
+  const { theme, isDark } = useSuiteTheme();
   const [schedule, setSchedule] = useState<SlotBooking[]>(INITIAL_SCHEDULE);
-  const [selectedSlot, setSelectedSlot] = useState<string>('08:00 - 09:00');
+  const [selectedSlot, setSelectedSlot] = useState<string>('10:00 - 11:00');
   const [notice, setNotice] = useState<string | null>(null);
 
   const current: SlotBooking = schedule.find((s) => s.timeSlot === selectedSlot) ?? INITIAL_SCHEDULE[0]!;
@@ -96,7 +114,7 @@ export function SpatialCalendar() {
     setSchedule((prev) =>
       prev.map((s) => {
         if (s.timeSlot === selectedSlot) {
-          const updated = { ...s.childBookings, [courtId]: 'Booked Online Pass' };
+          const updated = { ...s.childBookings, [courtId]: 'Booked Online Pass (You)' };
           return { ...s, childBookings: updated, parentLockedByChild: true };
         }
         return s;
@@ -106,71 +124,159 @@ export function SpatialCalendar() {
   };
 
   return (
-    <div style={{ backgroundColor: '#111827', border: '1px solid #1f2937', borderRadius: '12px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div
+      style={{
+        backgroundColor: theme.bgCard,
+        border: `1px solid ${theme.borderColor}`,
+        borderRadius: '24px',
+        padding: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '20px',
+        boxShadow: theme.shadowCard,
+      }}
+    >
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Layers size={20} color="#38bdf8" />
-            <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#f9fafb' }}>Clubdash Spatial Sub-Division Engine</h2>
+            <Layers size={20} color={theme.accent} />
+            <h2 style={{ fontSize: '18px', fontWeight: 900, color: theme.textPrimary, letterSpacing: '-0.3px' }}>
+              Clubdash Facility Booking Allocator
+            </h2>
           </div>
-          <p style={{ fontSize: '12px', color: '#9ca3af', marginTop: '2px' }}>
-            Spec 4.1: Real-time parent-child mutual exclusion with automated 15-minute changeover buffers
+          <p style={{ fontSize: '12px', color: theme.textMuted, marginTop: '2px', fontWeight: 500 }}>
+            Real-time parent-child spatial mutual exclusion with automated 15-minute changeover buffers
           </p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#1e293b', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', color: '#34d399', fontWeight: 600 }}>
-          <Clock size={14} /> 15m Changeover Guard Active
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            backgroundColor: theme.accentGreenMuted,
+            border: '1px solid rgba(5, 150, 105, 0.25)',
+            padding: '6px 14px',
+            borderRadius: '999px',
+            fontSize: '11px',
+            color: '#059669',
+            fontWeight: 800,
+          }}
+        >
+          <Clock size={13} />
+          <span>15m Changeover Guard Active</span>
         </div>
       </div>
 
       {notice && (
-        <div style={{ backgroundColor: notice.includes('Conflict') ? '#ef444420' : '#10b98120', border: `1px solid ${notice.includes('Conflict') ? '#ef444450' : '#10b98150'}`, borderRadius: '8px', padding: '10px 14px', fontSize: '12px', color: notice.includes('Conflict') ? '#fca5a5' : '#6ee7b7' }}>
-          {notice}
+        <div
+          style={{
+            backgroundColor: notice.includes('Conflict') ? 'rgba(239, 68, 68, 0.1)' : 'rgba(5, 150, 105, 0.1)',
+            border: `1px solid ${notice.includes('Conflict') ? 'rgba(239, 68, 68, 0.3)' : 'rgba(5, 150, 105, 0.3)'}`,
+            borderRadius: '12px',
+            padding: '10px 16px',
+            fontSize: '12px',
+            fontWeight: 600,
+            color: notice.includes('Conflict') ? '#EF4444' : '#059669',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+          }}
+        >
+          {notice.includes('Conflict') ? <AlertCircle size={15} /> : <ShieldCheck size={15} />}
+          <span>{notice}</span>
         </div>
       )}
 
       {/* Time Slot Selector */}
-      <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
-        {TIME_SLOTS.map((slot) => {
-          const slotData = schedule.find((s) => s.timeSlot === slot);
-          const isParentBooked = !!slotData?.parentBookedBy;
-          const isChildActive = Object.values(slotData?.childBookings || {}).some((v) => v !== null);
+      <div>
+        <div style={{ fontSize: '11px', fontWeight: 800, color: theme.textMuted, textTransform: 'uppercase', marginBottom: '8px' }}>
+          Select Schedule Window
+        </div>
+        <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
+          {TIME_SLOTS.map((slot) => {
+            const slotData = schedule.find((s) => s.timeSlot === slot);
+            const isParentBooked = !!slotData?.parentBookedBy;
+            const isChildActive = Object.values(slotData?.childBookings || {}).some((v) => v !== null);
+            const isSelected = selectedSlot === slot;
 
-          return (
-            <button
-              key={slot}
-              onClick={() => { setSelectedSlot(slot); setNotice(null); }}
-              style={{
-                padding: '8px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 700,
-                backgroundColor: selectedSlot === slot ? '#3b82f6' : '#1f2937',
-                color: selectedSlot === slot ? '#fff' : '#9ca3af',
-                border: '1px solid ' + (selectedSlot === slot ? '#60a5fa' : '#374151'),
-                display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '110px'
-              }}
-            >
-              <span>{slot}</span>
-              <span style={{ fontSize: '10px', marginTop: '4px', color: isParentBooked ? '#f87171' : isChildActive ? '#fbbf24' : '#34d399' }}>
-                {isParentBooked ? 'Full Court' : isChildActive ? 'Subdivided' : 'Available'}
-              </span>
-            </button>
-          );
-        })}
+            return (
+              <button
+                key={slot}
+                onClick={() => { setSelectedSlot(slot); setNotice(null); }}
+                style={{
+                  padding: '9px 14px',
+                  borderRadius: '12px',
+                  fontSize: '12px',
+                  fontWeight: 800,
+                  backgroundColor: isSelected ? theme.accent : theme.bgCardSecondary,
+                  color: isSelected ? '#FFFFFF' : theme.textPrimary,
+                  border: `1px solid ${isSelected ? theme.accent : theme.borderColor}`,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  minWidth: '115px',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                  boxShadow: isSelected ? theme.shadowPill : 'none',
+                }}
+              >
+                <span>{slot}</span>
+                <span
+                  style={{
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    marginTop: '4px',
+                    color: isSelected ? '#FFE4E6' : isParentBooked ? '#EF4444' : isChildActive ? '#D97706' : '#059669',
+                  }}
+                >
+                  {isParentBooked ? 'Full Court' : isChildActive ? 'Subdivided' : 'Available'}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Visual Spatial Court Blueprint */}
-      <div style={{ backgroundColor: '#0f172a', border: '2px dashed #334155', borderRadius: '12px', padding: '20px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-          <div style={{ fontSize: '14px', fontWeight: 700, color: '#f3f4f6' }}>
-            Parent Resource: Arena Court 01 (Full Hardwood FIBA Basketball)
+      <div
+        style={{
+          backgroundColor: theme.bgCardSecondary,
+          border: `2px dashed ${theme.borderColor}`,
+          borderRadius: '16px',
+          padding: '20px',
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <div>
+            <div style={{ fontSize: '14px', fontWeight: 900, color: theme.textPrimary }}>
+              Parent Spatial Asset: Arena Court 01 (Full Hardwood FIBA Basketball)
+            </div>
+            <div style={{ fontSize: '11px', color: theme.textMuted, marginTop: '2px' }}>
+              Occupies 3 Pickleball sub-divisions simultaneously when reserved
+            </div>
           </div>
           <button
             disabled={!!current.parentBookedBy || Object.values(current.childBookings).some((v) => v !== null)}
             onClick={bookParentCourt}
             style={{
-              padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: 700,
-              backgroundColor: current.parentBookedBy ? '#ef444430' : Object.values(current.childBookings).some((v) => v !== null) ? '#374151' : '#10b981',
-              color: current.parentBookedBy ? '#f87171' : Object.values(current.childBookings).some((v) => v !== null) ? '#6b7280' : '#000',
-              cursor: current.parentBookedBy || Object.values(current.childBookings).some((v) => v !== null) ? 'not-allowed' : 'pointer'
+              padding: '8px 16px',
+              borderRadius: '10px',
+              fontSize: '12px',
+              fontWeight: 800,
+              backgroundColor: current.parentBookedBy
+                ? 'rgba(239, 68, 68, 0.15)'
+                : Object.values(current.childBookings).some((v) => v !== null)
+                ? (isDark ? '#262B37' : '#E2E8F0')
+                : '#059669',
+              color: current.parentBookedBy
+                ? '#EF4444'
+                : Object.values(current.childBookings).some((v) => v !== null)
+                ? theme.textMuted
+                : '#FFFFFF',
+              border: 'none',
+              cursor: current.parentBookedBy || Object.values(current.childBookings).some((v) => v !== null) ? 'not-allowed' : 'pointer',
+              transition: 'all 0.2s',
             }}
           >
             {current.parentBookedBy ? 'Full Court Reserved' : Object.values(current.childBookings).some((v) => v !== null) ? 'Locked by Child Courts' : 'Book Full Court (₱1,500/hr)'}
@@ -178,10 +284,10 @@ export function SpatialCalendar() {
         </div>
 
         {/* Sub-Divided Child Courts */}
-        <div style={{ fontSize: '12px', fontWeight: 600, color: '#94a3b8', marginBottom: '8px' }}>
-          Physical Sub-Divisions (3x Badminton / Pickleball Courts):
+        <div style={{ fontSize: '12px', fontWeight: 800, color: theme.textSecondary, marginBottom: '10px' }}>
+          Physical Sub-Divisions (3x Pickleball / Badminton Courts):
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
           {(['A', 'B', 'C'] as const).map((court) => {
             const bookedBy = current.childBookings[court];
             const isLockedByParent = !!current.parentBookedBy;
@@ -190,20 +296,38 @@ export function SpatialCalendar() {
               <div
                 key={court}
                 style={{
-                  backgroundColor: '#1e293b',
-                  border: `1px solid ${bookedBy ? '#f59e0b' : isLockedByParent ? '#ef4444' : '#334155'}`,
-                  borderRadius: '10px', padding: '14px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between'
+                  backgroundColor: theme.bgCard,
+                  border: `1.5px solid ${bookedBy ? '#F59E0B' : isLockedByParent ? '#EF4444' : theme.borderColor}`,
+                  borderRadius: '14px',
+                  padding: '16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
                 }}
               >
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#f8fafc' }}>Court {court}</span>
-                    <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', backgroundColor: isLockedByParent ? '#ef444420' : bookedBy ? '#f59e0b20' : '#10b98120', color: isLockedByParent ? '#f87171' : bookedBy ? '#fbbf24' : '#34d399' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '13px', fontWeight: 900, color: theme.textPrimary }}>Court {court} (Pickleball)</span>
+                    <span
+                      style={{
+                        fontSize: '10px',
+                        fontWeight: 800,
+                        padding: '2px 8px',
+                        borderRadius: '999px',
+                        backgroundColor: isLockedByParent
+                          ? 'rgba(239, 68, 68, 0.12)'
+                          : bookedBy
+                          ? 'rgba(245, 158, 11, 0.12)'
+                          : 'rgba(5, 150, 105, 0.12)',
+                        color: isLockedByParent ? '#EF4444' : bookedBy ? '#D97706' : '#059669',
+                      }}
+                    >
                       {isLockedByParent ? 'PARENT LOCKED' : bookedBy ? 'OCCUPIED' : 'OPEN'}
                     </span>
                   </div>
-                  <p style={{ fontSize: '11px', color: '#94a3b8', minHeight: '32px' }}>
-                    {isLockedByParent ? `Parent court rented by: ${current.parentBookedBy}` : bookedBy ? `Booked: ${bookedBy}` : 'Pickleball / Badminton net layout'}
+                  <p style={{ fontSize: '11px', color: theme.textMuted, minHeight: '34px', lineHeight: '16px', fontWeight: 500 }}>
+                    {isLockedByParent ? `Parent court rented: ${current.parentBookedBy}` : bookedBy ? `Booked: ${bookedBy}` : 'Regulation Pickleball net layout ready'}
                   </p>
                 </div>
 
@@ -211,13 +335,19 @@ export function SpatialCalendar() {
                   disabled={isLockedByParent || !!bookedBy}
                   onClick={() => bookChildCourt(court)}
                   style={{
-                    marginTop: '10px', padding: '8px', borderRadius: '6px', fontSize: '11px', fontWeight: 700,
-                    backgroundColor: isLockedByParent || bookedBy ? '#334155' : '#3b82f6',
-                    color: isLockedByParent || bookedBy ? '#94a3b8' : '#fff',
-                    cursor: isLockedByParent || bookedBy ? 'not-allowed' : 'pointer'
+                    marginTop: '12px',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    backgroundColor: isLockedByParent || bookedBy ? (isDark ? '#262B37' : '#F1F5F9') : theme.accent,
+                    color: isLockedByParent || bookedBy ? theme.textMuted : '#FFFFFF',
+                    border: 'none',
+                    cursor: isLockedByParent || bookedBy ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.15s ease',
                   }}
                 >
-                  {isLockedByParent ? 'Court Unavailable' : bookedBy ? 'Booked' : 'Book Court (₱350/hr)'}
+                  {isLockedByParent ? 'Court Unavailable' : bookedBy ? 'Occupied' : 'Book Court (₱200/hr)'}
                 </button>
               </div>
             );

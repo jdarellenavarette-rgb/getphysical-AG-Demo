@@ -7,6 +7,7 @@ import { PerformanceTableCard } from './PerformanceTableCard';
 import { EngagementGaugeCard } from './EngagementGaugeCard';
 import { CoachAvailabilityCard } from './CoachAvailabilityCard';
 import { CreateMessageModal } from './CreateMessageModal';
+import { SpatialCalendar } from '../clubdash/SpatialCalendar';
 
 interface MainDashboardViewProps {
   suiteMode: SuiteMode;
@@ -43,6 +44,11 @@ export function MainDashboardView({
           suiteMode={suiteMode}
         />
       </div>
+
+      {/* Clubdash Spatial Facility Allocator: Integrated Directly Inside Clubdash */}
+      {suiteMode === 'CLUBDASH' && (
+        <SpatialCalendar />
+      )}
 
       {/* Bottom Grid: Top Performance Table (Left) + Gauges/Coach (Right) */}
       <div

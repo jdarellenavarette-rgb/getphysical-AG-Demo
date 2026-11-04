@@ -1,11 +1,10 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from "react-native";
-import { Sparkles, Check, Trash2, KeyRound, Zap } from "lucide-react-native";
+import { Sparkles, Check, Trash2 } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import { useTrackingStore } from "../../store/trackingStore";
 import { askOracleAiFoodGuru, type OracleAnalysisResult } from "../../services/oracleNutritionService";
 import { styles } from "./FoodTrackerView.styles";
-import { GoogleGeminiKeyModal } from "./GoogleGeminiKeyModal";
 
 export function FoodTrackerView() {
   const { colors } = useThemeStore();
@@ -14,7 +13,6 @@ export function FoodTrackerView() {
     hydrationLiters,
     dailyTargets,
     geminiApiKey,
-    setGeminiApiKey,
     saveFoodMeal,
     deleteFoodMeal,
     clearFoodMeals,
@@ -24,7 +22,6 @@ export function FoodTrackerView() {
   const [nlpInput, setNlpInput] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [oracleDraft, setOracleDraft] = useState<OracleAnalysisResult | null>(null);
-  const [isKeyModalOpen, setIsKeyModalOpen] = useState(false);
 
   const totalCalories = foodMeals.reduce((acc, curr) => acc + curr.totalCal, 0);
   const totalProtein = foodMeals.reduce((acc, curr) => acc + curr.totalP, 0);
@@ -59,8 +56,6 @@ export function FoodTrackerView() {
     setNlpInput("");
     Alert.alert("Logged to Diary!", `${oracleDraft.headline} added to your daily memories.`);
   };
-
-  const hasGoogleKey = Boolean(geminiApiKey.trim());
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.bgScreen }]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -109,21 +104,6 @@ export function FoodTrackerView() {
             <Sparkles size={13} color="#F59E0B" fill="#F59E0B" />
             <Text style={styles.oracleBadgeText}>ORACLE</Text>
           </View>
-          <TouchableOpacity
-            onPress={() => setIsKeyModalOpen(true)}
-            style={[
-              styles.geminiPill,
-              {
-                backgroundColor: hasGoogleKey ? "rgba(16, 185, 129, 0.12)" : "rgba(59, 130, 246, 0.12)",
-                borderColor: hasGoogleKey ? "rgba(16, 185, 129, 0.3)" : "rgba(59, 130, 246, 0.3)",
-              },
-            ]}
-          >
-            {hasGoogleKey ? <Zap size={11} color="#10B981" /> : <KeyRound size={11} color="#3B82F6" />}
-            <Text style={[styles.geminiPillText, { color: hasGoogleKey ? "#10B981" : "#3B82F6" }]}>
-              {hasGoogleKey ? "Google Gemini Live" : "Set Google Key"}
-            </Text>
-          </TouchableOpacity>
         </View>
 
         <Text style={[styles.oracleInstruct, { color: colors.textPrimary }]}>
@@ -221,13 +201,6 @@ export function FoodTrackerView() {
           </View>
         ))}
       </View>
-
-      <GoogleGeminiKeyModal
-        visible={isKeyModalOpen}
-        apiKey={geminiApiKey}
-        onSave={(key) => setGeminiApiKey(key)}
-        onClose={() => setIsKeyModalOpen(false)}
-      />
     </ScrollView>
   );
 }

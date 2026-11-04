@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { NavigationDock, NavTab } from './NavigationDock';
 import { MainDashboardView } from './MainDashboardView';
+import { AthleticInboxCRMView } from './AthleticInboxCRMView';
 import { SuiteMode } from './HeroPromoCard';
 import { SpatialCalendar } from '../clubdash/SpatialCalendar';
 import { DailyDash } from '../daily-dash/DailyDash';
@@ -13,6 +14,7 @@ import { Building2, ShieldCheck, Dumbbell, Compass, Lock, Unlock, Activity, Exte
 export function BusinessSuiteShell() {
   const [suiteMode, setSuiteMode] = useState<SuiteMode>('GYMDASH');
   const [activeTab, setActiveTab] = useState<NavTab>('DASHBOARD');
+  const [branch, setBranch] = useState<'BGC' | 'MAKATI' | 'PASIG'>('BGC');
 
   const [shift, setShift] = useState<ShiftSession | null>({
     staffId: 'st_882',
@@ -229,6 +231,27 @@ export function BusinessSuiteShell() {
             >
               <Info size={16} />
             </button>
+
+            {/* Multi-Location Portfolio Switcher (Meta Account Switcher Adaptation) */}
+            <select
+              value={branch}
+              onChange={(e) => setBranch(e.target.value as any)}
+              style={{
+                backgroundColor: '#161922',
+                color: '#D1D5DB',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: '8px',
+                padding: '6px 10px',
+                fontSize: '11px',
+                fontWeight: 700,
+                outline: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              <option value="BGC">📍 BGC High Street Arena</option>
+              <option value="MAKATI">📍 Makati West Complex</option>
+              <option value="PASIG">📍 Pasig Padel & Courts</option>
+            </select>
           </div>
 
           {/* Right Status Badges & Cashier Shift */}
@@ -349,6 +372,18 @@ export function BusinessSuiteShell() {
                 </p>
               </div>
               <SpatialCalendar />
+            </div>
+          )}
+
+          {activeTab === 'INBOX' && (
+            <div>
+              <div style={{ marginBottom: '16px' }}>
+                <h2 style={{ fontSize: '20px', fontWeight: 800 }}>Unified Athletic Inbox & Member CRM</h2>
+                <p style={{ fontSize: '12px', color: '#9CA3AF' }}>
+                  Meta-style unified communication center: turnstile access denials, coach form checks, at-risk member win-backs, and organizer match queues.
+                </p>
+              </div>
+              <AthleticInboxCRMView suiteMode={suiteMode} />
             </div>
           )}
 

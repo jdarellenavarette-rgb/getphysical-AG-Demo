@@ -1,9 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Home, Calendar, FileText, BarChart2, Settings, Bell } from 'lucide-react';
+import { Home, Calendar, MessageSquare, FileText, BarChart2, Settings, Bell } from 'lucide-react';
 
-export type NavTab = 'DASHBOARD' | 'SPATIAL' | 'BILLING' | 'TRIAGE' | 'SETTINGS';
+export type NavTab = 'DASHBOARD' | 'SPATIAL' | 'INBOX' | 'BILLING' | 'TRIAGE' | 'SETTINGS';
 
 interface NavigationDockProps {
   activeTab: NavTab;
@@ -14,6 +14,7 @@ export function NavigationDock({ activeTab, onSelectTab }: NavigationDockProps) 
   const navItems: { id: NavTab; icon: any; label: string }[] = [
     { id: 'DASHBOARD', icon: Home, label: 'Dashboard' },
     { id: 'SPATIAL', icon: Calendar, label: 'Spatial Schedule' },
+    { id: 'INBOX', icon: MessageSquare, label: 'Athletic Inbox & CRM' },
     { id: 'BILLING', icon: FileText, label: 'Maya Ledgers' },
     { id: 'TRIAGE', icon: BarChart2, label: 'Turnstile & Triage' },
     { id: 'SETTINGS', icon: Settings, label: 'Facility Settings' },

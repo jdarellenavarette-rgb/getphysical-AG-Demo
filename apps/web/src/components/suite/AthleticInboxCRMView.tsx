@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { MessageSquare, AlertCircle, UserCheck, ShieldAlert, CheckCircle, Send, Tag, Phone, Calendar, ArrowRight, Zap, RefreshCw } from 'lucide-react';
 import { SuiteMode } from './HeroPromoCard';
+import { useSuiteTheme } from './theme';
 
 interface MessageTicket {
   id: string;
@@ -37,7 +38,7 @@ const INITIAL_TICKETS: MessageTicket[] = [
     unread: true,
     status: 'OPEN',
     tag: 'Turnstile Denial',
-    tagColor: '#EF4444',
+    tagColor: '#DC2626',
     athleteMeta: {
       membership: 'Expired VIP All-Access',
       lastVisit: 'Today at Gate 01 (Denied)',
@@ -60,7 +61,7 @@ const INITIAL_TICKETS: MessageTicket[] = [
     unread: true,
     status: 'OPEN',
     tag: 'Coach Review',
-    tagColor: '#38BDF8',
+    tagColor: '#0284C7',
     athleteMeta: {
       membership: '12-Wk Strength Peak Client',
       lastVisit: 'Yesterday (Leg Power Cycle)',
@@ -82,7 +83,7 @@ const INITIAL_TICKETS: MessageTicket[] = [
     unread: false,
     status: 'OPEN',
     tag: 'At-Risk Win-Back',
-    tagColor: '#F59E0B',
+    tagColor: '#D97706',
     athleteMeta: {
       membership: 'Hyrox & Padel Member',
       lastVisit: '14 days ago',
@@ -105,7 +106,7 @@ const INITIAL_TICKETS: MessageTicket[] = [
     unread: false,
     status: 'RESOLVED',
     tag: 'Organizer League',
-    tagColor: '#10B981',
+    tagColor: '#059669',
     athleteMeta: {
       membership: 'Affiliated League Host',
       lastVisit: 'Nov 1 (Spatial Booking Confirmed)',
@@ -123,6 +124,7 @@ interface AthleticInboxCRMViewProps {
 }
 
 export function AthleticInboxCRMView({ suiteMode }: AthleticInboxCRMViewProps) {
+  const { theme, isDark } = useSuiteTheme();
   const [tickets, setTickets] = useState<MessageTicket[]>(INITIAL_TICKETS);
   const [selectedTicketId, setSelectedTicketId] = useState<string>(INITIAL_TICKETS[0]?.id ?? '');
   const [filterChannel, setFilterChannel] = useState<'ALL' | 'GATE_EXPIRATION' | 'FORM_CHECK' | 'AT_RISK' | 'GENERAL_INQUIRY'>('ALL');
@@ -150,7 +152,7 @@ export function AthleticInboxCRMView({ suiteMode }: AthleticInboxCRMViewProps) {
     setTickets((prev) =>
       prev.map((t) =>
         t.id === activeTicket.id
-          ? { ...t, messages: [...t.messages, newMsg], status: 'RESOLVED', tag: 'Resolved (Renewed)', tagColor: '#10B981' }
+          ? { ...t, messages: [...t.messages, newMsg], status: 'RESOLVED', tag: 'Resolved (Renewed)', tagColor: '#059669' }
           : t
       )
     );
@@ -160,29 +162,32 @@ export function AthleticInboxCRMView({ suiteMode }: AthleticInboxCRMViewProps) {
     <div
       style={{
         borderRadius: '24px',
-        backgroundColor: '#111319',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
+        backgroundColor: theme.bgCard,
+        border: `1px solid ${theme.borderColor}`,
         height: 'calc(100vh - 140px)',
         display: 'flex',
         overflow: 'hidden',
+        boxShadow: theme.shadowCard,
       }}
     >
       {/* Col 1: Channel Filters & Conversation List */}
       <div
         style={{
           width: '380px',
-          borderRight: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRight: `1px solid ${theme.borderColor}`,
           display: 'flex',
           flexDirection: 'column',
-          backgroundColor: '#0E1016',
+          backgroundColor: theme.bgCardSecondary,
         }}
       >
         {/* Header */}
-        <div style={{ padding: '20px', borderBottom: '1px solid rgba(255, 255, 255, 0.06)' }}>
+        <div style={{ padding: '20px', borderBottom: `1px solid ${theme.borderColor}`, backgroundColor: theme.bgCard }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
-            <MessageSquare size={18} color="#FF5364" />
-            <h3 style={{ fontSize: '16px', fontWeight: 900, color: '#FFFFFF' }}>Unified Athletic Inbox</h3>
-            <span style={{ fontSize: '10px', backgroundColor: 'rgba(255, 83, 100, 0.15)', color: '#FF5364', padding: '2px 7px', borderRadius: '999px', fontWeight: 800 }}>
+            <MessageSquare size={18} color="#E11D48" />
+            <h3 style={{ fontSize: '16px', fontWeight: 900, color: theme.textPrimary, letterSpacing: '-0.3px' }}>
+              Unified Athletic Inbox
+            </h3>
+            <span style={{ fontSize: '10px', backgroundColor: 'rgba(225, 29, 72, 0.1)', color: '#E11D48', padding: '2px 8px', borderRadius: '999px', fontWeight: 800 }}>
               Meta CRM Sync
             </span>
           </div>
@@ -199,15 +204,16 @@ export function AthleticInboxCRMView({ suiteMode }: AthleticInboxCRMViewProps) {
                 key={f.id}
                 onClick={() => setFilterChannel(f.id as any)}
                 style={{
-                  padding: '5px 10px',
+                  padding: '6px 12px',
                   borderRadius: '8px',
                   fontSize: '11px',
-                  fontWeight: 700,
-                  backgroundColor: filterChannel === f.id ? '#FF5364' : 'rgba(255, 255, 255, 0.05)',
-                  color: filterChannel === f.id ? '#FFFFFF' : '#9CA3AF',
+                  fontWeight: 800,
+                  backgroundColor: filterChannel === f.id ? '#E11D48' : theme.bgCardTertiary,
+                  color: filterChannel === f.id ? '#FFFFFF' : theme.textSecondary,
                   border: 'none',
                   cursor: 'pointer',
                   whiteSpace: 'nowrap',
+                  transition: 'all 0.15s ease',
                 }}
               >
                 {f.label}
@@ -226,9 +232,9 @@ export function AthleticInboxCRMView({ suiteMode }: AthleticInboxCRMViewProps) {
                 onClick={() => setSelectedTicketId(t.id)}
                 style={{
                   padding: '14px 18px',
-                  borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
-                  backgroundColor: isSelected ? 'rgba(255, 83, 100, 0.08)' : 'transparent',
-                  borderLeft: isSelected ? '3px solid #FF5364' : '3px solid transparent',
+                  borderBottom: `1px solid ${theme.borderLight}`,
+                  backgroundColor: isSelected ? '#FFFFFF' : 'transparent',
+                  borderLeft: isSelected ? '3px solid #E11D48' : '3px solid transparent',
                   cursor: 'pointer',
                   transition: 'all 0.15s ease',
                 }}
@@ -237,11 +243,11 @@ export function AthleticInboxCRMView({ suiteMode }: AthleticInboxCRMViewProps) {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <div
                       style={{
-                        width: '30px',
-                        height: '30px',
-                        borderRadius: '15px',
-                        backgroundColor: '#1E2330',
-                        color: '#FFFFFF',
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '16px',
+                        backgroundColor: '#E2E8F0',
+                        color: theme.textPrimary,
                         fontSize: '11px',
                         fontWeight: 900,
                         display: 'flex',
@@ -252,23 +258,23 @@ export function AthleticInboxCRMView({ suiteMode }: AthleticInboxCRMViewProps) {
                       {t.avatar}
                     </div>
                     <div>
-                      <div style={{ fontSize: '13px', fontWeight: 800, color: '#FFFFFF' }}>{t.athleteName}</div>
-                      <div style={{ fontSize: '10px', color: '#6B7280' }}>{t.handle}</div>
+                      <div style={{ fontSize: '13px', fontWeight: 800, color: theme.textPrimary }}>{t.athleteName}</div>
+                      <div style={{ fontSize: '10px', color: theme.textMuted, fontWeight: 600 }}>{t.handle}</div>
                     </div>
                   </div>
-                  <span style={{ fontSize: '10px', color: '#6B7280' }}>{t.time}</span>
+                  <span style={{ fontSize: '10px', color: theme.textMuted, fontWeight: 600 }}>{t.time}</span>
                 </div>
 
-                <p style={{ fontSize: '11px', color: '#9CA3AF', lineHeight: '15px', margin: '6px 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <p style={{ fontSize: '11px', color: theme.textSecondary, lineHeight: '16px', margin: '6px 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 500 }}>
                   {t.lastMessage}
                 </p>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ fontSize: '9px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px', backgroundColor: `${t.tagColor}20`, color: t.tagColor }}>
+                  <span style={{ fontSize: '10px', fontWeight: 800, padding: '2px 7px', borderRadius: '4px', backgroundColor: `${t.tagColor}15`, color: t.tagColor }}>
                     {t.tag}
                   </span>
                   {t.unread && (
-                    <span style={{ width: '6px', height: '6px', borderRadius: '3px', backgroundColor: '#FF5364' }} />
+                    <span style={{ width: '6px', height: '6px', borderRadius: '3px', backgroundColor: '#E11D48' }} />
                   )}
                 </div>
               </div>
@@ -279,27 +285,27 @@ export function AthleticInboxCRMView({ suiteMode }: AthleticInboxCRMViewProps) {
 
       {/* Col 2: Active Conversation & Athlete Action Hub */}
       {activeTicket && (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: '#111319' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: theme.bgCard }}>
           {/* Thread Header */}
           <div
             style={{
               padding: '16px 24px',
-              borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+              borderBottom: `1px solid ${theme.borderColor}`,
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              backgroundColor: '#141720',
+              backgroundColor: theme.bgCardSecondary,
             }}
           >
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <h4 style={{ fontSize: '15px', fontWeight: 900, color: '#FFFFFF' }}>{activeTicket.athleteName}</h4>
-                <span style={{ fontSize: '10px', color: '#6B7280' }}>{activeTicket.athleteMeta.phone}</span>
-                <span style={{ fontSize: '9px', padding: '2px 6px', borderRadius: '4px', backgroundColor: `${activeTicket.tagColor}20`, color: activeTicket.tagColor, fontWeight: 800 }}>
+                <h4 style={{ fontSize: '15px', fontWeight: 900, color: theme.textPrimary }}>{activeTicket.athleteName}</h4>
+                <span style={{ fontSize: '11px', color: theme.textMuted, fontWeight: 600 }}>{activeTicket.athleteMeta.phone}</span>
+                <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '4px', backgroundColor: `${activeTicket.tagColor}15`, color: activeTicket.tagColor, fontWeight: 800 }}>
                   {activeTicket.tag}
                 </span>
               </div>
-              <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '2px' }}>
+              <div style={{ fontSize: '11px', color: theme.textSecondary, marginTop: '2px', fontWeight: 600 }}>
                 {activeTicket.athleteMeta.membership} • Last visit: {activeTicket.athleteMeta.lastVisit}
               </div>
             </div>
@@ -310,38 +316,42 @@ export function AthleticInboxCRMView({ suiteMode }: AthleticInboxCRMViewProps) {
                 <button
                   onClick={handleActionRenew}
                   style={{
-                    backgroundColor: '#10B981',
-                    color: '#000000',
+                    backgroundColor: '#059669',
+                    color: '#FFFFFF',
                     fontSize: '11px',
-                    fontWeight: 900,
-                    padding: '6px 12px',
+                    fontWeight: 800,
+                    padding: '7px 14px',
                     borderRadius: '8px',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '4px',
+                    gap: '5px',
                     cursor: 'pointer',
+                    border: 'none',
+                    boxShadow: '0 4px 10px rgba(5, 150, 105, 0.25)',
                   }}
                 >
-                  <CheckCircle size={13} strokeWidth={3} />
+                  <CheckCircle size={14} strokeWidth={2.5} />
                   <span>1-Click Approve Pass</span>
                 </button>
               )}
               {activeTicket.channel === 'FORM_CHECK' && (
                 <button
                   style={{
-                    backgroundColor: '#38BDF8',
-                    color: '#000000',
+                    backgroundColor: '#0284C7',
+                    color: '#FFFFFF',
                     fontSize: '11px',
-                    fontWeight: 900,
-                    padding: '6px 12px',
+                    fontWeight: 800,
+                    padding: '7px 14px',
                     borderRadius: '8px',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '4px',
+                    gap: '5px',
                     cursor: 'pointer',
+                    border: 'none',
+                    boxShadow: '0 4px 10px rgba(2, 132, 199, 0.25)',
                   }}
                 >
-                  <Zap size={13} strokeWidth={3} />
+                  <Zap size={14} strokeWidth={2.5} />
                   <span>Verify 1RM Stamp</span>
                 </button>
               )}
@@ -349,7 +359,7 @@ export function AthleticInboxCRMView({ suiteMode }: AthleticInboxCRMViewProps) {
           </div>
 
           {/* Messages Body */}
-          <div style={{ flex: 1, padding: '24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div style={{ flex: 1, padding: '24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px', backgroundColor: theme.bgCard }}>
             {activeTicket.messages.map((m, idx) => {
               const isBiz = m.sender === 'business';
               return (
@@ -358,16 +368,16 @@ export function AthleticInboxCRMView({ suiteMode }: AthleticInboxCRMViewProps) {
                   style={{
                     alignSelf: isBiz ? 'flex-end' : 'flex-start',
                     maxWidth: '75%',
-                    backgroundColor: isBiz ? '#E11D48' : '#1A1E2A',
-                    color: '#FFFFFF',
+                    backgroundColor: isBiz ? '#E11D48' : theme.bgCardSecondary,
+                    color: isBiz ? '#FFFFFF' : theme.textPrimary,
                     borderRadius: '16px',
                     padding: '12px 16px',
-                    border: isBiz ? 'none' : '1px solid rgba(255, 255, 255, 0.08)',
-                    boxShadow: isBiz ? '0 6px 16px rgba(225, 29, 72, 0.35)' : 'none',
+                    border: isBiz ? 'none' : `1px solid ${theme.borderColor}`,
+                    boxShadow: isBiz ? '0 6px 16px rgba(225, 29, 72, 0.25)' : 'none',
                   }}
                 >
-                  <p style={{ fontSize: '13px', lineHeight: '18px', margin: 0 }}>{m.text}</p>
-                  <div style={{ fontSize: '10px', color: isBiz ? '#FFA69E' : '#6B7280', marginTop: '4px', textAlign: 'right' }}>
+                  <p style={{ fontSize: '13px', lineHeight: '18px', margin: 0, fontWeight: isBiz ? 600 : 500 }}>{m.text}</p>
+                  <div style={{ fontSize: '10px', color: isBiz ? 'rgba(255, 255, 255, 0.8)' : theme.textMuted, marginTop: '4px', textAlign: 'right', fontWeight: 600 }}>
                     {m.time}
                   </div>
                 </div>
@@ -376,7 +386,7 @@ export function AthleticInboxCRMView({ suiteMode }: AthleticInboxCRMViewProps) {
           </div>
 
           {/* Reply Bar */}
-          <div style={{ padding: '16px 24px', borderTop: '1px solid rgba(255, 255, 255, 0.08)', backgroundColor: '#141720', display: 'flex', gap: '10px' }}>
+          <div style={{ padding: '16px 24px', borderTop: `1px solid ${theme.borderColor}`, backgroundColor: theme.bgCardSecondary, display: 'flex', gap: '10px' }}>
             <input
               type="text"
               value={replyText}
@@ -385,11 +395,11 @@ export function AthleticInboxCRMView({ suiteMode }: AthleticInboxCRMViewProps) {
               placeholder="Write direct response or automated CRM prompt..."
               style={{
                 flex: 1,
-                backgroundColor: '#1E2330',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                backgroundColor: theme.bgCard,
+                border: `1px solid ${theme.borderColor}`,
                 borderRadius: '12px',
                 padding: '10px 14px',
-                color: '#FFFFFF',
+                color: theme.textPrimary,
                 fontSize: '13px',
                 outline: 'none',
               }}
@@ -397,17 +407,19 @@ export function AthleticInboxCRMView({ suiteMode }: AthleticInboxCRMViewProps) {
             <button
               onClick={handleSendReply}
               style={{
-                backgroundColor: '#FF5364',
+                backgroundColor: '#E11D48',
                 color: '#FFFFFF',
                 borderRadius: '12px',
-                padding: '0 16px',
+                padding: '0 18px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '6px',
                 fontSize: '13px',
                 fontWeight: 800,
+                border: 'none',
                 cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(225, 29, 72, 0.25)',
               }}
             >
               <Send size={15} />

@@ -3,6 +3,7 @@
 import React from 'react';
 import { ArrowUpRight, ArrowDownRight, ChevronRight, Activity, Users, Trophy, Calendar } from 'lucide-react';
 import { SuiteMode } from './HeroPromoCard';
+import { useSuiteTheme } from './theme';
 
 interface TableRowData {
   col1: string;
@@ -52,6 +53,7 @@ interface PerformanceTableCardProps {
 }
 
 export function PerformanceTableCard({ suiteMode, onViewAll }: PerformanceTableCardProps) {
+  const { theme, isDark } = useSuiteTheme();
   const getTableMeta = () => {
     switch (suiteMode) {
       case 'CLUBDASH':
@@ -88,16 +90,17 @@ export function PerformanceTableCard({ suiteMode, onViewAll }: PerformanceTableC
     <div
       style={{
         borderRadius: '24px',
-        backgroundColor: '#111319',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
+        backgroundColor: theme.bgCard,
+        border: `1px solid ${theme.borderColor}`,
         padding: '24px',
         display: 'flex',
         flexDirection: 'column',
+        boxShadow: theme.shadowCard,
       }}
     >
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
-        <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#FFFFFF', letterSpacing: '-0.3px' }}>
+        <h3 style={{ fontSize: '16px', fontWeight: 900, color: theme.textPrimary, letterSpacing: '-0.3px' }}>
           {meta.title}
         </h3>
         <button
@@ -106,13 +109,13 @@ export function PerformanceTableCard({ suiteMode, onViewAll }: PerformanceTableC
             display: 'flex',
             alignItems: 'center',
             gap: '3px',
-            color: '#9CA3AF',
+            color: theme.accent,
             fontSize: '12px',
-            fontWeight: 700,
-            transition: 'color 0.2s',
+            fontWeight: 800,
+            transition: 'opacity 0.2s',
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = '#FF5364')}
-          onMouseLeave={(e) => (e.currentTarget.style.color = '#9CA3AF')}
+          onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.7')}
+          onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
         >
           <span>View all</span>
           <ChevronRight size={14} />
@@ -123,9 +126,9 @@ export function PerformanceTableCard({ suiteMode, onViewAll }: PerformanceTableC
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
           <thead>
-            <tr style={{ color: '#6B7280', fontSize: '11px', fontWeight: 700, borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+            <tr style={{ color: theme.textMuted, fontSize: '11px', fontWeight: 700, borderBottom: `1px solid ${theme.borderColor}` }}>
               {meta.headers.map((h, i) => (
-                <th key={i} style={{ paddingBottom: '12px', fontWeight: 600 }}>{h}</th>
+                <th key={i} style={{ paddingBottom: '12px', fontWeight: 700 }}>{h}</th>
               ))}
             </tr>
           </thead>
@@ -134,62 +137,63 @@ export function PerformanceTableCard({ suiteMode, onViewAll }: PerformanceTableC
               <tr
                 key={i}
                 style={{
-                  borderBottom: i === meta.data.length - 1 ? 'none' : '1px solid rgba(255, 255, 255, 0.04)',
+                  borderBottom: i === meta.data.length - 1 ? 'none' : `1px solid ${theme.borderLight}`,
                   transition: 'background-color 0.15s ease',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.02)')}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = theme.bgCardSecondary)}
                 onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
               >
                 {/* Col 1 */}
-                <td style={{ padding: '12px 0', fontWeight: 700, color: '#F3F4F6' }}>
+                <td style={{ padding: '13px 0', fontWeight: 800, color: theme.textPrimary }}>
                   {row.col1}
                 </td>
 
                 {/* Col 2 */}
-                <td style={{ padding: '12px 0', color: '#9CA3AF', fontWeight: 600 }}>
+                <td style={{ padding: '13px 0', color: theme.textSecondary, fontWeight: 600 }}>
                   {row.col2}
                 </td>
 
                 {/* Col 3 */}
-                <td style={{ padding: '12px 0', color: '#D1D5DB', fontWeight: 700 }}>
+                <td style={{ padding: '13px 0', color: theme.textPrimary, fontWeight: 800 }}>
                   {row.col3}
                 </td>
 
                 {/* Col 4 (Trend) */}
-                <td style={{ padding: '12px 0' }}>
+                <td style={{ padding: '13px 0' }}>
                   <div
                     style={{
                       display: 'flex',
                       alignItems: 'center',
                       gap: '3px',
-                      color: row.isPositive ? '#FF5364' : '#F87171',
-                      fontWeight: 700,
+                      color: row.isPositive ? '#E11D48' : '#F43F5E',
+                      fontWeight: 800,
                       fontSize: '12px',
                     }}
                   >
-                    {row.isPositive ? <ArrowUpRight size={13} strokeWidth={2.5} /> : <ArrowDownRight size={13} strokeWidth={2.5} />}
+                    {row.isPositive ? <ArrowUpRight size={14} strokeWidth={2.5} /> : <ArrowDownRight size={14} strokeWidth={2.5} />}
                     <span>{row.col4}</span>
                   </div>
                 </td>
 
                 {/* Col 5 */}
-                <td style={{ padding: '12px 0', color: '#9CA3AF', fontWeight: 600 }}>
+                <td style={{ padding: '13px 0', color: theme.textSecondary, fontWeight: 600 }}>
                   {row.col5}
                 </td>
 
                 {/* Col 6 */}
-                <td style={{ padding: '12px 0', color: '#F3F4F6', fontWeight: 800 }}>
+                <td style={{ padding: '13px 0', color: theme.textPrimary, fontWeight: 800 }}>
                   <span
                     style={{
-                      padding: '3px 8px',
+                      padding: '4px 9px',
                       borderRadius: '6px',
                       fontSize: '11px',
+                      fontWeight: 800,
                       backgroundColor: row.col6.includes('At-Risk') || row.col6.includes('Due')
-                        ? 'rgba(239, 68, 68, 0.15)'
-                        : 'rgba(16, 185, 129, 0.12)',
+                        ? 'rgba(239, 68, 68, 0.1)'
+                        : 'rgba(5, 150, 105, 0.1)',
                       color: row.col6.includes('At-Risk') || row.col6.includes('Due')
-                        ? '#F87171'
-                        : '#10B981',
+                        ? '#DC2626'
+                        : '#059669',
                     }}
                   >
                     {row.col6}

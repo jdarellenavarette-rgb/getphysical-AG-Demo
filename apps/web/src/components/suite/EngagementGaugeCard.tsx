@@ -2,12 +2,14 @@
 
 import React from 'react';
 import { SuiteMode } from './HeroPromoCard';
+import { useSuiteTheme } from './theme';
 
 interface EngagementGaugeCardProps {
   suiteMode?: SuiteMode;
 }
 
 export function EngagementGaugeCard({ suiteMode = 'GYMDASH' }: EngagementGaugeCardProps) {
+  const { theme, isDark } = useSuiteTheme();
   const getGaugeMeta = () => {
     switch (suiteMode) {
       case 'CLUBDASH':
@@ -31,25 +33,26 @@ export function EngagementGaugeCard({ suiteMode = 'GYMDASH' }: EngagementGaugeCa
     <div
       style={{
         borderRadius: '24px',
-        backgroundColor: '#111319',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
+        backgroundColor: theme.bgCard,
+        border: `1px solid ${theme.borderColor}`,
         padding: '22px 24px',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
         minHeight: '165px',
+        boxShadow: theme.shadowCard,
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#FFFFFF', letterSpacing: '-0.2px' }}>
+          <h3 style={{ fontSize: '15px', fontWeight: 900, color: theme.textPrimary, letterSpacing: '-0.3px' }}>
             {title}
           </h3>
-          <p style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '3px' }}>
+          <p style={{ fontSize: '11px', color: theme.textMuted, marginTop: '3px', fontWeight: 500 }}>
             {sub}
           </p>
-          <div style={{ marginTop: '22px', fontSize: '11px', color: '#6B7280', fontWeight: 600 }}>
-            Target: <strong style={{ color: '#D1D5DB' }}>{target.toFixed(1)}</strong>
+          <div style={{ marginTop: '22px', fontSize: '11px', color: theme.textMuted, fontWeight: 700 }}>
+            Target: <strong style={{ color: theme.textPrimary }}>{target.toFixed(1)}</strong>
           </div>
         </div>
 
@@ -60,7 +63,7 @@ export function EngagementGaugeCard({ suiteMode = 'GYMDASH' }: EngagementGaugeCa
               cx="50"
               cy="50"
               r={radius}
-              stroke="#232836"
+              stroke={isDark ? '#262B37' : '#E2E8F0'}
               strokeWidth="7"
               fill="transparent"
             />
@@ -68,7 +71,7 @@ export function EngagementGaugeCard({ suiteMode = 'GYMDASH' }: EngagementGaugeCa
               cx="50"
               cy="50"
               r={radius}
-              stroke="url(#coralGrad)"
+              stroke="url(#coralGradLight)"
               strokeWidth="7"
               fill="transparent"
               strokeDasharray={circumference}
@@ -76,21 +79,21 @@ export function EngagementGaugeCard({ suiteMode = 'GYMDASH' }: EngagementGaugeCa
               strokeLinecap="round"
               style={{
                 transition: 'stroke-dashoffset 0.8s ease',
-                filter: 'drop-shadow(0 0 6px rgba(255, 83, 100, 0.6))',
+                filter: 'drop-shadow(0 0 4px rgba(225, 29, 72, 0.4))',
               }}
             />
             <defs>
-              <linearGradient id="coralGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <linearGradient id="coralGradLight" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#FFA69E" />
-                <stop offset="100%" stopColor="#FF3D57" />
+                <stop offset="100%" stopColor="#E11D48" />
               </linearGradient>
             </defs>
           </svg>
 
           {/* Center Text */}
           <div style={{ position: 'absolute', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <span style={{ fontSize: '20px', fontWeight: 900, color: '#FFFFFF', lineHeight: 1 }}>{score}</span>
-            <span style={{ fontSize: '8px', fontWeight: 700, color: '#9CA3AF', marginTop: '2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <span style={{ fontSize: '20px', fontWeight: 900, color: theme.textPrimary, lineHeight: 1 }}>{score}</span>
+            <span style={{ fontSize: '9px', fontWeight: 800, color: theme.textMuted, marginTop: '2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
               Index
             </span>
           </div>

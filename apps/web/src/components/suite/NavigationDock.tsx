@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Home, Calendar, MessageSquare, FileText, BarChart2, Settings, Bell } from 'lucide-react';
+import { useSuiteTheme } from './theme';
 
 export type NavTab = 'DASHBOARD' | 'SPATIAL' | 'INBOX' | 'BILLING' | 'TRIAGE' | 'SETTINGS';
 
@@ -11,6 +12,7 @@ interface NavigationDockProps {
 }
 
 export function NavigationDock({ activeTab, onSelectTab }: NavigationDockProps) {
+  const { theme, isDark } = useSuiteTheme();
   const navItems: { id: NavTab; icon: any; label: string }[] = [
     { id: 'DASHBOARD', icon: Home, label: 'Dashboard' },
     { id: 'SPATIAL', icon: Calendar, label: 'Spatial Schedule' },
@@ -25,8 +27,8 @@ export function NavigationDock({ activeTab, onSelectTab }: NavigationDockProps) 
       style={{
         width: '74px',
         height: '100%',
-        backgroundColor: '#0C0E14',
-        borderRight: '1px solid rgba(255, 255, 255, 0.06)',
+        backgroundColor: theme.bgDock,
+        borderRight: `1px solid ${theme.borderColor}`,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -34,6 +36,7 @@ export function NavigationDock({ activeTab, onSelectTab }: NavigationDockProps) 
         padding: '24px 0',
         zIndex: 10,
         flexShrink: 0,
+        boxShadow: '2px 0 12px rgba(0, 0, 0, 0.02)',
       }}
     >
       {/* Top Logo & Navigation Items */}
@@ -53,7 +56,7 @@ export function NavigationDock({ activeTab, onSelectTab }: NavigationDockProps) 
               fontSize: '22px',
               fontStyle: 'italic',
               fontWeight: 900,
-              color: '#FFFFFF',
+              color: theme.textPrimary,
               letterSpacing: '-1.5px',
               fontFamily: 'system-ui, sans-serif',
             }}
@@ -84,20 +87,20 @@ export function NavigationDock({ activeTab, onSelectTab }: NavigationDockProps) 
                   border: 'none',
                   transition: 'all 0.2s ease',
                   background: isActive
-                    ? 'linear-gradient(135deg, #FF6B7A 0%, #FF3D57 50%, #E11D48 100%)'
+                    ? 'linear-gradient(135deg, #E11D48 0%, #BE123C 100%)'
                     : 'transparent',
-                  color: isActive ? '#FFFFFF' : '#6B7280',
-                  boxShadow: isActive ? '0 6px 16px rgba(225, 29, 72, 0.45)' : 'none',
+                  color: isActive ? '#FFFFFF' : theme.textMuted,
+                  boxShadow: isActive ? '0 4px 14px rgba(225, 29, 72, 0.35)' : 'none',
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive) {
-                    e.currentTarget.style.color = '#FFFFFF';
-                    e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+                    e.currentTarget.style.color = theme.textPrimary;
+                    e.currentTarget.style.backgroundColor = theme.bgCardSecondary;
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (!isActive) {
-                    e.currentTarget.style.color = '#6B7280';
+                    e.currentTarget.style.color = theme.textMuted;
                     e.currentTarget.style.backgroundColor = 'transparent';
                   }
                 }}
@@ -118,13 +121,17 @@ export function NavigationDock({ activeTab, onSelectTab }: NavigationDockProps) 
             width: '40px',
             height: '40px',
             borderRadius: '20px',
-            backgroundColor: '#161922',
-            color: '#9CA3AF',
+            backgroundColor: theme.bgCardSecondary,
+            border: `1px solid ${theme.borderColor}`,
+            color: theme.textSecondary,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
+            transition: 'background-color 0.15s ease',
           }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = theme.bgCardTertiary)}
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = theme.bgCardSecondary)}
         >
           <Bell size={18} />
           <div
@@ -135,7 +142,7 @@ export function NavigationDock({ activeTab, onSelectTab }: NavigationDockProps) 
               width: '7px',
               height: '7px',
               borderRadius: '4px',
-              backgroundColor: '#FF5364',
+              backgroundColor: '#E11D48',
             }}
           />
         </button>

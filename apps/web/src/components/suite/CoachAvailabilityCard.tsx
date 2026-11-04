@@ -2,12 +2,14 @@
 
 import React from 'react';
 import { SuiteMode } from './HeroPromoCard';
+import { useSuiteTheme } from './theme';
 
 interface CoachAvailabilityCardProps {
   suiteMode: SuiteMode;
 }
 
 export function CoachAvailabilityCard({ suiteMode }: CoachAvailabilityCardProps) {
+  const { theme, isDark } = useSuiteTheme();
   const getAvailabilityMeta = () => {
     switch (suiteMode) {
       case 'CLUBDASH':
@@ -64,26 +66,27 @@ export function CoachAvailabilityCard({ suiteMode }: CoachAvailabilityCardProps)
     <div
       style={{
         borderRadius: '24px',
-        backgroundColor: '#111319',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
+        backgroundColor: theme.bgCard,
+        border: `1px solid ${theme.borderColor}`,
         padding: '22px 24px',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
         minHeight: '165px',
+        boxShadow: theme.shadowCard,
       }}
     >
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#FFFFFF', letterSpacing: '-0.2px' }}>
+        <h3 style={{ fontSize: '15px', fontWeight: 900, color: theme.textPrimary, letterSpacing: '-0.3px' }}>
           {meta.title}
         </h3>
         <span
           style={{
             fontSize: '11px',
-            fontWeight: 700,
-            color: '#FF5364',
-            backgroundColor: 'rgba(255, 83, 100, 0.12)',
+            fontWeight: 800,
+            color: '#E11D48',
+            backgroundColor: 'rgba(225, 29, 72, 0.1)',
             padding: '3px 8px',
             borderRadius: '6px',
           }}
@@ -96,20 +99,20 @@ export function CoachAvailabilityCard({ suiteMode }: CoachAvailabilityCardProps)
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <div style={{ width: '8px', height: '8px', borderRadius: '4px', backgroundColor: '#FF5364' }} />
-            <span style={{ fontSize: '12px', fontWeight: 700, color: '#F3F4F6' }}>{meta.label1}</span>
-            <span style={{ fontSize: '11px', color: '#6B7280' }}>• {meta.sub1}</span>
+            <div style={{ width: '8px', height: '8px', borderRadius: '4px', backgroundColor: '#E11D48' }} />
+            <span style={{ fontSize: '12px', fontWeight: 800, color: theme.textPrimary }}>{meta.label1}</span>
+            <span style={{ fontSize: '11px', color: theme.textMuted }}>• {meta.sub1}</span>
           </div>
-          <span style={{ fontSize: '11px', fontWeight: 700, color: '#9CA3AF' }}>{meta.tag1}</span>
+          <span style={{ fontSize: '11px', fontWeight: 700, color: theme.textMuted }}>{meta.tag1}</span>
         </div>
 
         {/* Progress Bar */}
-        <div style={{ width: '100%', height: '6px', backgroundColor: '#232836', borderRadius: '3px', overflow: 'hidden' }}>
+        <div style={{ width: '100%', height: '6px', backgroundColor: '#E2E8F0', borderRadius: '3px', overflow: 'hidden' }}>
           <div
             style={{
               width: `${meta.pct1}%`,
               height: '100%',
-              background: 'linear-gradient(90deg, #FF6B7A, #FF3D57)',
+              background: 'linear-gradient(90deg, #E11D48, #BE123C)',
               borderRadius: '3px',
             }}
           />
@@ -117,12 +120,12 @@ export function CoachAvailabilityCard({ suiteMode }: CoachAvailabilityCardProps)
       </div>
 
       {/* Row 2: Schedule Filled Info */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '6px', borderTop: '1px solid rgba(255, 255, 255, 0.04)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '6px', borderTop: `1px solid ${theme.borderLight}` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <div style={{ width: '8px', height: '8px', borderRadius: '4px', backgroundColor: '#FF5364' }} />
-          <span style={{ fontSize: '12px', fontWeight: 700, color: '#D1D5DB' }}>{meta.label2}</span>
+          <div style={{ width: '8px', height: '8px', borderRadius: '4px', backgroundColor: '#E11D48' }} />
+          <span style={{ fontSize: '12px', fontWeight: 700, color: theme.textSecondary }}>{meta.label2}</span>
         </div>
-        <span style={{ fontSize: '11px', fontWeight: 700, color: '#9CA3AF' }}>{meta.tag2}</span>
+        <span style={{ fontSize: '11px', fontWeight: 800, color: theme.textMuted }}>{meta.tag2}</span>
       </div>
     </div>
   );

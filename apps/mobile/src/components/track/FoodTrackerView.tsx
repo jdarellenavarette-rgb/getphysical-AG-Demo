@@ -58,7 +58,13 @@ export function FoodTrackerView() {
   };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.bgScreen }]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
+      contentContainerStyle={[styles.content, { paddingBottom: 60 }]}
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="on-drag"
+    >
       {/* 1. DAILY MACRO TARGETS */}
       <View style={[styles.macroCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
         <View style={styles.macroHeader}>

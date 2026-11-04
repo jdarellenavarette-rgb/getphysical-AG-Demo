@@ -1,5 +1,16 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, Modal, ScrollView, TextInput, TouchableOpacity, Alert } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Modal,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 import { X, Plus, Trash2, Dumbbell, Calendar, Check } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import { useTrackingStore, type TrainingProgram, type ProgramDay, type ProgramExercise } from "../../store/trackingStore";
@@ -89,7 +100,10 @@ export function CreateProgramModal({ visible, onClose }: CreateProgramModalProps
 
   return (
     <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
-      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
+      <KeyboardAvoidingView
+        style={[styles.container, { backgroundColor: colors.bgScreen }]}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
         <View style={[styles.navHeader, { borderBottomColor: colors.borderColor }]}>
           <TouchableOpacity onPress={onClose} style={styles.closeBtn}><X size={22} color={colors.textPrimary} /></TouchableOpacity>
           <View style={styles.headerTitleWrap}>
@@ -190,7 +204,7 @@ export function CreateProgramModal({ visible, onClose }: CreateProgramModalProps
             </View>
           ))}
         </ScrollView>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

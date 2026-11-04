@@ -1,5 +1,17 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, Image, TextInput, StyleSheet, Modal, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  TextInput,
+  StyleSheet,
+  Modal,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { X, Heart, Pin } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { useThemeStore } from "../../theme/theme";
@@ -11,6 +23,7 @@ interface CommentsBottomSheetProps {
 }
 
 export function CommentsBottomSheet({ visible, onClose }: CommentsBottomSheetProps) {
+  const insets = useSafeAreaInsets();
   const { profile } = useEcosystemStore();
   const { colors } = useThemeStore();
   const [commentText, setCommentText] = useState("");
@@ -65,8 +78,21 @@ export function CommentsBottomSheet({ visible, onClose }: CommentsBottomSheetPro
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={styles.overlay}>
-        <View style={[styles.sheetContainer, { backgroundColor: colors.bgCard, borderColor: colors.borderColor, borderWidth: 1 }]}>
+      <KeyboardAvoidingView
+        style={styles.overlay}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+        <View
+          style={[
+            styles.sheetContainer,
+            {
+              backgroundColor: colors.bgCard,
+              borderColor: colors.borderColor,
+              borderWidth: 1,
+              paddingBottom: Math.max(insets.bottom, 16),
+            },
+          ]}
+        >
           {/* HEADER */}
           <View style={[styles.header, { borderBottomColor: colors.borderColor }]}>
             <View style={[styles.dragPill, { backgroundColor: colors.borderColor }]} />
@@ -141,7 +167,7 @@ export function CommentsBottomSheet({ visible, onClose }: CommentsBottomSheetPro
             )}
           </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

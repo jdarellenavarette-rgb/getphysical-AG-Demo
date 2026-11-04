@@ -1,5 +1,16 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView, TextInput, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Modal,
+  ScrollView,
+  TextInput,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 import { X, Sparkles, Calculator, Check, ArrowRight, HeartPulse, Scale, Flame } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import { useTrackingStore, type UserBiometrics } from "../../store/trackingStore";
@@ -62,7 +73,10 @@ export function NasmBiometricsModal({ visible, onClose }: NasmBiometricsModalPro
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={styles.overlay}>
+      <KeyboardAvoidingView
+        style={styles.overlay}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
         <View style={[styles.sheetCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
           <View style={styles.header}>
             <View style={styles.badgeRow}>
@@ -72,7 +86,7 @@ export function NasmBiometricsModal({ visible, onClose }: NasmBiometricsModalPro
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}><X size={20} color={colors.textMuted} /></TouchableOpacity>
           </View>
 
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
             {/* COMPUTED MACRO TARGET HUD */}
             <View style={[styles.targetHud, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}>
               <Text style={[styles.hudTitle, { color: colors.textMuted }]}>RECOMMENDED ATHLETIC TARGET</Text>
@@ -137,7 +151,7 @@ export function NasmBiometricsModal({ visible, onClose }: NasmBiometricsModalPro
             </TouchableOpacity>
           </ScrollView>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

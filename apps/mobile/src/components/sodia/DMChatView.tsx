@@ -1,11 +1,22 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Image, ScrollView } from "react-native";
+import React, { useState, useRef, useEffect } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Image,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowLeft, Send, Paperclip, Flame, Award, Briefcase, CheckCircle2, Radio, Tag } from "lucide-react-native";
+import { ArrowLeft, Send, Paperclip, Radio, Tag } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import { useCrmMessagingStore } from "../../store/crmMessagingStore";
 import type { DMThread } from "./InboxView";
 import { chatStyles as styles } from "./DMChatView.styles";
+import { PRStampBubble, CoachTelemetryBubble, B2BHandshakeCard } from "./DMChatBubbleDecorators";
 
 interface DMChatViewProps {
   thread: DMThread;
@@ -17,21 +28,41 @@ export function DMChatView({ thread, onBack }: DMChatViewProps) {
   const { colors, themeMode } = useThemeStore();
   const { threadMessages, sendMessage } = useCrmMessagingStore();
 
+  const scrollViewRef = useRef<any>(null);
   const [inputText, setInputText] = useState("");
-  const [hasCongratulated, setHasCongratulated] = useState(false);
-  const [hasAcceptedHandshake, setHasAcceptedHandshake] = useState(false);
-  const [showRawData, setShowRawData] = useState(false);
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
 
   const messages = threadMessages[thread.id] || [];
+
+  useEffect(() => {
+    const showEv = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEv = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+
+    const showSub = Keyboard.addListener(showEv, () => {
+      setIsKeyboardOpen(true);
+      setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
+    });
+    const hideSub = Keyboard.addListener(hideEv, () => setIsKeyboardOpen(false));
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   const handleSendMessage = () => {
     if (!inputText.trim()) return;
     sendMessage(thread.id, inputText.trim());
     setInputText("");
+    setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 150);
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
+    <KeyboardAvoidingView
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+    >
       {/* HEADER WITH SAFE NOTCH INSET */}
       <View
         style={[
@@ -59,54 +90,25 @@ export function DMChatView({ thread, onBack }: DMChatViewProps) {
       </View>
 
       {/* CHAT MESSAGES */}
-      <ScrollView style={styles.chatViewport} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        ref={scrollViewRef}
+        style={styles.chatViewport}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+        contentContainerStyle={{ paddingBottom: 16 }}
+      >
         {/* DEFAULT GREETING */}
         <View style={[styles.incomingBubble, { backgroundColor: colors.bgCard, borderColor: colors.borderColor, borderWidth: 1 }]}>
           <Text style={[styles.bubbleText, { color: colors.textPrimary }]}>Hey Darelle! Great training session this morning.</Text>
           <Text style={[styles.bubbleTime, { color: colors.textMuted }]}>08:30 AM</Text>
         </View>
 
-        {/* INTERACTIVE TRACKER STAMP BUBBLE (Fitness Native) */}
-        <View style={[styles.outgoingBubble, { backgroundColor: themeMode === "light" ? "#E11D48" : "#27272A" }]}>
-          <View style={[styles.stampCard, { backgroundColor: themeMode === "light" ? "rgba(0,0,0,0.15)" : "#121215" }]}>
-            <View style={styles.stampHeader}>
-              <Award size={14} color="#10B981" />
-              <Text style={styles.stampType}>LIFT STAMP • PR VERIFIED</Text>
-            </View>
-            <Text style={styles.stampMetric}>225 KG</Text>
-            <Text style={[styles.stampDesc, themeMode === "light" && { color: "#FAFAFA" }]}>Conventional Deadlift • 1 Rep @ RPE 9.5</Text>
-            <TouchableOpacity
-              onPress={() => setHasCongratulated((prev) => !prev)}
-              style={[styles.congratulateBtn, hasCongratulated && styles.congratulatedActive]}
-            >
-              <Flame size={14} color={hasCongratulated ? "#FFFFFF" : "#F97316"} />
-              <Text style={[styles.congratulateText, hasCongratulated && styles.congratulateTextActive]}>
-                {hasCongratulated ? "Fired Up! (1)" : "Congratulate"}
-              </Text>
-            </TouchableOpacity>
-          </View>
-          <Text style={[styles.bubbleTime, themeMode === "light" && { color: "rgba(255,255,255,0.7)" }]}>08:32 AM</Text>
-        </View>
+        {/* INTERACTIVE TRACKER STAMP BUBBLE */}
+        <PRStampBubble themeMode={themeMode} />
 
         {/* COACH RAW DATA DEEP LINK BUBBLE */}
-        {thread.type === "coach" && (
-          <View style={[styles.incomingBubble, { backgroundColor: colors.bgCard, borderColor: colors.borderColor, borderWidth: 1 }]}>
-            <Text style={[styles.bubbleText, { color: colors.textPrimary }]}>I reviewed your last set bar-speed curve.</Text>
-            <TouchableOpacity onPress={() => setShowRawData(!showRawData)} style={[styles.rawDeepLinkBtn, { backgroundColor: colors.bgCardSecondary }]}>
-              <Text style={styles.rawDeepLinkText}>
-                {showRawData ? "📊 Hide Telemetry" : "📊 View Raw Data (Sets & RPE Breakdown)"}
-              </Text>
-            </TouchableOpacity>
-            {showRawData && (
-              <View style={{ marginTop: 8, padding: 8, backgroundColor: colors.bgCardSecondary, borderRadius: 8 }}>
-                <Text style={{ color: "#10B981", fontSize: 11, fontWeight: "700" }}>Set 1: 140kg @ 0.62 m/s (RPE 7.0)</Text>
-                <Text style={{ color: "#F59E0B", fontSize: 11, fontWeight: "700" }}>Set 2: 180kg @ 0.44 m/s (RPE 8.5)</Text>
-                <Text style={{ color: "#E11D48", fontSize: 11, fontWeight: "700" }}>Set 3: 225kg @ 0.19 m/s (RPE 9.5 PR)</Text>
-              </View>
-            )}
-            <Text style={[styles.bubbleTime, { color: colors.textMuted }]}>08:35 AM</Text>
-          </View>
-        )}
+        {thread.type === "coach" && <CoachTelemetryBubble colors={colors} />}
 
         {/* DYNAMIC MESSAGES FROM CRM STORE */}
         {messages.map((msg) => {
@@ -154,35 +156,20 @@ export function DMChatView({ thread, onBack }: DMChatViewProps) {
         })}
 
         {/* B2B STAFF HANDSHAKE CARD */}
-        {thread.type === "handshake" && (
-          <View style={[styles.handshakeCard, { backgroundColor: colors.bgCard }]}>
-            <View style={styles.handshakeHeader}>
-              <Briefcase size={16} color="#E11D48" />
-              <Text style={styles.handshakeTitle}>OFFICIAL B2B STAFF INVITATION</Text>
-            </View>
-            <Text style={[styles.handshakeBody, { color: colors.textSecondary }]}>
-              Metro Core Arena has invited you to join their frontline team as Front-Desk Staff & POS Operator.
-            </Text>
-            <TouchableOpacity
-              onPress={() => setHasAcceptedHandshake(true)}
-              disabled={hasAcceptedHandshake}
-              style={[styles.handshakeBtn, hasAcceptedHandshake && styles.handshakeBtnSuccess]}
-            >
-              {hasAcceptedHandshake ? (
-                <>
-                  <CheckCircle2 size={16} color="#10B981" />
-                  <Text style={styles.handshakeSuccessText}>Handshake Accepted • Role Added</Text>
-                </>
-              ) : (
-                <Text style={styles.handshakeBtnText}>Review & Accept Role</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        )}
+        {thread.type === "handshake" && <B2BHandshakeCard colors={colors} />}
       </ScrollView>
 
       {/* INPUT BAR */}
-      <View style={[styles.inputContainer, { backgroundColor: colors.bgHeader, borderTopColor: colors.borderColor }]}>
+      <View
+        style={[
+          styles.inputContainer,
+          {
+            backgroundColor: colors.bgHeader,
+            borderTopColor: colors.borderColor,
+            paddingBottom: isKeyboardOpen ? 10 : Math.max(insets.bottom, 12),
+          },
+        ]}
+      >
         <TouchableOpacity
           onPress={() => setInputText((p) => (p ? `${p} ` : "") + "📎 [225kg PR Verified]")}
           style={styles.attachBtn}
@@ -201,6 +188,6 @@ export function DMChatView({ thread, onBack }: DMChatViewProps) {
           <Send size={18} color="#FAFAFA" />
         </TouchableOpacity>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }

@@ -117,7 +117,7 @@ export function LiftTracker() {
   }
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.bgScreen }]} showsVerticalScrollIndicator={false}>
+    <ScrollView style={[styles.container, { backgroundColor: colors.bgScreen }]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
       <View style={styles.header}>
         <View style={{ flex: 1 }}>
           <TextInput style={[styles.titleInput, { color: colors.textPrimary }]} value={workoutTitle} onChangeText={setWorkoutTitle} />

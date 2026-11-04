@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, Image, StyleSheet, Modal, TextInput, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  StyleSheet,
+  Modal,
+  TextInput,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft, Camera, Heart, MessageCircle, Send, CheckCircle2, Sparkles } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
@@ -89,7 +100,10 @@ export function StoryViewerModal({ visible, onClose, onTapLocationTag, onOpenCom
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <View style={styles.overlay}>
+      <KeyboardAvoidingView
+        style={styles.overlay}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
         <Image source={{ uri: current.mediaUrl }} style={styles.bgMedia} resizeMode="cover" />
         <View style={styles.darkGradientOverlay} />
 
@@ -154,7 +168,7 @@ export function StoryViewerModal({ visible, onClose, onTapLocationTag, onOpenCom
             ))}
           </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

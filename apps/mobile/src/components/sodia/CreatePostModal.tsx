@@ -1,5 +1,16 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Modal, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Image,
+  StyleSheet,
+  Modal,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 import { X, MapPin, Award, Check } from "lucide-react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useEcosystemStore } from "../../store/ecosystemStore";
@@ -99,7 +110,10 @@ export function CreatePostModal({
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={styles.overlay}>
+      <KeyboardAvoidingView
+        style={styles.overlay}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
         <View style={[styles.container, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
           <View style={[styles.header, { borderBottomColor: colors.borderColor }]}>
             <TouchableOpacity onPress={onClose} style={styles.cancelBtn}><Text style={[styles.cancelText, { color: colors.textMuted }]}>Cancel</Text></TouchableOpacity>
@@ -119,7 +133,7 @@ export function CreatePostModal({
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={styles.formContent} showsVerticalScrollIndicator={false}>
+          <ScrollView style={styles.formContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
             <View style={styles.authorRow}>
               <Image source={{ uri: profile.avatar_url ?? "" }} style={styles.avatar} />
               <View style={styles.authorMeta}>
@@ -186,7 +200,7 @@ export function CreatePostModal({
             )}
           </ScrollView>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

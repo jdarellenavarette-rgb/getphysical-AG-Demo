@@ -1,5 +1,16 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Modal, TextInput, Alert, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Modal,
+  TextInput,
+  Alert,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 import { X, Send, Ticket, User, MessageSquare, CheckCircle2 } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import type { PassRow } from "sodia-core";
@@ -37,7 +48,10 @@ export function GiftPassModal({ visible, passes, onClose, onSendPass }: GiftPass
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={styles.overlay}>
+      <KeyboardAvoidingView
+        style={styles.overlay}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
         <View style={[styles.sheetCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
           {/* HEADER */}
           <View style={styles.header}>
@@ -50,7 +64,7 @@ export function GiftPassModal({ visible, passes, onClose, onSendPass }: GiftPass
             </TouchableOpacity>
           </View>
 
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
             {/* SELECT PASS */}
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>1. Select Pass to Gift</Text>
             <View style={styles.passList}>
@@ -112,7 +126,7 @@ export function GiftPassModal({ visible, passes, onClose, onSendPass }: GiftPass
             </TouchableOpacity>
           </ScrollView>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

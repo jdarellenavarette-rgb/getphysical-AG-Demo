@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { Dumbbell, Footprints, Apple, TrendingUp } from "lucide-react-native";
+import { Dumbbell, Footprints, Apple, TrendingUp, Zap } from "lucide-react-native";
 import { LiftTracker } from "./LiftTracker";
 import { MoveTrackerView } from "./MoveTrackerView";
 import { FoodTrackerView } from "./FoodTrackerView";
 import { JourneyView } from "./JourneyView";
+import { NasmBiometricsModal } from "../profile/NasmBiometricsModal";
 import { useThemeStore } from "../../theme/theme";
 import { useTrackingStore } from "../../store/trackingStore";
 
@@ -12,8 +13,9 @@ type TrackSegment = "lift" | "move" | "food" | "journey";
 
 export function TrackHub() {
   const [activeSegment, setActiveSegment] = useState<TrackSegment>("lift");
+  const [isNasmOpen, setIsNasmOpen] = useState(false);
   const { colors } = useThemeStore();
-  const { liftSessions, moveActivities } = useTrackingStore();
+  const { liftSessions, moveActivities, dailyTargets } = useTrackingStore();
 
   const totalWorkouts = liftSessions.length + moveActivities.length;
   const totalBurned =
@@ -37,6 +39,13 @@ export function TrackHub() {
           <Text style={[styles.summaryVal, { color: colors.textPrimary }]}>{totalGpsKm} km</Text>
           <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>GPS Move</Text>
         </View>
+        <TouchableOpacity onPress={() => setIsNasmOpen(true)} style={styles.summaryItem}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+            <Text style={[styles.summaryVal, { color: colors.textPrimary }]}>{dailyTargets.calories}</Text>
+            <Zap size={11} color="#E11D48" />
+          </View>
+          <Text style={[styles.summaryLabel, { color: "#E11D48", fontWeight: "700" }]}>NASM Goal</Text>
+        </TouchableOpacity>
       </View>
 
       {/* 4-SEGMENT DOCK (LIFT | MOVE | FOOD | JOURNEY) */}
@@ -89,6 +98,7 @@ export function TrackHub() {
         {activeSegment === "food" && <FoodTrackerView />}
         {activeSegment === "journey" && <JourneyView />}
       </View>
+      <NasmBiometricsModal visible={isNasmOpen} onClose={() => setIsNasmOpen(false)} />
     </View>
   );
 }

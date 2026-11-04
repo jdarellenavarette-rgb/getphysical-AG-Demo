@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Modal, TextInput,
 import { Check, Plus, Award, Flame } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import { useEcosystemStore } from "../../store/ecosystemStore";
-import { useTrackingStore, type LoggedSet } from "../../store/trackingStore";
+import { useTrackingStore, type LoggedSet, type ProgramExercise } from "../../store/trackingStore";
 import { LiftLaunchpadView } from "./LiftLaunchpadView";
 
 export function LiftTracker() {
@@ -49,11 +49,9 @@ export function LiftTracker() {
   const adjustWeight = (idx: number, delta: number) => {
     setSets((prev) => prev.map((s, i) => (i === idx ? { ...s, weight: Math.max(0, s.weight + delta) } : s)));
   };
-
   const adjustReps = (idx: number, delta: number) => {
     setSets((prev) => prev.map((s, i) => (i === idx ? { ...s, reps: Math.max(1, s.reps + delta) } : s)));
   };
-
   const addSet = () => {
     const last = sets[sets.length - 1];
     setSets((prev) => [...prev, { setNumber: prev.length + 1, weight: last?.weight ?? 100, reps: last?.reps ?? 5, isCompleted: false }]);
@@ -92,12 +90,27 @@ export function LiftTracker() {
     Alert.alert("Workout Saved!", "Your lift session and volume have been recorded to your athletic memories.");
   };
 
+  const handleStartWorkout = (title?: string, exercises?: ProgramExercise[]) => {
+    if (title) setWorkoutTitle(title);
+    if (exercises && exercises.length > 0 && exercises[0]) {
+      const first = exercises[0];
+      setActiveExerciseName(first.name);
+      setSets(Array.from({ length: first.sets }, (_, i) => ({
+        setNumber: i + 1,
+        weight: first.weightKg,
+        reps: first.reps,
+        isCompleted: false,
+      })));
+    }
+    setIsTraining(true);
+  };
+
   if (!isTraining) {
     return (
       <LiftLaunchpadView
         workoutTitle={workoutTitle}
         setWorkoutTitle={setWorkoutTitle}
-        onStartTraining={() => setIsTraining(true)}
+        onStartTraining={handleStartWorkout}
         liftSessions={liftSessions}
       />
     );

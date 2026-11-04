@@ -7,6 +7,8 @@ import { ReceiptModal } from "./ReceiptModal";
 import { StatementOfAccountModal } from "./StatementOfAccountModal";
 import { TurnstileQRModal } from "./TurnstileQRModal";
 import { GiftPassModal } from "./GiftPassModal";
+import { AddMembershipChoiceModal } from "./AddMembershipChoiceModal";
+import { ClubQRScannerModal } from "./ClubQRScannerModal";
 import { useThemeStore } from "../../theme/theme";
 import type { PassRow } from "sodia-core";
 
@@ -21,6 +23,8 @@ export function CardsHub({ onBrowseVenues }: CardsHubProps) {
   const [isSoaOpen, setIsSoaOpen] = useState(false);
   const [isQrOpen, setIsQrOpen] = useState(false);
   const [isGiftOpen, setIsGiftOpen] = useState(false);
+  const [isAddMembershipChoiceOpen, setIsAddMembershipChoiceOpen] = useState(false);
+  const [isClubScannerOpen, setIsClubScannerOpen] = useState(false);
   const [showFullCardNum, setShowFullCardNum] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -57,21 +61,19 @@ export function CardsHub({ onBrowseVenues }: CardsHubProps) {
             <Text style={[styles.emptyCardDesc, { color: colors.textSecondary }]}>
               Add a day pass, court booking, or VIP membership to unlock turnstiles with 60s dynamic TOTP.
             </Text>
-            {onBrowseVenues && (
-              <TouchableOpacity onPress={onBrowseVenues} style={styles.getPassButton}>
-                <Plus size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
-                <Text style={styles.getPassButtonText}>Browse Venues</Text>
-              </TouchableOpacity>
-            )}
+            <TouchableOpacity onPress={() => setIsAddMembershipChoiceOpen(true)} style={styles.getPassButton}>
+              <Plus size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+              <Text style={styles.getPassButtonText}>+ Add Membership</Text>
+            </TouchableOpacity>
           </View>
         </View>
       )}
 
       {/* QUICK ACTION PILLS (ADD, SEND/GIFT, PAY) */}
       <View style={styles.actionPillsRow}>
-        <TouchableOpacity onPress={onBrowseVenues} style={[styles.actionPill, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}>
+        <TouchableOpacity onPress={() => setIsAddMembershipChoiceOpen(true)} style={[styles.actionPill, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}>
           <Plus size={16} color="#EC4899" />
-          <Text style={[styles.actionPillText, { color: colors.textPrimary }]}>Add +</Text>
+          <Text style={[styles.actionPillText, { color: colors.textPrimary }]}>+ Add</Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => setIsGiftOpen(true)} style={[styles.actionPill, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}>
@@ -152,6 +154,13 @@ export function CardsHub({ onBrowseVenues }: CardsHubProps) {
       <StatementOfAccountModal visible={isSoaOpen} passes={passes} onClose={() => setIsSoaOpen(false)} onSelectPass={(p) => { setIsSoaOpen(false); setSelectedPassForReceipt(p); }} />
       <TurnstileQRModal visible={isQrOpen} onClose={() => setIsQrOpen(false)} facilityName="Metro Core Arena" />
       <GiftPassModal visible={isGiftOpen} passes={passes} onClose={() => setIsGiftOpen(false)} onSendPass={(passId, rec, msg) => { setIsGiftOpen(false); }} />
+      <AddMembershipChoiceModal
+        visible={isAddMembershipChoiceOpen}
+        onClose={() => setIsAddMembershipChoiceOpen(false)}
+        onSelectBrowse={() => onBrowseVenues?.()}
+        onSelectScan={() => setIsClubScannerOpen(true)}
+      />
+      <ClubQRScannerModal visible={isClubScannerOpen} onClose={() => setIsClubScannerOpen(false)} />
     </ScrollView>
   );
 }

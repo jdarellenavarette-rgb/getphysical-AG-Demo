@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView, Modal } from "react-native";
-import { Award, Shield, Eye, CheckCircle2, MessageSquare, UserPlus, ArrowLeft, Grid, X, Heart } from "lucide-react-native";
+import { Award, Shield, Eye, CheckCircle2, MessageSquare, UserPlus, ArrowLeft, Grid, X, Activity, ChevronRight } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { useThemeStore } from "../../theme/theme";
+import { useTrackingStore } from "../../store/trackingStore";
+import { NasmBiometricsModal } from "./NasmBiometricsModal";
 
 interface ProfileHubProps {
   onBack?: () => void;
@@ -14,9 +16,11 @@ interface ProfileHubProps {
 export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
   const { profile, passes } = useEcosystemStore();
   const { colors } = useThemeStore();
+  const { userBiometrics } = useTrackingStore();
   const [activeTab, setActiveTab] = useState<"grid" | "trophy" | "locker">("grid");
   const [isFollowing, setIsFollowing] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+  const [isNasmOpen, setIsNasmOpen] = useState(false);
 
   const highlights = [
     { id: "h1", title: "225kg PR", image: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=200&q=80" },
@@ -82,6 +86,21 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
           <View style={styles.metricItem}><Text style={[styles.metricVal, { color: colors.textPrimary }]}>342</Text><Text style={styles.metricLabel}>Workouts</Text></View>
           <View style={styles.metricItem}><Text style={[styles.metricVal, { color: colors.textPrimary }]}>18</Text><Text style={styles.metricLabel}>PR Stamps</Text></View>
         </View>
+
+        <TouchableOpacity onPress={() => setIsNasmOpen(true)} style={[styles.nasmBanner, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
+          <View style={styles.nasmBannerLeft}>
+            <Activity size={15} color="#E11D48" />
+            <View>
+              <Text style={[styles.nasmBannerTitle, { color: colors.textPrimary }]}>
+                NASM Biometrics: {userBiometrics.heightCm}cm • {userBiometrics.weightKg}kg • {userBiometrics.goal.toUpperCase().replace("_", " ")}
+              </Text>
+              <Text style={[styles.nasmBannerSub, { color: colors.textMuted }]}>
+                BMR {userBiometrics.bmr} • TDEE {userBiometrics.tdee} kcal • BMI {userBiometrics.bmi}
+              </Text>
+            </View>
+          </View>
+          <ChevronRight size={15} color="#E11D48" />
+        </TouchableOpacity>
 
         <View style={styles.highlightsTray}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.highlightsScroll}>
@@ -161,6 +180,7 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
           {selectedPhoto && <Image source={{ uri: selectedPhoto }} style={styles.fullPhoto} resizeMode="contain" />}
         </View>
       </Modal>
+      <NasmBiometricsModal visible={isNasmOpen} onClose={() => setIsNasmOpen(false)} />
     </ScrollView>
   );
 }
@@ -192,6 +212,10 @@ const styles = StyleSheet.create({
   metricItem: { alignItems: "center" },
   metricVal: { fontSize: 18, fontWeight: "900" },
   metricLabel: { color: "#71717A", fontSize: 10, fontWeight: "700", marginTop: 2 },
+  nasmBanner: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderRadius: 12, padding: 12, marginTop: 10, borderWidth: 1 },
+  nasmBannerLeft: { flexDirection: "row", alignItems: "center", gap: 10, flex: 1 },
+  nasmBannerTitle: { fontSize: 12, fontWeight: "800" },
+  nasmBannerSub: { fontSize: 10, marginTop: 2 },
   highlightsTray: { marginVertical: 16 },
   highlightsScroll: { gap: 14 },
   highlightItem: { alignItems: "center", width: 64 },

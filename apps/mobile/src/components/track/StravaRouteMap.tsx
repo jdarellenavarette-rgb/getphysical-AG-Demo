@@ -24,9 +24,11 @@ export function StravaRouteMap({ routeCoords, currentPos, isTracking }: StravaRo
     webViewRef.current?.injectJavaScript(js);
   }, [currentPos]);
 
-  const tileUrl = isLight
-    ? "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-    : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+  const effectiveKey = process.env.EXPO_PUBLIC_MAPS_API_KEY || "d797ff206eda4d1a804ab31d002f0f41";
+  const primaryTileUrl = isLight
+    ? `https://maps.geoapify.com/v1/tile/osm-bright-smooth/{z}/{x}/{y}.png?apiKey=${effectiveKey}`
+    : `https://maps.geoapify.com/v1/tile/dark-matter-purple-roads/{z}/{x}/{y}.png?apiKey=${effectiveKey}`;
+  const fallbackTileUrl = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 
   const initialCoordsJson = JSON.stringify(routeCoords);
   const initialPosJson = JSON.stringify(initialPosRef.current);
@@ -64,10 +66,15 @@ export function StravaRouteMap({ routeCoords, currentPos, isTracking }: StravaRo
     var initialCoords = ${initialCoordsJson};
     var map = L.map('map', { zoomControl: false, attributionControl: false }).setView(startPos, 16);
 
-    L.tileLayer('${tileUrl}', {
-      subdomains: 'abcd',
-      maxZoom: 19
-    }).addTo(map);
+    var primaryLayer = L.tileLayer('${primaryTileUrl}', { maxZoom: 19 });
+    var fallbackLayer = L.tileLayer('${fallbackTileUrl}', { maxZoom: 19 });
+
+    primaryLayer.on('tileerror', function() {
+      if (!map.hasLayer(fallbackLayer)) {
+        fallbackLayer.addTo(map);
+      }
+    });
+    primaryLayer.addTo(map);
 
     var liveIcon = L.divIcon({ className: 'live-beacon', iconSize: [18, 18], iconAnchor: [9, 9] });
     var startIcon = L.divIcon({ className: 'start-beacon', iconSize: [14, 14], iconAnchor: [7, 7] });

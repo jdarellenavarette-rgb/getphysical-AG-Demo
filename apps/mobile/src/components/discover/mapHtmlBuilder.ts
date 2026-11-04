@@ -27,9 +27,7 @@ export function buildLeafletMapHtml({
     ? `https://maps.geoapify.com/v1/tile/osm-bright-smooth/{z}/{x}/{y}.png?apiKey=${effectiveKey}`
     : `https://maps.geoapify.com/v1/tile/dark-matter-purple-roads/{z}/{x}/{y}.png?apiKey=${effectiveKey}`;
 
-  const fallbackTileUrl = isLight
-    ? "https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png"
-    : "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png";
+  const fallbackTileUrl = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 
   const venuesJson = JSON.stringify(
     facilities.map((f) => ({

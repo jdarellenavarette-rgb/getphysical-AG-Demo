@@ -97,12 +97,16 @@ export async function askOracleAiFoodGuru(
   userProvidedApiKey?: string
 ): Promise<OracleAnalysisResult> {
   const query = userPrompt.trim();
-  const geminiKey = (userProvidedApiKey || process.env.EXPO_PUBLIC_GEMINI_API_KEY || "").trim();
+  const geminiKey = (
+    userProvidedApiKey ||
+    process.env.EXPO_PUBLIC_GEMINI_API_KEY ||
+    ""
+  ).trim();
 
-  // 1. CALL GOOGLE GEMINI 2.0 / 1.5 FLASH API
+  // 1. CALL GOOGLE GEMINI 3.5 FLASH-LITE / 3.8 FLASH API
   if (geminiKey) {
     try {
-      const models = ["gemini-2.0-flash", "gemini-1.5-flash"];
+      const models = ["gemini-3.5-flash-lite", "gemini-3.8-flash", "gemini-3.5-flash"];
       for (const model of models) {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`;
         const systemPrompt = `You are Oracle, the high-performance AI Sports Nutritionist for GetPhysical.

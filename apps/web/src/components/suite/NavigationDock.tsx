@@ -1,17 +1,16 @@
 'use client';
 
 import React from 'react';
-import { Home, Calendar, FileText, BarChart2, Settings, Bell, Shield, Smartphone } from 'lucide-react';
+import { Home, Calendar, FileText, BarChart2, Settings, Bell } from 'lucide-react';
 
 export type NavTab = 'DASHBOARD' | 'SPATIAL' | 'BILLING' | 'TRIAGE' | 'SETTINGS';
 
 interface NavigationDockProps {
   activeTab: NavTab;
   onSelectTab: (tab: NavTab) => void;
-  onOpenMobileApp?: () => void;
 }
 
-export function NavigationDock({ activeTab, onSelectTab, onOpenMobileApp }: NavigationDockProps) {
+export function NavigationDock({ activeTab, onSelectTab }: NavigationDockProps) {
   const navItems: { id: NavTab; icon: any; label: string }[] = [
     { id: 'DASHBOARD', icon: Home, label: 'Dashboard' },
     { id: 'SPATIAL', icon: Calendar, label: 'Spatial Schedule' },
@@ -109,29 +108,8 @@ export function NavigationDock({ activeTab, onSelectTab, onOpenMobileApp }: Navi
         </div>
       </div>
 
-      {/* Bottom Actions: Notifications & Mobile App Toggle */}
+      {/* Bottom Actions: Notifications */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}>
-        {onOpenMobileApp && (
-          <button
-            onClick={onOpenMobileApp}
-            title="Switch to Athlete Mobile Preview"
-            style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '12px',
-              backgroundColor: 'rgba(236, 72, 153, 0.1)',
-              color: '#EC4899',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              border: '1px solid rgba(236, 72, 153, 0.25)',
-              cursor: 'pointer',
-            }}
-          >
-            <Smartphone size={18} />
-          </button>
-        )}
-
         <button
           title="Notifications & Turnstile Alerts"
           style={{

@@ -10,11 +10,7 @@ import { TriageDashboard } from '../dashboard/TriageDashboard';
 import { FloatGateModal, ShiftSession } from '../daily-dash/FloatGateModal';
 import { Building2, ShieldCheck, Dumbbell, Compass, Lock, Unlock, Activity, ExternalLink, Zap, UserCheck, Trophy, Info } from 'lucide-react';
 
-interface BusinessSuiteShellProps {
-  onOpenMobileApp?: () => void;
-}
-
-export function BusinessSuiteShell({ onOpenMobileApp }: BusinessSuiteShellProps) {
+export function BusinessSuiteShell() {
   const [suiteMode, setSuiteMode] = useState<SuiteMode>('GYMDASH');
   const [activeTab, setActiveTab] = useState<NavTab>('DASHBOARD');
 
@@ -95,7 +91,6 @@ export function BusinessSuiteShell({ onOpenMobileApp }: BusinessSuiteShellProps)
       <NavigationDock
         activeTab={activeTab}
         onSelectTab={setActiveTab}
-        onOpenMobileApp={onOpenMobileApp}
       />
 
       {/* 2. Main Workstation Area */}

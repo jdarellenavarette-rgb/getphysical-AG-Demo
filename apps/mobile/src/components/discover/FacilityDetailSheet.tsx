@@ -28,6 +28,8 @@ export function FacilityDetailSheet({
   onSelectPass,
 }: FacilityDetailSheetProps) {
   const { colors } = useThemeStore();
+  const [selectedPassId, setSelectedPassId] = useState<string>("");
+
   if (!visible || !facility) return null;
 
   const isGym = facility.registry === "A";
@@ -44,7 +46,6 @@ export function FacilityDetailSheet({
         { id: "court_tournament", title: "Sunset Open Tournament Pass", subtitle: "Official bracket roster entry • Prize pool eligible", pricePhp: 500, billingKind: "one_time_pass", splitNote: "Direct bracket prize pool escrow" },
       ];
 
-  const [selectedPassId, setSelectedPassId] = useState<string>(passOptions[0]?.id ?? "");
   const activePass = passOptions.find((p) => p.id === selectedPassId) ?? passOptions[0];
 
   const amenities = isGym

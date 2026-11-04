@@ -102,7 +102,9 @@ export interface TrackingState {
   savedPrograms: TrainingProgram[];
   userBiometrics: UserBiometrics;
   hydrationLiters: number;
+  geminiApiKey: string;
   dailyTargets: { calories: number; protein: number; carbs: number; fat: number; hydration: number };
+  setGeminiApiKey: (key: string) => void;
   saveLiftSession: (session: Omit<LiftSession, "id" | "date">) => LiftSession;
   saveMoveActivity: (act: Omit<MoveActivity, "id" | "date">) => MoveActivity;
   saveFoodMeal: (meal: Omit<LoggedMeal, "id" | "date">) => LoggedMeal;
@@ -205,7 +207,10 @@ export const useTrackingStore = create<TrackingState>((set) => ({
   savedPrograms: INITIAL_PROGRAMS,
   userBiometrics: INITIAL_BIOMETRICS,
   hydrationLiters: 1.75,
+  geminiApiKey: process.env.EXPO_PUBLIC_GEMINI_API_KEY || "",
   dailyTargets: { calories: 2650, protein: 180, carbs: 280, fat: 72, hydration: 3.0 },
+
+  setGeminiApiKey: (key) => set({ geminiApiKey: key.trim() }),
 
   saveLiftSession: (data) => {
     const s: LiftSession = { ...data, id: `lift_${Date.now()}`, date: new Date().toISOString() };

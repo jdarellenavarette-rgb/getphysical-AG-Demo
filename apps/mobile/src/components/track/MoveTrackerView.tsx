@@ -24,49 +24,61 @@ export function MoveTrackerView() {
   const [isFinished, setIsFinished] = useState(false);
   const [sharedToFeed, setSharedToFeed] = useState(false);
   const bearingRef = useRef<number>(0.8);
+  const currentCoordsRef = useRef<[number, number]>(currentCoords);
+
+  useEffect(() => {
+    currentCoordsRef.current = currentCoords;
+  }, [currentCoords]);
 
   useEffect(() => {
     requestAndFetchUserLocation().then((loc) => {
       const start: [number, number] = [loc.latitude, loc.longitude];
       setCurrentCoords(start);
+      currentCoordsRef.current = start;
       setRoute([start]);
     });
   }, []);
 
-  // GPS engine: Hardware GPS watch + dead-reckoning forward trail generator
+  // 1. Dedicated Stopwatch Timer: Always increments reliably every second when active
+  useEffect(() => {
+    let t: any = null;
+    if (isActive) {
+      t = setInterval(() => {
+        setSeconds((s) => s + 1);
+      }, 1000);
+    }
+    return () => clearInterval(t);
+  }, [isActive]);
+
+  // 2. GPS & Route Progression Engine (depends only on isActive & selectedSport)
   useEffect(() => {
     let timer: any = null;
     let locSub: Location.LocationSubscription | null = null;
 
     if (isActive) {
       Location.watchPositionAsync(
-        { accuracy: Location.Accuracy.BestForNavigation, timeInterval: 1000, distanceInterval: 1 },
+        { accuracy: Location.Accuracy.Balanced, timeInterval: 1000, distanceInterval: 1 },
         (loc) => {
           const lat = loc.coords.latitude;
           const lng = loc.coords.longitude;
-          setCurrentCoords([lat, lng]);
-          setRoute((prev) => {
-            const last = prev[prev.length - 1];
-            if (last) {
-              const movedKm = calculateHaversineKm(last[0], last[1], lat, lng);
-              if (movedKm > 0.001) {
-                setDistanceKm((d) => +(d + movedKm).toFixed(3));
-                return [...prev, [lat, lng]];
-              }
-            }
-            return prev;
-          });
+          const last = currentCoordsRef.current;
+          const movedKm = calculateHaversineKm(last[0], last[1], lat, lng);
+          if (movedKm > 0.001) {
+            const nextPt: [number, number] = [lat, lng];
+            setCurrentCoords(nextPt);
+            setRoute((prev) => [...prev, nextPt]);
+            setDistanceKm((d) => +(d + movedKm).toFixed(3));
+          }
         }
       ).then((sub) => { locSub = sub; }).catch(() => {});
 
       timer = setInterval(() => {
-        setSeconds((prev) => prev + 1);
         const speedMps = selectedSport === "cycling" ? 6.2 : selectedSport === "walk" ? 1.4 : 3.1;
         const deltaKm = speedMps / 1000;
         setDistanceKm((d) => +(d + deltaKm).toFixed(3));
 
         setRoute((prev) => {
-          const last = prev[prev.length - 1] || currentCoords;
+          const last = prev[prev.length - 1] || currentCoordsRef.current;
           bearingRef.current += (Math.random() - 0.48) * 0.12;
           const dLat = (deltaKm / 111) * Math.cos(bearingRef.current);
           const dLng = (deltaKm / (111 * Math.cos((last[0] * Math.PI) / 180))) * Math.sin(bearingRef.current);
@@ -76,8 +88,11 @@ export function MoveTrackerView() {
         });
       }, 1000);
     }
-    return () => { clearInterval(timer); locSub?.remove(); };
-  }, [isActive, selectedSport, currentCoords]);
+    return () => {
+      clearInterval(timer);
+      locSub?.remove();
+    };
+  }, [isActive, selectedSport]);
 
   const formatTime = (sec: number) =>
     `${Math.floor(sec / 60).toString().padStart(2, "0")}:${(sec % 60).toString().padStart(2, "0")}`;

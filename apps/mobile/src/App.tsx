@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, StyleSheet, StatusBar, Modal } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { HeaderBar } from "./components/common/HeaderBar";
@@ -25,6 +25,8 @@ import { OrganizerMeetModal } from "./components/profile/OrganizerMeetModal";
 import { AthleteProfileModal, type AthleteProfileData } from "./components/profile/AthleteProfileModal";
 import { getAthleteProfile } from "./data/athleteRosterData";
 import { useEcosystemStore } from "./store/ecosystemStore";
+import { useCrmMessagingStore } from "./store/crmMessagingStore";
+import { CrmToastBanner } from "./components/common/CrmToastBanner";
 import { useThemeStore } from "./theme/theme";
 import type { FacilityRow } from "sodia-core";
 import { OpeningLoadingScreen } from "./components/common/OpeningLoadingScreen";
@@ -51,6 +53,11 @@ export default function App() {
 
   const { provisionPass, facilities } = useEcosystemStore();
   const { colors } = useThemeStore();
+  const { initRealtimeSubscription, threads } = useCrmMessagingStore();
+
+  useEffect(() => {
+    initRealtimeSubscription();
+  }, []);
 
   const handleCheckoutConfirm = (item: CheckoutRequest) => {
     provisionPass(item.facilityName, item.billingKind, item.baseAmountPhp, item.title, item.facilityId);
@@ -63,6 +70,14 @@ export default function App() {
       <StatusBar barStyle={colors.statusBarStyle} />
 
       {isOpeningLoading && <OpeningLoadingScreen onFinish={() => setIsOpeningLoading(false)} />}
+
+      <CrmToastBanner
+        onPressToast={(threadId) => {
+          const thread = threads.find((t) => t.id === threadId) || threads[0];
+          if (thread) setActiveChatThread(thread);
+          setIsInboxOpen(true);
+        }}
+      />
 
       <HeaderBar
         onOpenMenu={() => setIsMenuOpen(true)}

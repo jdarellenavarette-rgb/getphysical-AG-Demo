@@ -1,16 +1,18 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, Send, Sparkles, Bell, MessageSquare, Tag, Users, CheckCircle, Trophy, UserCheck } from 'lucide-react';
+import { X, Send, Sparkles, Bell, MessageSquare, Tag, Users, CheckCircle, Trophy, UserCheck, Radio } from 'lucide-react';
 import { SuiteMode } from './HeroPromoCard';
+import { getSodiaSupabaseClient, CrmBroadcast } from 'sodia-core';
 
 interface CreateMessageModalProps {
   visible: boolean;
   onClose: () => void;
   suiteMode: SuiteMode;
+  onBroadcastSent?: (broadcast: CrmBroadcast) => void;
 }
 
-export function CreateMessageModal({ visible, onClose, suiteMode }: CreateMessageModalProps) {
+export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSent }: CreateMessageModalProps) {
   const [audience, setAudience] = useState<'ALL' | 'SEGMENT_1' | 'SEGMENT_2' | 'SEGMENT_3'>('ALL');
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
@@ -83,12 +85,74 @@ export function CreateMessageModal({ visible, onClose, suiteMode }: CreateMessag
 
   const cfg = getModalConfig();
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!title.trim() || !body.trim()) {
       alert('Please provide a message headline and body.');
       return;
     }
+
+    const senderName =
+      suiteMode === 'GYMDASH'
+        ? 'Metro Core Arena (GymDash)'
+        : suiteMode === 'CLUBDASH'
+        ? 'ClubDash Facility Broadcast'
+        : suiteMode === 'COACHDASH'
+        ? 'Coach Miguel Ramos (Studio)'
+        : 'Metro Padel & Tournament Desk';
+
+    const senderAvatar =
+      suiteMode === 'GYMDASH'
+        ? 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=200&q=80'
+        : suiteMode === 'CLUBDASH'
+        ? 'https://images.unsplash.com/photo-1554068865-24cecd4e34b8?auto=format&fit=crop&w=200&q=80'
+        : suiteMode === 'COACHDASH'
+        ? 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80'
+        : 'https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?auto=format&fit=crop&w=200&q=80';
+
+    const broadcastPayload: CrmBroadcast = {
+      id: `bc_${Date.now()}`,
+      suiteMode,
+      senderName,
+      senderAvatar,
+      audience,
+      title: title.trim(),
+      body: body.trim(),
+      promoCode: promoCode.trim() || undefined,
+      createdAt: new Date().toISOString(),
+      badgeText: suiteMode === 'GYMDASH' ? 'GYMDASH CRM' : `${suiteMode} CRM`,
+    };
+
     setIsSent(true);
+
+    try {
+      // 1. Post to Next.js API
+      await fetch('/api/crm/broadcast', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(broadcastPayload),
+      }).catch((e) => console.warn('[CRM Modal] fetch err:', e));
+
+      // 2. Broadcast via Supabase Realtime peer channel
+      const client = getSodiaSupabaseClient();
+      const channel = client.channel('sodia_crm_broadcasts');
+      channel.send({
+        type: 'broadcast',
+        event: 'crm_broadcast',
+        payload: broadcastPayload,
+      });
+
+      // 3. Local custom event for web components
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('sodia_crm_broadcast_sent', { detail: broadcastPayload })
+        );
+      }
+
+      onBroadcastSent?.(broadcastPayload);
+    } catch (err) {
+      console.warn('[CRM Broadcast Send Error]:', err);
+    }
+
     setTimeout(() => {
       setIsSent(false);
       setTitle('');

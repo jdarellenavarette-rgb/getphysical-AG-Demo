@@ -1,9 +1,11 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, ScrollView } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Image, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowLeft, Send, Paperclip, Flame, Award, Briefcase, CheckCircle2 } from "lucide-react-native";
+import { ArrowLeft, Send, Paperclip, Flame, Award, Briefcase, CheckCircle2, Radio, Tag } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
+import { useCrmMessagingStore } from "../../store/crmMessagingStore";
 import type { DMThread } from "./InboxView";
+import { chatStyles as styles } from "./DMChatView.styles";
 
 interface DMChatViewProps {
   thread: DMThread;
@@ -13,25 +15,35 @@ interface DMChatViewProps {
 export function DMChatView({ thread, onBack }: DMChatViewProps) {
   const insets = useSafeAreaInsets();
   const { colors, themeMode } = useThemeStore();
+  const { threadMessages, sendMessage } = useCrmMessagingStore();
+
   const [inputText, setInputText] = useState("");
   const [hasCongratulated, setHasCongratulated] = useState(false);
   const [hasAcceptedHandshake, setHasAcceptedHandshake] = useState(false);
   const [showRawData, setShowRawData] = useState(false);
-  const [extraMessages, setExtraMessages] = useState<{ id: string; text: string; time: string }[]>([]);
+
+  const messages = threadMessages[thread.id] || [];
 
   const handleSendMessage = () => {
     if (!inputText.trim()) return;
-    setExtraMessages((prev) => [
-      ...prev,
-      { id: `msg_${Date.now()}`, text: inputText.trim(), time: "Just now" },
-    ]);
+    sendMessage(thread.id, inputText.trim());
     setInputText("");
   };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       {/* HEADER WITH SAFE NOTCH INSET */}
-      <View style={[styles.header, { paddingTop: Math.max(insets.top, 50) + 6, height: Math.max(insets.top, 50) + 56, backgroundColor: colors.bgHeader, borderBottomColor: colors.borderColor }]}>
+      <View
+        style={[
+          styles.header,
+          {
+            paddingTop: Math.max(insets.top, 50) + 6,
+            height: Math.max(insets.top, 50) + 56,
+            backgroundColor: colors.bgHeader,
+            borderBottomColor: colors.borderColor,
+          },
+        ]}
+      >
         <TouchableOpacity
           onPress={onBack}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
@@ -48,7 +60,7 @@ export function DMChatView({ thread, onBack }: DMChatViewProps) {
 
       {/* CHAT MESSAGES */}
       <ScrollView style={styles.chatViewport} showsVerticalScrollIndicator={false}>
-        {/* INCOMING TEXT */}
+        {/* DEFAULT GREETING */}
         <View style={[styles.incomingBubble, { backgroundColor: colors.bgCard, borderColor: colors.borderColor, borderWidth: 1 }]}>
           <Text style={[styles.bubbleText, { color: colors.textPrimary }]}>Hey Darelle! Great training session this morning.</Text>
           <Text style={[styles.bubbleTime, { color: colors.textMuted }]}>08:30 AM</Text>
@@ -96,13 +108,50 @@ export function DMChatView({ thread, onBack }: DMChatViewProps) {
           </View>
         )}
 
-        {/* EXTRA USER MESSAGES */}
-        {extraMessages.map((msg) => (
-          <View key={msg.id} style={[styles.outgoingBubble, { backgroundColor: themeMode === "light" ? "#E11D48" : "#27272A" }]}>
-            <Text style={[styles.bubbleText, { color: "#FFFFFF" }]}>{msg.text}</Text>
-            <Text style={[styles.bubbleTime, themeMode === "light" && { color: "rgba(255,255,255,0.7)" }]}>{msg.time}</Text>
-          </View>
-        ))}
+        {/* DYNAMIC MESSAGES FROM CRM STORE */}
+        {messages.map((msg) => {
+          if (msg.isCrmBroadcast && msg.broadcastData) {
+            return (
+              <View key={msg.id} style={[styles.broadcastCard, { backgroundColor: colors.bgCard, borderColor: "#E11D48" }]}>
+                <View style={styles.broadcastHeader}>
+                  <View style={styles.broadcastTag}>
+                    <Radio size={10} color="#FFFFFF" />
+                    <Text style={styles.broadcastTagText}>OFFICIAL FACILITY BROADCAST</Text>
+                  </View>
+                  <Text style={[styles.broadcastTime, { color: colors.textMuted }]}>{msg.time}</Text>
+                </View>
+                <Text style={[styles.broadcastTitle, { color: colors.textPrimary }]}>{msg.broadcastData.title}</Text>
+                <Text style={[styles.broadcastBody, { color: colors.textSecondary }]}>{msg.broadcastData.body}</Text>
+                {msg.broadcastData.promoCode ? (
+                  <View style={styles.promoCodePill}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+                      <Tag size={12} color="#E11D48" />
+                      <Text style={styles.promoCodeLabel}>VOUCHER CREDIT CODE:</Text>
+                    </View>
+                    <Text style={styles.promoCodeVal}>{msg.broadcastData.promoCode}</Text>
+                  </View>
+                ) : null}
+              </View>
+            );
+          }
+
+          const isOutgoing = msg.senderId === "usr_athlete_01";
+          return (
+            <View
+              key={msg.id}
+              style={[
+                isOutgoing ? styles.outgoingBubble : styles.incomingBubble,
+                { backgroundColor: isOutgoing ? (themeMode === "light" ? "#E11D48" : "#27272A") : colors.bgCard },
+                !isOutgoing && { borderColor: colors.borderColor, borderWidth: 1 },
+              ]}
+            >
+              <Text style={[styles.bubbleText, { color: isOutgoing ? "#FFFFFF" : colors.textPrimary }]}>{msg.text}</Text>
+              <Text style={[styles.bubbleTime, { color: isOutgoing ? "rgba(255,255,255,0.7)" : colors.textMuted }]}>
+                {msg.time}
+              </Text>
+            </View>
+          );
+        })}
 
         {/* B2B STAFF HANDSHAKE CARD */}
         {thread.type === "handshake" && (
@@ -142,7 +191,7 @@ export function DMChatView({ thread, onBack }: DMChatViewProps) {
         </TouchableOpacity>
         <TextInput
           style={[styles.chatInput, { backgroundColor: colors.bgInput, color: colors.textPrimary }]}
-          placeholder="Message..."
+          placeholder="Type message to Business Suite..."
           placeholderTextColor={colors.textMuted}
           value={inputText}
           onChangeText={setInputText}
@@ -155,41 +204,3 @@ export function DMChatView({ thread, onBack }: DMChatViewProps) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, borderBottomWidth: 1 },
-  backBtn: { minWidth: 44, minHeight: 44, justifyContent: "center", alignItems: "center" },
-  headerAvatar: { width: 36, height: 36, borderRadius: 18, marginLeft: 8 },
-  headerMeta: { marginLeft: 10 },
-  headerName: { fontSize: 13, fontWeight: "700" },
-  headerStatus: { color: "#10B981", fontSize: 10, marginTop: 1 },
-  chatViewport: { flex: 1, padding: 16 },
-  incomingBubble: { alignSelf: "flex-start", borderRadius: 16, borderBottomLeftRadius: 4, padding: 12, maxWidth: "80%", marginBottom: 12 },
-  outgoingBubble: { alignSelf: "flex-end", borderRadius: 16, borderBottomRightRadius: 4, padding: 12, maxWidth: "85%", marginBottom: 12 },
-  bubbleText: { fontSize: 13, lineHeight: 18 },
-  bubbleTime: { fontSize: 9, alignSelf: "flex-end", marginTop: 4 },
-  stampCard: { borderRadius: 12, padding: 12, borderWidth: 1, borderColor: "rgba(16, 185, 129, 0.3)" },
-  stampHeader: { flexDirection: "row", alignItems: "center", gap: 6 },
-  stampType: { color: "#10B981", fontSize: 10, fontWeight: "800", letterSpacing: 0.5 },
-  stampMetric: { color: "#FAFAFA", fontSize: 22, fontWeight: "900", marginTop: 4 },
-  stampDesc: { color: "#A1A1AA", fontSize: 11, marginTop: 2 },
-  congratulateBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: "rgba(249, 115, 22, 0.15)", borderWidth: 1, borderColor: "rgba(249, 115, 22, 0.3)", borderRadius: 8, paddingVertical: 8, marginTop: 10 },
-  congratulatedActive: { backgroundColor: "#F97316" },
-  congratulateText: { color: "#F97316", fontSize: 11, fontWeight: "700" },
-  congratulateTextActive: { color: "#FFFFFF" },
-  rawDeepLinkBtn: { borderRadius: 8, paddingVertical: 8, paddingHorizontal: 10, marginTop: 8 },
-  rawDeepLinkText: { color: "#38BDF8", fontSize: 11, fontWeight: "700" },
-  handshakeCard: { borderRadius: 14, borderWidth: 1, borderColor: "#E11D48", padding: 14, marginBottom: 16 },
-  handshakeHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
-  handshakeTitle: { color: "#E11D48", fontSize: 11, fontWeight: "800", letterSpacing: 0.5 },
-  handshakeBody: { fontSize: 12, marginTop: 6, lineHeight: 17 },
-  handshakeBtn: { backgroundColor: "#E11D48", borderRadius: 8, paddingVertical: 10, alignItems: "center", marginTop: 12 },
-  handshakeBtnSuccess: { backgroundColor: "rgba(16, 185, 129, 0.15)", borderWidth: 1, borderColor: "#10B981", flexDirection: "row", justifyContent: "center", gap: 6 },
-  handshakeBtnText: { color: "#FFFFFF", fontSize: 12, fontWeight: "700" },
-  handshakeSuccessText: { color: "#10B981", fontSize: 12, fontWeight: "700" },
-  inputContainer: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 10, borderTopWidth: 1, gap: 10 },
-  attachBtn: { padding: 6 },
-  chatInput: { flex: 1, height: 40, borderRadius: 20, paddingHorizontal: 16, fontSize: 13 },
-  sendBtn: { width: 38, height: 38, borderRadius: 19, backgroundColor: "#E11D48", alignItems: "center", justifyContent: "center" },
-});

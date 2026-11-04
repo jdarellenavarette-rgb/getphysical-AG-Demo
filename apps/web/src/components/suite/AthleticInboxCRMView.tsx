@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
-import { MessageSquare, AlertCircle, UserCheck, ShieldAlert, CheckCircle, Send, Tag, Phone, Calendar, ArrowRight, Zap, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { MessageSquare, AlertCircle, UserCheck, ShieldAlert, CheckCircle, Send, Tag, Phone, Calendar, ArrowRight, Zap, RefreshCw, Megaphone, Radio } from 'lucide-react';
 import { SuiteMode } from './HeroPromoCard';
 import { useSuiteTheme } from './theme';
+import { CreateMessageModal } from './CreateMessageModal';
+import { getSodiaSupabaseClient, CrmBroadcast } from 'sodia-core';
 
 interface MessageTicket {
   id: string;
@@ -27,6 +29,28 @@ interface MessageTicket {
 }
 
 const INITIAL_TICKETS: MessageTicket[] = [
+  {
+    id: 't_darelle',
+    athleteName: 'Darelle Navarette',
+    avatar: 'DN',
+    handle: '@darellenavarette',
+    channel: 'GENERAL_INQUIRY',
+    lastMessage: 'IFBB Certified Trainer • Titanium VIP Member connected via Sodia Messaging.',
+    time: 'Just now',
+    unread: false,
+    status: 'OPEN',
+    tag: 'IFBB Certified Trainer',
+    tagColor: '#E11D48',
+    athleteMeta: {
+      membership: 'Titanium VIP All-Access • IFBB Pro Trainer',
+      lastVisit: 'Today at BGC High Street Arena',
+      primary1RM: 'Deadlift 225kg PR (Verified)',
+      phone: '+63 917 888 1994',
+    },
+    messages: [
+      { sender: 'business', text: 'Welcome Darelle! Your IFBB Trainer credential and facility all-access pass are active.', time: '08:00 AM' },
+    ],
+  },
   {
     id: 't1',
     athleteName: 'Jake Torralba',
@@ -129,6 +153,93 @@ export function AthleticInboxCRMView({ suiteMode }: AthleticInboxCRMViewProps) {
   const [selectedTicketId, setSelectedTicketId] = useState<string>(INITIAL_TICKETS[0]?.id ?? '');
   const [filterChannel, setFilterChannel] = useState<'ALL' | 'GATE_EXPIRATION' | 'FORM_CHECK' | 'AT_RISK' | 'GENERAL_INQUIRY'>('ALL');
   const [replyText, setReplyText] = useState('');
+  const [isBroadcastModalOpen, setIsBroadcastModalOpen] = useState(false);
+
+  useEffect(() => {
+    try {
+      const client = getSodiaSupabaseClient();
+      const channel = client.channel('sodia_crm_broadcasts');
+
+      // 1. Listen for athlete replies from mobile
+      channel.on('broadcast', { event: 'crm_reply' }, ({ payload }: { payload: any }) => {
+        if (!payload) return;
+        const athleteMsg = {
+          sender: 'athlete' as const,
+          text: payload.text,
+          time: payload.time || 'Just now',
+        };
+
+        setTickets((prev) =>
+          prev.map((t) =>
+            t.id === 't_darelle' || t.athleteName === payload.senderName || t.handle === payload.senderHandle
+              ? {
+                  ...t,
+                  messages: [...t.messages, athleteMsg],
+                  lastMessage: payload.text,
+                  unread: true,
+                  time: 'Just now',
+                }
+              : t
+          )
+        );
+      });
+
+      // 2. Listen for broadcasts dispatched
+      channel.on('broadcast', { event: 'crm_broadcast' }, ({ payload }: { payload: CrmBroadcast }) => {
+        if (!payload) return;
+        const bcMsg = {
+          sender: 'business' as const,
+          text: `📢 [BROADCAST: ${payload.title}]: ${payload.body}${payload.promoCode ? ` (Promo: ${payload.promoCode})` : ''}`,
+          time: 'Just now',
+        };
+
+        setTickets((prev) =>
+          prev.map((t) =>
+            t.id === 't_darelle'
+              ? {
+                  ...t,
+                  messages: [...t.messages, bcMsg],
+                  lastMessage: `📢 ${payload.title}`,
+                  time: 'Just now',
+                }
+              : t
+          )
+        );
+      });
+
+      channel.subscribe();
+
+      // 3. Local window event listener for immediate UI update
+      const handleLocalBroadcast = (e: any) => {
+        const payload = e.detail;
+        if (!payload) return;
+        const bcMsg = {
+          sender: 'business' as const,
+          text: `📢 [BROADCAST: ${payload.title}]: ${payload.body}${payload.promoCode ? ` (Promo: ${payload.promoCode})` : ''}`,
+          time: 'Just now',
+        };
+        setTickets((prev) =>
+          prev.map((t) =>
+            t.id === 't_darelle'
+              ? {
+                  ...t,
+                  messages: [...t.messages, bcMsg],
+                  lastMessage: `📢 ${payload.title}`,
+                  time: 'Just now',
+                }
+              : t
+          )
+        );
+      };
+
+      window.addEventListener('sodia_crm_broadcast_sent', handleLocalBroadcast);
+      return () => {
+        window.removeEventListener('sodia_crm_broadcast_sent', handleLocalBroadcast);
+      };
+    } catch (err) {
+      console.warn('[CRM View Supabase listener err]', err);
+    }
+  }, []);
 
   const activeTicket = tickets.find((t) => t.id === selectedTicketId) ?? tickets[0];
 
@@ -137,13 +248,46 @@ export function AthleticInboxCRMView({ suiteMode }: AthleticInboxCRMViewProps) {
     return t.channel === filterChannel;
   });
 
-  const handleSendReply = () => {
+  const handleSendReply = async () => {
     if (!replyText.trim() || !activeTicket) return;
-    const newMsg = { sender: 'business' as const, text: replyText.trim(), time: 'Just now' };
+    const textToSend = replyText.trim();
+    const newMsg = { sender: 'business' as const, text: textToSend, time: 'Just now' };
     setTickets((prev) =>
       prev.map((t) => (t.id === activeTicket.id ? { ...t, messages: [...t.messages, newMsg], lastMessage: newMsg.text, unread: false } : t))
     );
     setReplyText('');
+
+    // If activeTicket is Darelle Navarette, dispatch real-time to mobile!
+    if (activeTicket.id === 't_darelle' || activeTicket.athleteName.includes('Darelle')) {
+      try {
+        const client = getSodiaSupabaseClient();
+        const channel = client.channel('sodia_crm_broadcasts');
+        await channel.send({
+          type: 'broadcast',
+          event: 'crm_direct',
+          payload: {
+            threadId: 'thread_metro_core',
+            senderName: 'Metro Core Arena (GymDash)',
+            targetAthleteId: 'usr_athlete_01',
+            text: textToSend,
+          },
+        });
+
+        // Also post to API route
+        await fetch('/api/crm/reply', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            threadId: 'thread_metro_core',
+            senderId: 'business',
+            senderName: 'Metro Core Arena (GymDash)',
+            text: textToSend,
+          }),
+        }).catch(() => {});
+      } catch (err) {
+        console.warn('[CRM Direct send err]', err);
+      }
+    }
   };
 
   const handleActionRenew = () => {
@@ -182,14 +326,33 @@ export function AthleticInboxCRMView({ suiteMode }: AthleticInboxCRMViewProps) {
       >
         {/* Header */}
         <div style={{ padding: '20px', borderBottom: `1px solid ${theme.borderColor}`, backgroundColor: theme.bgCard }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
-            <MessageSquare size={18} color="#E11D48" />
-            <h3 style={{ fontSize: '16px', fontWeight: 900, color: theme.textPrimary, letterSpacing: '-0.3px' }}>
-              Unified Athletic Inbox
-            </h3>
-            <span style={{ fontSize: '10px', backgroundColor: 'rgba(225, 29, 72, 0.1)', color: '#E11D48', padding: '2px 8px', borderRadius: '999px', fontWeight: 800 }}>
-              Meta CRM Sync
-            </span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <MessageSquare size={18} color="#E11D48" />
+              <h3 style={{ fontSize: '16px', fontWeight: 900, color: theme.textPrimary, letterSpacing: '-0.3px' }}>
+                Unified Athletic Inbox
+              </h3>
+            </div>
+            <button
+              onClick={() => setIsBroadcastModalOpen(true)}
+              style={{
+                backgroundColor: '#E11D48',
+                color: '#FFFFFF',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '6px 10px',
+                fontSize: '11px',
+                fontWeight: 800,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                boxShadow: '0 2px 8px rgba(225, 29, 72, 0.35)',
+              }}
+            >
+              <Megaphone size={12} />
+              <span>Broadcast to All</span>
+            </button>
           </div>
 
           {/* Channels Filter Pills */}
@@ -253,9 +416,14 @@ export function AthleticInboxCRMView({ suiteMode }: AthleticInboxCRMViewProps) {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
+                        overflow: 'hidden',
                       }}
                     >
-                      {t.avatar}
+                      {t.id === 't_darelle' ? (
+                        <img src="/profiles/darelle/avatar.png" alt="Darelle" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        t.avatar
+                      )}
                     </div>
                     <div>
                       <div style={{ fontSize: '13px', fontWeight: 800, color: theme.textPrimary }}>{t.athleteName}</div>
@@ -297,16 +465,25 @@ export function AthleticInboxCRMView({ suiteMode }: AthleticInboxCRMViewProps) {
               backgroundColor: theme.bgCardSecondary,
             }}
           >
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <h4 style={{ fontSize: '15px', fontWeight: 900, color: theme.textPrimary }}>{activeTicket.athleteName}</h4>
-                <span style={{ fontSize: '11px', color: theme.textMuted, fontWeight: 600 }}>{activeTicket.athleteMeta.phone}</span>
-                <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '4px', backgroundColor: `${activeTicket.tagColor}15`, color: activeTicket.tagColor, fontWeight: 800 }}>
-                  {activeTicket.tag}
-                </span>
-              </div>
-              <div style={{ fontSize: '11px', color: theme.textSecondary, marginTop: '2px', fontWeight: 600 }}>
-                {activeTicket.athleteMeta.membership} • Last visit: {activeTicket.athleteMeta.lastVisit}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              {activeTicket.id === 't_darelle' && (
+                <img
+                  src="/profiles/darelle/avatar.png"
+                  alt="Darelle Navarette"
+                  style={{ width: '38px', height: '38px', borderRadius: '19px', objectFit: 'cover', border: '2px solid #E11D48' }}
+                />
+              )}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <h4 style={{ fontSize: '15px', fontWeight: 900, color: theme.textPrimary }}>{activeTicket.athleteName}</h4>
+                  <span style={{ fontSize: '11px', color: theme.textMuted, fontWeight: 600 }}>{activeTicket.athleteMeta.phone}</span>
+                  <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '4px', backgroundColor: `${activeTicket.tagColor}15`, color: activeTicket.tagColor, fontWeight: 800 }}>
+                    {activeTicket.tag}
+                  </span>
+                </div>
+                <div style={{ fontSize: '11px', color: theme.textSecondary, marginTop: '2px', fontWeight: 600 }}>
+                  {activeTicket.athleteMeta.membership} • Last visit: {activeTicket.athleteMeta.lastVisit}
+                </div>
               </div>
             </div>
 
@@ -428,6 +605,12 @@ export function AthleticInboxCRMView({ suiteMode }: AthleticInboxCRMViewProps) {
           </div>
         </div>
       )}
+
+      <CreateMessageModal
+        visible={isBroadcastModalOpen}
+        onClose={() => setIsBroadcastModalOpen(false)}
+        suiteMode={suiteMode}
+      />
     </div>
   );
 }

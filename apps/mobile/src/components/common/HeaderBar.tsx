@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Menu, MessageSquare, Bell, Settings } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
+import { useCrmMessagingStore } from "../../store/crmMessagingStore";
 
 interface HeaderBarProps {
   onOpenMenu?: () => void;
@@ -19,6 +20,8 @@ export function HeaderBar({
   onPressLogo,
 }: HeaderBarProps) {
   const { colors } = useThemeStore();
+  const { threads } = useCrmMessagingStore();
+  const unreadCount = threads.reduce((acc, t) => acc + (t.unreadCount || 0), 0);
 
   return (
     <View style={[styles.header, { backgroundColor: colors.bgHeader, borderBottomColor: colors.borderColor }]}>
@@ -47,7 +50,7 @@ export function HeaderBar({
           style={styles.iconCircle}
         >
           <MessageSquare size={19} color={colors.textPrimary} strokeWidth={2} />
-          <View style={[styles.notificationDot, { borderColor: colors.bgHeader }]} />
+          {unreadCount > 0 && <View style={[styles.notificationDot, { borderColor: colors.bgHeader }]} />}
         </TouchableOpacity>
 
         <TouchableOpacity

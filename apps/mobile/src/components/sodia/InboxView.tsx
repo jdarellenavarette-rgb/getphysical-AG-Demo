@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, ScrollView 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Search, Edit3, ArrowLeft, Camera, Plus } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
+import { useCrmMessagingStore } from "../../store/crmMessagingStore";
 
 export interface DMThread {
   id: string;
@@ -34,51 +35,11 @@ export function InboxView({ onBack, onSelectThread }: InboxViewProps) {
     { id: "note_3", name: "Sarah", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80", note: "Leg day crushed 💪" },
   ];
 
-  const threads: DMThread[] = [
-    {
-      id: "thread_coach_ramos",
-      name: "Coach Miguel Ramos",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80",
-      lastMessage: "Shared your Lift PR: View Raw Data (sets, reps & RPE)",
-      timeAgo: "12m ago",
-      unreadCount: 1,
-      isOnline: true,
-      type: "coach",
-      badgeText: "COACH PRO",
-    },
-    {
-      id: "thread_metro_core",
-      name: "Metro Core Arena (GymDash)",
-      avatar: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=200&q=80",
-      lastMessage: "B2B Staff Invite: Metro Core invited you to join as Staff",
-      timeAgo: "1h ago",
-      unreadCount: 1,
-      isOnline: false,
-      type: "handshake",
-      badgeText: "B2B INVITE",
-    },
-    {
-      id: "thread_bgc_pickleball",
-      name: "BGC Pickleball Saturday 3v3",
-      avatar: "https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?auto=format&fit=crop&w=200&q=80",
-      lastMessage: "Dave: Court A booked for 4:00 PM. See everyone there!",
-      timeAgo: "3h ago",
-      unreadCount: 0,
-      isOnline: true,
-      type: "group",
-      badgeText: "GROUP (6)",
-    },
-    {
-      id: "thread_sarah",
-      name: "Sarah Jenkins",
-      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80",
-      lastMessage: "Sent you a 1-day pass for Twins Fitness 🎟️",
-      timeAgo: "1d ago",
-      unreadCount: 0,
-      isOnline: false,
-      type: "direct",
-    },
-  ];
+  const { threads, markThreadAsRead } = useCrmMessagingStore();
+
+  const filteredThreads = threads.filter((t) =>
+    searchQuery.trim() === "" ? true : t.name.toLowerCase().includes(searchQuery.toLowerCase()) || t.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
@@ -139,8 +100,15 @@ export function InboxView({ onBack, onSelectThread }: InboxViewProps) {
 
       {/* THREADS LIST */}
       <ScrollView style={styles.threadList} showsVerticalScrollIndicator={false}>
-        {threads.map((t) => (
-          <TouchableOpacity key={t.id} onPress={() => onSelectThread(t)} style={[styles.threadItem, { borderBottomColor: colors.borderColor }]}>
+        {filteredThreads.map((t) => (
+          <TouchableOpacity
+            key={t.id}
+            onPress={() => {
+              markThreadAsRead(t.id);
+              onSelectThread(t);
+            }}
+            style={[styles.threadItem, { borderBottomColor: colors.borderColor }]}
+          >
             <View style={styles.avatarContainer}>
               <Image source={{ uri: t.avatar }} style={styles.avatar} />
               {t.isOnline && <View style={[styles.onlineBadge, { borderColor: colors.bgScreen }]} />}

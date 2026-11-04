@@ -12,3 +12,5 @@ export * from "./client";
 export * from "./totp";
 export * from "./validation";
 export * from "./seed-data";
+export * from "./supabase";
+export * from "./crm.types";

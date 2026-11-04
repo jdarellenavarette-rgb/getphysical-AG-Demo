@@ -23,7 +23,6 @@ export function MoveTrackerView() {
   const [route, setRoute] = useState<[number, number][]>([[DEFAULT_BGC_COORDS.latitude, DEFAULT_BGC_COORDS.longitude]]);
   const [isFinished, setIsFinished] = useState(false);
   const [sharedToFeed, setSharedToFeed] = useState(false);
-  const bearingRef = useRef<number>(0.8);
   const currentCoordsRef = useRef<[number, number]>(currentCoords);
 
   useEffect(() => {
@@ -39,7 +38,7 @@ export function MoveTrackerView() {
     });
   }, []);
 
-  // 1. Dedicated Stopwatch Timer: Always increments reliably every second when active
+  // 1. Elapsed Time Stopwatch: Smooth 1-second increment while active
   useEffect(() => {
     let t: any = null;
     if (isActive) {
@@ -50,55 +49,60 @@ export function MoveTrackerView() {
     return () => clearInterval(t);
   }, [isActive]);
 
-  // 2. GPS & Route Progression Engine (depends only on isActive & selectedSport)
+  // 2. Real Hardware GPS Movement Tracker (Zero fake movement when stationary)
   useEffect(() => {
-    let timer: any = null;
     let locSub: Location.LocationSubscription | null = null;
 
     if (isActive) {
       Location.watchPositionAsync(
-        { accuracy: Location.Accuracy.Balanced, timeInterval: 1000, distanceInterval: 1 },
+        {
+          accuracy: Location.Accuracy.BestForNavigation,
+          timeInterval: 1000,
+          distanceInterval: 1,
+        },
         (loc) => {
+          // Reject inaccurate GPS fixes to prevent indoor jitter
+          if (loc.coords.accuracy && loc.coords.accuracy > 40) return;
+
           const lat = loc.coords.latitude;
           const lng = loc.coords.longitude;
           const last = currentCoordsRef.current;
           const movedKm = calculateHaversineKm(last[0], last[1], lat, lng);
-          if (movedKm > 0.001) {
+
+          // Strava threshold: only advance when physical displacement is >= 2.5 meters (0.0025 km)
+          if (movedKm >= 0.0025) {
             const nextPt: [number, number] = [lat, lng];
             setCurrentCoords(nextPt);
             setRoute((prev) => [...prev, nextPt]);
-            setDistanceKm((d) => +(d + movedKm).toFixed(3));
+            setDistanceKm((d) => +(d + movedKm).toFixed(2));
           }
         }
       ).then((sub) => { locSub = sub; }).catch(() => {});
-
-      timer = setInterval(() => {
-        const speedMps = selectedSport === "cycling" ? 6.2 : selectedSport === "walk" ? 1.4 : 3.1;
-        const deltaKm = speedMps / 1000;
-        setDistanceKm((d) => +(d + deltaKm).toFixed(3));
-
-        setRoute((prev) => {
-          const last = prev[prev.length - 1] || currentCoordsRef.current;
-          bearingRef.current += (Math.random() - 0.48) * 0.12;
-          const dLat = (deltaKm / 111) * Math.cos(bearingRef.current);
-          const dLng = (deltaKm / (111 * Math.cos((last[0] * Math.PI) / 180))) * Math.sin(bearingRef.current);
-          const nextPt: [number, number] = [+(last[0] + dLat).toFixed(6), +(last[1] + dLng).toFixed(6)];
-          setCurrentCoords(nextPt);
-          return [...prev, nextPt];
-        });
-      }, 1000);
     }
+
     return () => {
-      clearInterval(timer);
       locSub?.remove();
     };
-  }, [isActive, selectedSport]);
+  }, [isActive]);
 
   const formatTime = (sec: number) =>
     `${Math.floor(sec / 60).toString().padStart(2, "0")}:${(sec % 60).toString().padStart(2, "0")}`;
 
+  const formatPace = () => {
+    if (distanceKm < 0.01 || seconds === 0) return "-:--";
+    const totalPaceSec = Math.round(seconds / distanceKm);
+    if (totalPaceSec > 3599) return "-:--";
+    const m = Math.floor(totalPaceSec / 60);
+    const s = totalPaceSec % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
+
   const activeSportObj = SPORTS_LIST.find((s) => s.id === selectedSport) || SPORTS_LIST[0]!;
-  const calBurned = Math.round(distanceKm > 0 ? distanceKm * activeSportObj.rateKcal : (seconds / 60) * (activeSportObj.rateKcal / 10));
+  const calBurned = Math.round(
+    distanceKm > 0
+      ? distanceKm * activeSportObj.rateKcal
+      : (seconds / 60) * (activeSportObj.rateKcal * 0.05)
+  );
 
   const handleFinish = () => {
     setIsActive(false);
@@ -108,7 +112,7 @@ export function MoveTrackerView() {
       title: `${activeSportObj.label} Session`,
       durationSeconds: seconds,
       distanceKm,
-      paceMinKm: distanceKm > 0 ? (seconds / 60 / distanceKm).toFixed(2) : "0:00",
+      paceMinKm: formatPace(),
       avgSpeedKmH: +(distanceKm / (seconds / 3600 || 1)).toFixed(1),
       caloriesBurned: calBurned,
       routeCoords: route,
@@ -146,7 +150,7 @@ export function MoveTrackerView() {
       <View style={styles.statusRow}>
         <View style={styles.livePill}>
           <View style={styles.livePulse} />
-          <Text style={styles.liveText}>{isActive ? "GPS TRACKING ACTIVE" : "GPS READY • SATELLITE LOCK"}</Text>
+          <Text style={styles.liveText}>{isActive ? "GPS LIVE • TRACKING" : "GPS READY • SATELLITE LOCK"}</Text>
         </View>
         <Text style={[styles.activityTag, { color: colors.textMuted }]}>{activeSportObj.icon} {activeSportObj.label.toUpperCase()}</Text>
       </View>
@@ -161,7 +165,7 @@ export function MoveTrackerView() {
           </View>
           <View style={[styles.metricDivider, { backgroundColor: colors.borderColor }]} />
           <View style={styles.metricCol}>
-            <Text style={[styles.metricVal, { color: colors.textPrimary }]}>{distanceKm > 0 ? (seconds / 60 / distanceKm).toFixed(1) : "0.0"}</Text>
+            <Text style={[styles.metricVal, { color: colors.textPrimary }]}>{formatPace()}</Text>
             <Text style={[styles.metricLabel, { color: colors.textMuted }]}>MIN / KM PACE</Text>
           </View>
           <View style={[styles.metricDivider, { backgroundColor: colors.borderColor }]} />

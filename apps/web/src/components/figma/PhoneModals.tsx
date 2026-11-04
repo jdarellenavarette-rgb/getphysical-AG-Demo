@@ -24,7 +24,7 @@ export function PhoneModals({
 }: PhoneModalsProps) {
   const [commentInput, setCommentInput] = useState('');
   const [comments, setComments] = useState([
-    { id: '1', author: 'adam.arete', text: 'Form looks super clean Moe! 🔥', time: '18m ago' },
+    { id: '1', author: 'darellenavarette', text: 'Form looks super clean Moe! 🔥', time: '18m ago' },
     { id: '2', author: 'coach.sarah', text: 'Love the tempo on those reps!', time: '12m ago' },
   ]);
 
@@ -120,8 +120,8 @@ export function PhoneModals({
               <button onClick={onCloseMenu} style={{ color: '#a1a1aa', background: 'none', border: 'none', cursor: 'pointer' }}><X size={18} /></button>
             </div>
             <div style={{ padding: '10px 0', borderBottom: '1px solid #27272a' }}>
-              <div style={{ fontSize: '13px', fontWeight: 800, color: '#fff' }}>Adam Arête</div>
-              <div style={{ fontSize: '11px', color: '#ec4899' }}>@adam.arete • Titanium VIP</div>
+              <div style={{ fontSize: '13px', fontWeight: 800, color: '#fff' }}>Darelle Navarette</div>
+              <div style={{ fontSize: '11px', color: '#e11d48' }}>@darellenavarette • IFBB CPFT</div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <button onClick={() => { onSelectRole?.('Staff'); onCloseMenu(); }} style={{ textAlign: 'left', padding: '10px', borderRadius: '8px', backgroundColor: '#18181b', color: '#10b981', fontSize: '12px', fontWeight: 700, border: '1px solid #27272a', cursor: 'pointer' }}>

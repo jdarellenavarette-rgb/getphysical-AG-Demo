@@ -63,8 +63,8 @@ export function SodiaMobileSimulator({ onTriggerTurnstileScan }: SodiaMobileSimu
               <div style={{ backgroundColor: '#121215', border: '1px solid #27272a', borderRadius: '14px', padding: '12px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                   <div>
-                    <div style={{ fontSize: '13px', fontWeight: 800, color: '#fafafa' }}>Adam Arête <span style={{ color: '#10b981', fontSize: '10px' }}>• VERIFIED PR</span></div>
-                    <div style={{ fontSize: '11px', color: '#71717a' }}>@adam.arete • 12m ago</div>
+                    <div style={{ fontSize: '13px', fontWeight: 800, color: '#fafafa' }}>Darelle Navarette <span style={{ color: '#10b981', fontSize: '10px' }}>• VERIFIED PR</span></div>
+                    <div style={{ fontSize: '11px', color: '#71717a' }}>@darellenavarette • 12m ago</div>
                   </div>
                   <button
                     onClick={() => setCheckoutItem({ title: 'Metro Core All-Access Day Pass', base: 350 })}
@@ -120,7 +120,7 @@ export function SodiaMobileSimulator({ onTriggerTurnstileScan }: SodiaMobileSimu
                       <span style={{ fontSize: '10px', color: '#a7f3d0' }}>Tap to Flip 180° ↻</span>
                     </div>
                     <div>
-                      <div style={{ fontSize: '20px', fontWeight: 900, color: '#fff' }}>ADAM ARÊTE</div>
+                      <div style={{ fontSize: '20px', fontWeight: 900, color: '#fff' }}>DARELLE NAVARETTE</div>
                       <div style={{ fontSize: '11px', color: '#cbd5e1', marginTop: '4px' }}>Tier 0 Liability Waiver Signed • Active</div>
                     </div>
                   </>

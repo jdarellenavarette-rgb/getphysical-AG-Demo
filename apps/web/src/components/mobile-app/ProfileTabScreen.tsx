@@ -13,17 +13,17 @@ export function ProfileTabScreen({ onSwitchRole }: ProfileTabScreenProps) {
       {/* Profile Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '20px' }}>
         <img
-          src="/assets/design/avatar-adam.png"
-          alt="Adam Arête"
-          style={{ width: '64px', height: '64px', borderRadius: '50%', border: '2px solid #ec4899', objectFit: 'cover' }}
+          src="/profiles/darelle/avatar.png"
+          alt="Darelle Navarette"
+          style={{ width: '64px', height: '64px', borderRadius: '50%', border: '2px solid #e11d48', objectFit: 'cover' }}
         />
         <div>
-          <h2 style={{ fontSize: '20px', fontWeight: 900, color: '#fff', margin: 0 }}>Adam Arête</h2>
-          <div style={{ fontSize: '11px', color: '#a1a1aa', marginTop: '2px' }}>@adam.arete • BGC, Manila</div>
-          <div style={{ display: 'flex', gap: '12px', marginTop: '6px', fontSize: '11px', color: '#ec4899', fontWeight: 800 }}>
-            <span>142 Followers</span>
+          <h2 style={{ fontSize: '20px', fontWeight: 900, color: '#fff', margin: 0 }}>Darelle Navarette</h2>
+          <div style={{ fontSize: '11px', color: '#a1a1aa', marginTop: '2px' }}>@darellenavarette • IFBB CPFT Trainer</div>
+          <div style={{ display: 'flex', gap: '12px', marginTop: '6px', fontSize: '11px', color: '#e11d48', fontWeight: 800 }}>
+            <span>3.8k Followers</span>
             <span>•</span>
-            <span>24 Verified Lifts</span>
+            <span>540 Workouts</span>
           </div>
         </div>
       </div>

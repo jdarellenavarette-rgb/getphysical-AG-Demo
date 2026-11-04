@@ -58,7 +58,7 @@ export function ExactVIPCard({ pass, facilityName }: ExactVIPCardProps) {
           <View style={styles.bottomRow}>
             <View>
               <Text style={styles.labelMuted}>VIP ATHLETE</Text>
-              <Text style={styles.memberName}>{profile.name ?? "Adam Arête"}</Text>
+              <Text style={styles.memberName}>{profile.name ?? "Darelle Navarette"}</Text>
             </View>
             <View style={styles.flipPill}>
               <RotateCw size={11} color="#FFFFFF" style={{ marginRight: 4 }} />

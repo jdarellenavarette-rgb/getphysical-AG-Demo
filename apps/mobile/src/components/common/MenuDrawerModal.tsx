@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView, Image } fr
 import { X, Home, Compass, Dumbbell, CreditCard, RefreshCw, Database, Settings as SettingsIcon, ChevronRight } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { useThemeStore } from "../../theme/theme";
+import { DARELLE_AVATAR } from "../../constants/darelleAssets";
 
 interface MenuDrawerModalProps {
   visible: boolean;
@@ -51,14 +52,14 @@ export function MenuDrawerModal({
               style={[styles.userCard, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}
             >
               <Image
-                source={{ uri: profile.avatar_url ?? "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80" }}
+                source={{ uri: profile.avatar_url ?? DARELLE_AVATAR }}
                 style={styles.avatar}
               />
               <View style={styles.userInfo}>
-                <Text style={[styles.userName, { color: colors.textPrimary }]}>{profile.name ?? "Adam Arête"}</Text>
+                <Text style={[styles.userName, { color: colors.textPrimary }]}>{profile.name ?? "Darelle Navarette"}</Text>
                 <Text style={[styles.userHandle, { color: colors.textMuted }]}>@{profile.username} • View Profile</Text>
                 <View style={styles.activeRoleBadge}>
-                  <Text style={styles.activeRoleText}>ATHLETE PROFILE</Text>
+                  <Text style={styles.activeRoleText}>IFBB CPFT COACH</Text>
                 </View>
               </View>
               <ChevronRight size={18} color={colors.textMuted} />

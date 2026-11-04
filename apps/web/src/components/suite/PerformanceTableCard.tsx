@@ -32,7 +32,7 @@ const CLUB_DATA: TableRowData[] = [
 ];
 
 const COACH_DATA: TableRowData[] = [
-  { col1: 'Adam Arête', col2: '12-Wk Power & Hypertrophy', col3: '225kg Deadlift', col4: '12%', isPositive: true, col5: '98.0%', col6: 'On-Track' },
+  { col1: 'Darelle Navarette (IFBB Trainer)', col2: '12-Wk Power & Hypertrophy', col3: '225kg Deadlift', col4: '12%', isPositive: true, col5: '98.0%', col6: 'On-Track' },
   { col1: 'Alyssa Ramos', col2: 'Hyrox Endurance Prep', col3: 'Sub-45m 10K', col4: '18%', isPositive: true, col5: '94.5%', col6: 'On-Track' },
   { col1: 'Marcus Cruz', col2: 'Conventional Strength Peak', col3: '180kg Squat', col4: '8%', isPositive: true, col5: '91.2%', col6: 'Check-in Due' },
   { col1: 'Elena Rostova', col2: 'Post-Injury Shoulder Rehab', col3: 'Scapular Stability', col4: '24%', isPositive: true, col5: '100%', col6: 'On-Track' },

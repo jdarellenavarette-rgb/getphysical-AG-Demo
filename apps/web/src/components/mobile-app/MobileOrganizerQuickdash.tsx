@@ -9,7 +9,7 @@ interface MobileOrganizerQuickdashProps {
 
 export function MobileOrganizerQuickdash({ onBack }: MobileOrganizerQuickdashProps) {
   const [matches, setMatches] = useState([
-    { id: '1', court: 'Court 1 (Pickleball)', teamA: 'Team Alpha (Adam / Leo)', teamB: 'Team Strike (Marco / Dan)', score: '11 - 8', status: 'IN_PLAY' },
+    { id: '1', court: 'Court 1 (Pickleball)', teamA: 'Team Alpha (Darelle / Leo)', teamB: 'Team Strike (Marco / Dan)', score: '11 - 8', status: 'IN_PLAY' },
     { id: '2', court: 'Court 2 (Pickleball)', teamA: 'Net Masters (Sam / Kim)', teamB: 'Smash Bros (Jay / Ron)', score: '0 - 0', status: 'CHECKING_IN' },
   ]);
 

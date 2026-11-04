@@ -143,9 +143,9 @@ export const SEED_POSTS: readonly SodiaPostRow[] = [
   {
     id: "post_mock_status",
     user_id: "usr_athlete_01",
-    author_name: "Adam Arête",
+    author_name: "Darelle Navarette",
     author_avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
-    author_role: "individual",
+    author_role: "coach",
     content: "Unpopular training truth: If you're not taking at least 2 full rest days a week, your central nervous system is borrowing strength from next month. Sleep 8 hours, drink 3L water, and hit the sauna. Growth happens during recovery, not the workout.",
     media_url: null,
     likes_count: 89,

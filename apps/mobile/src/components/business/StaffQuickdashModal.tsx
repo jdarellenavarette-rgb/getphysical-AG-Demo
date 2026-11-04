@@ -32,7 +32,7 @@ export function StaffQuickdashModal({ visible, onClose }: StaffQuickdashModalPro
     if (type === "GREEN") {
       newLog = {
         id: `scan_${Date.now()}`,
-        name: "Adam Arête",
+        name: "Darelle Navarette",
         type: "MEMBER_ENTRY",
         time: timeStr,
         detail: "VIP Monthly • Turnstile Gate A Unlocked (TOTP Verified)",

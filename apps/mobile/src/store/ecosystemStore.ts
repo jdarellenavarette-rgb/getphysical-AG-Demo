@@ -2,7 +2,6 @@ import { create } from "zustand";
 import {
   SEED_FACILITIES,
   SEED_PASSES,
-  SEED_POSTS,
   SEED_CHALLENGES,
   type FacilityRow,
   type PassRow,
@@ -11,6 +10,12 @@ import {
   type ProfileRow,
   type UserRole,
 } from "sodia-core";
+import {
+  DARELLE_AVATAR,
+  DARELLE_PHYSIQUE,
+  DARELLE_TENNIS_JUMP,
+} from "../constants/darelleAssets";
+import { INITIAL_DARELLE_POSTS } from "../data/darelleSeedPosts";
 
 export interface MobileEcosystemState {
   currentRole: UserRole;
@@ -50,31 +55,31 @@ export interface MobileEcosystemState {
 
 const INITIAL_PROFILE: ProfileRow = {
   id: "usr_athlete_01",
-  username: "adam.arete",
-  first_name: "Adam",
-  last_name: "Arête",
-  avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
-  avatar_url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
-  cover_url: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80",
-  bio: "Functional weightlifter & Hyrox athlete.",
+  username: "darellenavarette",
+  first_name: "Darelle",
+  last_name: "Navarette",
+  avatar: DARELLE_AVATAR,
+  avatar_url: DARELLE_AVATAR,
+  cover_url: DARELLE_TENNIS_JUMP,
+  bio: "IFBB Certified Personal Fitness Trainer | Strength & Hypertrophy • Racket Sports • Combat Conditioning.",
   dob: "1998-05-15",
   home_location: "Metro Manila",
   user_roles: ["individual", "staff", "coach", "organizer"],
   is_private: false,
-  streak_goal_per_week: 3,
+  streak_goal_per_week: 4,
   default_launch_tab: "sodia",
   soft_deleted_at: null,
   created_at: "2026-10-31T00:00:00.000Z",
   updated_at: "2026-10-31T00:00:00.000Z",
-  active_role: "individual",
+  active_role: "coach",
   roles: ["individual", "staff", "coach", "organizer"],
   phone_hash: "hash_9171234567",
-  streak_weeks: 0,
-  streak_goal: 3,
+  streak_weeks: 14,
+  streak_goal: 4,
   streak_freeze_available: true,
-  weights: { weightlifting: 40, running: 30, pickleball: 20, general: 10 },
-  metrics: { followers: 0, following: 0, activeChallenges: 0 },
-  name: "Adam Arête",
+  weights: { weightlifting: 45, running: 20, pickleball: 25, general: 10 },
+  metrics: { followers: 3820, following: 215, activeChallenges: 4 },
+  name: "Darelle Navarette",
 };
 
 export const useEcosystemStore = create<MobileEcosystemState>((set) => ({
@@ -82,9 +87,13 @@ export const useEcosystemStore = create<MobileEcosystemState>((set) => ({
   profile: INITIAL_PROFILE,
   facilities: SEED_FACILITIES,
   passes: [],
-  posts: SEED_POSTS,
+  posts: INITIAL_DARELLE_POSTS,
   challenges: [],
-  userStory: null,
+  userStory: {
+    image: DARELLE_PHYSIQUE,
+    text: "IFBB CPFT • Training Day",
+    createdAt: new Date().toISOString(),
+  },
   isOffline: false,
   activeWorkout: {
     title: "",
@@ -167,7 +176,7 @@ export const useEcosystemStore = create<MobileEcosystemState>((set) => ({
         author_avatar: state.profile.avatar_url,
         author_role: state.currentRole,
         content,
-        media_url: mediaUrl === undefined ? "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80" : mediaUrl,
+        media_url: mediaUrl === undefined ? DARELLE_PHYSIQUE : mediaUrl,
         likes_count: 0,
         comments_count: 0,
         facility_tag: facility
@@ -194,11 +203,10 @@ export const useEcosystemStore = create<MobileEcosystemState>((set) => ({
       },
     }),
 
-  // Helpers to test transitions between Empty and Seeded States
   loadDemoData: () =>
     set({
       passes: SEED_PASSES,
-      posts: SEED_POSTS,
+      posts: INITIAL_DARELLE_POSTS,
       challenges: SEED_CHALLENGES,
     }),
 

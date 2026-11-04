@@ -1,10 +1,18 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView, Modal } from "react-native";
-import { Award, Shield, Eye, CheckCircle2, MessageSquare, UserPlus, ArrowLeft, Grid, X, Activity, ChevronRight } from "lucide-react-native";
+import { View, Text, TouchableOpacity, Image, ScrollView, Modal } from "react-native";
+import { Award, Shield, Eye, CheckCircle2, MessageSquare, UserPlus, ArrowLeft, Grid, X, Activity, ChevronRight, Dumbbell } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { useThemeStore } from "../../theme/theme";
 import { useTrackingStore } from "../../store/trackingStore";
 import { NasmBiometricsModal } from "./NasmBiometricsModal";
+import { styles } from "./ProfileHub.styles";
+import {
+  DARELLE_AVATAR,
+  DARELLE_PHYSIQUE,
+  DARELLE_TENNIS_JUMP,
+  DARELLE_TENNIS_RACKET,
+  DARELLE_BOXING,
+} from "../../constants/darelleAssets";
 
 interface ProfileHubProps {
   onBack?: () => void;
@@ -23,25 +31,28 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
   const [isNasmOpen, setIsNasmOpen] = useState(false);
 
   const highlights = [
-    { id: "h1", title: "225kg PR", image: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=200&q=80" },
-    { id: "h2", title: "Hyrox '26", image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=200&q=80" },
-    { id: "h3", title: "Court Club", image: "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?auto=format&fit=crop&w=200&q=80" },
-    { id: "h4", title: "Nutrition", image: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=200&q=80" },
+    { id: "h1", title: "IFBB CPFT", image: DARELLE_AVATAR },
+    { id: "h2", title: "Physique", image: DARELLE_PHYSIQUE },
+    { id: "h3", title: "Tennis Smash", image: DARELLE_TENNIS_JUMP },
+    { id: "h4", title: "Combat", image: DARELLE_BOXING },
+    { id: "h5", title: "Court Gear", image: DARELLE_TENNIS_RACKET },
   ];
 
   const gridPhotos = [
+    DARELLE_PHYSIQUE,
+    DARELLE_TENNIS_JUMP,
+    DARELLE_BOXING,
+    DARELLE_TENNIS_RACKET,
+    DARELLE_AVATAR,
     "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=400&q=80",
-    "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=400&q=80",
-    "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?auto=format&fit=crop&w=400&q=80",
-    "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=400&q=80",
-    "https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=400&q=80",
-    "https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=400&q=80",
   ];
+
+  const avatarUri = profile.avatar_url || DARELLE_AVATAR;
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.bgScreen }]} contentContainerStyle={{ paddingBottom: 110 }} showsVerticalScrollIndicator={false}>
       <View style={styles.coverContainer}>
-        <Image source={{ uri: profile.cover_url ?? "" }} style={styles.coverPhoto} />
+        <Image source={{ uri: profile.cover_url || DARELLE_TENNIS_JUMP }} style={styles.coverPhoto} />
         <View style={styles.coverGradient} />
         {onBack && (
           <TouchableOpacity onPress={onBack} style={styles.backButtonPill}>
@@ -53,10 +64,10 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
 
       <View style={styles.profileHeader}>
         <View style={styles.avatarRow}>
-          <Image source={{ uri: profile.avatar_url ?? "" }} style={[styles.avatar, { borderColor: colors.bgScreen }]} />
+          <Image source={{ uri: avatarUri }} style={[styles.avatar, { borderColor: colors.bgScreen }]} />
           <View style={styles.liveTrainingBadge}>
             <View style={styles.liveGreenDot} />
-            <Text style={styles.liveTrainingText}>ACTIVE ATHLETE</Text>
+            <Text style={styles.liveTrainingText}>IFBB CERTIFIED TRAINER</Text>
           </View>
         </View>
 
@@ -65,14 +76,18 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
             <Text style={[styles.fullName, { color: colors.textPrimary }]}>{profile.first_name} {profile.last_name}</Text>
             <CheckCircle2 size={16} color="#38BDF8" fill="#38BDF8" />
           </View>
-          <Text style={[styles.username, { color: colors.textSecondary }]}>@{profile.username} • Strength & Hyrox</Text>
+          <View style={styles.certBadge}>
+            <Dumbbell size={12} color="#E11D48" />
+            <Text style={styles.certBadgeText}>IFBB Certified Personal Fitness Trainer</Text>
+          </View>
+          <Text style={[styles.username, { color: colors.textSecondary }]}>@{profile.username} • Strength & Physique • Racket & Combat</Text>
           <Text style={[styles.bioText, { color: colors.textPrimary }]}>{profile.bio}</Text>
         </View>
 
         <View style={styles.actionBtnRow}>
           <TouchableOpacity onPress={() => setIsFollowing(!isFollowing)} style={[styles.primaryActionBtn, isFollowing && styles.followingActive]}>
             <UserPlus size={15} color="#FFFFFF" style={{ marginRight: 6 }} />
-            <Text style={styles.primaryActionText}>{isFollowing ? "Following" : "Follow Athlete"}</Text>
+            <Text style={styles.primaryActionText}>{isFollowing ? "Following" : "Follow Coach"}</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={onOpenMessages} style={[styles.secondaryActionBtn, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
             <MessageSquare size={15} color={colors.textPrimary} style={{ marginRight: 6 }} />
@@ -81,10 +96,10 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
         </View>
 
         <View style={[styles.metricsRow, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
-          <View style={styles.metricItem}><Text style={[styles.metricVal, { color: colors.textPrimary }]}>2.3k</Text><Text style={styles.metricLabel}>Followers</Text></View>
-          <View style={styles.metricItem}><Text style={[styles.metricVal, { color: colors.textPrimary }]}>142</Text><Text style={styles.metricLabel}>Following</Text></View>
-          <View style={styles.metricItem}><Text style={[styles.metricVal, { color: colors.textPrimary }]}>342</Text><Text style={styles.metricLabel}>Workouts</Text></View>
-          <View style={styles.metricItem}><Text style={[styles.metricVal, { color: colors.textPrimary }]}>18</Text><Text style={styles.metricLabel}>PR Stamps</Text></View>
+          <View style={styles.metricItem}><Text style={[styles.metricVal, { color: colors.textPrimary }]}>3.8k</Text><Text style={styles.metricLabel}>Followers</Text></View>
+          <View style={styles.metricItem}><Text style={[styles.metricVal, { color: colors.textPrimary }]}>215</Text><Text style={styles.metricLabel}>Following</Text></View>
+          <View style={styles.metricItem}><Text style={[styles.metricVal, { color: colors.textPrimary }]}>540</Text><Text style={styles.metricLabel}>Workouts</Text></View>
+          <View style={styles.metricItem}><Text style={[styles.metricVal, { color: colors.textPrimary }]}>24</Text><Text style={styles.metricLabel}>PR Stamps</Text></View>
         </View>
 
         <TouchableOpacity onPress={() => setIsNasmOpen(true)} style={[styles.nasmBanner, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
@@ -141,7 +156,7 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
           <View style={styles.trophyGrid}>
             <View style={[styles.stampCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
               <View style={styles.stampHeader}>
-                <Text style={styles.stampType}>LIFT STAMP • VERIFIED PR</Text>
+                <Text style={styles.stampType}>IFBB CPFT • VERIFIED STRENGTH PR</Text>
                 <Eye size={13} color="#10B981" />
               </View>
               <Text style={[styles.stampMetric, { color: colors.textPrimary }]}>225 KG</Text>
@@ -149,11 +164,11 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
             </View>
             <View style={[styles.stampCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
               <View style={styles.stampHeader}>
-                <Text style={styles.stampType}>MOVE STAMP • GPS VERIFIED</Text>
+                <Text style={styles.stampType}>RACKET SPEED • VERIFIED OVERHEAD</Text>
                 <Eye size={13} color="#10B981" />
               </View>
-              <Text style={[styles.stampMetric, { color: colors.textPrimary }]}>21:45</Text>
-              <Text style={[styles.stampSub, { color: colors.textSecondary }]}>5.00 km Outdoor Pace • BGC Track 30th</Text>
+              <Text style={[styles.stampMetric, { color: colors.textPrimary }]}>172 KM/H</Text>
+              <Text style={[styles.stampSub, { color: colors.textSecondary }]}>Tennis Overhead Smash Peak Velocity • Court Club</Text>
             </View>
           </View>
         )}
@@ -161,7 +176,9 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
         {activeTab === "locker" && (
           <View style={styles.lockerList}>
             {passes.length === 0 ? (
-              <View style={styles.emptyLocker}><Text style={[styles.emptyLockerText, { color: colors.textMuted }]}>No active passes in locker</Text></View>
+              <View style={styles.emptyLocker}>
+                <Text style={[styles.emptyLockerText, { color: colors.textMuted }]}>No active passes. Explore facilities to unlock VIP access.</Text>
+              </View>
             ) : (
               passes.map((p) => (
                 <View key={p.id} style={[styles.lockerRow, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
@@ -184,63 +201,3 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  coverContainer: { position: "relative", width: "100%", height: 130 },
-  coverPhoto: { width: "100%", height: "100%" },
-  coverGradient: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.4)" },
-  backButtonPill: { position: "absolute", top: 12, left: 16, flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "rgba(9, 9, 11, 0.75)", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: "rgba(255,255,255,0.2)" },
-  backButtonText: { color: "#FAFAFA", fontSize: 12, fontWeight: "700" },
-  profileHeader: { paddingHorizontal: 16, marginTop: -40 },
-  avatarRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end" },
-  avatar: { width: 80, height: 80, borderRadius: 40, borderWidth: 3 },
-  liveTrainingBadge: { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "rgba(16, 185, 129, 0.15)", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, borderWidth: 1, borderColor: "rgba(16, 185, 129, 0.3)" },
-  liveGreenDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "#10B981" },
-  liveTrainingText: { color: "#10B981", fontSize: 10, fontWeight: "800" },
-  nameRow: { marginTop: 12 },
-  fullName: { fontSize: 22, fontWeight: "900" },
-  username: { fontSize: 12, marginTop: 2 },
-  bioText: { fontSize: 13, marginTop: 6, lineHeight: 18 },
-  actionBtnRow: { flexDirection: "row", gap: 10, marginTop: 14 },
-  primaryActionBtn: { flex: 1, backgroundColor: "#E11D48", borderRadius: 12, paddingVertical: 12, flexDirection: "row", alignItems: "center", justifyContent: "center" },
-  followingActive: { backgroundColor: "#71717A" },
-  primaryActionText: { color: "#FFFFFF", fontSize: 13, fontWeight: "800" },
-  secondaryActionBtn: { flex: 1, borderRadius: 12, paddingVertical: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", borderWidth: 1 },
-  secondaryActionText: { fontSize: 13, fontWeight: "800" },
-  metricsRow: { flexDirection: "row", justifyContent: "space-around", borderRadius: 14, paddingVertical: 14, marginTop: 16, borderWidth: 1 },
-  metricItem: { alignItems: "center" },
-  metricVal: { fontSize: 18, fontWeight: "900" },
-  metricLabel: { color: "#71717A", fontSize: 10, fontWeight: "700", marginTop: 2 },
-  nasmBanner: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderRadius: 12, padding: 12, marginTop: 10, borderWidth: 1 },
-  nasmBannerLeft: { flexDirection: "row", alignItems: "center", gap: 10, flex: 1 },
-  nasmBannerTitle: { fontSize: 12, fontWeight: "800" },
-  nasmBannerSub: { fontSize: 10, marginTop: 2 },
-  highlightsTray: { marginVertical: 16 },
-  highlightsScroll: { gap: 14 },
-  highlightItem: { alignItems: "center", width: 64 },
-  highlightRing: { width: 58, height: 58, borderRadius: 29, borderWidth: 1.5, padding: 2 },
-  highlightThumb: { width: "100%", height: "100%", borderRadius: 27 },
-  highlightLabel: { fontSize: 10, fontWeight: "600", marginTop: 4, textAlign: "center" },
-  tabsHeader: { flexDirection: "row", borderBottomWidth: 1, marginTop: 4 },
-  tabItem: { flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 12 },
-  tabItemActive: { borderBottomWidth: 2, borderBottomColor: "#E11D48" },
-  photoGrid: { flexDirection: "row", flexWrap: "wrap", gap: 2, marginTop: 10 },
-  gridPhotoWrap: { width: "32.7%", aspectRatio: 1 },
-  gridPhoto: { width: "100%", height: "100%" },
-  trophyGrid: { marginTop: 14, gap: 10 },
-  stampCard: { borderRadius: 14, padding: 14, borderWidth: 1 },
-  stampHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  stampType: { color: "#10B981", fontSize: 10, fontWeight: "800", letterSpacing: 0.5 },
-  stampMetric: { fontSize: 24, fontWeight: "900", marginTop: 6 },
-  stampSub: { fontSize: 12, marginTop: 2 },
-  lockerList: { marginTop: 14, gap: 8 },
-  emptyLocker: { padding: 24, alignItems: "center" },
-  emptyLockerText: { fontSize: 13 },
-  lockerRow: { flexDirection: "row", justifyContent: "space-between", padding: 12, borderRadius: 10, borderWidth: 1 },
-  lockerPassType: { fontSize: 13, fontWeight: "600" },
-  lockerStatus: { color: "#10B981", fontSize: 11, fontWeight: "700" },
-  photoModalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.9)", justifyContent: "center", alignItems: "center" },
-  closePhotoBtn: { position: "absolute", top: 48, right: 20, zIndex: 10, width: 44, height: 44, justifyContent: "center", alignItems: "center" },
-  fullPhoto: { width: "90%", height: "70%", borderRadius: 16 },
-});

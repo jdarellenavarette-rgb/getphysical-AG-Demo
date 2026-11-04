@@ -50,7 +50,7 @@ export function DMChatView({ thread, onBack }: DMChatViewProps) {
       <ScrollView style={styles.chatViewport} showsVerticalScrollIndicator={false}>
         {/* INCOMING TEXT */}
         <View style={[styles.incomingBubble, { backgroundColor: colors.bgCard, borderColor: colors.borderColor, borderWidth: 1 }]}>
-          <Text style={[styles.bubbleText, { color: colors.textPrimary }]}>Hey Adam! Great session this morning.</Text>
+          <Text style={[styles.bubbleText, { color: colors.textPrimary }]}>Hey Darelle! Great training session this morning.</Text>
           <Text style={[styles.bubbleTime, { color: colors.textMuted }]}>08:30 AM</Text>
         </View>
 

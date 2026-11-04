@@ -18,7 +18,7 @@ export function MobileStaffQuickdash({ onBack }: MobileStaffQuickdashProps) {
     if (type === 'VIP') {
       setGateFlash('GREEN');
       setOccupancy(prev => Math.min(prev + 1, maxCapacity));
-      setLastMember('Adam Arête (Titanium VIP #8821)');
+      setLastMember('Darelle Navarette (IFBB Pro VIP #8821)');
     } else if (type === 'COACH_CLIENT') {
       setGateFlash('BLUE');
       setOccupancy(prev => Math.min(prev + 1, maxCapacity));
@@ -101,7 +101,7 @@ export function MobileStaffQuickdash({ onBack }: MobileStaffQuickdashProps) {
           onClick={() => simulateScan('VIP')}
           style={{ padding: '10px', borderRadius: '10px', backgroundColor: '#10b98125', border: '1px solid #10b981', color: '#34d399', fontWeight: 800, fontSize: '12px', cursor: 'pointer' }}
         >
-          Simulate Valid Member Scan (Adam Arête)
+          Simulate Valid Member Scan (Darelle Navarette)
         </button>
         <button
           onClick={() => simulateScan('COACH_CLIENT')}

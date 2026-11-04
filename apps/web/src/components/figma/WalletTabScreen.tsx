@@ -27,18 +27,18 @@ export function WalletTabScreen({ onOpenFullHistory, onSelectTx }: WalletTabScre
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
-      {/* USER GREETING: AVATAR + ADAM ARÊTE */}
+      {/* USER GREETING: AVATAR + DARELLE NAVARETTE */}
       <div style={{ padding: '6px 20px 10px', display: 'flex', alignItems: 'center', gap: '14px', zIndex: 20 }}>
         <img
-          src="/assets/design/avatar-adam.png"
-          alt="Adam Arête"
+          src="/profiles/darelle/avatar.png"
+          alt="Darelle Navarette"
           style={{ width: '56px', height: '56px', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.7)', objectFit: 'cover' }}
         />
         <div>
           <h2 style={{ fontSize: '24px', fontWeight: 900, color: '#ffffff', letterSpacing: '-0.3px', margin: 0 }}>
-            Adam Arête
+            Darelle Navarette
           </h2>
-          <span style={{ fontSize: '11px', color: '#ec4899', fontWeight: 700 }}>Titanium VIP Member</span>
+          <span style={{ fontSize: '11px', color: '#ec4899', fontWeight: 700 }}>IFBB CPFT • Titanium VIP</span>
         </div>
       </div>
 

@@ -1,6 +1,32 @@
 import type { AthleteProfileData } from "../components/profile/AthleteProfileModal";
+import {
+  DARELLE_AVATAR,
+  DARELLE_PHYSIQUE,
+  DARELLE_TENNIS_JUMP,
+  DARELLE_TENNIS_RACKET,
+  DARELLE_BOXING,
+} from "../constants/darelleAssets";
 
 export const ATHLETE_ROSTER: Record<string, AthleteProfileData> = {
+  "Darelle Navarette": {
+    userId: "usr_athlete_01",
+    name: "Darelle Navarette",
+    username: "darellenavarette",
+    avatar: DARELLE_AVATAR,
+    bio: "IFBB Certified Personal Fitness Trainer | Strength & Hypertrophy • Racket Sports • Combat Conditioning.",
+    specialty: "IFBB Certified Personal Fitness Trainer",
+    isVerified: true,
+    followersCount: "3.8k",
+    workoutsCount: "540",
+    prStamp: { title: "Deadlift 1RM", metric: "225 KG", venue: "Metro Core Arena" },
+    photos: [
+      DARELLE_PHYSIQUE,
+      DARELLE_TENNIS_JUMP,
+      DARELLE_BOXING,
+      DARELLE_TENNIS_RACKET,
+      DARELLE_AVATAR,
+    ],
+  },
   "Coach Miguel Ramos": {
     userId: "u_miguel",
     name: "Coach Miguel Ramos",
@@ -61,15 +87,15 @@ export function getAthleteProfile(name: string, avatar?: string | null): Athlete
     userId: `u_${Date.now()}`,
     name,
     username: name.toLowerCase().replace(/\s+/g, "."),
-    avatar: avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
+    avatar: avatar || DARELLE_AVATAR,
     bio: "Active athlete in the Metro community. Training consistently on GetPhysical.",
     specialty: "Functional Athlete",
     isVerified: false,
     followersCount: "1.2k",
     workoutsCount: "180",
     photos: [
-      "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=400&q=80",
-      "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=400&q=80",
+      DARELLE_PHYSIQUE,
+      DARELLE_TENNIS_JUMP,
     ],
   };
 }

@@ -71,7 +71,7 @@ export function SettingsModal({
             <Text style={styles.cardHeader}>ATHLETE PROFILE</Text>
             <View style={[styles.row, { borderBottomColor: colors.borderLight }]}>
               <Text style={[styles.label, { color: colors.textSecondary }]}>Display Name</Text>
-              <Text style={[styles.value, { color: colors.textPrimary }]}>{profile.name ?? "Adam Arête"}</Text>
+              <Text style={[styles.value, { color: colors.textPrimary }]}>{profile.name ?? "Darelle Navarette"}</Text>
             </View>
             <View style={[styles.row, { borderBottomColor: colors.borderLight }]}>
               <Text style={[styles.label, { color: colors.textSecondary }]}>Handle</Text>

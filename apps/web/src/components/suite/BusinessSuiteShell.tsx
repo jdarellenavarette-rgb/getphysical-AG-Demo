@@ -59,8 +59,8 @@ function BusinessSuiteInner() {
         };
       case 'COACHDASH':
         return {
-          title: 'Coach Adam Arête Training Studio',
-          meta: 'Registry C • Program Cycles, Client Roster & Compliance CRM',
+          title: 'Coach Darelle Navarette (IFBB CPFT) Training Studio',
+          meta: 'Registry C • IFBB Certified Trainer • Hypertrophy, Racket & Combat Conditioning',
           badge: '32 Coached Athletes Active',
         };
       case 'ORGANIZERDASH':

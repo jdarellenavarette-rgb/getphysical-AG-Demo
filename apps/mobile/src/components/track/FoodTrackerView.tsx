@@ -86,14 +86,13 @@ export function FoodTrackerView() {
         </View>
       </View>
 
-      {/* 2. ORACLE - GEMINI AI FOOD GURU */}
+      {/* 2. ORACLE */}
       <View style={[styles.oracleBox, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
         <View style={styles.oracleTop}>
           <View style={styles.oracleBadge}>
-            <Sparkles size={14} color="#F59E0B" fill="#F59E0B" />
-            <Text style={styles.oracleBadgeText}>ORACLE • GEMINI AI FOOD GURU</Text>
+            <Sparkles size={13} color="#F59E0B" fill="#F59E0B" />
+            <Text style={styles.oracleBadgeText}>ORACLE</Text>
           </View>
-          <Text style={[styles.oracleSub, { color: colors.textMuted }]}>Nutritionix Macro Database Engine</Text>
         </View>
         <Text style={[styles.oracleInstruct, { color: colors.textPrimary }]}>
           Type random foods in casual language, Oracle computes the macros:
@@ -203,12 +202,11 @@ const styles = StyleSheet.create({
   progBarTrack: { width: "100%", height: 6, borderRadius: 3, overflow: "hidden", marginBottom: 4 },
   progBarFill: { height: "100%", borderRadius: 3 },
   ringLabel: { fontSize: 9, fontWeight: "700", textAlign: "center" },
-  oracleBox: { borderRadius: 18, borderWidth: 1, padding: 16, marginBottom: 14 },
-  oracleTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
+  oracleBox: { borderRadius: 18, borderWidth: 1, padding: 16, marginBottom: 14, overflow: "hidden" },
+  oracleTop: { flexDirection: "row", alignItems: "center", marginBottom: 8 },
   oracleBadge: { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "rgba(245, 158, 11, 0.12)", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 },
   oracleBadgeText: { color: "#F59E0B", fontSize: 10, fontWeight: "900" },
-  oracleSub: { fontSize: 10, fontWeight: "700" },
-  oracleInstruct: { fontSize: 13, fontWeight: "700", marginBottom: 10 },
+  oracleInstruct: { fontSize: 13, fontWeight: "700", marginBottom: 10, lineHeight: 18 },
   oracleInputRow: { flexDirection: "row", gap: 8 },
   oracleInput: { flex: 1, height: 44, borderRadius: 12, paddingHorizontal: 12, fontSize: 13, borderWidth: 1 },
   askOracleBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: "#E11D48", justifyContent: "center", alignItems: "center" },

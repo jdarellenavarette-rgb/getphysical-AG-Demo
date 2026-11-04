@@ -1,17 +1,64 @@
 'use client';
 
 import React from 'react';
-import { CheckCircle2, Clock } from 'lucide-react';
+import { SuiteMode } from './HeroPromoCard';
 
 interface CoachAvailabilityCardProps {
-  suiteMode: 'GYMDASH' | 'CLUBDASH';
+  suiteMode: SuiteMode;
 }
 
 export function CoachAvailabilityCard({ suiteMode }: CoachAvailabilityCardProps) {
-  const isGym = suiteMode === 'GYMDASH';
-  const label1 = isGym ? 'Coaching Capacity' : 'Court & Host Availability';
-  const sublabel1 = isGym ? 'Active Schedule Windows' : 'Prime Slot Windows';
-  const tag1 = isGym ? 'Coach Slots Filled' : 'Court Blocks Reserved';
+  const getAvailabilityMeta = () => {
+    switch (suiteMode) {
+      case 'CLUBDASH':
+        return {
+          title: 'Court & Changeover Availability',
+          badge: '94% on-time',
+          label1: 'Court Buffers',
+          sub1: '15-min Auto Changeovers',
+          tag1: 'Active Slots Safe',
+          pct1: 94,
+          label2: 'Prime Court Hours: 94% utilized',
+          tag2: 'Weekly Sched',
+        };
+      case 'COACHDASH':
+        return {
+          title: 'Coach Roster & Weekly Floor Hours',
+          badge: '88% booked',
+          label1: 'Floor Training Hours',
+          sub1: '28h of 35h Max Client Capacity',
+          tag1: 'Slots Filled',
+          pct1: 88,
+          label2: 'Client Slots: 32 active / 35 maximum',
+          tag2: 'Weekly Roster',
+        };
+      case 'ORGANIZERDASH':
+        return {
+          title: 'Game-Day Command & Brackets',
+          badge: '100% seeded',
+          label1: 'Tournament Match Grid',
+          sub1: 'All 64 Matches Assigned to Courts',
+          tag1: 'Referees Assigned',
+          pct1: 100,
+          label2: 'Tournament Schedule: 100% locked',
+          tag2: 'Bracket Live',
+        };
+      case 'GYMDASH':
+      default:
+        return {
+          title: 'Coach & Schedule Availability',
+          badge: '80% completed',
+          label1: 'Coaching Capacity',
+          sub1: 'Active Schedule Windows',
+          tag1: 'Coach Slots Filled',
+          pct1: 80,
+          label2: 'Schedule filled: 80% completed',
+          tag2: 'Weekly Sched',
+        };
+    }
+  };
+
+  const meta = getAvailabilityMeta();
 
   return (
     <div
@@ -29,7 +76,7 @@ export function CoachAvailabilityCard({ suiteMode }: CoachAvailabilityCardProps)
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#FFFFFF', letterSpacing: '-0.2px' }}>
-          {isGym ? 'Coach & Schedule Availability' : 'Court & Referee Availability'}
+          {meta.title}
         </h3>
         <span
           style={{
@@ -41,7 +88,7 @@ export function CoachAvailabilityCard({ suiteMode }: CoachAvailabilityCardProps)
             borderRadius: '6px',
           }}
         >
-          80% completed
+          {meta.badge}
         </span>
       </div>
 
@@ -50,17 +97,17 @@ export function CoachAvailabilityCard({ suiteMode }: CoachAvailabilityCardProps)
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <div style={{ width: '8px', height: '8px', borderRadius: '4px', backgroundColor: '#FF5364' }} />
-            <span style={{ fontSize: '12px', fontWeight: 700, color: '#F3F4F6' }}>{label1}</span>
-            <span style={{ fontSize: '11px', color: '#6B7280' }}>• {sublabel1}</span>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: '#F3F4F6' }}>{meta.label1}</span>
+            <span style={{ fontSize: '11px', color: '#6B7280' }}>• {meta.sub1}</span>
           </div>
-          <span style={{ fontSize: '11px', fontWeight: 700, color: '#9CA3AF' }}>{tag1}</span>
+          <span style={{ fontSize: '11px', fontWeight: 700, color: '#9CA3AF' }}>{meta.tag1}</span>
         </div>
 
         {/* Progress Bar */}
         <div style={{ width: '100%', height: '6px', backgroundColor: '#232836', borderRadius: '3px', overflow: 'hidden' }}>
           <div
             style={{
-              width: '80%',
+              width: `${meta.pct1}%`,
               height: '100%',
               background: 'linear-gradient(90deg, #FF6B7A, #FF3D57)',
               borderRadius: '3px',
@@ -73,9 +120,9 @@ export function CoachAvailabilityCard({ suiteMode }: CoachAvailabilityCardProps)
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '6px', borderTop: '1px solid rgba(255, 255, 255, 0.04)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <div style={{ width: '8px', height: '8px', borderRadius: '4px', backgroundColor: '#FF5364' }} />
-          <span style={{ fontSize: '12px', fontWeight: 700, color: '#D1D5DB' }}>Schedule filled: 80% completed</span>
+          <span style={{ fontSize: '12px', fontWeight: 700, color: '#D1D5DB' }}>{meta.label2}</span>
         </div>
-        <span style={{ fontSize: '11px', fontWeight: 700, color: '#9CA3AF' }}>Weekly Sched</span>
+        <span style={{ fontSize: '11px', fontWeight: 700, color: '#9CA3AF' }}>{meta.tag2}</span>
       </div>
     </div>
   );

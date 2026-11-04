@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Users, CreditCard, ChevronDown, ArrowDownRight, TrendingDown } from 'lucide-react';
+import React from 'react';
+import { Users, CreditCard, ChevronDown, ArrowDownRight, ArrowUpRight, Calendar, Trophy, UserCheck } from 'lucide-react';
+import { SuiteMode } from './HeroPromoCard';
 
 interface ActivityPerformanceSectionProps {
   timeframe: string;
   setTimeframe: (t: string) => void;
-  suiteMode: 'GYMDASH' | 'CLUBDASH';
+  suiteMode: SuiteMode;
 }
 
 export function ActivityPerformanceSection({
@@ -14,20 +15,55 @@ export function ActivityPerformanceSection({
   setTimeframe,
   suiteMode,
 }: ActivityPerformanceSectionProps) {
-  const isGym = suiteMode === 'GYMDASH';
+  const getMetrics = () => {
+    switch (suiteMode) {
+      case 'CLUBDASH':
+        return {
+          title: 'Activity & Facility Telemetry',
+          sub: 'Clubdash: Facility Bookings & Organizer Affiliation Network',
+          card1: { label: 'Court Bookings', val: '742', sub: 'Hours Booked', g: '800h', a: '690h', color: '#FF5364' },
+          card2: { label: 'Facility Cashflow', val: '₱ 2.18M', sub: 'Gross Revenue', g: '₱ 2.0M', a: '₱ 1.85M', badge: 'Maya Multi-Tenant' },
+          card3: { label: 'Organizer Affiliations', val: '18 Clubs', sub: 'Active Leagues', g: '20 Clubs', a: '14 Avg', isUp: true, pct: '+28%' },
+          bar1: { icon: Calendar, label: 'Spatial Court Utilization', val: '92.5% Prime Hours Booked', pct: 92.5, color: '#FF5364' },
+          bar2: { icon: CreditCard, label: 'Organizer Split Settlements', val: '96.2% Disbursed (Maya)', pct: 96.2, color: '#00D084' },
+        };
+      case 'COACHDASH':
+        return {
+          title: 'Coaching Pipeline & Client CRM',
+          sub: 'CoachDash: Client Rosters, Program Cycles & Morning Compliance',
+          card1: { label: 'Active Client Roster', val: '32', sub: 'Athletes Coached', g: '35 Max', a: '28 Avg', color: '#FF5364' },
+          card2: { label: 'Monthly Coaching Net', val: '₱ 245K', sub: 'Post-Floor Fee', g: '₱ 220K', a: '₱ 190K', badge: 'Coach Payout' },
+          card3: { label: 'Client Compliance', val: '91.4%', sub: 'Logging Accuracy', g: '>90%', a: '84.2%', isUp: true, pct: '+7.2%' },
+          bar1: { icon: UserCheck, label: 'Program Cycle Adherence', val: '93.8% Workouts Logged', pct: 93.8, color: '#FF5364' },
+          bar2: { icon: Trophy, label: 'PR Form & Recovery Reviews', val: '88.0% Feedback Given', pct: 88.0, color: '#38BDF8' },
+        };
+      case 'ORGANIZERDASH':
+        return {
+          title: 'Event Operations & Participant CRM',
+          sub: 'OrganizerDash: Tournaments, Participant Rosters & Bracket Verification',
+          card1: { label: 'Tournament Entries', val: '420', sub: 'Athletes Enrolled', g: '450 Max', a: '380 Avg', color: '#FF5364' },
+          card2: { label: 'Gross Event Pool', val: '₱ 630K', sub: 'Registration Pool', g: '₱ 600K', a: '₱ 510K', badge: 'Prize Escrow' },
+          card3: { label: 'Check-In Verification', val: '98.2%', sub: 'Waivers Cleared', g: '100%', a: '95.0%', isUp: true, pct: '+3.2%' },
+          bar1: { icon: Trophy, label: 'Bracket Seeding & Schedules', val: '100% Matches Seeded', pct: 100, color: '#FF5364' },
+          bar2: { icon: UserCheck, label: 'Participant Digital Passes', val: '98.2% Gate Ready', pct: 98.2, color: '#00D084' },
+        };
+      case 'GYMDASH':
+      default:
+        return {
+          title: 'Activity & Performance',
+          sub: 'GymDash: Commercial Gym Attendance & POS Cashflow',
+          card1: { label: 'Attendance', val: '883', sub: 'Daily Active Members', g: '1,000', a: '812', color: '#FF5364' },
+          card2: { label: 'Monthly Cashflow', val: '₱ 1.48M', sub: 'Gross Revenue', g: '₱ 1.30M', a: '₱ 1.17M', badge: 'maya Partner' },
+          card3: { label: 'Member Attrition', val: '4.2%', sub: 'Monthly Churn Rate', g: '<5.0%', a: '5.2%', isUp: false, pct: '↘' },
+          bar1: { icon: Users, label: 'Attendance & Registration', val: '88.3% Active Members', pct: 88.3, color: '#FF5364' },
+          bar2: { icon: CreditCard, label: 'Maya Payments Summary', val: '94.8% Completed (Maya)', pct: 94.8, color: '#00D084' },
+        };
+    }
+  };
 
-  // Stats dynamically adapt between GymDash and Clubdash
-  const attendanceVal = isGym ? 883 : 640;
-  const attendanceGoal = isGym ? '1,000' : '750';
-  const attendanceAvg = isGym ? '812' : '590';
-
-  const cashflowVal = isGym ? '₱ 1.48M' : '₱ 2.15M';
-  const cashflowGoal = isGym ? '₱ 1.30M' : '₱ 1.90M';
-  const cashflowAvg = isGym ? '₱ 1.17M' : '₱ 1.62M';
-
-  const attritionVal = isGym ? '4.2%' : '3.8%';
-  const attritionGoal = '<5.0%';
-  const attritionAvg = isGym ? '5.2%' : '4.6%';
+  const m = getMetrics();
+  const Icon1 = m.bar1.icon;
+  const Icon2 = m.bar2.icon;
 
   return (
     <div
@@ -45,10 +81,10 @@ export function ActivityPerformanceSection({
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#FFFFFF', letterSpacing: '-0.3px' }}>
-            Activity & Performance
+            {m.title}
           </h2>
           <span style={{ fontSize: '11px', color: '#6B7280', fontWeight: 600 }}>
-            {isGym ? 'Commercial Gym Live Telemetry' : 'Club & Spatial Court Capacity'}
+            {m.sub}
           </span>
         </div>
 
@@ -85,7 +121,7 @@ export function ActivityPerformanceSection({
 
       {/* 3 Metric Cards with Glowing Waves */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px' }}>
-        {/* Card 1: Attendance */}
+        {/* Card 1 */}
         <div
           style={{
             borderRadius: '18px',
@@ -100,10 +136,9 @@ export function ActivityPerformanceSection({
           }}
         >
           <div style={{ fontSize: '13px', fontWeight: 700, color: '#D1D5DB', marginBottom: '8px' }}>
-            {isGym ? 'Attendance' : 'Court Check-ins'}
+            {m.card1.label}
           </div>
 
-          {/* SVG Wave Sparkline */}
           <div style={{ height: '54px', width: '100%', margin: '4px 0 10px' }}>
             <svg viewBox="0 0 180 50" preserveAspectRatio="none" style={{ width: '100%', height: '100%' }}>
               <defs>
@@ -112,36 +147,24 @@ export function ActivityPerformanceSection({
                   <stop offset="100%" stopColor="#FF4D6D" stopOpacity="0.0" />
                 </linearGradient>
               </defs>
-              <path
-                d="M 0 35 Q 25 15, 50 32 T 100 20 T 140 28 T 180 14 L 180 50 L 0 50 Z"
-                fill="url(#waveFill1)"
-              />
-              <path
-                d="M 0 35 Q 25 15, 50 32 T 100 20 T 140 28 T 180 14"
-                fill="none"
-                stroke="#FF5364"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              />
+              <path d="M 0 35 Q 25 15, 50 32 T 100 20 T 140 28 T 180 14 L 180 50 L 0 50 Z" fill="url(#waveFill1)" />
+              <path d="M 0 35 Q 25 15, 50 32 T 100 20 T 140 28 T 180 14" fill="none" stroke="#FF5364" strokeWidth="2.5" strokeLinecap="round" />
             </svg>
           </div>
 
-          {/* Big Number & Subtext */}
           <div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-              <span style={{ fontSize: '24px', fontWeight: 900, color: '#FFFFFF' }}>{attendanceVal}</span>
-              <span style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 700 }}>
-                {isGym ? 'Daily Active' : 'Players In-Venue'}
-              </span>
+              <span style={{ fontSize: '24px', fontWeight: 900, color: '#FFFFFF' }}>{m.card1.val}</span>
+              <span style={{ fontSize: '11px', color: '#9CA3AF', fontWeight: 700 }}>{m.card1.sub}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px', fontSize: '10px', color: '#6B7280', fontWeight: 600 }}>
-              <span>Goal: <strong style={{ color: '#9CA3AF' }}>{attendanceGoal}</strong></span>
-              <span>Average: <strong style={{ color: '#9CA3AF' }}>{attendanceAvg}</strong></span>
+              <span>Goal: <strong style={{ color: '#9CA3AF' }}>{m.card1.g}</strong></span>
+              <span>Average: <strong style={{ color: '#9CA3AF' }}>{m.card1.a}</strong></span>
             </div>
           </div>
         </div>
 
-        {/* Card 2: Monthly Cashflow */}
+        {/* Card 2 */}
         <div
           style={{
             borderRadius: '18px',
@@ -156,10 +179,9 @@ export function ActivityPerformanceSection({
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 700, color: '#D1D5DB' }}>Monthly Cashflow</span>
+            <span style={{ fontSize: '13px', fontWeight: 700, color: '#D1D5DB' }}>{m.card2.label}</span>
           </div>
 
-          {/* SVG Wave Sparkline */}
           <div style={{ height: '54px', width: '100%', margin: '4px 0 10px' }}>
             <svg viewBox="0 0 180 50" preserveAspectRatio="none" style={{ width: '100%', height: '100%' }}>
               <defs>
@@ -168,25 +190,14 @@ export function ActivityPerformanceSection({
                   <stop offset="100%" stopColor="#FF4D6D" stopOpacity="0.0" />
                 </linearGradient>
               </defs>
-              <path
-                d="M 0 38 Q 30 18, 60 30 T 110 15 T 150 25 T 180 10 L 180 50 L 0 50 Z"
-                fill="url(#waveFill2)"
-              />
-              <path
-                d="M 0 38 Q 30 18, 60 30 T 110 15 T 150 25 T 180 10"
-                fill="none"
-                stroke="#FF5364"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              />
+              <path d="M 0 38 Q 30 18, 60 30 T 110 15 T 150 25 T 180 10 L 180 50 L 0 50 Z" fill="url(#waveFill2)" />
+              <path d="M 0 38 Q 30 18, 60 30 T 110 15 T 150 25 T 180 10" fill="none" stroke="#FF5364" strokeWidth="2.5" strokeLinecap="round" />
             </svg>
           </div>
 
-          {/* Big Number & Maya Partner */}
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-              <span style={{ fontSize: '24px', fontWeight: 900, color: '#FFFFFF' }}>{cashflowVal}</span>
-              {/* Maya Partner Pill Badge */}
+              <span style={{ fontSize: '24px', fontWeight: 900, color: '#FFFFFF' }}>{m.card2.val}</span>
               <div
                 style={{
                   display: 'flex',
@@ -198,18 +209,17 @@ export function ActivityPerformanceSection({
                   borderRadius: '999px',
                 }}
               >
-                <span style={{ fontSize: '9px', fontWeight: 900, color: '#00D084' }}>maya</span>
-                <span style={{ fontSize: '9px', fontWeight: 700, color: '#D1D5DB' }}>Partner</span>
+                <span style={{ fontSize: '9px', fontWeight: 900, color: '#00D084' }}>{m.card2.badge}</span>
               </div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px', fontSize: '10px', color: '#6B7280', fontWeight: 600 }}>
-              <span>Goal: <strong style={{ color: '#9CA3AF' }}>{cashflowGoal}</strong></span>
-              <span>Average: <strong style={{ color: '#9CA3AF' }}>{cashflowAvg}</strong></span>
+              <span>Goal: <strong style={{ color: '#9CA3AF' }}>{m.card2.g}</strong></span>
+              <span>Average: <strong style={{ color: '#9CA3AF' }}>{m.card2.a}</strong></span>
             </div>
           </div>
         </div>
 
-        {/* Card 3: Member Attrition */}
+        {/* Card 3 */}
         <div
           style={{
             borderRadius: '18px',
@@ -224,10 +234,9 @@ export function ActivityPerformanceSection({
           }}
         >
           <div style={{ fontSize: '13px', fontWeight: 700, color: '#D1D5DB', marginBottom: '8px' }}>
-            Member Attrition
+            {m.card3.label}
           </div>
 
-          {/* SVG Wave Sparkline */}
           <div style={{ height: '54px', width: '100%', margin: '4px 0 10px' }}>
             <svg viewBox="0 0 180 50" preserveAspectRatio="none" style={{ width: '100%', height: '100%' }}>
               <defs>
@@ -236,29 +245,26 @@ export function ActivityPerformanceSection({
                   <stop offset="100%" stopColor="#FF4D6D" stopOpacity="0.0" />
                 </linearGradient>
               </defs>
-              <path
-                d="M 0 20 Q 30 35, 70 24 T 120 34 T 150 22 T 180 32 L 180 50 L 0 50 Z"
-                fill="url(#waveFill3)"
-              />
-              <path
-                d="M 0 20 Q 30 35, 70 24 T 120 34 T 150 22 T 180 32"
-                fill="none"
-                stroke="#FF5364"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              />
+              <path d="M 0 20 Q 30 35, 70 24 T 120 34 T 150 22 T 180 32 L 180 50 L 0 50 Z" fill="url(#waveFill3)" />
+              <path d="M 0 20 Q 30 35, 70 24 T 120 34 T 150 22 T 180 32" fill="none" stroke="#FF5364" strokeWidth="2.5" strokeLinecap="round" />
             </svg>
           </div>
 
-          {/* Big Number & Subtext */}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <span style={{ fontSize: '24px', fontWeight: 900, color: '#FFFFFF' }}>{attritionVal}</span>
-              <ArrowDownRight size={18} color="#FF5364" strokeWidth={2.5} />
+              <span style={{ fontSize: '24px', fontWeight: 900, color: '#FFFFFF' }}>{m.card3.val}</span>
+              {m.card3.isUp ? (
+                <div style={{ display: 'flex', alignItems: 'center', color: '#10B981', fontSize: '12px', fontWeight: 800 }}>
+                  <ArrowUpRight size={16} />
+                  <span>{m.card3.pct}</span>
+                </div>
+              ) : (
+                <ArrowDownRight size={18} color="#FF5364" strokeWidth={2.5} />
+              )}
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px', fontSize: '10px', color: '#6B7280', fontWeight: 600 }}>
-              <span>Goal: <strong style={{ color: '#10B981' }}>{attritionGoal}</strong></span>
-              <span>Average: <strong style={{ color: '#9CA3AF' }}>{attritionAvg}</strong></span>
+              <span>Goal: <strong style={{ color: '#10B981' }}>{m.card3.g}</strong></span>
+              <span>Average: <strong style={{ color: '#9CA3AF' }}>{m.card3.a}</strong></span>
             </div>
           </div>
         </div>
@@ -266,7 +272,6 @@ export function ActivityPerformanceSection({
 
       {/* 2 Progress Bars Underneath */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px', marginTop: '2px' }}>
-        {/* Attendance & Registration */}
         <div
           style={{
             backgroundColor: '#161922',
@@ -290,17 +295,17 @@ export function ActivityPerformanceSection({
               flexShrink: 0,
             }}
           >
-            <Users size={16} color="#FF5364" />
+            <Icon1 size={16} color="#FF5364" />
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '6px' }}>
-              <span style={{ color: '#9CA3AF', fontWeight: 700 }}>Attendance & Registration</span>
-              <span style={{ color: '#FFFFFF', fontWeight: 800 }}>88.3% Active Members</span>
+              <span style={{ color: '#9CA3AF', fontWeight: 700 }}>{m.bar1.label}</span>
+              <span style={{ color: '#FFFFFF', fontWeight: 800 }}>{m.bar1.val}</span>
             </div>
             <div style={{ width: '100%', height: '6px', backgroundColor: '#232836', borderRadius: '3px', overflow: 'hidden' }}>
               <div
                 style={{
-                  width: '88.3%',
+                  width: `${m.bar1.pct}%`,
                   height: '100%',
                   background: 'linear-gradient(90deg, #FF6B7A, #FF3D57)',
                   borderRadius: '3px',
@@ -310,7 +315,6 @@ export function ActivityPerformanceSection({
           </div>
         </div>
 
-        {/* Maya Payments Summary */}
         <div
           style={{
             backgroundColor: '#161922',
@@ -334,17 +338,17 @@ export function ActivityPerformanceSection({
               flexShrink: 0,
             }}
           >
-            <CreditCard size={16} color="#00D084" />
+            <Icon2 size={16} color="#00D084" />
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '6px' }}>
-              <span style={{ color: '#9CA3AF', fontWeight: 700 }}>Maya Payments Summary</span>
-              <span style={{ color: '#FFFFFF', fontWeight: 800 }}>94.8% Completed (Maya)</span>
+              <span style={{ color: '#9CA3AF', fontWeight: 700 }}>{m.bar2.label}</span>
+              <span style={{ color: '#FFFFFF', fontWeight: 800 }}>{m.bar2.val}</span>
             </div>
             <div style={{ width: '100%', height: '6px', backgroundColor: '#232836', borderRadius: '3px', overflow: 'hidden' }}>
               <div
                 style={{
-                  width: '94.8%',
+                  width: `${m.bar2.pct}%`,
                   height: '100%',
                   background: 'linear-gradient(90deg, #00D084, #10B981)',
                   borderRadius: '3px',

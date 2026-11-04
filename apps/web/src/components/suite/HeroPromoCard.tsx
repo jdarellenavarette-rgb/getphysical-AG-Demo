@@ -3,13 +3,45 @@
 import React from 'react';
 import { Send, Sparkles } from 'lucide-react';
 
+export type SuiteMode = 'GYMDASH' | 'CLUBDASH' | 'COACHDASH' | 'ORGANIZERDASH';
+
 interface HeroPromoCardProps {
   onCreateMessage: () => void;
-  suiteMode?: 'GYMDASH' | 'CLUBDASH';
+  suiteMode?: SuiteMode;
 }
 
 export function HeroPromoCard({ onCreateMessage, suiteMode = 'GYMDASH' }: HeroPromoCardProps) {
-  const isGym = suiteMode === 'GYMDASH';
+  const getCopy = () => {
+    switch (suiteMode) {
+      case 'CLUBDASH':
+        return {
+          title: 'Facility Bookings & Affiliations',
+          desc: 'Broadcast court schedule changes and partner club notices.',
+          btn: 'Broadcast Alert ›',
+        };
+      case 'COACHDASH':
+        return {
+          title: 'Coach Client CRM & Programs',
+          desc: 'Push cycle updates, recovery reminders, and client check-in nudges.',
+          btn: 'Message Clients ›',
+        };
+      case 'ORGANIZERDASH':
+        return {
+          title: 'Participant Broadcasts & CRM',
+          desc: 'Dispatch bracket seeds, check-in calls, and tournament rule packs.',
+          btn: 'Broadcast Event ›',
+        };
+      case 'GYMDASH':
+      default:
+        return {
+          title: 'Manage Messaging & Promos',
+          desc: 'Send newsletters, promos, and reminders within your club.',
+          btn: 'Create Message ›',
+        };
+    }
+  };
+
+  const copy = getCopy();
 
   return (
     <div
@@ -107,7 +139,7 @@ export function HeroPromoCard({ onCreateMessage, suiteMode = 'GYMDASH' }: HeroPr
             marginBottom: '6px',
           }}
         >
-          {isGym ? 'Manage Messaging & Promos' : 'Broadcast Club Announcements'}
+          {copy.title}
         </h3>
         <p
           style={{
@@ -118,9 +150,7 @@ export function HeroPromoCard({ onCreateMessage, suiteMode = 'GYMDASH' }: HeroPr
             margin: '0 auto',
           }}
         >
-          {isGym
-            ? 'Send newsletters, promos, and reminders within your club.'
-            : 'Push court schedules, tournament invites, and club alerts.'}
+          {copy.desc}
         </p>
       </div>
 
@@ -150,8 +180,7 @@ export function HeroPromoCard({ onCreateMessage, suiteMode = 'GYMDASH' }: HeroPr
         onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-2px)')}
         onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateY(0)')}
       >
-        <span>Create Message</span>
-        <span style={{ fontSize: '14px', fontWeight: 900 }}>›</span>
+        <span>{copy.btn}</span>
       </button>
     </div>
   );

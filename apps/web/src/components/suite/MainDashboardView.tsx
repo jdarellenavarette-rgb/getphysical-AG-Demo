@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { HeroPromoCard } from './HeroPromoCard';
+import { HeroPromoCard, SuiteMode } from './HeroPromoCard';
 import { ActivityPerformanceSection } from './ActivityPerformanceSection';
 import { PerformanceTableCard } from './PerformanceTableCard';
 import { EngagementGaugeCard } from './EngagementGaugeCard';
@@ -9,7 +9,7 @@ import { CoachAvailabilityCard } from './CoachAvailabilityCard';
 import { CreateMessageModal } from './CreateMessageModal';
 
 interface MainDashboardViewProps {
-  suiteMode: 'GYMDASH' | 'CLUBDASH';
+  suiteMode: SuiteMode;
   onNavigateToSchedule?: () => void;
   onNavigateToTriage?: () => void;
 }
@@ -58,7 +58,7 @@ export function MainDashboardView({
         />
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <EngagementGaugeCard score={suiteMode === 'GYMDASH' ? 7.4 : 8.2} target={8.0} />
+          <EngagementGaugeCard suiteMode={suiteMode} />
           <CoachAvailabilityCard suiteMode={suiteMode} />
         </div>
       </div>

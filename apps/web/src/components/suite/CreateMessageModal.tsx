@@ -1,23 +1,87 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, Send, Sparkles, Bell, MessageSquare, Tag, Users, CheckCircle } from 'lucide-react';
+import { X, Send, Sparkles, Bell, MessageSquare, Tag, Users, CheckCircle, Trophy, UserCheck } from 'lucide-react';
+import { SuiteMode } from './HeroPromoCard';
 
 interface CreateMessageModalProps {
   visible: boolean;
   onClose: () => void;
-  suiteMode: 'GYMDASH' | 'CLUBDASH';
+  suiteMode: SuiteMode;
 }
 
 export function CreateMessageModal({ visible, onClose, suiteMode }: CreateMessageModalProps) {
-  const [audience, setAudience] = useState<'ALL' | 'AT_RISK' | 'VIP' | 'PROGRAMS'>('ALL');
-  const [channel, setChannel] = useState<'PUSH' | 'SMS' | 'FEED'>('PUSH');
+  const [audience, setAudience] = useState<'ALL' | 'SEGMENT_1' | 'SEGMENT_2' | 'SEGMENT_3'>('ALL');
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [promoCode, setPromoCode] = useState('');
   const [isSent, setIsSent] = useState(false);
 
   if (!visible) return null;
+
+  const getModalConfig = () => {
+    switch (suiteMode) {
+      case 'CLUBDASH':
+        return {
+          title: 'Facility & Affiliated Club Broadcast',
+          sub: 'Broadcast court schedule changes and affiliated club notices',
+          segments: [
+            { id: 'ALL', label: 'All Players (640)' },
+            { id: 'SEGMENT_1', label: 'Affiliated Clubs (18)' },
+            { id: 'SEGMENT_2', label: 'Peak Court Bookers' },
+            { id: 'SEGMENT_3', label: 'Tournament Entrants' },
+          ],
+          placeholderTitle: 'e.g. Court 3 & 4 Resurfacing Scheduled for Tomorrow 06:00-10:00',
+          placeholderBody: 'Notice to all affiliated leagues: Alternate slots reserved in Court Alpha.',
+          promoLabel: 'Attach Court Booking Credit (Optional)',
+        };
+      case 'COACHDASH':
+        return {
+          title: 'Coach Client CRM & Program Nudge',
+          sub: 'Send macrocycle updates, recovery reminders, and client nudges',
+          segments: [
+            { id: 'ALL', label: 'All Clients (32)' },
+            { id: 'SEGMENT_1', label: 'Hypertrophy Track' },
+            { id: 'SEGMENT_2', label: 'Hyrox Endurance' },
+            { id: 'SEGMENT_3', label: 'At-Risk / Missing Logs (4)' },
+          ],
+          placeholderTitle: 'e.g. Week 4 Deload & 1RM Progression Check',
+          placeholderBody: 'Ensure your post-workout heart rates and video form checks are logged today.',
+          promoLabel: 'Attach Session Pack Bonus (Optional)',
+        };
+      case 'ORGANIZERDASH':
+        return {
+          title: 'Tournament Participant Broadcast',
+          sub: 'Dispatch bracket updates, check-in calls, and rule packs',
+          segments: [
+            { id: 'ALL', label: 'All Participants (420)' },
+            { id: 'SEGMENT_1', label: 'Men / Women Open (128)' },
+            { id: 'SEGMENT_2', label: 'Mixed Doubles (96)' },
+            { id: 'SEGMENT_3', label: 'Unverified Waivers (8)' },
+          ],
+          placeholderTitle: 'e.g. Official Bracket Draw Released & Court Allocation Finalized',
+          placeholderBody: 'All team captains must check in at Gate B 30 minutes prior to first whistle.',
+          promoLabel: 'Attach Spectator Pass Code (Optional)',
+        };
+      case 'GYMDASH':
+      default:
+        return {
+          title: 'Manage Messaging & Promos',
+          sub: 'Send newsletters, promos, and reminders within your gym',
+          segments: [
+            { id: 'ALL', label: 'All Active (883)' },
+            { id: 'SEGMENT_1', label: 'At-Risk (42)' },
+            { id: 'SEGMENT_2', label: 'VIP Pass (210)' },
+            { id: 'SEGMENT_3', label: 'Class Enrollees (540)' },
+          ],
+          placeholderTitle: 'e.g. Flash 48-Hour Recovery Clinic & Sauna Access',
+          placeholderBody: 'Exclusive recovery masterclass with verified PR reviews this Saturday.',
+          promoLabel: 'Attach Promo Voucher (Optional)',
+        };
+    }
+  };
+
+  const cfg = getModalConfig();
 
   const handleSend = () => {
     if (!title.trim() || !body.trim()) {
@@ -78,9 +142,9 @@ export function CreateMessageModal({ visible, onClose, suiteMode }: CreateMessag
             </div>
             <div>
               <h3 style={{ fontSize: '17px', fontWeight: 900, color: '#FFFFFF' }}>
-                {suiteMode === 'GYMDASH' ? 'Manage Messaging & Promos' : 'Broadcast Club Announcement'}
+                {cfg.title}
               </h3>
-              <p style={{ fontSize: '11px', color: '#9CA3AF' }}>Deliver directly to members&apos; phones and watches</p>
+              <p style={{ fontSize: '11px', color: '#9CA3AF' }}>{cfg.sub}</p>
             </div>
           </div>
           <button
@@ -96,7 +160,7 @@ export function CreateMessageModal({ visible, onClose, suiteMode }: CreateMessag
             <CheckCircle size={48} color="#10B981" style={{ margin: '0 auto 14px' }} />
             <h4 style={{ fontSize: '18px', fontWeight: 800, color: '#FFFFFF' }}>Broadcast Dispatched!</h4>
             <p style={{ fontSize: '12px', color: '#9CA3AF', marginTop: '6px' }}>
-              Your message was sent to {audience === 'ALL' ? '883 active members' : 'selected member segment'}.
+              Your message was pushed to the selected audience segment with live delivery confirmation.
             </p>
           </div>
         ) : (
@@ -104,15 +168,10 @@ export function CreateMessageModal({ visible, onClose, suiteMode }: CreateMessag
             {/* Target Audience */}
             <div>
               <label style={{ fontSize: '11px', fontWeight: 800, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '6px' }}>
-                Target Audience
+                Audience Segment
               </label>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
-                {[
-                  { id: 'ALL', label: 'All Active (883)' },
-                  { id: 'AT_RISK', label: 'At-Risk (42)' },
-                  { id: 'VIP', label: 'VIP Pass (210)' },
-                  { id: 'PROGRAMS', label: 'Classes (540)' },
-                ].map((aud) => (
+                {cfg.segments.map((aud) => (
                   <button
                     key={aud.id}
                     onClick={() => setAudience(aud.id as any)}
@@ -136,13 +195,13 @@ export function CreateMessageModal({ visible, onClose, suiteMode }: CreateMessag
             {/* Headline */}
             <div>
               <label style={{ fontSize: '11px', fontWeight: 800, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '6px' }}>
-                Headline / Notification Title
+                Broadcast Headline
               </label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. Flash 48-Hour Recovery Clinic & Sauna Access"
+                placeholder={cfg.placeholderTitle}
                 style={{
                   width: '100%',
                   backgroundColor: '#181B24',
@@ -164,7 +223,7 @@ export function CreateMessageModal({ visible, onClose, suiteMode }: CreateMessag
               <textarea
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
-                placeholder="Write your announcement or workout reminder here..."
+                placeholder={cfg.placeholderBody}
                 rows={3}
                 style={{
                   width: '100%',
@@ -180,17 +239,17 @@ export function CreateMessageModal({ visible, onClose, suiteMode }: CreateMessag
               />
             </div>
 
-            {/* Optional Promo Tag */}
+            {/* Optional Voucher Tag */}
             <div>
               <label style={{ fontSize: '11px', fontWeight: 800, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', marginBottom: '6px' }}>
-                Attach Promo Voucher (Optional)
+                {cfg.promoLabel}
               </label>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <input
                   type="text"
                   value={promoCode}
                   onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                  placeholder="e.g. VIPPASS20"
+                  placeholder="e.g. GPVIP20"
                   style={{
                     flex: 1,
                     backgroundColor: '#181B24',
@@ -205,7 +264,7 @@ export function CreateMessageModal({ visible, onClose, suiteMode }: CreateMessag
                 />
                 <button
                   type="button"
-                  onClick={() => setPromoCode('METROVIP50')}
+                  onClick={() => setPromoCode('METROGP2026')}
                   style={{ backgroundColor: '#1F2432', color: '#D1D5DB', padding: '0 12px', borderRadius: '10px', fontSize: '11px', fontWeight: 700 }}
                 >
                   Generate Code
@@ -234,7 +293,7 @@ export function CreateMessageModal({ visible, onClose, suiteMode }: CreateMessag
               }}
             >
               <Send size={15} />
-              <span>Send Broadcast to {audience === 'ALL' ? '883 Members' : 'Segment'}</span>
+              <span>Broadcast Now</span>
             </button>
           </div>
         )}

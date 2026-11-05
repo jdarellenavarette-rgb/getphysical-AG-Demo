@@ -1,6 +1,16 @@
 import { create } from 'zustand';
+import Constants from 'expo-constants';
 import { getSodiaSupabaseClient, CrmBroadcast, CrmChatMessage } from 'sodia-core';
 import type { DMThread } from '../components/sodia/InboxView';
+
+const getApiBaseUrl = (): string => {
+  const hostUri = Constants.expoConfig?.hostUri || (Constants as any).manifest?.debuggerHost;
+  if (hostUri) {
+    const host = hostUri.split(':')[0];
+    return `http://${host}:3000`;
+  }
+  return 'http://192.168.1.3:3000';
+};
 
 export interface CrmNotificationToast {
   id: string;
@@ -289,7 +299,8 @@ export const useCrmMessagingStore = create<CrmMessagingState>((set, get) => ({
 
     // 2. HTTP POST fallback to web server
     try {
-      await fetch('http://192.168.0.173:3000/api/crm/reply', {
+      const baseUrl = getApiBaseUrl();
+      await fetch(`${baseUrl}/api/crm/reply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -306,7 +317,8 @@ export const useCrmMessagingStore = create<CrmMessagingState>((set, get) => ({
 
   loadBroadcastHistory: async () => {
     try {
-      const res = await fetch('http://192.168.0.173:3000/api/crm/broadcast');
+      const baseUrl = getApiBaseUrl();
+      const res = await fetch(`${baseUrl}/api/crm/broadcast`);
       if (res.ok) {
         const json = await res.json();
         if (json.broadcasts && Array.isArray(json.broadcasts)) {

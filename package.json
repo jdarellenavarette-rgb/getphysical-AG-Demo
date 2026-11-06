@@ -8,6 +8,10 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
+    "typecheck:functions": "pnpm --filter sodia-core exec tsc -p ../../supabase/functions/tsconfig.json",
+    "test": "turbo run test",
+    "db:test": "bash supabase/tests/run-db-tests.sh",
+    "db:types:check": "cmp packages/sodia-core/src/database.types.ts supabase/functions/_shared/database.types.ts",
     "clean": "turbo run clean"
   },
   "devDependencies": {

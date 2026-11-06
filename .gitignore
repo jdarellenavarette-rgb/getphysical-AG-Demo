@@ -34,3 +34,8 @@ yarn-error.log*
 .DS_Store
 *.pem
 *.tsbuildinfo
+
+# Supabase CLI
+supabase/.temp/
+supabase/.branches/
+supabase/functions/.env

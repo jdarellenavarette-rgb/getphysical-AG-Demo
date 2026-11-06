@@ -71,6 +71,10 @@ cp packages/sodia-core/src/database.types.ts supabase/functions/_shared/database
 
 ## Deploying
 
+**Staging project:** `cmahltbjopkihcfkzzex` (ap-southeast-1, Postgres 17). Migrations 0001–0008 applied
+2026-11-06 and recorded in `supabase_migrations.schema_migrations`; all six DB test suites passed
+against it (run in rolled-back transactions). Edge functions not yet deployed.
+
 1. **Use a new Supabase project** (or reset staging). The existing demo project's schema
    was never in version control and cannot be verified, so do not `db push` onto it blindly.
 2. `supabase link --project-ref <ref>` then `supabase db push`.

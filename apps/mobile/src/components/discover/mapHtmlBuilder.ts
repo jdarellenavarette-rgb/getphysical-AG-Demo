@@ -21,7 +21,7 @@ export function buildLeafletMapHtml({
   isLight,
   apiKey,
 }: BuildMapHtmlOptions): string {
-  const effectiveKey = apiKey || process.env.EXPO_PUBLIC_MAPS_API_KEY || "d797ff206eda4d1a804ab31d002f0f41";
+  const effectiveKey = apiKey || process.env.EXPO_PUBLIC_MAPS_API_KEY || "";
 
   const primaryTileUrl = isLight
     ? `https://maps.geoapify.com/v1/tile/osm-bright-smooth/{z}/{x}/{y}.png?apiKey=${effectiveKey}`

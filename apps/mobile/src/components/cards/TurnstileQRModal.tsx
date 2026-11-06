@@ -1,38 +1,30 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Modal } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft, QrCode, ShieldCheck, RefreshCw } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
+import { usePassTotp } from "../../hooks/usePassTotp";
 
 interface TurnstileQRModalProps {
   visible: boolean;
   onClose: () => void;
   facilityName?: string;
+  passId: string | null;
 }
 
-export function TurnstileQRModal({ visible, onClose, facilityName = "Metro Core Arena" }: TurnstileQRModalProps) {
+export function TurnstileQRModal({ visible, onClose, facilityName = "Metro Core Arena", passId }: TurnstileQRModalProps) {
   const insets = useSafeAreaInsets();
   const { colors } = useThemeStore();
-  const [secondsRemaining, setSecondsRemaining] = useState(60);
-  const [totpToken, setTotpToken] = useState("892 410");
-
-  useEffect(() => {
-    let interval: ReturnType<typeof setInterval> | null = null;
-    if (visible) {
-      interval = setInterval(() => {
-        setSecondsRemaining((prev) => {
-          if (prev <= 1) {
-            setTotpToken(`${Math.floor(100 + Math.random() * 900)} ${Math.floor(100 + Math.random() * 900)}`);
-            return 60;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [visible]);
+  const totpState = usePassTotp(passId, visible);
+  const totp = totpState.status === "ready" ? totpState.totp : null;
+  const statusText =
+    totpState.status === "signed_out"
+      ? "Sign in to activate your pass"
+      : totpState.status === "unavailable"
+        ? "No active pass for this facility"
+        : totpState.status === "loading"
+          ? "Loading secure code…"
+          : `Refreshes in ${totpState.totp.remainingSeconds}s${totpState.offline ? " • offline" : ""}`;
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
@@ -60,10 +52,10 @@ export function TurnstileQRModal({ visible, onClose, facilityName = "Metro Core 
           {/* QR CODE DISPLAY BOX */}
           <View style={styles.qrCard}>
             <QrCode size={190} color="#09090B" />
-            <Text style={styles.tokenText}>{totpToken}</Text>
+            <Text style={styles.tokenText}>{totp ? `${totp.code.slice(0, 3)} ${totp.code.slice(3)}` : "––– –––"}</Text>
             <View style={styles.timerRow}>
               <RefreshCw size={12} color="#10B981" />
-              <Text style={styles.timerText}>Refreshes in {secondsRemaining}s</Text>
+              <Text style={styles.timerText}>{statusText}</Text>
             </View>
           </View>
 

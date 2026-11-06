@@ -30,6 +30,7 @@ import { CrmToastBanner } from "./components/common/CrmToastBanner";
 import { useThemeStore } from "./theme/theme";
 import type { FacilityRow } from "sodia-core";
 import { OpeningLoadingScreen } from "./components/common/OpeningLoadingScreen";
+import { useCheckout } from "./hooks/useCheckout";
 
 export default function App() {
   const insets = useSafeAreaInsets();
@@ -55,14 +56,18 @@ export default function App() {
   const { colors } = useThemeStore();
   const { initRealtimeSubscription, threads } = useCrmMessagingStore();
 
-  useEffect(() => {
-    initRealtimeSubscription();
-  }, []);
+  // Subscribes to the user's inbox; the returned teardown removes the Realtime channel.
+  useEffect(() => initRealtimeSubscription(), [initRealtimeSubscription]);
 
-  const handleCheckoutConfirm = (item: CheckoutRequest) => {
+  // Signed-out preview keeps the local demo pass; signed-in users pay via Xendit/Stripe.
+  const { confirm: confirmCheckout } = useCheckout((item) => {
     provisionPass(item.facilityName, item.billingKind, item.baseAmountPhp, item.title, item.facilityId);
-    setActiveCheckoutItem(null);
-    setCurrentTab("cards");
+  });
+  const handleCheckoutConfirm = async (item: CheckoutRequest) => {
+    if (await confirmCheckout(item)) {
+      setActiveCheckoutItem(null);
+      setCurrentTab("cards");
+    }
   };
 
   return (

@@ -12,7 +12,6 @@ export function FoodTrackerView() {
     foodMeals,
     hydrationLiters,
     dailyTargets,
-    geminiApiKey,
     saveFoodMeal,
     deleteFoodMeal,
     clearFoodMeals,
@@ -32,7 +31,7 @@ export function FoodTrackerView() {
     if (!nlpInput.trim()) return;
     setIsAnalyzing(true);
     try {
-      const res = await askOracleAiFoodGuru(nlpInput.trim(), geminiApiKey);
+      const res = await askOracleAiFoodGuru(nlpInput.trim());
       setOracleDraft(res);
     } catch {
       Alert.alert("Oracle", "Could not analyze meal. Please check network or try again.");

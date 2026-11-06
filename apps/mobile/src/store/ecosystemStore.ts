@@ -80,6 +80,7 @@ const INITIAL_PROFILE: ProfileRow = {
   weights: { weightlifting: 45, running: 20, pickleball: 25, general: 10 },
   metrics: { followers: 3820, following: 215, activeChallenges: 4 },
   name: "Darelle Navarette",
+  coach_plan: "FREE",
 };
 
 export const useEcosystemStore = create<MobileEcosystemState>((set) => ({
@@ -155,12 +156,13 @@ export const useEcosystemStore = create<MobileEcosystemState>((set) => ({
       const newPass: PassRow = {
         id: `pass_${Date.now()}`,
         owner_id: state.profile.id,
-        facility_id: (facilityId as any) ?? "fac_metro_core",
+        facility_id: facilityId ?? "fac_metro_core",
         sku_id: kind === "recurring_subscription" ? "sku_vip_monthly" : "sku_day_pass",
         pass_type: customTitle ?? (kind === "recurring_subscription" ? "VIP Monthly All-Access" : "Day Pass"),
-        status: "active",
+        status: "ACTIVE",
         valid_until: new Date(Date.now() + 30 * 86400000).toISOString(),
         gifted_by_user_id: null,
+        payment_order_id: null,
         created_at: new Date().toISOString(),
       };
       return { passes: [newPass, ...state.passes] };

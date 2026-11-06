@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { QrCode, RotateCw, ShieldCheck, Zap, Radio, Sparkles } from "lucide-react-native";
-import { generateDynamicPassTotp, type PassRow } from "sodia-core";
+import type { PassRow } from "sodia-core";
+import { usePassTotp } from "../../hooks/usePassTotp";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 
 interface ExactVIPCardProps {
@@ -12,18 +13,19 @@ interface ExactVIPCardProps {
 export function ExactVIPCard({ pass, facilityName }: ExactVIPCardProps) {
   const { profile } = useEcosystemStore();
   const [isFlipped, setIsFlipped] = useState(false);
-  const [totpData, setTotpData] = useState(() =>
-    generateDynamicPassTotp(profile.id, pass.id, pass.facility_id ?? "fac_001")
-  );
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTotpData(
-        generateDynamicPassTotp(profile.id, pass.id, pass.facility_id ?? "fac_001")
-      );
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [profile.id, pass.id, pass.facility_id]);
+  // Codes are only computed while the back (scanner) face is showing.
+  const totpState = usePassTotp(pass.id, isFlipped);
+  const totp = totpState.status === "ready" ? totpState.totp : null;
+  const totpStatusText =
+    totpState.status === "signed_out"
+      ? "Sign in to activate this pass"
+      : totpState.status === "unavailable"
+        ? "Pass inactive — no gate code"
+        : totpState.status === "loading"
+          ? "Loading secure code…"
+          : totpState.offline
+            ? "Offline code • Touch to flip back"
+            : "Turnstile Gate A Scan • Touch to flip back";
 
   return (
     <TouchableOpacity
@@ -73,7 +75,7 @@ export function ExactVIPCard({ pass, facilityName }: ExactVIPCardProps) {
             <View style={styles.qrTickingRow}>
               <Zap size={13} color="#10B981" />
               <Text style={styles.qrTickingText}>
-                ROLLING KEY • {totpData.remainingSeconds}s REFRESH
+                ROLLING KEY • {totp ? `${totp.remainingSeconds}s REFRESH` : "—"}
               </Text>
             </View>
             <Text style={styles.totpFallbackHeader}>60-SEC HARDWARE TOTP</Text>
@@ -84,10 +86,10 @@ export function ExactVIPCard({ pass, facilityName }: ExactVIPCardProps) {
           </View>
 
           <View style={styles.totpCodeContainer}>
-            <Text style={styles.totpCodeText}>{totpData.formattedCode}</Text>
-            <Text style={styles.totpSubtext}>
-              Turnstile Gate A Scan • Touch to flip back
+            <Text style={styles.totpCodeText} accessibilityLabel={totp ? `Gate code ${totp.code.split("").join(" ")}` : undefined}>
+              {totp?.formattedCode ?? "––– –––"}
             </Text>
+            <Text style={styles.totpSubtext}>{totpStatusText}</Text>
           </View>
         </View>
       )}

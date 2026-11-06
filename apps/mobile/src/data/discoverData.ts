@@ -100,7 +100,10 @@ export const EXPANDED_FACILITIES: readonly FacilityRow[] = [
     has_active_challenge: true,
     challenge_title: "Heaviest Deadlift in BGC",
     spatial_assets: null,
+    owner_id: null,
+    plan: "FREE",
     created_at: "2026-10-31T00:00:00.000Z",
+    updated_at: null,
   },
   {
     id: "fac_iron_forge",
@@ -135,7 +138,10 @@ export const EXPANDED_FACILITIES: readonly FacilityRow[] = [
     has_active_challenge: true,
     challenge_title: "1km Sled Push Sprint",
     spatial_assets: null,
+    owner_id: null,
+    plan: "FREE",
     created_at: "2026-10-31T00:00:00.000Z",
+    updated_at: null,
   },
   {
     id: "fac_aura_pilates",
@@ -170,7 +176,10 @@ export const EXPANDED_FACILITIES: readonly FacilityRow[] = [
     has_active_challenge: false,
     challenge_title: null,
     spatial_assets: null,
+    owner_id: null,
+    plan: "FREE",
     created_at: "2026-10-31T00:00:00.000Z",
+    updated_at: null,
   },
   {
     id: "fac_coreform_pilates",
@@ -205,7 +214,10 @@ export const EXPANDED_FACILITIES: readonly FacilityRow[] = [
     has_active_challenge: false,
     challenge_title: null,
     spatial_assets: null,
+    owner_id: null,
+    plan: "FREE",
     created_at: "2026-10-31T00:00:00.000Z",
+    updated_at: null,
   },
   {
     id: "fac_nexus_club",
@@ -240,7 +252,10 @@ export const EXPANDED_FACILITIES: readonly FacilityRow[] = [
     has_active_challenge: false,
     challenge_title: null,
     spatial_assets: null,
+    owner_id: null,
+    plan: "FREE",
     created_at: "2026-10-31T00:00:00.000Z",
+    updated_at: null,
   },
   {
     id: "fac_apex_aquatics",
@@ -275,7 +290,10 @@ export const EXPANDED_FACILITIES: readonly FacilityRow[] = [
     has_active_challenge: true,
     challenge_title: "100m Freestyle Time Trial",
     spatial_assets: null,
+    owner_id: null,
+    plan: "FREE",
     created_at: "2026-10-31T00:00:00.000Z",
+    updated_at: null,
   },
   {
     id: "fac_summit_climb",
@@ -310,7 +328,10 @@ export const EXPANDED_FACILITIES: readonly FacilityRow[] = [
     has_active_challenge: true,
     challenge_title: "Flash V6 Boulder Route",
     spatial_assets: null,
+    owner_id: null,
+    plan: "FREE",
     created_at: "2026-10-31T00:00:00.000Z",
+    updated_at: null,
   },
   {
     id: "fac_velocity_turf",
@@ -345,7 +366,10 @@ export const EXPANDED_FACILITIES: readonly FacilityRow[] = [
     has_active_challenge: false,
     challenge_title: null,
     spatial_assets: null,
+    owner_id: null,
+    plan: "FREE",
     created_at: "2026-10-31T00:00:00.000Z",
+    updated_at: null,
   },
 ];
 

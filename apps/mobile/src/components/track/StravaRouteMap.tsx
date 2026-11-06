@@ -24,7 +24,7 @@ export function StravaRouteMap({ routeCoords, currentPos, isTracking }: StravaRo
     webViewRef.current?.injectJavaScript(js);
   }, [currentPos]);
 
-  const effectiveKey = process.env.EXPO_PUBLIC_MAPS_API_KEY || "d797ff206eda4d1a804ab31d002f0f41";
+  const effectiveKey = process.env.EXPO_PUBLIC_MAPS_API_KEY || "";
   const primaryTileUrl = isLight
     ? `https://maps.geoapify.com/v1/tile/osm-bright-smooth/{z}/{x}/{y}.png?apiKey=${effectiveKey}`
     : `https://maps.geoapify.com/v1/tile/dark-matter-purple-roads/{z}/{x}/{y}.png?apiKey=${effectiveKey}`;

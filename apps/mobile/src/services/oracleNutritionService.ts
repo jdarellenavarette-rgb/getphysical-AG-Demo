@@ -1,4 +1,5 @@
 import type { FoodItemBreakdown } from "../store/trackingStore";
+import { getSessionUserId, getSupabase } from "../lib/supabase";
 
 export interface OracleAnalysisResult {
   headline: string;
@@ -92,75 +93,31 @@ function parsePortionCount(clause: string, keyword: string): number {
   return 1;
 }
 
-export async function askOracleAiFoodGuru(
-  userPrompt: string,
-  userProvidedApiKey?: string
-): Promise<OracleAnalysisResult> {
-  const query = userPrompt.trim();
-  const geminiKey = (
-    userProvidedApiKey ||
-    process.env.EXPO_PUBLIC_GEMINI_API_KEY ||
-    ""
-  ).trim();
-
-  // 1. CALL GOOGLE GEMINI 3.5 FLASH-LITE / 3.8 FLASH API
-  if (geminiKey) {
-    try {
-      const models = ["gemini-3.5-flash-lite", "gemini-3.8-flash", "gemini-3.5-flash"];
-      for (const model of models) {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`;
-        const systemPrompt = `You are Oracle, the high-performance AI Sports Nutritionist for GetPhysical.
-Parse the athlete's conversational meal log into exact macronutrients (calories, protein, carbs, fat).
-Return ONLY a valid JSON object matching this schema:
-{
-  "headline": "Short clean meal title",
-  "totalCalories": number,
-  "totalProtein": number,
-  "totalCarbs": number,
-  "totalFat": number,
-  "items": [{"name": string, "portion": string, "cal": number, "p": number, "c": number, "f": number}],
-  "guruCommentary": "1-2 sentences of athletic nutritional insight"
-}`;
-
-        const response = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: `${systemPrompt}\n\nMeal logged: "${query}"` }] }],
-            generationConfig: {
-              response_mime_type: "application/json",
-              temperature: 0.2,
-            },
-          }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (rawText) {
-            const parsed = JSON.parse(rawText.trim());
-            const totalCal = parsed.items?.reduce((s: number, i: any) => s + (i.cal || 0), 0) || parsed.totalCalories;
-            const totalP = parsed.items?.reduce((s: number, i: any) => s + (i.p || 0), 0) || parsed.totalProtein;
-            const totalC = parsed.items?.reduce((s: number, i: any) => s + (i.c || 0), 0) || parsed.totalCarbs;
-            const totalF = parsed.items?.reduce((s: number, i: any) => s + (i.f || 0), 0) || parsed.totalFat;
-
-            return {
-              headline: parsed.headline || query.slice(0, 30),
-              totalCalories: Math.round(totalCal),
-              totalProtein: Math.round(totalP),
-              totalCarbs: Math.round(totalC),
-              totalFat: Math.round(totalF),
-              items: parsed.items || [],
-              guruCommentary: parsed.guruCommentary || "Logged via Google Gemini AI Nutrition Engine.",
-              poweredBy: "google_gemini",
-            };
-          }
-        }
-      }
-    } catch (err) {
-      console.warn("Google Gemini API error, falling back to local NLP engine:", err);
-    }
+/**
+ * Server-side AI parse via the `nutrition-parse` edge function (the Gemini key
+ * never ships in the app). Returns null when signed out, offline, rate-limited
+ * or on any upstream error, so the caller can use the on-device parser.
+ */
+async function parseWithServer(query: string): Promise<OracleAnalysisResult | null> {
+  const supabase = getSupabase();
+  if (!supabase || !(await getSessionUserId())) return null;
+  try {
+    const { data, error } = await supabase.functions.invoke<OracleAnalysisResult>("nutrition-parse", {
+      body: { meal: query },
+    });
+    if (error || !data) return null;
+    return { ...data, items: data.items.slice(0, 20) };
+  } catch {
+    return null;
   }
+}
+
+export async function askOracleAiFoodGuru(userPrompt: string): Promise<OracleAnalysisResult> {
+  const query = userPrompt.trim();
+
+  // 1. SERVER-SIDE AI (authenticated, quota-limited)
+  const serverResult = await parseWithServer(query);
+  if (serverResult) return serverResult;
 
   // 2. INTELLIGENT MULTI-ITEM LOCAL NLP ENGINE
   const clauses = query

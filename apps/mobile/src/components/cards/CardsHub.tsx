@@ -152,7 +152,7 @@ export function CardsHub({ onBrowseVenues }: CardsHubProps) {
 
       <ReceiptModal visible={!!selectedPassForReceipt} pass={selectedPassForReceipt} onClose={() => setSelectedPassForReceipt(null)} />
       <StatementOfAccountModal visible={isSoaOpen} passes={passes} onClose={() => setIsSoaOpen(false)} onSelectPass={(p) => { setIsSoaOpen(false); setSelectedPassForReceipt(p); }} />
-      <TurnstileQRModal visible={isQrOpen} onClose={() => setIsQrOpen(false)} facilityName="Metro Core Arena" />
+      <TurnstileQRModal visible={isQrOpen} onClose={() => setIsQrOpen(false)} facilityName="Metro Core Arena" passId={activePass?.id ?? null} />
       <GiftPassModal visible={isGiftOpen} passes={passes} onClose={() => setIsGiftOpen(false)} onSendPass={(passId, rec, msg) => { setIsGiftOpen(false); }} />
       <AddMembershipChoiceModal
         visible={isAddMembershipChoiceOpen}

@@ -18,7 +18,8 @@
       "infoPlist": {
         "NSCameraUsageDescription": "Sodia needs camera access to capture workout stories, PR challenges, and reels.",
         "NSMicrophoneUsageDescription": "Sodia needs microphone access to record audio with workout reels.",
-        "NSPhotoLibraryUsageDescription": "Sodia needs photo library access to attach workout media."
+        "NSPhotoLibraryUsageDescription": "Sodia needs photo library access to attach workout media.",
+        "NSLocationWhenInUseUsageDescription": "Sodia uses your location to show gyms, clubs and courts near you and to map your runs."
       }
     },
     "android": {
@@ -26,14 +27,23 @@
       "permissions": [
         "CAMERA",
         "RECORD_AUDIO",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ],
+      "blockedPermissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
       ]
     },
     "plugins": [
       "expo-router",
       "expo-secure-store",
-      "expo-location",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Sodia uses your location to show gyms, clubs and courts near you and to map your runs."
+        }
+      ],
       [
         "expo-camera",
         {
@@ -43,9 +53,6 @@
       ],
       "expo-image-picker",
       "expo-video"
-    ],
-    "extra": {
-      "mapsApiKey": "d797ff206eda4d1a804ab31d002f0f41"
-    }
+    ]
   }
 }

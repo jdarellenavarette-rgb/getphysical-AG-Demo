@@ -17,3 +17,4 @@ export * from "./seed-data";
 export * from "./supabase";
 export * from "./crm.types";
 export * from "./payments";
+export * from "./qr";

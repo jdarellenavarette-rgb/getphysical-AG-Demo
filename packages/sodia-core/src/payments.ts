@@ -18,7 +18,7 @@ export interface CheckoutResponse {
   checkoutUrl: string;
   totalPhp: number;
   serviceFeePhp: number;
-  provider: "XENDIT" | "STRIPE";
+  provider: "XENDIT" | "STRIPE" | "MAYA";
 }
 
 /** Request body for the `nutrition-parse` edge function. */

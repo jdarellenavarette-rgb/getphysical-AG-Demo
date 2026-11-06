@@ -30,6 +30,30 @@ supabase/
 | Messaging | Rows in `messages` with sender bound to `auth.uid()`; facility-voice messages only by staff; broadcasts fan out server-side to members/segments. Realtime uses `postgres_changes`, which honours RLS. |
 | Secrets | No keys in source. Apps get only the anon/publishable key; `assertClientSupabaseConfig` refuses `service_role` keys and non-HTTPS URLs. AI/payment keys live in edge-function secrets. |
 
+## QR codes
+
+Two families, deliberately different:
+
+| | Identity QR (static) | Membership-card QR (dynamic) |
+|---|---|---|
+| Used for | Add friend (USER), enrol with coach (COACH), follow organizer (ORGANIZER), join club / open gym page (FACILITY), register (EVENT) | Entering a facility |
+| Payload | `https://<app-domain>/q/<token>` or `sodia://q/<token>` | `GP2:<pass_id>:<6 digits>` |
+| Uniqueness | 128-bit random token, primary key (cannot repeat), one ACTIVE per subject | Per-pass 256-bit secret, code changes every 60 s |
+| If leaked | `rotate_qr_code()` revokes it instantly | Expires in ≤ 2 min; replay blocked |
+| Server API | `get_qr_code`, `rotate_qr_code`, `resolve_qr_code` (public preview), `redeem_qr_code` (performs the action) | `verify_pass_code` (staff only) |
+
+Codes are issued automatically for every profile, facility and event; COACH/ORGANIZER codes on first request
+(role required). The apps render the payload as a QR image locally — nothing to store or generate client-side.
+
+## Maps & GPS
+
+- Facility pins: `facilities.location` (PostGIS geography, generated from lat/lng) + `facilities_nearby()` RPC
+  (works signed-out, nearest first, optional registry filter).
+- Facility links: unique `facilities.slug` → `https://<app-domain>/f/<slug>`; map pins open the facility bottom sheet.
+- Runs/rides: clients upload the GPS track as GeoJSON `LineString` in `workouts_move.route_geojson`; the database
+  builds `route` and computes `distance_km` itself.
+- Rendering provider is a client choice (recommended: Mapbox — see the session notes / QA doc).
+
 ## Local development
 
 Prerequisites: Supabase CLI and Docker.
@@ -71,9 +95,10 @@ cp packages/sodia-core/src/database.types.ts supabase/functions/_shared/database
 
 ## Deploying
 
-**Staging project:** `cmahltbjopkihcfkzzex` (ap-southeast-1, Postgres 17). Migrations 0001–0008 applied
-2026-11-06 and recorded in `supabase_migrations.schema_migrations`; all six DB test suites passed
-against it (run in rolled-back transactions). Edge functions not yet deployed.
+**Staging project:** `cmahltbjopkihcfkzzex` (ap-southeast-1, Postgres 17). Migrations 0001–0011 applied
+2026-11-06 and recorded in `supabase_migrations.schema_migrations`; all eight DB test suites passed
+against it (rolled-back transactions, no residue). All five edge functions are deployed and boot in
+Deno; they answer `SERVER_MISCONFIGURED` until their secrets are set (Edge Functions → Secrets).
 
 1. **Use a new Supabase project** (or reset staging). The existing demo project's schema
    was never in version control and cannot be verified, so do not `db push` onto it blindly.
@@ -85,6 +110,13 @@ against it (run in rolled-back transactions). Edge functions not yet deployed.
 6. Mobile (EAS): set `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, `EXPO_PUBLIC_MAPS_API_KEY`.
 
 ### Payment providers
+
+- **Maya (current test provider):** set `MAYA_PUBLIC_KEY`, `MAYA_SECRET_KEY` (sandbox) and a random
+  `MAYA_WEBHOOK_TOKEN` as function secrets; register the webhook
+  `https://<ref>.supabase.co/functions/v1/webhook-maya?token=<MAYA_WEBHOOK_TOKEN>` for payment success/failure/expiry;
+  route a facility with `update facility_payout_accounts set preferred_provider = 'MAYA', charges_enabled = true`.
+  Production note: a single platform Maya account would make GetPhysical the Merchant of Record — each facility
+  needs its own Maya merchant account (or a Maya marketplace arrangement) before going live.
 
 - **Xendit (gyms):** create one sub-account per gym (xenPlatform), two fee rules (fixed ₱15; 5%),
   set the invoice callback URL to `https://<ref>.supabase.co/functions/v1/webhook-xendit`, and store

@@ -134,3 +134,66 @@ export async function createStripeCheckoutSession(
 export function getStripePaymentIntent(paymentIntentId: string): Promise<{ id: string; metadata: Record<string, string> }> {
   return stripeRequest(`payment_intents/${encodeURIComponent(paymentIntentId)}`, { method: "GET" });
 }
+
+// -----------------------------------------------------------------------------
+// Maya Checkout (test provider). Sandbox: https://pg-sandbox.paymaya.com
+// Create uses the PUBLIC key; reading payments uses the SECRET key.
+// -----------------------------------------------------------------------------
+function mayaBaseUrl(): string {
+  return (Deno.env.get("MAYA_API_BASE_URL") || "https://pg-sandbox.paymaya.com").replace(/\/+$/, "");
+}
+
+function mayaAuth(key: string): string {
+  return `Basic ${btoa(`${key}:`)}`;
+}
+
+export async function createMayaCheckout(
+  order: CheckoutOrder,
+  itemName: string,
+  redirectBaseUrl: string,
+): Promise<ProviderCheckout> {
+  const response = await fetch(`${mayaBaseUrl()}/checkout/v1/checkouts`, {
+    method: "POST",
+    headers: {
+      Authorization: mayaAuth(requireEnv("MAYA_PUBLIC_KEY")),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      totalAmount: { value: order.total_php, currency: "PHP" },
+      items: [{ name: itemName, quantity: 1, totalAmount: { value: order.total_php } }],
+      requestReferenceNumber: order.id,
+      redirectUrl: {
+        success: `${redirectBaseUrl}/checkout/success?order=${order.id}`,
+        failure: `${redirectBaseUrl}/checkout/failed?order=${order.id}`,
+        cancel: `${redirectBaseUrl}/checkout/failed?order=${order.id}`,
+      },
+      metadata: { order_id: order.id },
+    }),
+    signal: AbortSignal.timeout(TIMEOUT_MS),
+  });
+  const body = (await response.json().catch(() => ({}))) as { checkoutId?: string; redirectUrl?: string; message?: string };
+  if (!response.ok || !body.checkoutId || !body.redirectUrl) {
+    throw new HttpError(502, "MAYA_ERROR", body.message ?? `Maya responded ${response.status}`);
+  }
+  return { providerRef: body.checkoutId, checkoutUrl: body.redirectUrl };
+}
+
+export interface MayaPayment {
+  id: string;
+  status: string;
+  amount: number | string;
+  currency: string;
+  requestReferenceNumber: string;
+}
+
+/** All payment attempts for a request reference number (our order id). */
+export async function getMayaPaymentsByReference(orderId: string): Promise<MayaPayment[]> {
+  const response = await fetch(`${mayaBaseUrl()}/payments/v1/payment-rrns/${encodeURIComponent(orderId)}`, {
+    headers: { Authorization: mayaAuth(requireEnv("MAYA_SECRET_KEY")) },
+    signal: AbortSignal.timeout(TIMEOUT_MS),
+  });
+  if (response.status === 404) return [];
+  if (!response.ok) throw new HttpError(502, "MAYA_ERROR", `Maya responded ${response.status}`);
+  const body: unknown = await response.json();
+  return Array.isArray(body) ? (body as MayaPayment[]) : [];
+}

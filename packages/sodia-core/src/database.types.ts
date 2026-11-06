@@ -387,6 +387,102 @@ export type Database = {
           },
         ];
       };
+      event_registrations: {
+        Row: {
+          event_id: string;
+          registered_at: string | null;
+          status: string;
+          user_id: string;
+        };
+        Insert: {
+          event_id: string;
+          registered_at?: string | null;
+          status?: string;
+          user_id?: string;
+        };
+        Update: {
+          event_id?: string;
+          registered_at?: string | null;
+          status?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "event_registrations_event_id_fkey";
+            columns: ["event_id"];
+            isOneToOne: false;
+            referencedRelation: "events";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "event_registrations_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      events: {
+        Row: {
+          capacity: number | null;
+          created_at: string | null;
+          description: string | null;
+          ends_at: string | null;
+          facility_id: string | null;
+          id: string;
+          organizer_id: string;
+          sport: string | null;
+          starts_at: string;
+          status: Database["public"]["Enums"]["event_status"];
+          title: string;
+          updated_at: string | null;
+        };
+        Insert: {
+          capacity?: number | null;
+          created_at?: string | null;
+          description?: string | null;
+          ends_at?: string | null;
+          facility_id?: string | null;
+          id?: string;
+          organizer_id?: string;
+          sport?: string | null;
+          starts_at: string;
+          status?: Database["public"]["Enums"]["event_status"];
+          title: string;
+          updated_at?: string | null;
+        };
+        Update: {
+          capacity?: number | null;
+          created_at?: string | null;
+          description?: string | null;
+          ends_at?: string | null;
+          facility_id?: string | null;
+          id?: string;
+          organizer_id?: string;
+          sport?: string | null;
+          starts_at?: string;
+          status?: Database["public"]["Enums"]["event_status"];
+          title?: string;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "events_facility_id_fkey";
+            columns: ["facility_id"];
+            isOneToOne: false;
+            referencedRelation: "facilities";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "events_organizer_id_fkey";
+            columns: ["organizer_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       facilities: {
         Row: {
           address: string;
@@ -411,6 +507,7 @@ export type Database = {
           lat: number | null;
           live_capacity: Json;
           lng: number | null;
+          location: unknown | null;
           logo: string | null;
           logo_url: string | null;
           max_capacity: number | null;
@@ -423,6 +520,7 @@ export type Database = {
           registry: string;
           registry_type: Database["public"]["Enums"]["registry_type"];
           review_count: number | null;
+          slug: string | null;
           spatial_assets: Json | null;
           updated_at: string | null;
         };
@@ -449,6 +547,7 @@ export type Database = {
           lat?: number | null;
           live_capacity?: Json;
           lng?: number | null;
+          location?: never;
           logo?: string | null;
           logo_url?: string | null;
           max_capacity?: number | null;
@@ -461,6 +560,7 @@ export type Database = {
           registry?: never;
           registry_type: Database["public"]["Enums"]["registry_type"];
           review_count?: number | null;
+          slug?: string | null;
           spatial_assets?: Json | null;
           updated_at?: string | null;
         };
@@ -487,6 +587,7 @@ export type Database = {
           lat?: number | null;
           live_capacity?: Json;
           lng?: number | null;
+          location?: never;
           logo?: string | null;
           logo_url?: string | null;
           max_capacity?: number | null;
@@ -499,6 +600,7 @@ export type Database = {
           registry?: never;
           registry_type?: Database["public"]["Enums"]["registry_type"];
           review_count?: number | null;
+          slug?: string | null;
           spatial_assets?: Json | null;
           updated_at?: string | null;
         };
@@ -558,6 +660,8 @@ export type Database = {
         Row: {
           charges_enabled: boolean;
           facility_id: string;
+          maya_merchant_id: string | null;
+          preferred_provider: Database["public"]["Enums"]["payment_provider"] | null;
           stripe_account_id: string | null;
           updated_at: string | null;
           xendit_sub_account_id: string | null;
@@ -565,6 +669,8 @@ export type Database = {
         Insert: {
           charges_enabled?: boolean;
           facility_id: string;
+          maya_merchant_id?: string | null;
+          preferred_provider?: Database["public"]["Enums"]["payment_provider"] | null;
           stripe_account_id?: string | null;
           updated_at?: string | null;
           xendit_sub_account_id?: string | null;
@@ -572,6 +678,8 @@ export type Database = {
         Update: {
           charges_enabled?: boolean;
           facility_id?: string;
+          maya_merchant_id?: string | null;
+          preferred_provider?: Database["public"]["Enums"]["payment_provider"] | null;
           stripe_account_id?: string | null;
           updated_at?: string | null;
           xendit_sub_account_id?: string | null;
@@ -1292,6 +1400,61 @@ export type Database = {
         };
         Relationships: [];
       };
+      qr_codes: {
+        Row: {
+          created_at: string;
+          event_id: string | null;
+          facility_id: string | null;
+          kind: Database["public"]["Enums"]["qr_kind"];
+          revoked_at: string | null;
+          status: string;
+          token: string;
+          user_id: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          event_id?: string | null;
+          facility_id?: string | null;
+          kind: Database["public"]["Enums"]["qr_kind"];
+          revoked_at?: string | null;
+          status?: string;
+          token: string;
+          user_id?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          event_id?: string | null;
+          facility_id?: string | null;
+          kind?: Database["public"]["Enums"]["qr_kind"];
+          revoked_at?: string | null;
+          status?: string;
+          token?: string;
+          user_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "qr_codes_event_id_fkey";
+            columns: ["event_id"];
+            isOneToOne: true;
+            referencedRelation: "events";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "qr_codes_facility_id_fkey";
+            columns: ["facility_id"];
+            isOneToOne: true;
+            referencedRelation: "facilities";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "qr_codes_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       sodia_post_comments: {
         Row: {
           body: string;
@@ -1552,11 +1715,15 @@ export type Database = {
           current_pace: string | null;
           distance_km: number | null;
           duration_seconds: number | null;
+          ended_at: string | null;
           id: string;
           is_court_mode: boolean | null;
           match_result: string | null;
           opponent_username: string | null;
+          route: unknown | null;
+          route_geojson: Json | null;
           score: string | null;
+          started_at: string | null;
           type: string;
           user_id: string;
           verified_stamp: Json | null;
@@ -1566,11 +1733,15 @@ export type Database = {
           current_pace?: string | null;
           distance_km?: number | null;
           duration_seconds?: number | null;
+          ended_at?: string | null;
           id?: string;
           is_court_mode?: boolean | null;
           match_result?: string | null;
           opponent_username?: string | null;
+          route?: unknown | null;
+          route_geojson?: Json | null;
           score?: string | null;
+          started_at?: string | null;
           type?: string;
           user_id?: string;
           verified_stamp?: Json | null;
@@ -1580,11 +1751,15 @@ export type Database = {
           current_pace?: string | null;
           distance_km?: number | null;
           duration_seconds?: number | null;
+          ended_at?: string | null;
           id?: string;
           is_court_mode?: boolean | null;
           match_result?: string | null;
           opponent_username?: string | null;
+          route?: unknown | null;
+          route_geojson?: Json | null;
           score?: string | null;
+          started_at?: string | null;
           type?: string;
           user_id?: string;
           verified_stamp?: Json | null;
@@ -1622,6 +1797,12 @@ export type Database = {
       can_access_conversation: {
         Args: {
           p_conversation_id: string;
+        };
+        Returns: boolean;
+      };
+      can_manage_event: {
+        Args: {
+          p_event_id: string;
         };
         Returns: boolean;
       };
@@ -1667,9 +1848,26 @@ export type Database = {
         };
         Returns: string;
       };
+      facilities_nearby: {
+        Args: {
+          p_lat: number;
+          p_lng: number;
+          p_radius_km?: number;
+          p_registry?: Database["public"]["Enums"]["registry_type"];
+          p_limit?: number;
+        };
+        Returns: { id: string | null; slug: string | null; name: string | null; registry_type: Database["public"]["Enums"]["registry_type"] | null; category: string | null; lat: number | null; lng: number | null; logo_url: string | null; is_open: boolean | null; inside_now_count: number | null; max_capacity: number | null; rating: number | null; distance_km: number | null }[];
+      };
       get_my_profile: {
         Args: Record<PropertyKey, never>;
         Returns: Database["public"]["Tables"]["profiles"]["Row"];
+      };
+      get_qr_code: {
+        Args: {
+          p_kind: Database["public"]["Enums"]["qr_kind"];
+          p_target?: string;
+        };
+        Returns: Json;
       };
       has_facility_role: {
         Args: {
@@ -1723,12 +1921,31 @@ export type Database = {
         };
         Returns: boolean;
       };
+      redeem_qr_code: {
+        Args: {
+          p_token: string;
+        };
+        Returns: Json;
+      };
       refund_payment_order: {
         Args: {
           p_order_id: string;
           p_reason: string;
         };
         Returns: Database["public"]["Tables"]["payment_orders"]["Row"];
+      };
+      resolve_qr_code: {
+        Args: {
+          p_token: string;
+        };
+        Returns: Json;
+      };
+      rotate_qr_code: {
+        Args: {
+          p_kind: Database["public"]["Enums"]["qr_kind"];
+          p_target?: string;
+        };
+        Returns: Json;
       };
       send_crm_broadcast: {
         Args: {
@@ -1764,11 +1981,13 @@ export type Database = {
     };
     Enums: {
       conversation_kind: "DIRECT" | "GROUP" | "FACILITY";
+      event_status: "DRAFT" | "PUBLISHED" | "CANCELLED";
       facility_role: "OWNER" | "ADMIN" | "STAFF" | "COACH";
-      membership_status: "ACTIVE" | "CANCELLED";
+      membership_status: "ACTIVE" | "CANCELLED" | "PENDING";
       pass_status: "ACTIVE" | "EXPIRED" | "REVOKED";
       payment_order_status: "PENDING" | "PAID" | "EXPIRED" | "FAILED" | "REFUNDED";
-      payment_provider: "XENDIT" | "STRIPE";
+      payment_provider: "XENDIT" | "STRIPE" | "MAYA";
+      qr_kind: "USER" | "COACH" | "ORGANIZER" | "FACILITY" | "EVENT";
       registry_type: "COMMERCIAL" | "COMMUNITY";
       scan_status: "GRANTED" | "DENIED";
       sender_kind: "USER" | "FACILITY";

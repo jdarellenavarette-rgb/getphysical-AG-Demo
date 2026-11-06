@@ -2,7 +2,11 @@ import { HttpError } from "./http.ts";
 
 export function requireEnv(name: string): string {
   const value = Deno.env.get(name);
-  if (!value) throw new HttpError(500, "SERVER_MISCONFIGURED", `Missing environment variable ${name}`);
+  if (!value) {
+    // Name the missing secret in server logs only, never in the response body.
+    console.error(JSON.stringify({ code: "SERVER_MISCONFIGURED", missingEnv: name }));
+    throw new HttpError(503, "SERVER_MISCONFIGURED", "This service is not configured yet");
+  }
   return value;
 }
 

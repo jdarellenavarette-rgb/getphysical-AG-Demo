@@ -2,13 +2,13 @@
  * POST /functions/v1/payments-checkout   { facilityId, sku, idempotencyKey }
  *
  * 1. create_payment_order() as the user → server-side price, age gate, payout check
- * 2. create the provider checkout (Xendit invoice or Stripe Checkout Session)
+ * 2. create the provider checkout (Maya Checkout, Xendit invoice or Stripe Checkout Session)
  * 3. attach_payment_checkout() as service_role
  * The pass is issued only when the provider's webhook confirms payment.
  */
 import { allowedOrigins, requireEnv } from "../_shared/env.ts";
 import { handle, HttpError, json, readJson, rpcError } from "../_shared/http.ts";
-import { createStripeCheckoutSession, createXenditInvoice } from "../_shared/providers.ts";
+import { createMayaCheckout, createStripeCheckoutSession, createXenditInvoice } from "../_shared/providers.ts";
 import { checkoutRequestSchema } from "../_shared/schemas.ts";
 import { serviceClient, userClient } from "../_shared/supabase.ts";
 
@@ -57,7 +57,9 @@ Deno.serve(handle("payments-checkout", allowedOrigins(), async (req) => {
   const label = `${sku === "MONTHLY" ? "Monthly membership" : "Day pass"} — ${facility.name}`;
   const redirectBase = requireEnv("CHECKOUT_REDIRECT_BASE_URL");
 
-  const checkout = order.provider === "XENDIT"
+  const checkout = order.provider === "MAYA"
+    ? await createMayaCheckout(order, label, redirectBase)
+    : order.provider === "XENDIT"
     ? await createXenditInvoice(order, payout.xendit_sub_account_id ?? "", label, user.email, redirectBase)
     : await createStripeCheckoutSession(order, payout.stripe_account_id ?? "", label, user.email, redirectBase);
 

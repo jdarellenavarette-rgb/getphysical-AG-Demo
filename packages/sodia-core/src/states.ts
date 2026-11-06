@@ -158,3 +158,87 @@ export function createEmptyState<TData = null>(
   };
 }
 
+
+export function createErrorState<TData>(
+  errorCode: string,
+  userMessage: string,
+  retryable = true,
+  previousData: TData | null = null
+): TenStateEnvelope<TData> {
+  return { status: "error", data: previousData, errorCode, userMessage, retryable };
+}
+
+export function createNoInternetState<TData>(
+  cachedData: TData | null,
+  offline: Partial<OfflineFallbackMeta> = {}
+): TenStateEnvelope<TData> {
+  return {
+    status: "no_internet",
+    data: cachedData,
+    offline: {
+      cachedAtIso: offline.cachedAtIso ?? null,
+      queuedMutationsCount: offline.queuedMutationsCount ?? 0,
+      totpFallbackActive: offline.totpFallbackActive ?? false,
+    },
+  };
+}
+
+/** RTT threshold (ms) above which flows enter `slow_network` (Master Spec §2.5). */
+export const SLOW_NETWORK_THRESHOLD_MS = 2500;
+
+export function createSlowNetworkState<TData>(
+  data: TData | null,
+  latencyMs: number,
+  degradedMediaMode = true
+): TenStateEnvelope<TData> {
+  return {
+    status: "slow_network",
+    data,
+    network: { latencyMs, thresholdMs: SLOW_NETWORK_THRESHOLD_MS, degradedMediaMode },
+  };
+}
+
+export function createNoSearchResultsState<TData = null>(
+  query: string,
+  suggestedAlternatives: readonly string[] = [],
+  activeFilters: readonly string[] = [],
+  allowManualEntry = false
+): TenStateEnvelope<TData> {
+  return {
+    status: "no_search_results",
+    data: null,
+    search: { query, activeFilters, suggestedAlternatives, allowManualEntry },
+  };
+}
+
+export function createPermissionDeniedState<TData>(
+  permission: OSResourcePermission,
+  fallbackMode: PermissionDeniedMeta["fallbackMode"],
+  canAskAgain = false,
+  data: TData | null = null
+): TenStateEnvelope<TData> {
+  return { status: "permission_denied", data, permissionMeta: { permission, canAskAgain, fallbackMode } };
+}
+
+export function createSessionExpiredState<TData>(
+  preservedDraftKey: string | null,
+  reason: SessionExpiredMeta["reason"] = "token_stale",
+  data: TData | null = null
+): TenStateEnvelope<TData> {
+  return { status: "session_expired", data, session: { requiresBiometricReauth: true, preservedDraftKey, reason } };
+}
+
+export function createFormValidationState<TData>(
+  issues: readonly ValidationIssue[],
+  data: TData | null = null
+): TenStateEnvelope<TData> {
+  return { status: "form_validation", data, issues };
+}
+
+/** Short, human-quotable correlation code for support tickets (e.g. "GP-7K2Q9X"). */
+export function createCorrelationCode(prefix = "GP"): string {
+  const alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+  let out = "";
+  for (let i = 0; i < 6; i += 1) out += alphabet[Math.floor(Math.random() * alphabet.length)];
+  return `${prefix}-${out}`;
+}

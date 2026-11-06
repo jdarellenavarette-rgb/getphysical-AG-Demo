@@ -18,3 +18,4 @@ export * from "./supabase";
 export * from "./crm.types";
 export * from "./payments";
 export * from "./qr";
+export * from "./qrEncode";

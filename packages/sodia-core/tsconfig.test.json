@@ -4,7 +4,15 @@
     "rootDir": "../..",
     "allowImportingTsExtensions": true,
     "baseUrl": ".",
-    "paths": { "zod": ["./node_modules/zod"] }
+    "paths": {
+      "zod": [
+        "./node_modules/zod"
+      ]
+    },
+    "resolveJsonModule": true
   },
-  "include": ["src/**/*.ts", "test/**/*.ts"]
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts"
+  ]
 }

@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Image, ScrollView, Modal } from "react-native";
-import { Award, Shield, Eye, CheckCircle2, MessageSquare, UserPlus, ArrowLeft, Grid, X, Activity, ChevronRight, Dumbbell } from "lucide-react-native";
+import { Award, Shield, Eye, CheckCircle2, MessageSquare, QrCode, ArrowLeft, Grid, X, Activity, ChevronRight, Dumbbell } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { useThemeStore } from "../../theme/theme";
 import { useTrackingStore } from "../../store/trackingStore";
 import { NasmBiometricsModal } from "./NasmBiometricsModal";
+import { MyQrModal } from "./MyQrModal";
 import { styles } from "./ProfileHub.styles";
 import {
   DARELLE_AVATAR,
@@ -26,7 +27,7 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
   const { colors } = useThemeStore();
   const { userBiometrics } = useTrackingStore();
   const [activeTab, setActiveTab] = useState<"grid" | "trophy" | "locker">("grid");
-  const [isFollowing, setIsFollowing] = useState(false);
+  const [isMyQrOpen, setIsMyQrOpen] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
   const [isNasmOpen, setIsNasmOpen] = useState(false);
 
@@ -85,9 +86,9 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
         </View>
 
         <View style={styles.actionBtnRow}>
-          <TouchableOpacity onPress={() => setIsFollowing(!isFollowing)} style={[styles.primaryActionBtn, isFollowing && styles.followingActive]}>
-            <UserPlus size={15} color="#FFFFFF" style={{ marginRight: 6 }} />
-            <Text style={styles.primaryActionText}>{isFollowing ? "Following" : "Follow Coach"}</Text>
+          <TouchableOpacity onPress={() => setIsMyQrOpen(true)} style={styles.primaryActionBtn} accessibilityLabel="Show my QR code">
+            <QrCode size={15} color="#FFFFFF" style={{ marginRight: 6 }} />
+            <Text style={styles.primaryActionText}>My QR</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={onOpenMessages} style={[styles.secondaryActionBtn, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
             <MessageSquare size={15} color={colors.textPrimary} style={{ marginRight: 6 }} />
@@ -198,6 +199,7 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
         </View>
       </Modal>
       <NasmBiometricsModal visible={isNasmOpen} onClose={() => setIsNasmOpen(false)} />
+      <MyQrModal visible={isMyQrOpen} onClose={() => setIsMyQrOpen(false)} />
     </ScrollView>
   );
 }

@@ -8,7 +8,7 @@ import { StatementOfAccountModal } from "./StatementOfAccountModal";
 import { TurnstileQRModal } from "./TurnstileQRModal";
 import { GiftPassModal } from "./GiftPassModal";
 import { AddMembershipChoiceModal } from "./AddMembershipChoiceModal";
-import { ClubQRScannerModal } from "./ClubQRScannerModal";
+import { QrScannerModal } from "./QrScannerModal";
 import { useThemeStore } from "../../theme/theme";
 import type { PassRow } from "sodia-core";
 
@@ -160,7 +160,7 @@ export function CardsHub({ onBrowseVenues }: CardsHubProps) {
         onSelectBrowse={() => onBrowseVenues?.()}
         onSelectScan={() => setIsClubScannerOpen(true)}
       />
-      <ClubQRScannerModal visible={isClubScannerOpen} onClose={() => setIsClubScannerOpen(false)} />
+      <QrScannerModal visible={isClubScannerOpen} onClose={() => setIsClubScannerOpen(false)} title="Scan to join" />
     </ScrollView>
   );
 }

@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { QrCode, RotateCw, ShieldCheck, Zap, Radio, Sparkles } from "lucide-react-native";
 import type { PassRow } from "sodia-core";
 import { usePassTotp } from "../../hooks/usePassTotp";
+import { QrCodeView } from "../common/QrCodeView";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 
 interface ExactVIPCardProps {
@@ -82,7 +83,11 @@ export function ExactVIPCard({ pass, facilityName }: ExactVIPCardProps) {
           </View>
 
           <View style={styles.qrBox}>
-            <QrCode size={105} color="#09090B" />
+            {totp ? (
+              <QrCodeView value={totp.qrPayload} size={105} accessibilityLabel="Membership entry QR code" />
+            ) : (
+              <QrCode size={105} color="#D4D4D8" />
+            )}
           </View>
 
           <View style={styles.totpCodeContainer}>

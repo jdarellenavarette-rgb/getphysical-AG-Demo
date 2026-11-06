@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView } from "rea
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft, QrCode, CheckCircle2, XCircle, Clock, Shield } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
+import { QrScannerModal } from "../cards/QrScannerModal";
 
 interface StaffQuickdashModalProps {
   visible: boolean;
@@ -22,6 +23,7 @@ export function StaffQuickdashModal({ visible, onClose }: StaffQuickdashModalPro
   const { colors } = useThemeStore();
   const [lastScanResult, setLastScanResult] = useState<"GREEN" | "BLUE" | "RED" | null>(null);
   const [scanLogs, setScanLogs] = useState<ScanLog[]>([]);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   const handleSimulateScan = (type: "GREEN" | "BLUE" | "RED") => {
     setLastScanResult(type);
@@ -60,6 +62,7 @@ export function StaffQuickdashModal({ visible, onClose }: StaffQuickdashModalPro
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+      <QrScannerModal visible={isScannerOpen} onClose={() => setIsScannerOpen(false)} title="Member check-in" />
       <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         {/* HEADER BAR */}
         <View style={[styles.topBar, { paddingTop: Math.max(insets.top, 50) + 10, backgroundColor: colors.bgHeader, borderBottomColor: colors.borderColor }]}>
@@ -78,6 +81,14 @@ export function StaffQuickdashModal({ visible, onClose }: StaffQuickdashModalPro
           <View style={[styles.venueCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
             <Text style={[styles.venueTitle, { color: colors.textPrimary }]}>Metro Core Arena • Turnstile Station #1</Text>
             <Text style={[styles.venueSub, { color: colors.textMuted }]}>Hardware TOTP & DTR Attendance Validator</Text>
+            <TouchableOpacity
+              onPress={() => setIsScannerOpen(true)}
+              accessibilityRole="button"
+              style={{ marginTop: 12, backgroundColor: "#10B981", borderRadius: 12, paddingVertical: 12, flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 8 }}
+            >
+              <QrCode size={16} color="#FFFFFF" />
+              <Text style={{ color: "#FFFFFF", fontWeight: "800" }}>Scan member card</Text>
+            </TouchableOpacity>
           </View>
 
           {/* SIMULATED CAMERA SCANNER VIEWPORT */}

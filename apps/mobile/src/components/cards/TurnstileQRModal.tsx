@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft, QrCode, ShieldCheck, RefreshCw } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import { usePassTotp } from "../../hooks/usePassTotp";
+import { QrCodeView } from "../common/QrCodeView";
 
 interface TurnstileQRModalProps {
   visible: boolean;
@@ -51,7 +52,11 @@ export function TurnstileQRModal({ visible, onClose, facilityName = "Metro Core 
 
           {/* QR CODE DISPLAY BOX */}
           <View style={styles.qrCard}>
-            <QrCode size={190} color="#09090B" />
+            {totp ? (
+              <QrCodeView value={totp.qrPayload} size={190} accessibilityLabel="Membership entry QR code" />
+            ) : (
+              <QrCode size={190} color="#D4D4D8" />
+            )}
             <Text style={styles.tokenText}>{totp ? `${totp.code.slice(0, 3)} ${totp.code.slice(3)}` : "––– –––"}</Text>
             <View style={styles.timerRow}>
               <RefreshCw size={12} color="#10B981" />

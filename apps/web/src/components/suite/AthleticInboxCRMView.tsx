@@ -1,147 +1,15 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useTransition } from 'react';
 import { MessageSquare, AlertCircle, UserCheck, ShieldAlert, CheckCircle, Send, Tag, Phone, Calendar, ArrowRight, Zap, RefreshCw, Megaphone, Radio } from 'lucide-react';
 import { SuiteMode } from './HeroPromoCard';
 import { useSuiteTheme } from './theme';
 import { CreateMessageModal } from './CreateMessageModal';
-import { getSodiaSupabaseClient, CrmBroadcast } from 'sodia-core';
+import { sendCrmReply } from '../../app/actions/crm';
+import { useActiveFacility } from './ActiveFacilityContext';
+import { useFacilityInbox, type InboxTicket } from './useFacilityInbox';
 
-interface MessageTicket {
-  id: string;
-  athleteName: string;
-  avatar: string;
-  handle: string;
-  channel: 'GATE_EXPIRATION' | 'AT_RISK' | 'FORM_CHECK' | 'GENERAL_INQUIRY';
-  lastMessage: string;
-  time: string;
-  unread: boolean;
-  status: 'OPEN' | 'RESOLVED';
-  tag: string;
-  tagColor: string;
-  athleteMeta: {
-    membership: string;
-    lastVisit: string;
-    primary1RM?: string;
-    phone: string;
-  };
-  messages: { sender: 'athlete' | 'business'; text: string; time: string }[];
-}
-
-const INITIAL_TICKETS: MessageTicket[] = [
-  {
-    id: 't_darelle',
-    athleteName: 'Darelle Navarette',
-    avatar: 'DN',
-    handle: '@darellenavarette',
-    channel: 'GENERAL_INQUIRY',
-    lastMessage: 'IFBB Certified Trainer • Titanium VIP Member connected via Sodia Messaging.',
-    time: 'Just now',
-    unread: false,
-    status: 'OPEN',
-    tag: 'IFBB Certified Trainer',
-    tagColor: '#E11D48',
-    athleteMeta: {
-      membership: 'Titanium VIP All-Access • IFBB Pro Trainer',
-      lastVisit: 'Today at BGC High Street Arena',
-      primary1RM: 'Deadlift 225kg PR (Verified)',
-      phone: '+63 917 888 1994',
-    },
-    messages: [
-      { sender: 'business', text: 'Welcome Darelle! Your IFBB Trainer credential and facility all-access pass are active.', time: '08:00 AM' },
-    ],
-  },
-  {
-    id: 't1',
-    athleteName: 'Jake Torralba',
-    avatar: 'JT',
-    handle: '@jake.torralba',
-    channel: 'GATE_EXPIRATION',
-    lastMessage: 'Turnstile access denied: Pass expired 2 days ago. Sent 1-click renewal prompt.',
-    time: '10:42 AM',
-    unread: true,
-    status: 'OPEN',
-    tag: 'Turnstile Denial',
-    tagColor: '#DC2626',
-    athleteMeta: {
-      membership: 'Expired VIP All-Access',
-      lastVisit: 'Today at Gate 01 (Denied)',
-      primary1RM: 'Bench 120kg',
-      phone: '+63 917 555 0192',
-    },
-    messages: [
-      { sender: 'business', text: 'Turnstile Alert: Your 60s dynamic pass expired on Nov 2. Would you like to renew with your saved Maya account?', time: '10:40 AM' },
-      { sender: 'athlete', text: 'Hey, I am at the front desk right now, can you approve a renewal pass?', time: '10:42 AM' },
-    ],
-  },
-  {
-    id: 't2',
-    athleteName: 'Marcus Cruz',
-    avatar: 'MC',
-    handle: '@marcus.cruz',
-    channel: 'FORM_CHECK',
-    lastMessage: 'Uploaded video: 180kg Squat 1RM attempt for PR review.',
-    time: '09:15 AM',
-    unread: true,
-    status: 'OPEN',
-    tag: 'Coach Review',
-    tagColor: '#0284C7',
-    athleteMeta: {
-      membership: '12-Wk Strength Peak Client',
-      lastVisit: 'Yesterday (Leg Power Cycle)',
-      primary1RM: 'Squat 180kg Attempt',
-      phone: '+63 920 888 3412',
-    },
-    messages: [
-      { sender: 'athlete', text: 'Coach, just logged my 180kg squat set in the app with the video clip attached. Depth was borderline, check my hips.', time: '09:15 AM' },
-    ],
-  },
-  {
-    id: 't3',
-    athleteName: 'Alyssa Ramos',
-    avatar: 'AR',
-    handle: '@alyssa.runs',
-    channel: 'AT_RISK',
-    lastMessage: 'Automated CRM trigger: Absent 14 days from regular court slots.',
-    time: 'Yesterday',
-    unread: false,
-    status: 'OPEN',
-    tag: 'At-Risk Win-Back',
-    tagColor: '#D97706',
-    athleteMeta: {
-      membership: 'Hyrox & Padel Member',
-      lastVisit: '14 days ago',
-      primary1RM: '5km Pace 21:40',
-      phone: '+63 918 333 9921',
-    },
-    messages: [
-      { sender: 'business', text: 'Hey Alyssa, we missed you at the track! Here is an exclusive 30% recovery court voucher for this weekend.', time: 'Yesterday' },
-      { sender: 'athlete', text: 'Thanks! Had a mild ankle sprain, resuming light drills this Saturday.', time: 'Yesterday' },
-    ],
-  },
-  {
-    id: 't4',
-    athleteName: 'Metro Padel League',
-    avatar: 'MP',
-    handle: '@metropadel.org',
-    channel: 'GENERAL_INQUIRY',
-    lastMessage: 'Requested parent court lock for Saturday Tournament Quarterfinals.',
-    time: 'Nov 2',
-    unread: false,
-    status: 'RESOLVED',
-    tag: 'Organizer League',
-    tagColor: '#059669',
-    athleteMeta: {
-      membership: 'Affiliated League Host',
-      lastVisit: 'Nov 1 (Spatial Booking Confirmed)',
-      phone: '+63 915 222 7701',
-    },
-    messages: [
-      { sender: 'athlete', text: 'Can we reserve Court Alpha and Beta with 20-min buffers instead of 15-min?', time: 'Nov 2' },
-      { sender: 'business', text: 'Approved! Buffers updated in Clubdash Spatial Engine.', time: 'Nov 2' },
-    ],
-  },
-];
+type MessageTicket = InboxTicket;
 
 interface AthleticInboxCRMViewProps {
   suiteMode: SuiteMode;
@@ -149,97 +17,14 @@ interface AthleticInboxCRMViewProps {
 
 export function AthleticInboxCRMView({ suiteMode }: AthleticInboxCRMViewProps) {
   const { theme, isDark } = useSuiteTheme();
-  const [tickets, setTickets] = useState<MessageTicket[]>(INITIAL_TICKETS);
-  const [selectedTicketId, setSelectedTicketId] = useState<string>(INITIAL_TICKETS[0]?.id ?? '');
+  const facility = useActiveFacility();
+  const { tickets, setTickets, status: inboxStatus, errorMessage: inboxError, reload } = useFacilityInbox(facility.id);
+  const [selectedTicketId, setSelectedTicketId] = useState<string>('');
+  const [replyError, setReplyError] = useState<string | null>(null);
+  const [isSending, startSending] = useTransition();
   const [filterChannel, setFilterChannel] = useState<'ALL' | 'GATE_EXPIRATION' | 'FORM_CHECK' | 'AT_RISK' | 'GENERAL_INQUIRY'>('ALL');
   const [replyText, setReplyText] = useState('');
   const [isBroadcastModalOpen, setIsBroadcastModalOpen] = useState(false);
-
-  useEffect(() => {
-    try {
-      const client = getSodiaSupabaseClient();
-      const channel = client.channel('sodia_crm_broadcasts');
-
-      // 1. Listen for athlete replies from mobile
-      channel.on('broadcast', { event: 'crm_reply' }, ({ payload }: { payload: any }) => {
-        if (!payload) return;
-        const athleteMsg = {
-          sender: 'athlete' as const,
-          text: payload.text,
-          time: payload.time || 'Just now',
-        };
-
-        setTickets((prev) =>
-          prev.map((t) =>
-            t.id === 't_darelle' || t.athleteName === payload.senderName || t.handle === payload.senderHandle
-              ? {
-                  ...t,
-                  messages: [...t.messages, athleteMsg],
-                  lastMessage: payload.text,
-                  unread: true,
-                  time: 'Just now',
-                }
-              : t
-          )
-        );
-      });
-
-      // 2. Listen for broadcasts dispatched
-      channel.on('broadcast', { event: 'crm_broadcast' }, ({ payload }: { payload: CrmBroadcast }) => {
-        if (!payload) return;
-        const bcMsg = {
-          sender: 'business' as const,
-          text: `📢 [BROADCAST: ${payload.title}]: ${payload.body}${payload.promoCode ? ` (Promo: ${payload.promoCode})` : ''}`,
-          time: 'Just now',
-        };
-
-        setTickets((prev) =>
-          prev.map((t) =>
-            t.id === 't_darelle'
-              ? {
-                  ...t,
-                  messages: [...t.messages, bcMsg],
-                  lastMessage: `📢 ${payload.title}`,
-                  time: 'Just now',
-                }
-              : t
-          )
-        );
-      });
-
-      channel.subscribe();
-
-      // 3. Local window event listener for immediate UI update
-      const handleLocalBroadcast = (e: any) => {
-        const payload = e.detail;
-        if (!payload) return;
-        const bcMsg = {
-          sender: 'business' as const,
-          text: `📢 [BROADCAST: ${payload.title}]: ${payload.body}${payload.promoCode ? ` (Promo: ${payload.promoCode})` : ''}`,
-          time: 'Just now',
-        };
-        setTickets((prev) =>
-          prev.map((t) =>
-            t.id === 't_darelle'
-              ? {
-                  ...t,
-                  messages: [...t.messages, bcMsg],
-                  lastMessage: `📢 ${payload.title}`,
-                  time: 'Just now',
-                }
-              : t
-          )
-        );
-      };
-
-      window.addEventListener('sodia_crm_broadcast_sent', handleLocalBroadcast);
-      return () => {
-        window.removeEventListener('sodia_crm_broadcast_sent', handleLocalBroadcast);
-      };
-    } catch (err) {
-      console.warn('[CRM View Supabase listener err]', err);
-    }
-  }, []);
 
   const activeTicket = tickets.find((t) => t.id === selectedTicketId) ?? tickets[0];
 
@@ -248,59 +33,42 @@ export function AthleticInboxCRMView({ suiteMode }: AthleticInboxCRMViewProps) {
     return t.channel === filterChannel;
   });
 
-  const handleSendReply = async () => {
-    if (!replyText.trim() || !activeTicket) return;
-    const textToSend = replyText.trim();
-    const newMsg = { sender: 'business' as const, text: textToSend, time: 'Just now' };
-    setTickets((prev) =>
-      prev.map((t) => (t.id === activeTicket.id ? { ...t, messages: [...t.messages, newMsg], lastMessage: newMsg.text, unread: false } : t))
-    );
-    setReplyText('');
-
-    // If activeTicket is Darelle Navarette, dispatch real-time to mobile!
-    if (activeTicket.id === 't_darelle' || activeTicket.athleteName.includes('Darelle')) {
-      try {
-        const client = getSodiaSupabaseClient();
-        const channel = client.channel('sodia_crm_broadcasts');
-        await channel.send({
-          type: 'broadcast',
-          event: 'crm_direct',
-          payload: {
-            threadId: 'thread_metro_core',
-            senderName: 'Metro Core Arena (GymDash)',
-            targetAthleteId: 'usr_athlete_01',
-            text: textToSend,
-          },
-        });
-
-        // Also post to API route
-        await fetch('/api/crm/reply', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            threadId: 'thread_metro_core',
-            senderId: 'business',
-            senderName: 'Metro Core Arena (GymDash)',
-            text: textToSend,
-          }),
-        }).catch(() => {});
-      } catch (err) {
-        console.warn('[CRM Direct send err]', err);
+  const sendToActiveThread = (textToSend: string, clearComposer: boolean) => {
+    if (!textToSend || !activeTicket) return;
+    const conversationId = activeTicket.id;
+    setReplyError(null);
+    startSending(async () => {
+      const result = await sendCrmReply({ conversationId, body: textToSend });
+      if (!result.ok) {
+        setReplyError(result.state === 'form_validation' ? Object.values(result.fieldErrors).join(' · ') : result.message);
+        return;
       }
-    }
+      if (clearComposer) setReplyText('');
+      // Optimistic append; the Realtime echo is de-duplicated by message id.
+      setTickets((prev) =>
+        prev.map((t) =>
+          t.id === conversationId
+            ? {
+                ...t,
+                messages: t.messages.some((m) => m.id === result.data.id)
+                  ? t.messages
+                  : [...t.messages, { id: result.data.id, sender: 'business' as const, text: textToSend, time: 'Just now' }],
+                lastMessage: textToSend,
+                unread: false,
+              }
+            : t
+        )
+      );
+    });
   };
 
-  const handleActionRenew = () => {
-    if (!activeTicket) return;
-    const newMsg = { sender: 'business' as const, text: 'Digital Pass Provisioned! Turnstile Gate 01 is now cleared for 30 days.', time: 'Just now' };
-    setTickets((prev) =>
-      prev.map((t) =>
-        t.id === activeTicket.id
-          ? { ...t, messages: [...t.messages, newMsg], status: 'RESOLVED', tag: 'Resolved (Renewed)', tagColor: '#059669' }
-          : t
-      )
+  const handleSendReply = () => sendToActiveThread(replyText.trim(), true);
+
+  const handleActionRenew = () =>
+    sendToActiveThread(
+      `Hi ${activeTicket?.athleteName ?? 'there'}, your pass at ${facility.name} has expired. Renew in the Sodia app under Cards → ${facility.name} to get back in.`,
+      false
     );
-  };
 
   return (
     <div
@@ -365,7 +133,7 @@ export function AthleticInboxCRMView({ suiteMode }: AthleticInboxCRMViewProps) {
             ].map((f) => (
               <button
                 key={f.id}
-                onClick={() => setFilterChannel(f.id as any)}
+                onClick={() => setFilterChannel(f.id as typeof filterChannel)}
                 style={{
                   padding: '6px 12px',
                   borderRadius: '8px',
@@ -386,7 +154,31 @@ export function AthleticInboxCRMView({ suiteMode }: AthleticInboxCRMViewProps) {
         </div>
 
         {/* Conversation List */}
-        <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div style={{ flex: 1, overflowY: 'auto' }} aria-busy={inboxStatus === 'loading'}>
+          {inboxStatus === 'loading' &&
+            [0, 1, 2, 3].map((i) => (
+              <div key={i} style={{ height: '72px', margin: '10px 14px', borderRadius: '12px', backgroundColor: theme.borderColor, opacity: 0.5 }} />
+            ))}
+          {inboxStatus === 'empty' && (
+            <div style={{ padding: '32px 20px', textAlign: 'center', color: theme.textSecondary, fontSize: '13px' }}>
+              No member conversations yet. Send a broadcast to start one.
+              <button onClick={() => setIsBroadcastModalOpen(true)} style={{ display: 'block', margin: '14px auto 0', padding: '8px 14px', borderRadius: '8px', border: 'none', backgroundColor: '#FF5364', color: '#FFFFFF', fontWeight: 700, cursor: 'pointer' }}>
+                New broadcast
+              </button>
+            </div>
+          )}
+          {(inboxStatus === 'error' || inboxStatus === 'permission_denied' || inboxStatus === 'session_expired') && (
+            <div role="alert" style={{ padding: '32px 20px', textAlign: 'center', color: theme.textSecondary, fontSize: '13px' }}>
+              {inboxError ?? 'Could not load conversations.'}
+              {inboxStatus === 'session_expired' ? (
+                <a href="/login" style={{ display: 'block', marginTop: '14px', color: '#FF5364', fontWeight: 700 }}>Sign in again</a>
+              ) : (
+                <button onClick={() => void reload()} style={{ display: 'block', margin: '14px auto 0', padding: '8px 14px', borderRadius: '8px', border: `1px solid ${theme.borderColor}`, background: 'none', color: theme.textPrimary, fontWeight: 700, cursor: 'pointer' }}>
+                  Retry
+                </button>
+              )}
+            </div>
+          )}
           {filteredTickets.map((t) => {
             const isSelected = t.id === activeTicket?.id;
             return (
@@ -562,14 +354,22 @@ export function AthleticInboxCRMView({ suiteMode }: AthleticInboxCRMViewProps) {
             })}
           </div>
 
+          {replyError && (
+            <div role="alert" style={{ padding: '8px 24px', backgroundColor: '#2A1418', color: '#FCA5A5', fontSize: '12px' }}>
+              {replyError}
+            </div>
+          )}
+
           {/* Reply Bar */}
           <div style={{ padding: '16px 24px', borderTop: `1px solid ${theme.borderColor}`, backgroundColor: theme.bgCardSecondary, display: 'flex', gap: '10px' }}>
             <input
               type="text"
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSendReply()}
-              placeholder="Write direct response or automated CRM prompt..."
+              onKeyDown={(e) => e.key === 'Enter' && !isSending && handleSendReply()}
+              placeholder="Write a reply to this member..."
+              aria-label="Reply to member"
+              maxLength={4000}
               style={{
                 flex: 1,
                 backgroundColor: theme.bgCard,
@@ -583,7 +383,9 @@ export function AthleticInboxCRMView({ suiteMode }: AthleticInboxCRMViewProps) {
             />
             <button
               onClick={handleSendReply}
+              disabled={isSending}
               style={{
+                opacity: isSending ? 0.6 : 1,
                 backgroundColor: '#E11D48',
                 color: '#FFFFFF',
                 borderRadius: '12px',

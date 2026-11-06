@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { MessageCircle, Heart, QrCode } from 'lucide-react';
-import { generateDynamicPassTotp, calculateHybridServiceFee } from 'sodia-core';
+import { generatePassTotp, calculateHybridServiceFee } from 'sodia-core';
 
 interface SodiaMobileSimulatorProps { onTriggerTurnstileScan?: () => void; }
 
@@ -18,8 +18,11 @@ export function SodiaMobileSimulator({ onTriggerTurnstileScan }: SodiaMobileSimu
   const [checkoutItem, setCheckoutItem] = useState<{ title: string; base: number } | null>(null);
 
   useEffect(() => {
+    // Preview only: a throwaway per-mount secret, so these codes open no real gate.
+    const previewSecret = crypto.getRandomValues(new Uint8Array(32));
+    const previewPassId = crypto.randomUUID();
     const updateToken = () => {
-      const token = generateDynamicPassTotp('usr_athlete_01', 'pass_metro_vip_01', 'fac_metro_core', Date.now());
+      const token = generatePassTotp(previewPassId, previewSecret, Date.now());
       setTotpCode(token.formattedCode);
       setTtl(token.remainingSeconds);
     };

@@ -11,10 +11,11 @@ import { TriageDashboard } from '../dashboard/TriageDashboard';
 import { FloatGateModal, ShiftSession } from '../daily-dash/FloatGateModal';
 import { Building2, ShieldCheck, Dumbbell, Compass, Lock, Unlock, Activity, ExternalLink, Zap, UserCheck, Trophy, Info, Sun, Moon } from 'lucide-react';
 import { SuiteThemeProvider, useSuiteTheme } from './theme';
+import { ActiveFacilityProvider, type ActiveFacilityValue } from './ActiveFacilityContext';
 
-function BusinessSuiteInner() {
+function BusinessSuiteInner({ facility }: { facility: ActiveFacilityValue }) {
   const { theme, isDark, toggleTheme } = useSuiteTheme();
-  const [suiteMode, setSuiteMode] = useState<SuiteMode>('GYMDASH');
+  const [suiteMode, setSuiteMode] = useState<SuiteMode>(facility.registryType === 'COMMUNITY' ? 'CLUBDASH' : 'GYMDASH');
   const [activeTab, setActiveTab] = useState<NavTab>('DASHBOARD');
   const [branch, setBranch] = useState<'BGC' | 'MAKATI' | 'PASIG'>('BGC');
 
@@ -605,10 +606,18 @@ function BusinessSuiteInner() {
   );
 }
 
-export function BusinessSuiteShell() {
+export interface BusinessSuiteShellProps {
+  facility: ActiveFacilityValue;
+  facilities: ActiveFacilityValue[];
+  operatorName: string;
+}
+
+export function BusinessSuiteShell({ facility }: BusinessSuiteShellProps) {
   return (
-    <SuiteThemeProvider>
-      <BusinessSuiteInner />
-    </SuiteThemeProvider>
+    <ActiveFacilityProvider value={facility}>
+      <SuiteThemeProvider>
+        <BusinessSuiteInner facility={facility} />
+      </SuiteThemeProvider>
+    </ActiveFacilityProvider>
   );
 }

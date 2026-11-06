@@ -1,15 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useTransition } from 'react';
 import { X, Send, Sparkles, Bell, MessageSquare, Tag, Users, CheckCircle, Trophy, UserCheck, Radio } from 'lucide-react';
 import { SuiteMode } from './HeroPromoCard';
-import { getSodiaSupabaseClient, CrmBroadcast } from 'sodia-core';
+import { sendCrmBroadcast, type BroadcastSummary } from '../../app/actions/crm';
+import { useActiveFacility } from './ActiveFacilityContext';
 
 interface CreateMessageModalProps {
   visible: boolean;
   onClose: () => void;
   suiteMode: SuiteMode;
-  onBroadcastSent?: (broadcast: CrmBroadcast) => void;
+  onBroadcastSent?: (broadcast: BroadcastSummary) => void;
 }
 
 export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSent }: CreateMessageModalProps) {
@@ -18,6 +19,11 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
   const [body, setBody] = useState('');
   const [promoCode, setPromoCode] = useState('');
   const [isSent, setIsSent] = useState(false);
+  const [recipientCount, setRecipientCount] = useState(0);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [formError, setFormError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const facility = useActiveFacility();
 
   if (!visible) return null;
 
@@ -85,81 +91,35 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
 
   const cfg = getModalConfig();
 
-  const handleSend = async () => {
-    if (!title.trim() || !body.trim()) {
-      alert('Please provide a message headline and body.');
-      return;
-    }
-
-    const senderName =
-      suiteMode === 'GYMDASH'
-        ? 'Metro Core Arena (GymDash)'
-        : suiteMode === 'CLUBDASH'
-        ? 'ClubDash Facility Broadcast'
-        : suiteMode === 'COACHDASH'
-        ? 'Coach Miguel Ramos (Studio)'
-        : 'Metro Padel & Tournament Desk';
-
-    const senderAvatar =
-      suiteMode === 'GYMDASH'
-        ? 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=200&q=80'
-        : suiteMode === 'CLUBDASH'
-        ? 'https://images.unsplash.com/photo-1554068865-24cecd4e34b8?auto=format&fit=crop&w=200&q=80'
-        : suiteMode === 'COACHDASH'
-        ? 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80'
-        : 'https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?auto=format&fit=crop&w=200&q=80';
-
-    const broadcastPayload: CrmBroadcast = {
-      id: `bc_${Date.now()}`,
-      suiteMode,
-      senderName,
-      senderAvatar,
-      audience,
-      title: title.trim(),
-      body: body.trim(),
-      promoCode: promoCode.trim() || undefined,
-      createdAt: new Date().toISOString(),
-      badgeText: suiteMode === 'GYMDASH' ? 'GYMDASH CRM' : `${suiteMode} CRM`,
-    };
-
-    setIsSent(true);
-
-    try {
-      // 1. Post to Next.js API
-      await fetch('/api/crm/broadcast', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(broadcastPayload),
-      }).catch((e) => console.warn('[CRM Modal] fetch err:', e));
-
-      // 2. Broadcast via Supabase Realtime peer channel
-      const client = getSodiaSupabaseClient();
-      const channel = client.channel('sodia_crm_broadcasts');
-      channel.send({
-        type: 'broadcast',
-        event: 'crm_broadcast',
-        payload: broadcastPayload,
+  const handleSend = () => {
+    setFieldErrors({});
+    setFormError(null);
+    startTransition(async () => {
+      const result = await sendCrmBroadcast({
+        facilityId: facility.id,
+        suiteMode,
+        audience,
+        title,
+        body,
+        promoCode,
+        badgeText: `${suiteMode} CRM`,
       });
-
-      // 3. Local custom event for web components
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(
-          new CustomEvent('sodia_crm_broadcast_sent', { detail: broadcastPayload })
-        );
+      if (!result.ok) {
+        if (result.state === 'form_validation') setFieldErrors(result.fieldErrors);
+        else setFormError(result.message);
+        return;
       }
-
-      onBroadcastSent?.(broadcastPayload);
-    } catch (err) {
-      console.warn('[CRM Broadcast Send Error]:', err);
-    }
-
-    setTimeout(() => {
-      setIsSent(false);
-      setTitle('');
-      setBody('');
-      setPromoCode('');
-      onClose();
-    }, 1800);
+      setRecipientCount(result.data.recipientCount);
+      setIsSent(true);
+      onBroadcastSent?.(result.data);
+      setTimeout(() => {
+        setIsSent(false);
+        setTitle('');
+        setBody('');
+        setPromoCode('');
+        onClose();
+      }, 1800);
+    });
   };
 
   return (
@@ -224,7 +184,7 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
             <CheckCircle size={48} color="#10B981" style={{ margin: '0 auto 14px' }} />
             <h4 style={{ fontSize: '18px', fontWeight: 800, color: '#FFFFFF' }}>Broadcast Dispatched!</h4>
             <p style={{ fontSize: '12px', color: '#9CA3AF', marginTop: '6px' }}>
-              Your message was pushed to the selected audience segment with live delivery confirmation.
+              Delivered to {recipientCount} {recipientCount === 1 ? 'member' : 'members'} of {facility.name}.
             </p>
           </div>
         ) : (
@@ -238,7 +198,7 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
                 {cfg.segments.map((aud) => (
                   <button
                     key={aud.id}
-                    onClick={() => setAudience(aud.id as any)}
+                    onClick={() => setAudience(aud.id as typeof audience)}
                     style={{
                       padding: '8px 4px',
                       borderRadius: '10px',
@@ -336,9 +296,16 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
               </div>
             </div>
 
+            {(Object.keys(fieldErrors).length > 0 || formError) && (
+              <div role="alert" style={{ backgroundColor: '#2A1418', color: '#FCA5A5', padding: '10px 12px', borderRadius: '10px', fontSize: '12px' }}>
+                {formError ?? Object.values(fieldErrors).join(' · ')}
+              </div>
+            )}
+
             {/* Submit Button */}
             <button
               onClick={handleSend}
+              disabled={isPending}
               style={{
                 marginTop: '10px',
                 padding: '12px',
@@ -357,7 +324,7 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
               }}
             >
               <Send size={15} />
-              <span>Broadcast Now</span>
+              <span>{isPending ? 'Sending…' : 'Broadcast Now'}</span>
             </button>
           </div>
         )}

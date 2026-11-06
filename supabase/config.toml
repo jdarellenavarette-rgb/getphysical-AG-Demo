@@ -1,0 +1,53 @@
+# Supabase CLI project config (local dev: `supabase start`, deploy: `supabase db push`
+# and `supabase functions deploy`). See docs/BACKEND.md.
+project_id = "getphysical"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+major_version = 15
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
+
+[realtime]
+enabled = true
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000/auth/confirm", "sodia://auth/callback"]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = true
+
+[auth.rate_limit]
+email_sent = 4
+sign_in_sign_ups = 30
+token_verifications = 30
+
+[functions.nutrition-parse]
+verify_jwt = true
+
+[functions.payments-checkout]
+verify_jwt = true
+
+# Payment providers cannot send Supabase JWTs; these verify their own signatures.
+[functions.webhook-xendit]
+verify_jwt = false
+
+[functions.webhook-stripe]
+verify_jwt = false

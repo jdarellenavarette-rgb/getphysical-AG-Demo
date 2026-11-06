@@ -76,8 +76,17 @@ quality; they are never a licence to copy another product's branding, art or cop
 
 ## 5. Known gaps & follow-ups (tracked, not yet delivered)
 
-- **Data layer:** both apps still run on seeded Zustand/in-memory data. TanStack Query (mobile) / RSC data fetching (web) against Supabase with explicit column selectors is the next milestone; offline persistence (SQLite queue) depends on it.
-- **Auth & session_expired:** onboarding/OTP/biometric re-auth flow (Spec Phase 1) is not implemented in the demo.
+- **Device runtime not yet verified:** mobile passes `tsc` and `expo export --platform android` (Hermes bundle), but the
+  bottom-sheet v5 + gesture-handler 3 + Reanimated 4 combination has not been exercised on a physical device/simulator.
+  First QA pass on device must cover sheets, double-tap like, card flip, toasts and Android back.
+- **Data layer:** TanStack Query is wired on mobile (feed query, checkout mutation, offline-first client) and web uses
+  Server Components + Server Actions, but data is still seeded locally. Supabase queries with explicit column selectors
+  and SQLite offline persistence are the next milestone. Web "Inside Now" is a local counter, not yet a realtime channel.
+- **Live state detection:** `slow_network` (RTT measurement) and `session_expired` (biometric re-auth; needs
+  `expo-local-authentication`) render correctly when fed, but no screen detects them yet.
+- **Cards QR:** TOTP code is generated locally and shown on flip, but no QR renderer is installed, and the TOTP seed is
+  derived from IDs rather than the Secure Enclave JWT.
+- **Auth & onboarding:** onboarding/OTP/biometric flow (Spec Phase 1) is not implemented in the demo.
 - **Web styling system:** Tailwind + Shadcn (AGENTS.md §2) not yet adopted; current web styles are inline objects + `globals.css`. Migration should be its own PR.
 - **Maps:** Discover uses a Leaflet WebView, not `@rnmapbox/maps` (AGENTS.md §2).
 - **Web CRM REST routes** (`apps/web/src/app/api/crm/*`) are kept because the mobile app calls them over the network; Server Actions cannot be called from React Native. Revisit once Supabase Realtime carries CRM messages end-to-end.

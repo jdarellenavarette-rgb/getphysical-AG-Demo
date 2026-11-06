@@ -1,9 +1,12 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowLeft, Ticket, FileText } from "lucide-react-native";
-import { useThemeStore } from "../../theme/theme";
-import type { PassRow } from "sodia-core";
+import React, { useMemo, useState } from "react";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { FlashList } from "@shopify/flash-list";
+import { ChevronRight, FileText, Ticket } from "lucide-react-native";
+import { createEmptyState, createSuccessState, type PassRow } from "sodia-core";
+import { useColors } from "../../theme/theme";
+import { AppModal } from "../common/AppModal";
+import { ScreenHeader } from "../common/ScreenHeader";
+import { TenStateView } from "../common/TenStateView";
 
 interface StatementOfAccountModalProps {
   visible: boolean;
@@ -12,133 +15,112 @@ interface StatementOfAccountModalProps {
   onSelectPass: (pass: PassRow) => void;
 }
 
-export function StatementOfAccountModal({
-  visible,
-  passes,
-  onClose,
-  onSelectPass,
-}: StatementOfAccountModalProps) {
-  const insets = useSafeAreaInsets();
-  const { colors } = useThemeStore();
-  const [filter, setFilter] = useState<"all" | "passes" | "courts">("all");
+type LedgerFilter = "all" | "passes" | "courts";
+const FILTERS: readonly { key: LedgerFilter; label: string }[] = [
+  { key: "all", label: "All" },
+  { key: "passes", label: "Passes & memberships" },
+  { key: "courts", label: "Courts & meets" },
+];
 
-  const totalSpent = passes.length * 265;
+function isCourt(p: PassRow): boolean {
+  return /court|reservation|entry|session/i.test(p.pass_type);
+}
+
+/** Append-only ledger view (rows are never edited; voids appear as reversing entries). */
+export function StatementOfAccountModal({ visible, passes, onClose, onSelectPass }: StatementOfAccountModalProps) {
+  const colors = useColors();
+  const [filter, setFilter] = useState<LedgerFilter>("all");
+  const rows = useMemo(
+    () => passes.filter((p) => (filter === "all" ? true : filter === "courts" ? isCourt(p) : !isCourt(p))),
+    [passes, filter]
+  );
+  const state = rows.length === 0
+    ? createEmptyState<PassRow[]>(filter === "all" ? "Purchases, memberships and court splits appear here." : "Nothing in this category yet.", "")
+    : createSuccessState([...rows]);
+
+  const header = (
+    <View>
+      <View style={[styles.summary, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
+        <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>THIS MONTH</Text>
+        <Text style={[styles.summaryValue, { color: colors.textPrimary }]}>{passes.length} settled</Text>
+        <Text style={[styles.summaryMeta, { color: colors.accentGreen }]}>0 failed or reversed</Text>
+      </View>
+      <View style={styles.filters} accessibilityRole="tablist">
+        {FILTERS.map((f) => {
+          const active = f.key === filter;
+          return (
+            <TouchableOpacity
+              key={f.key}
+              onPress={() => setFilter(f.key)}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: active }}
+              style={[styles.filter, { backgroundColor: active ? colors.accent : colors.bgCardSecondary, borderColor: active ? colors.accent : colors.borderColor }]}
+            >
+              <Text style={[styles.filterText, { color: active ? colors.textOnAccent : colors.textSecondary }]}>{f.label}</Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </View>
+  );
 
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+    <AppModal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
-        {/* HEADER BAR WITH SAFE NOTCH INSET */}
-        <View style={[styles.topBar, { paddingTop: Math.max(insets.top, 50) + 10, backgroundColor: colors.bgHeader, borderBottomColor: colors.borderColor }]}>
-          <TouchableOpacity
-            onPress={onClose}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-            style={styles.backBtn}
-          >
-            <ArrowLeft size={20} color={colors.textPrimary} />
-            <Text style={[styles.backBtnText, { color: colors.textPrimary }]}>Cards Hub</Text>
-          </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>STATEMENT OF ACCOUNT</Text>
-          <View style={{ width: 44 }} />
-        </View>
-
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-          {/* LEDGER OVERVIEW CARD */}
-          <View style={[styles.summaryCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
-            <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>TOTAL EXPENDITURE (CURRENT MONTH)</Text>
-            <Text style={[styles.summaryAmount, { color: colors.textPrimary }]}>₱{totalSpent.toFixed(2)}</Text>
-            <View style={styles.summaryMetaRow}>
-              <Text style={styles.summaryMeta}>{passes.length} Settled Transactions</Text>
-              <Text style={styles.summaryMeta}>• Zero Failed Invoices</Text>
-            </View>
-          </View>
-
-          {/* FILTER ROW */}
-          <View style={styles.filterRow}>
-            {(["all", "passes", "courts"] as const).map((fil) => (
-              <TouchableOpacity
-                key={fil}
-                onPress={() => setFilter(fil)}
-                style={[styles.filterPill, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }, filter === fil && styles.filterPillActive]}
-              >
-                <Text style={[styles.filterText, { color: colors.textMuted }, filter === fil && styles.filterTextActive]}>
-                  {fil === "all" ? `All (${passes.length})` : fil === "passes" ? "Day Passes" : "Courts & Meets"}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {/* TRANSACTION LIST OR EMPTY STATE */}
-          {passes.length === 0 ? (
-            <View style={[styles.emptyCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
-              <Ticket size={36} color={colors.textMuted} />
-              <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No transaction history</Text>
-              <Text style={[styles.emptySub, { color: colors.textMuted }]}>
-                Your purchases, recurring memberships, and court splits will appear here.
-              </Text>
-            </View>
-          ) : (
-            <View style={styles.txList}>
-              {passes.map((p) => (
+        <ScreenHeader title="Statement of account" onBack={onClose} backLabel="Back to wallet" />
+        <View style={styles.pad}>{state.status !== "success" ? header : null}</View>
+        <TenStateView state={state} emptyIcon={Ticket} emptyTitle="No transactions">
+          {(list) => (
+            <FlashList
+              data={list}
+              keyExtractor={(p) => p.id}
+              ListHeaderComponent={header}
+              contentContainerStyle={styles.content}
+              ItemSeparatorComponent={() => <View style={styles.sep} />}
+              renderItem={({ item: p }) => (
                 <TouchableOpacity
-                  key={p.id}
                   onPress={() => onSelectPass(p)}
-                  style={[styles.txRow, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}
+                  style={[styles.row, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${p.pass_type}, ${p.status}. View receipt`}
                 >
-                  <View style={styles.txIconWrap}>
-                    <FileText size={16} color="#EC4899" />
+                  <View style={[styles.icon, { backgroundColor: colors.accentMuted }]}>
+                    <FileText size={16} color={colors.accentText} />
                   </View>
-                  <View style={styles.txDetails}>
-                    <Text style={[styles.txTitle, { color: colors.textPrimary }]}>{p.pass_type}</Text>
-                    <Text style={[styles.txDate, { color: colors.textMuted }]}>{p.created_at ? new Date(p.created_at).toLocaleDateString() : "Active"} • Metro Core</Text>
+                  <View style={styles.flex}>
+                    <Text style={[styles.title, { color: colors.textPrimary }]}>{p.pass_type}</Text>
+                    <Text style={[styles.date, { color: colors.textMuted }]}>
+                      {p.created_at ? new Date(p.created_at).toLocaleDateString() : "Active"} • Metro Core
+                    </Text>
                   </View>
-                  <View style={styles.txRight}>
-                    <Text style={[styles.txPrice, { color: colors.textPrimary }]}>₱265.00</Text>
-                    <Text style={styles.txStatus}>{p.status.toUpperCase()}</Text>
-                  </View>
+                  <Text style={[styles.status, { color: colors.accentGreen }]}>{p.status.toUpperCase()}</Text>
+                  <ChevronRight size={16} color={colors.textMuted} />
                 </TouchableOpacity>
-              ))}
-            </View>
+              )}
+            />
           )}
-
-          {/* FOOTER CLOSE BUTTON */}
-          <TouchableOpacity onPress={onClose} style={[styles.footerBackBtn, { backgroundColor: colors.bgInput }]}>
-            <Text style={[styles.footerBackText, { color: colors.textPrimary }]}>Close Statement</Text>
-          </TouchableOpacity>
-        </ScrollView>
+        </TenStateView>
       </View>
-    </Modal>
+    </AppModal>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingBottom: 14, borderBottomWidth: 1 },
-  backBtn: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 44, paddingVertical: 4 },
-  backBtnText: { fontSize: 13, fontWeight: "700" },
-  headerTitle: { fontSize: 12, fontWeight: "900", letterSpacing: 0.8 },
-  content: { padding: 16 },
-  summaryCard: { borderRadius: 16, padding: 18, marginBottom: 16, borderWidth: 1 },
-  summaryLabel: { fontSize: 10, fontWeight: "800", letterSpacing: 0.8 },
-  summaryAmount: { fontSize: 28, fontWeight: "900", marginTop: 6 },
-  summaryMetaRow: { flexDirection: "row", gap: 6, marginTop: 6 },
-  summaryMeta: { color: "#10B981", fontSize: 11, fontWeight: "600" },
-  filterRow: { flexDirection: "row", gap: 8, marginBottom: 14 },
-  filterPill: { borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1 },
-  filterPillActive: { backgroundColor: "#E11D48", borderColor: "#E11D48" },
-  filterText: { fontSize: 11, fontWeight: "700" },
-  filterTextActive: { color: "#FAFAFA" },
-  emptyCard: { borderRadius: 14, padding: 32, alignItems: "center", borderWidth: 1 },
-  emptyTitle: { fontSize: 14, fontWeight: "700", marginTop: 10 },
-  emptySub: { fontSize: 11, textAlign: "center", marginTop: 4, maxWidth: 260 },
-  txList: { gap: 8, marginBottom: 16 },
-  txRow: { flexDirection: "row", alignItems: "center", borderRadius: 12, padding: 12, borderWidth: 1 },
-  txIconWrap: { width: 34, height: 34, borderRadius: 8, backgroundColor: "rgba(236, 72, 153, 0.15)", alignItems: "center", justifyContent: "center" },
-  txDetails: { flex: 1, marginLeft: 12 },
-  txTitle: { fontSize: 13, fontWeight: "700" },
-  txDate: { fontSize: 11, marginTop: 2 },
-  txRight: { alignItems: "flex-end" },
-  txPrice: { fontSize: 13, fontWeight: "800" },
-  txStatus: { color: "#10B981", fontSize: 10, fontWeight: "800", marginTop: 2 },
-  footerBackBtn: { borderRadius: 10, paddingVertical: 12, alignItems: "center", marginTop: 8, marginBottom: 24 },
-  footerBackText: { fontSize: 13, fontWeight: "700" },
+  pad: { paddingHorizontal: 16 },
+  content: { padding: 16, paddingBottom: 40 },
+  summary: { borderRadius: 16, borderWidth: 1, padding: 18, marginTop: 8 },
+  summaryLabel: { fontSize: 11, fontWeight: "800", letterSpacing: 0.8 },
+  summaryValue: { fontSize: 28, fontWeight: "900", marginTop: 4 },
+  summaryMeta: { fontSize: 12, fontWeight: "700", marginTop: 4 },
+  filters: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginVertical: 14 },
+  filter: { minHeight: 36, justifyContent: "center", paddingHorizontal: 14, borderRadius: 18, borderWidth: 1 },
+  filterText: { fontSize: 13, fontWeight: "700" },
+  sep: { height: 8 },
+  row: { flexDirection: "row", alignItems: "center", gap: 10, padding: 12, borderRadius: 12, borderWidth: 1, minHeight: 64 },
+  icon: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },
+  flex: { flex: 1 },
+  title: { fontSize: 14, fontWeight: "800" },
+  date: { fontSize: 12, marginTop: 2 },
+  status: { fontSize: 11, fontWeight: "800" },
 });

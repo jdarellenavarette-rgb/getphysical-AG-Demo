@@ -1,5 +1,8 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, Image, ScrollView, Modal } from "react-native";
+import { View, Text, TouchableOpacity, Image } from "react-native";
+import { FlashList } from "@shopify/flash-list";
+import type { PassRow } from "sodia-core";
+import { AppModal } from "../common/AppModal";
 import { Award, Shield, Eye, CheckCircle2, MessageSquare, UserPlus, ArrowLeft, Grid, X, Activity, ChevronRight, Dumbbell } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { useThemeStore } from "../../theme/theme";
@@ -48,9 +51,26 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
   ];
 
   const avatarUri = profile.avatar_url || DARELLE_AVATAR;
+  type ProfileItem = { kind: "photo"; id: string; uri: string } | { kind: "pass"; id: string; pass: PassRow };
+  const items: ProfileItem[] =
+    activeTab === "grid"
+      ? gridPhotos.map((uri, i): ProfileItem => ({ kind: "photo", id: `ph_${i}`, uri }))
+      : activeTab === "locker"
+        ? passes.map((pass): ProfileItem => ({ kind: "pass", id: pass.id, pass }))
+        : [];
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.bgScreen }]} contentContainerStyle={{ paddingBottom: 110 }} showsVerticalScrollIndicator={false}>
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
+      <FlashList
+        key={activeTab}
+        data={items}
+        numColumns={activeTab === "grid" ? 3 : 1}
+        keyExtractor={(it) => it.id}
+        getItemType={(it) => it.kind}
+        contentContainerStyle={{ paddingBottom: 110 }}
+        showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          <View>
       <View style={styles.coverContainer}>
         <Image source={{ uri: profile.cover_url || DARELLE_TENNIS_JUMP }} style={styles.coverPhoto} />
         <View style={styles.coverGradient} />
@@ -77,7 +97,7 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
             <CheckCircle2 size={16} color="#38BDF8" fill="#38BDF8" />
           </View>
           <View style={styles.certBadge}>
-            <Dumbbell size={12} color="#E11D48" />
+            <Dumbbell size={12} color={colors.accent} />
             <Text style={styles.certBadgeText}>IFBB Certified Personal Fitness Trainer</Text>
           </View>
           <Text style={[styles.username, { color: colors.textSecondary }]}>@{profile.username} • Strength & Physique • Racket & Combat</Text>
@@ -104,7 +124,7 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
 
         <TouchableOpacity onPress={() => setIsNasmOpen(true)} style={[styles.nasmBanner, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
           <View style={styles.nasmBannerLeft}>
-            <Activity size={15} color="#E11D48" />
+            <Activity size={15} color={colors.accent} />
             <View>
               <Text style={[styles.nasmBannerTitle, { color: colors.textPrimary }]}>
                 NASM Biometrics: {userBiometrics.heightCm}cm • {userBiometrics.weightKg}kg • {userBiometrics.goal.toUpperCase().replace("_", " ")}
@@ -114,50 +134,51 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
               </Text>
             </View>
           </View>
-          <ChevronRight size={15} color="#E11D48" />
+          <ChevronRight size={15} color={colors.accent} />
         </TouchableOpacity>
 
         <View style={styles.highlightsTray}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.highlightsScroll}>
-            {highlights.map((h) => (
-              <TouchableOpacity key={h.id} onPress={() => setSelectedPhoto(h.image)} style={styles.highlightItem}>
+          <FlashList
+            horizontal
+            data={highlights}
+            keyExtractor={(h) => h.id}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.highlightsScroll}
+            ItemSeparatorComponent={() => <View style={{ width: 14 }} />}
+            renderItem={({ item: h }) => (
+              <TouchableOpacity onPress={() => setSelectedPhoto(h.image)} style={styles.highlightItem} accessibilityRole="button" accessibilityLabel={`Highlight: ${h.title}`}>
                 <View style={[styles.highlightRing, { borderColor: colors.borderColor }]}>
                   <Image source={{ uri: h.image }} style={styles.highlightThumb} />
                 </View>
                 <Text numberOfLines={1} style={[styles.highlightLabel, { color: colors.textSecondary }]}>{h.title}</Text>
               </TouchableOpacity>
-            ))}
-          </ScrollView>
+            )}
+          />
         </View>
 
         <View style={[styles.tabsHeader, { borderBottomColor: colors.borderColor }]}>
-          <TouchableOpacity onPress={() => setActiveTab("grid")} style={[styles.tabItem, activeTab === "grid" && styles.tabItemActive]}>
-            <Grid size={16} color={activeTab === "grid" ? "#E11D48" : "#71717A"} />
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Photos" onPress={() => setActiveTab("grid")} style={[styles.tabItem, activeTab === "grid" && styles.tabItemActive]}>
+            <Grid size={16} color={activeTab === "grid" ? colors.accent : colors.textMuted} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => setActiveTab("trophy")} style={[styles.tabItem, activeTab === "trophy" && styles.tabItemActive]}>
-            <Award size={16} color={activeTab === "trophy" ? "#E11D48" : "#71717A"} />
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Verified PRs" onPress={() => setActiveTab("trophy")} style={[styles.tabItem, activeTab === "trophy" && styles.tabItemActive]}>
+            <Award size={16} color={activeTab === "trophy" ? colors.accent : colors.textMuted} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => setActiveTab("locker")} style={[styles.tabItem, activeTab === "locker" && styles.tabItemActive]}>
-            <Shield size={16} color={activeTab === "locker" ? "#E11D48" : "#71717A"} />
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Pass locker" onPress={() => setActiveTab("locker")} style={[styles.tabItem, activeTab === "locker" && styles.tabItemActive]}>
+            <Shield size={16} color={activeTab === "locker" ? colors.accent : colors.textMuted} />
           </TouchableOpacity>
         </View>
 
-        {activeTab === "grid" && (
-          <View style={styles.photoGrid}>
-            {gridPhotos.map((photo, i) => (
-              <TouchableOpacity key={i} onPress={() => setSelectedPhoto(photo)} style={styles.gridPhotoWrap}>
-                <Image source={{ uri: photo }} style={styles.gridPhoto} />
-              </TouchableOpacity>
-            ))}
+      </View>
           </View>
-        )}
-
+        }
+        ListFooterComponent={
+          <View style={styles.footerPad}>
         {activeTab === "trophy" && (
           <View style={styles.trophyGrid}>
             <View style={[styles.stampCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
               <View style={styles.stampHeader}>
                 <Text style={styles.stampType}>IFBB CPFT • VERIFIED STRENGTH PR</Text>
-                <Eye size={13} color="#10B981" />
+                <Eye size={13} color={colors.accentGreen} />
               </View>
               <Text style={[styles.stampMetric, { color: colors.textPrimary }]}>225 KG</Text>
               <Text style={[styles.stampSub, { color: colors.textSecondary }]}>Conventional Deadlift 1RM • Metro Core Arena</Text>
@@ -165,7 +186,7 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
             <View style={[styles.stampCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
               <View style={styles.stampHeader}>
                 <Text style={styles.stampType}>RACKET SPEED • VERIFIED OVERHEAD</Text>
-                <Eye size={13} color="#10B981" />
+                <Eye size={13} color={colors.accentGreen} />
               </View>
               <Text style={[styles.stampMetric, { color: colors.textPrimary }]}>172 KM/H</Text>
               <Text style={[styles.stampSub, { color: colors.textSecondary }]}>Tennis Overhead Smash Peak Velocity • Court Club</Text>
@@ -173,31 +194,33 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
           </View>
         )}
 
-        {activeTab === "locker" && (
-          <View style={styles.lockerList}>
-            {passes.length === 0 ? (
-              <View style={styles.emptyLocker}>
-                <Text style={[styles.emptyLockerText, { color: colors.textMuted }]}>No active passes. Explore facilities to unlock VIP access.</Text>
-              </View>
-            ) : (
-              passes.map((p) => (
-                <View key={p.id} style={[styles.lockerRow, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
-                  <Text style={[styles.lockerPassType, { color: colors.textPrimary }]}>{p.pass_type}</Text>
-                  <Text style={styles.lockerStatus}>{p.status.toUpperCase()}</Text>
-                </View>
-              ))
-            )}
+        {activeTab === "locker" && passes.length === 0 ? (
+          <View style={styles.emptyLocker}>
+            <Text style={[styles.emptyLockerText, { color: colors.textMuted }]}>No active passes. Explore facilities to unlock VIP access.</Text>
           </View>
-        )}
-      </View>
-
-      <Modal visible={!!selectedPhoto} transparent animationType="fade" onRequestClose={() => setSelectedPhoto(null)}>
+        ) : null}
+          </View>
+        }
+        renderItem={({ item }) =>
+          item.kind === "photo" ? (
+            <TouchableOpacity onPress={() => setSelectedPhoto(item.uri)} style={styles.gridPhotoWrap} accessibilityRole="imagebutton" accessibilityLabel="Open photo">
+              <Image source={{ uri: item.uri }} style={styles.gridPhoto} />
+            </TouchableOpacity>
+          ) : (
+            <View style={[styles.lockerRow, styles.lockerItem, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
+              <Text style={[styles.lockerPassType, { color: colors.textPrimary }]}>{item.pass.pass_type}</Text>
+              <Text style={styles.lockerStatus}>{item.pass.status.toUpperCase()}</Text>
+            </View>
+          )
+        }
+      />
+      <AppModal visible={!!selectedPhoto} transparent animationType="fade" onRequestClose={() => setSelectedPhoto(null)}>
         <View style={styles.photoModalOverlay}>
-          <TouchableOpacity onPress={() => setSelectedPhoto(null)} style={styles.closePhotoBtn}><X size={22} color="#FFF" /></TouchableOpacity>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Close photo" onPress={() => setSelectedPhoto(null)} style={styles.closePhotoBtn}><X size={22} color="#FFF" /></TouchableOpacity>
           {selectedPhoto && <Image source={{ uri: selectedPhoto }} style={styles.fullPhoto} resizeMode="contain" />}
         </View>
-      </Modal>
+      </AppModal>
       <NasmBiometricsModal visible={isNasmOpen} onClose={() => setIsNasmOpen(false)} />
-    </ScrollView>
+    </View>
   );
 }

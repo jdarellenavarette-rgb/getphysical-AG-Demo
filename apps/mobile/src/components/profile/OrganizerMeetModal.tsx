@@ -1,5 +1,7 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { FlashList } from "@shopify/flash-list";
+import { AppModal } from "../common/AppModal";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Users, Clock, Trophy, CheckCircle2, Flame, Shield, ArrowLeft, Sparkles } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
@@ -30,8 +32,18 @@ export function OrganizerMeetModal({ visible, onClose }: OrganizerMeetModalProps
   const toggleKudos = (id: string) => setRoster((prev) => prev.map((p) => (p.id === id ? { ...p, kudosGiven: !p.kudosGiven } : p)));
   const triggerWaitlistClaim = (id: string) => setWaitlist((prev) => prev.map((w) => (w.id === id ? { ...w, claimActive: true } : w)));
 
+  type OrganizerItem =
+    | { kind: "player"; id: string; player: (typeof roster)[number] }
+    | { kind: "wait"; id: string; entry: (typeof waitlist)[number] };
+  const items: OrganizerItem[] =
+    subTab === "roster"
+      ? roster.map((player): OrganizerItem => ({ kind: "player", id: player.id, player }))
+      : subTab === "waitlist"
+        ? waitlist.map((entry): OrganizerItem => ({ kind: "wait", id: entry.id, entry }))
+        : [];
+
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+    <AppModal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         {/* TOP HEADER WITH SAFE NOTCH PADDING */}
         <View style={[styles.topBar, { paddingTop: Math.max(insets.top, 50) + 10, backgroundColor: colors.bgHeader, borderBottomColor: colors.borderColor }]}>
@@ -40,12 +52,21 @@ export function OrganizerMeetModal({ visible, onClose }: OrganizerMeetModalProps
             <Text style={[styles.backText, { color: colors.textPrimary }]}>Profile</Text>
           </TouchableOpacity>
           <View style={styles.rolePill}>
-            <Sparkles size={12} color="#10B981" />
+            <Sparkles size={12} color={colors.accentGreen} />
             <Text style={styles.rolePillText}>CLUBDASH ORGANIZER PRO</Text>
           </View>
         </View>
 
-        <ScrollView showsVerticalScrollIndicator={false} style={styles.body}>
+        <FlashList
+          key={subTab}
+          data={items}
+          keyExtractor={(it) => it.id}
+          getItemType={(it) => it.kind}
+          style={styles.body}
+          showsVerticalScrollIndicator={false}
+          ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+          ListHeaderComponent={
+            <View>
           {/* TOURNAMENT SUMMARY CARD */}
           <View style={[styles.meetCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
             <View style={styles.meetBadgeRow}>
@@ -55,7 +76,7 @@ export function OrganizerMeetModal({ visible, onClose }: OrganizerMeetModalProps
             <Text style={[styles.meetTitle, { color: colors.textPrimary }]}>Sunset Doubles Ladder (Court A & B)</Text>
             <Text style={[styles.venueSub, { color: colors.textMuted }]}>Twins Fitness Court Club • Sat, 4:00 PM</Text>
             <View style={[styles.splitLedgerBox, { backgroundColor: colors.bgCardSecondary }]}>
-              <Shield size={14} color="#10B981" />
+              <Shield size={14} color={colors.accentGreen} />
               <Text style={[styles.splitLedgerText, { color: colors.textSecondary }]}>Escrow Active: ₱150/player fee collected automatically via Sodia Split.</Text>
             </View>
           </View>
@@ -78,11 +99,38 @@ export function OrganizerMeetModal({ visible, onClose }: OrganizerMeetModalProps
             ))}
           </View>
 
-          {/* TAB 1: ROSTER */}
-          {subTab === "roster" && (
+              {subTab === "waitlist" ? (
+  <View style={styles.infoBanner}>
+                <Text style={styles.infoBannerText}>180s Auto-Drop Rule: When a slot opens, waitlist #1 has 3 minutes to confirm before passing to #2.</Text>
+              </View>
+              ) : null}
+            </View>
+          }
+          ListFooterComponent={
+            <View>
+          {/* TAB 3: LIVE COURTS */}
+          {subTab === "courts" && (
             <View style={styles.sectionList}>
-              {roster.map((player) => (
-                <View key={player.id} style={[styles.playerRow, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
+              <View style={[styles.courtCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
+                <View style={styles.courtHeader}>
+                  <Text style={[styles.courtTitle, { color: colors.textMuted }]}>COURT A • GAME 1 (FINAL)</Text>
+                  <Text style={styles.courtLiveBadge}>{courtAScore.finalized ? "OFFICIAL" : "LIVE"}</Text>
+                </View>
+                <Text style={[styles.matchupText, { color: colors.textPrimary }]}>Marco & Tina ({courtAScore.a}) vs Enzo & Bianca ({courtAScore.b})</Text>
+                <TouchableOpacity onPress={() => setCourtAScore((p) => ({ ...p, finalized: true }))} disabled={courtAScore.finalized} style={[styles.stampBtn, courtAScore.finalized && { backgroundColor: colors.accentGreen }]}>
+                  <CheckCircle2 size={14} color="#FFFFFF" />
+                  <Text style={styles.stampBtnText}>{courtAScore.finalized ? "Scores Synced to DUPR Roster" : "Sign Off & Post Results"}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+            </View>
+          }
+          renderItem={({ item }) => {
+            if (item.kind === "player") {
+              const player = item.player;
+              return (
+                <View style={[styles.playerRow, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
                   <View>
                     <View style={styles.nameRow}>
                       <Text style={[styles.playerName, { color: colors.textPrimary }]}>{player.name}</Text>
@@ -95,55 +143,30 @@ export function OrganizerMeetModal({ visible, onClose }: OrganizerMeetModalProps
                     </Text>
                   </View>
                   <TouchableOpacity onPress={() => toggleKudos(player.id)} style={[styles.kudosBtn, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }, player.kudosGiven && styles.kudosBtnActive]}>
-                    <Flame size={12} color={player.kudosGiven ? "#F59E0B" : colors.textMuted} />
-                    <Text style={[styles.kudosText, { color: colors.textMuted }, player.kudosGiven && { color: "#F59E0B" }]}>
+                    <Flame size={12} color={player.kudosGiven ? colors.warning : colors.textMuted} />
+                    <Text style={[styles.kudosText, { color: colors.textMuted }, player.kudosGiven && { color: colors.warning }]}>
                       {player.kudosGiven ? "Hyped" : "Hype"}
                     </Text>
                   </TouchableOpacity>
                 </View>
-              ))}
-            </View>
-          )}
-
-          {/* TAB 2: WAITLIST */}
-          {subTab === "waitlist" && (
-            <View style={styles.sectionList}>
-              <View style={styles.infoBanner}>
-                <Text style={styles.infoBannerText}>180s Auto-Drop Rule: When a slot opens, waitlist #1 has 3 minutes to confirm before passing to #2.</Text>
-              </View>
-              {waitlist.map((w) => (
-                <View key={w.id} style={[styles.playerRow, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
+              );
+            }
+            const w = item.entry;
+            return (
+                <View style={[styles.playerRow, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
                   <View>
                     <Text style={[styles.playerName, { color: colors.textPrimary }]}>#{w.position} • {w.name}</Text>
                     <Text style={[styles.playerSub, { color: colors.textMuted }]}>DUPR {w.dupr} • {w.claimActive ? "Claim link active (180s)" : "Standing by"}</Text>
                   </View>
-                  <TouchableOpacity onPress={() => triggerWaitlistClaim(w.id)} style={[styles.claimBtn, w.claimActive && { backgroundColor: "#10B981" }]}>
+                  <TouchableOpacity onPress={() => triggerWaitlistClaim(w.id)} style={[styles.claimBtn, w.claimActive && { backgroundColor: colors.accentGreen }]}>
                     <Text style={styles.claimBtnText}>{w.claimActive ? "Pinged ✓" : "Call Up"}</Text>
                   </TouchableOpacity>
                 </View>
-              ))}
-            </View>
-          )}
-
-          {/* TAB 3: LIVE COURTS */}
-          {subTab === "courts" && (
-            <View style={styles.sectionList}>
-              <View style={[styles.courtCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
-                <View style={styles.courtHeader}>
-                  <Text style={[styles.courtTitle, { color: colors.textMuted }]}>COURT A • GAME 1 (FINAL)</Text>
-                  <Text style={styles.courtLiveBadge}>{courtAScore.finalized ? "OFFICIAL" : "LIVE"}</Text>
-                </View>
-                <Text style={[styles.matchupText, { color: colors.textPrimary }]}>Marco & Tina ({courtAScore.a}) vs Enzo & Bianca ({courtAScore.b})</Text>
-                <TouchableOpacity onPress={() => setCourtAScore((p) => ({ ...p, finalized: true }))} disabled={courtAScore.finalized} style={[styles.stampBtn, courtAScore.finalized && { backgroundColor: "#10B981" }]}>
-                  <CheckCircle2 size={14} color="#FFFFFF" />
-                  <Text style={styles.stampBtnText}>{courtAScore.finalized ? "Scores Synced to DUPR Roster" : "Sign Off & Post Results"}</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
-        </ScrollView>
+            );
+          }}
+        />
       </View>
-    </Modal>
+    </AppModal>
   );
 }
 
@@ -153,11 +176,11 @@ const styles = StyleSheet.create({
   backBtn: { flexDirection: "row", alignItems: "center", gap: 6 },
   backText: { fontSize: 14, fontWeight: "700" },
   rolePill: { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "rgba(16,185,129,0.15)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
-  rolePillText: { color: "#10B981", fontSize: 10, fontWeight: "800" },
+  rolePillText: { color: "#10B981", fontSize: 11, fontWeight: "800" },
   body: { flex: 1, padding: 16 },
   meetCard: { borderRadius: 14, padding: 16, borderWidth: 1 },
   meetBadgeRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  sportTag: { color: "#38BDF8", fontSize: 10, fontWeight: "800" },
+  sportTag: { color: "#38BDF8", fontSize: 11, fontWeight: "800" },
   slotCount: { color: "#F59E0B", fontSize: 11, fontWeight: "800" },
   meetTitle: { fontSize: 18, fontWeight: "900", marginTop: 6 },
   venueSub: { fontSize: 12, marginTop: 4 },
@@ -173,7 +196,7 @@ const styles = StyleSheet.create({
   nameRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   playerName: { fontSize: 14, fontWeight: "700" },
   duprBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  duprText: { color: "#38BDF8", fontSize: 10, fontWeight: "700" },
+  duprText: { color: "#38BDF8", fontSize: 11, fontWeight: "700" },
   playerSub: { fontSize: 11, marginTop: 4 },
   kudosBtn: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, borderWidth: 1 },
   kudosBtnActive: { borderColor: "#F59E0B", backgroundColor: "rgba(245,158,11,0.1)" },
@@ -185,7 +208,7 @@ const styles = StyleSheet.create({
   courtCard: { padding: 14, borderRadius: 12, borderWidth: 1 },
   courtHeader: { flexDirection: "row", justifyContent: "space-between", marginBottom: 8 },
   courtTitle: { fontSize: 11, fontWeight: "800" },
-  courtLiveBadge: { color: "#10B981", fontSize: 10, fontWeight: "800" },
+  courtLiveBadge: { color: "#10B981", fontSize: 11, fontWeight: "800" },
   matchupText: { fontSize: 14, fontWeight: "800", marginBottom: 12 },
   stampBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: "#E11D48", paddingVertical: 10, borderRadius: 8 },
   stampBtnText: { color: "#FFFFFF", fontSize: 12, fontWeight: "700" },

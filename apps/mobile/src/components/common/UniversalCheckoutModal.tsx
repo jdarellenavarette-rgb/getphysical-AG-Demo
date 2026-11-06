@@ -1,97 +1,162 @@
-import React from "react";
-import { View, Text, StyleSheet, Modal, TouchableOpacity } from "react-native";
-import { Shield } from "lucide-react-native";
-import { calculateHybridServiceFee } from "sodia-core";
-import { useThemeStore } from "../../theme/theme";
+import React, { useEffect, useRef } from "react";
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { BottomSheetView } from "@gorhom/bottom-sheet";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useMutation } from "@tanstack/react-query";
+import { Lock, Shield, WifiOff, X } from "lucide-react-native";
+import { calculateHybridServiceFee, createCorrelationCode, HYBRID_FEE_MODEL, MIN_TOUCH_TARGET, RADII, SPACING, TYPE_SCALE } from "sodia-core";
+import { useColors } from "../../theme/theme";
+import { useEcosystemStore } from "../../store/ecosystemStore";
+import { AppBottomSheet } from "../sheets/AppBottomSheet";
+import { haptics } from "../../lib/haptics";
 import type { CheckoutRequest } from "../discover/DiscoverView";
 
 interface UniversalCheckoutModalProps {
   item: CheckoutRequest | null;
   visible: boolean;
   onClose: () => void;
-  onConfirm: (item: CheckoutRequest) => void;
+  /** Provisions the pass; may be async (gateway hand-off). Throwing surfaces the error state. */
+  onConfirm: (item: CheckoutRequest) => void | Promise<void>;
 }
 
-export function UniversalCheckoutModal({
-  item,
-  visible,
-  onClose,
-  onConfirm,
-}: UniversalCheckoutModalProps) {
-  const { colors } = useThemeStore();
-  if (!visible || !item) return null;
+function peso(n: number): string {
+  return `₱${n.toFixed(2)}`;
+}
 
-  const fee = calculateHybridServiceFee(item.baseAmountPhp, item.billingKind);
+/**
+ * Universal checkout (Master Spec Phase 4). GetPhysical is never MoR: the only
+ * platform line is the hybrid Service Fee (₱15 fixed one-time / 5% recurring).
+ */
+export function UniversalCheckoutModal({ item, visible, onClose, onConfirm }: UniversalCheckoutModalProps) {
+  const colors = useColors();
+  const insets = useSafeAreaInsets();
+  const isOffline = useEcosystemStore((s) => s.isOffline);
+  const lastItem = useRef<CheckoutRequest | null>(item);
+  if (item) lastItem.current = item;
+  const current = lastItem.current;
+
+  const pay = useMutation({
+    mutationFn: async (req: CheckoutRequest) => {
+      await onConfirm(req);
+    },
+    onSuccess: () => haptics.success(),
+    onError: () => haptics.error(),
+  });
+  const { reset } = pay;
+
+  useEffect(() => {
+    if (visible) reset();
+  }, [visible, item?.id, reset]);
+
+  const securing = pay.isPending;
+  const fee = current ? calculateHybridServiceFee(current.baseAmountPhp, current.billingKind) : null;
+  const recurring = current?.billingKind === "recurring_subscription";
+  const feeLabel = recurring ? `Service Fee (${HYBRID_FEE_MODEL.RECURRING_SUB_FEE_RATE * 100}%)` : "Service Fee";
+  const errorCode = useRef(createCorrelationCode("PAY"));
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={styles.modalOverlay}>
-        <View style={[styles.checkoutSheet, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
-          <View style={styles.sheetHeader}>
-            <Text style={[styles.sheetTitle, { color: colors.textPrimary }]}>UNIVERSAL CHECKOUT</Text>
-            <TouchableOpacity onPress={onClose}>
-              <Text style={[styles.closeBtn, { color: colors.textMuted }]}>Close</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={[styles.inventoryItem, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor, borderWidth: 1 }]}>
-            <Text style={[styles.invTitle, { color: colors.textPrimary }]}>{item.title}</Text>
-            <Text style={[styles.invSubtitle, { color: colors.textSecondary }]}>{item.subtitle}</Text>
-            <Text style={styles.invPrice}>₱{item.baseAmountPhp.toFixed(2)}</Text>
-            {item.splitNote && (
-              <View style={styles.splitRow}>
-                <Shield size={11} color="#10B981" />
-                <Text style={styles.splitText}>{item.splitNote}</Text>
-              </View>
-            )}
-          </View>
-
-          <View style={[styles.feeBreakdown, { borderTopColor: colors.borderColor }]}>
-            <View style={styles.feeRow}>
-              <Text style={[styles.feeLabel, { color: colors.textMuted }]}>Subtotal</Text>
-              <Text style={[styles.feeVal, { color: colors.textPrimary }]}>₱{fee.baseAmountPhp.toFixed(2)}</Text>
-            </View>
-            <View style={styles.feeRow}>
-              <Text style={[styles.feeLabel, { color: colors.textMuted }]}>
-                Service Fee ({item.billingKind === "recurring_subscription" ? "5% Recurring" : "₱15 Fixed"})
-              </Text>
-              <Text style={[styles.feeVal, { color: colors.textPrimary }]}>₱{fee.serviceFeePhp.toFixed(2)}</Text>
-            </View>
-            <View style={[styles.feeRow, styles.totalRow, { borderTopColor: colors.borderColor }]}>
-              <Text style={[styles.totalLabel, { color: colors.textPrimary }]}>Total Charge</Text>
-              <Text style={[styles.totalVal, { color: colors.accent }]}>₱{fee.totalChargePhp.toFixed(2)}</Text>
-            </View>
-          </View>
-
-          <TouchableOpacity onPress={() => onConfirm(item)} style={styles.payButton}>
-            <Shield size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
-            <Text style={styles.payButtonText}>Confirm & Pay with Biometrics</Text>
+    <AppBottomSheet visible={visible && !!item} onClose={onClose} locked={securing} accessibilityLabel="Checkout">
+      <BottomSheetView style={[styles.sheet, { paddingBottom: insets.bottom + SPACING.lg }]}>
+        <View style={styles.header}>
+          <Text style={[styles.title, { color: colors.textPrimary }]} accessibilityRole="header">Checkout</Text>
+          <TouchableOpacity
+            onPress={onClose}
+            disabled={securing}
+            style={[styles.close, securing && styles.disabled]}
+            accessibilityRole="button"
+            accessibilityLabel="Close checkout"
+            accessibilityState={{ disabled: securing }}
+          >
+            <X size={20} color={colors.textMuted} />
           </TouchableOpacity>
         </View>
-      </View>
-    </Modal>
+
+        {current && fee ? (
+          <>
+            <View style={[styles.item, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}>
+              <Text style={[styles.itemTitle, { color: colors.textPrimary }]}>{current.title}</Text>
+              <Text style={[styles.itemSub, { color: colors.textSecondary }]}>{current.subtitle}</Text>
+              {current.splitNote ? (
+                <View style={[styles.note, { backgroundColor: colors.accentGreenMuted }]}>
+                  <Shield size={12} color={colors.accentGreen} />
+                  <Text style={[styles.noteText, { color: colors.accentGreen }]}>{current.splitNote}</Text>
+                </View>
+              ) : null}
+            </View>
+
+            <View style={[styles.lines, { borderTopColor: colors.borderColor }]}>
+              <View style={styles.line}>
+                <Text style={[styles.lineLabel, { color: colors.textSecondary }]}>{recurring ? "Membership (monthly)" : "Pass price"}</Text>
+                <Text style={[styles.lineVal, { color: colors.textPrimary }]}>{peso(fee.baseAmountPhp)}</Text>
+              </View>
+              <View style={styles.line}>
+                <Text style={[styles.lineLabel, { color: colors.textSecondary }]}>{feeLabel}</Text>
+                <Text style={[styles.lineVal, { color: colors.textPrimary }]}>{peso(fee.serviceFeePhp)}</Text>
+              </View>
+              <View style={[styles.line, styles.total, { borderTopColor: colors.borderColor }]}>
+                <Text style={[styles.totalLabel, { color: colors.textPrimary }]}>Total{recurring ? " / month" : ""}</Text>
+                <Text style={[styles.totalVal, { color: colors.textPrimary }]}>{peso(fee.totalChargePhp)}</Text>
+              </View>
+            </View>
+
+            {isOffline ? (
+              <View style={[styles.banner, { backgroundColor: colors.bgCardSecondary, borderColor: colors.warning }]} accessibilityRole="alert">
+                <WifiOff size={16} color={colors.warning} />
+                <Text style={[styles.bannerText, { color: colors.textPrimary }]}>Payments need a connection. Reconnect to continue.</Text>
+              </View>
+            ) : null}
+            {pay.isError ? (
+              <View style={[styles.banner, { backgroundColor: colors.bgCardSecondary, borderColor: colors.danger }]} accessibilityRole="alert">
+                <Text style={[styles.bannerText, { color: colors.textPrimary }]}>
+                  Payment didn't go through. You weren't charged. Ref {errorCode.current}
+                </Text>
+              </View>
+            ) : null}
+
+            <TouchableOpacity
+              onPress={() => pay.mutate(current)}
+              disabled={securing || isOffline}
+              style={[styles.pay, { backgroundColor: colors.accent }, (securing || isOffline) && styles.disabled]}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: securing || isOffline, busy: securing }}
+              accessibilityLabel={securing ? "Securing your slot" : `Pay ${peso(fee.totalChargePhp)}`}
+            >
+              {securing ? <ActivityIndicator color={colors.textOnAccent} /> : <Lock size={16} color={colors.textOnAccent} />}
+              <Text style={[styles.payText, { color: colors.textOnAccent }]}>
+                {securing ? "Securing your slot…" : pay.isError ? "Try again" : `Pay ${peso(fee.totalChargePhp)}`}
+              </Text>
+            </TouchableOpacity>
+            <Text style={[styles.legal, { color: colors.textMuted }]}>
+              Paid directly to {current.facilityName}. GetPhysical charges only the service fee.
+            </Text>
+          </>
+        ) : null}
+      </BottomSheetView>
+    </AppBottomSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" },
-  checkoutSheet: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, borderWidth: 1 },
-  sheetHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 },
-  sheetTitle: { fontSize: 13, fontWeight: "800", letterSpacing: 0.8 },
-  closeBtn: { fontSize: 13, fontWeight: "600" },
-  inventoryItem: { borderRadius: 12, padding: 14, marginBottom: 16 },
-  invTitle: { fontSize: 15, fontWeight: "700" },
-  invSubtitle: { fontSize: 12, marginTop: 2 },
-  invPrice: { color: "#10B981", fontSize: 16, fontWeight: "800", marginTop: 4 },
-  splitRow: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 8, backgroundColor: "rgba(16, 185, 129, 0.12)", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
-  splitText: { color: "#10B981", fontSize: 11, fontWeight: "700" },
-  feeBreakdown: { borderTopWidth: 1, paddingTop: 12, marginBottom: 16 },
-  feeRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 6 },
-  feeLabel: { fontSize: 12 },
-  feeVal: { fontSize: 12, fontWeight: "600" },
-  totalRow: { borderTopWidth: 1, paddingTop: 8, marginTop: 4 },
-  totalLabel: { fontSize: 14, fontWeight: "800" },
-  totalVal: { fontSize: 18, fontWeight: "900" },
-  payButton: { backgroundColor: "#E11D48", borderRadius: 12, paddingVertical: 14, flexDirection: "row", alignItems: "center", justifyContent: "center" },
-  payButtonText: { color: "#FFFFFF", fontSize: 14, fontWeight: "700" },
+  sheet: { paddingHorizontal: SPACING.xl },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: SPACING.sm },
+  title: { ...TYPE_SCALE.title, fontWeight: "900" },
+  close: { width: MIN_TOUCH_TARGET, height: MIN_TOUCH_TARGET, alignItems: "center", justifyContent: "center" },
+  disabled: { opacity: 0.5 },
+  item: { borderRadius: RADII.lg, padding: 14, borderWidth: 1, marginBottom: SPACING.lg },
+  itemTitle: { ...TYPE_SCALE.bodyLarge, fontWeight: "700" },
+  itemSub: { ...TYPE_SCALE.footnote, marginTop: 2 },
+  note: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 8, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, alignSelf: "flex-start" },
+  noteText: { ...TYPE_SCALE.caption, fontWeight: "700" },
+  lines: { borderTopWidth: 1, paddingTop: SPACING.md, marginBottom: SPACING.lg },
+  line: { flexDirection: "row", justifyContent: "space-between", marginBottom: SPACING.sm },
+  lineLabel: { ...TYPE_SCALE.body },
+  lineVal: { ...TYPE_SCALE.body, fontWeight: "600", fontVariant: ["tabular-nums"] },
+  total: { borderTopWidth: 1, paddingTop: SPACING.sm, marginTop: SPACING.xs },
+  totalLabel: { ...TYPE_SCALE.bodyLarge, fontWeight: "800" },
+  totalVal: { ...TYPE_SCALE.title, fontWeight: "900", fontVariant: ["tabular-nums"] },
+  banner: { flexDirection: "row", alignItems: "center", gap: SPACING.sm, padding: SPACING.md, borderRadius: RADII.md, borderWidth: 1, marginBottom: SPACING.md },
+  bannerText: { ...TYPE_SCALE.footnote, flex: 1 },
+  pay: { minHeight: 52, borderRadius: RADII.lg, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: SPACING.sm },
+  payText: { ...TYPE_SCALE.bodyLarge, fontWeight: "800" },
+  legal: { ...TYPE_SCALE.caption, textAlign: "center", marginTop: SPACING.md },
 });

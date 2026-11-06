@@ -1,19 +1,21 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { View, Text, TextInput, TouchableOpacity, Image, ScrollView } from "react-native";
-import { Search, Users, Navigation, X, Map as MapIcon, List, SlidersHorizontal } from "lucide-react-native";
-import { useEcosystemStore } from "../../store/ecosystemStore";
-import { useThemeStore } from "../../theme/theme";
+import React, { useMemo, useState } from "react";
+import { StyleSheet as RNStyleSheet, TextInput, TouchableOpacity, View } from "react-native";
+import { Search, X, Map as MapIcon, List, SlidersHorizontal } from "lucide-react-native";
 import type { FacilityRow } from "sodia-core";
+import { useEcosystemStore } from "../../store/ecosystemStore";
+import { useColors } from "../../theme/theme";
+import { overlays } from "../../navigation/overlayStore";
 import { styles } from "./DiscoverView.styles";
 import { DiscoverMapCanvas } from "./DiscoverMapCanvas";
 import { DiscoverFilterBar } from "./DiscoverFilterBar";
 import { DiscoverFilterModal } from "./DiscoverFilterModal";
 import { DiscoverListSection } from "./DiscoverListSection";
-import { FacilityDetailSheet } from "./FacilityDetailSheet";
+import { DiscoverCarousel } from "./DiscoverCarousel";
+import { LocationSeedCard } from "./LocationSeedCard";
 import { DiscoverEntitySheet, type DiscoverSelectedEntity } from "./DiscoverEntitySheet";
 import { EXPANDED_FACILITIES, EXPANDED_COACHES, EXPANDED_CLUBS, type DiscoverFilterState, INITIAL_DISCOVER_FILTERS } from "../../data/discoverData";
 import { filterDiscoverItems } from "../../data/discoverFilterHelper";
-import { requestAndFetchUserLocation, DEFAULT_BGC_COORDS, calculateHaversineKm, formatWalkingEta, type UserCoordinates } from "../../services/locationService";
+import { useDiscoverLocation } from "../../hooks/useDiscoverLocation";
 
 export interface CheckoutRequest {
   id: string;
@@ -27,27 +29,19 @@ export interface CheckoutRequest {
 }
 
 interface DiscoverViewProps {
-  onSelectFacility?: (facility: FacilityRow) => void;
   onCheckoutItem?: (item: CheckoutRequest) => void;
 }
 
 export function DiscoverView({ onCheckoutItem }: DiscoverViewProps) {
-  const { facilities } = useEcosystemStore();
-  const { colors } = useThemeStore();
+  const facilities = useEcosystemStore((s) => s.facilities);
+  const colors = useColors();
+  const location = useDiscoverLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<DiscoverFilterState>(INITIAL_DISCOVER_FILTERS);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"map" | "list">("map");
   const [selectedFacilityId, setSelectedFacilityId] = useState<string | null>(EXPANDED_FACILITIES[0]?.id ?? null);
-  const [selectedDetailFacility, setSelectedDetailFacility] = useState<FacilityRow | null>(null);
-  const [selectedEntityForSheet, setSelectedEntityForSheet] = useState<DiscoverSelectedEntity>(null);
-  const [userCoords, setUserCoords] = useState<UserCoordinates>(DEFAULT_BGC_COORDS);
-
-  useEffect(() => {
-    let active = true;
-    requestAndFetchUserLocation().then((loc) => { if (active) setUserCoords(loc); });
-    return () => { active = false; };
-  }, []);
+  const [entity, setEntity] = useState<DiscoverSelectedEntity>(null);
 
   const allFacilities = useMemo(() => {
     const map = new Map<string, FacilityRow>();
@@ -61,44 +55,64 @@ export function DiscoverView({ onCheckoutItem }: DiscoverViewProps) {
     [allFacilities, searchQuery, filters]
   );
 
-  const hasActiveFilters = filters.category !== "All" || filters.sport !== "All" || filters.priceRange !== "all" || filters.openNowOnly;
+  const activeFilters = [
+    filters.category !== "All" ? filters.category : null,
+    filters.sport !== "All" ? filters.sport : null,
+    filters.priceRange !== "all" ? filters.priceRange : null,
+    filters.openNowOnly ? "Open now" : null,
+  ].filter((f): f is string => f !== null);
+  const hasActiveFilters = activeFilters.length > 0;
   const totalCount = filteredFacilities.length + filteredCoaches.length + filteredClubs.length;
+
+  const openFacility = (facility: FacilityRow) => {
+    setSelectedFacilityId(facility.id);
+    overlays.open({ kind: "facility", facility });
+  };
+  const resetAll = () => {
+    setFilters(INITIAL_DISCOVER_FILTERS);
+    setSearchQuery("");
+  };
+  const seedCard = location.permission === "denied" ? <LocationSeedCard variant="inline" onSeed={location.applySeed} /> : null;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
-      {/* 1. FLOATING SEARCH HEADER */}
       <View style={styles.searchHeader}>
         <View style={[styles.searchBox, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
           <Search size={16} color={colors.textMuted} />
           <TextInput
             style={[styles.searchInput, { color: colors.textPrimary }]}
-            placeholder="Search Gyms, Pilates, Courts, Clubs..."
+            placeholder="Search gyms, pilates, courts, clubs…"
             placeholderTextColor={colors.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
+            returnKeyType="search"
+            accessibilityLabel="Search venues"
           />
           {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery("")}><X size={16} color={colors.textMuted} /></TouchableOpacity>
+            <TouchableOpacity onPress={() => setSearchQuery("")} hitSlop={12} accessibilityRole="button" accessibilityLabel="Clear search">
+              <X size={16} color={colors.textMuted} />
+            </TouchableOpacity>
           )}
         </View>
-
         <TouchableOpacity
           onPress={() => setIsFilterModalOpen(true)}
-          style={[styles.filterTriggerBtn, { backgroundColor: colors.bgCard, borderColor: hasActiveFilters ? "#E11D48" : colors.borderColor }]}
+          style={[styles.filterTriggerBtn, { backgroundColor: colors.bgCard, borderColor: hasActiveFilters ? colors.accent : colors.borderColor }]}
+          accessibilityRole="button"
+          accessibilityLabel={hasActiveFilters ? `Filters, ${activeFilters.length} active` : "Filters"}
         >
-          <SlidersHorizontal size={18} color={hasActiveFilters ? "#E11D48" : colors.textPrimary} />
-          {hasActiveFilters && <View style={styles.filterBadgeDot} />}
+          <SlidersHorizontal size={18} color={hasActiveFilters ? colors.accentText : colors.textPrimary} />
+          {hasActiveFilters && <View style={[styles.filterBadgeDot, { backgroundColor: colors.accent }]} />}
         </TouchableOpacity>
-
         <TouchableOpacity
           onPress={() => setViewMode(viewMode === "map" ? "list" : "map")}
           style={[styles.viewToggleBtn, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}
+          accessibilityRole="button"
+          accessibilityLabel={viewMode === "map" ? "Show list view" : "Show map view"}
         >
           {viewMode === "map" ? <List size={18} color={colors.textPrimary} /> : <MapIcon size={18} color={colors.textPrimary} />}
         </TouchableOpacity>
       </View>
 
-      {/* 2. CATEGORY & SPORT FILTER BAR */}
       <DiscoverFilterBar
         selectedCategory={filters.category}
         onSelectCategory={(cat) => setFilters((prev) => ({ ...prev, category: cat, sport: "All" }))}
@@ -106,7 +120,6 @@ export function DiscoverView({ onCheckoutItem }: DiscoverViewProps) {
         onSelectSport={(sp) => setFilters((prev) => ({ ...prev, sport: sp }))}
       />
 
-      {/* 3. MAP OR LIST VIEW */}
       {viewMode === "map" ? (
         <View style={styles.mapViewport}>
           <DiscoverMapCanvas
@@ -114,77 +127,51 @@ export function DiscoverView({ onCheckoutItem }: DiscoverViewProps) {
             coaches={filteredCoaches}
             clubs={filteredClubs}
             selectedId={selectedFacilityId}
-            userCoords={userCoords}
+            userCoords={location.coords}
             onSelectPin={(id) => {
-              setSelectedFacilityId(id);
               const fac = allFacilities.find((f) => f.id === id);
-              if (fac) setSelectedDetailFacility(fac);
+              if (fac) openFacility(fac);
             }}
             onSelectCoach={(id) => {
               const coach = EXPANDED_COACHES.find((c) => c.id === id);
-              if (coach) setSelectedEntityForSheet({ kind: "coach", data: coach });
+              if (coach) setEntity({ kind: "coach", data: coach });
             }}
             onSelectClub={(id) => {
               const club = EXPANDED_CLUBS.find((cl) => cl.id === id);
-              if (club) setSelectedEntityForSheet({ kind: "club", data: club });
+              if (club) setEntity({ kind: "club", data: club });
             }}
-            onRefreshLocation={() => requestAndFetchUserLocation().then(setUserCoords)}
+            onRefreshLocation={() => {
+              location.refresh().catch(() => undefined);
+            }}
           />
-
-          <View style={styles.carouselSection}>
-            <Text style={[styles.carouselHeaderTitle, { color: colors.textMuted }]}>ATHLETIC HUBS & EXPERIENCES</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carouselScroll}>
-              {filteredFacilities.map((fac) => {
-                const isSelected = fac.id === selectedFacilityId;
-                const distKm = calculateHaversineKm(userCoords.latitude, userCoords.longitude, fac.lat ?? 14.549, fac.lng ?? 121.05);
-                return (
-                  <TouchableOpacity
-                    key={fac.id}
-                    onPress={() => { setSelectedFacilityId(fac.id); setSelectedDetailFacility(fac); }}
-                    style={[styles.grabCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }, isSelected && styles.grabCardActive]}
-                  >
-                    <Image source={{ uri: fac.cover_image ?? "" }} style={styles.grabCover} />
-                    <View style={styles.grabBody}>
-                      <View style={styles.grabTopRow}>
-                        <Text style={[styles.grabName, { color: colors.textPrimary }]} numberOfLines={1}>{fac.name}</Text>
-                        <View style={styles.capacityPill}>
-                          <Users size={11} color="#10B981" />
-                          <Text style={styles.capacityPillText}>{fac.inside_now_count ?? 42}/{fac.max_capacity ?? 100}</Text>
-                        </View>
-                      </View>
-                      <View style={styles.grabLocationRow}>
-                        <Navigation size={11} color={colors.textMuted} />
-                        <Text style={[styles.grabDistanceText, { color: colors.textMuted }]}>{distKm} km • {formatWalkingEta(distKm)}</Text>
-                      </View>
-                      <View style={[styles.grabFooter, { borderTopColor: colors.borderColor }]}>
-                        <Text style={[styles.grabPrice, { color: colors.textPrimary }]}>
-                          {fac.registry === "A" ? `₱${fac.day_pass_price_php} Pass` : `₱${fac.court_hourly_price_php}/hr Court`}
-                        </Text>
-                        <TouchableOpacity onPress={() => setSelectedDetailFacility(fac)} style={styles.grabBookCTA}>
-                          <Text style={styles.grabBookText}>Passes</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          </View>
+          {location.isBlocked ? (
+            <View style={[RNStyleSheet.absoluteFill, local.blocked, { backgroundColor: colors.overlayScrim }]}>
+              <LocationSeedCard variant="overlay" onSeed={location.applySeed} />
+            </View>
+          ) : (
+            <DiscoverCarousel facilities={filteredFacilities} selectedId={selectedFacilityId} userCoords={location.coords} onSelect={openFacility} />
+          )}
         </View>
       ) : (
         <DiscoverListSection
           facilities={filteredFacilities}
           coaches={filteredCoaches}
           clubs={filteredClubs}
-          userCoords={userCoords}
-          onSelectFacility={setSelectedDetailFacility}
-          onSelectCoach={(c) => setSelectedEntityForSheet({ kind: "coach", data: c })}
-          onSelectClub={(cl) => setSelectedEntityForSheet({ kind: "club", data: cl })}
-          onResetFilters={() => setFilters(INITIAL_DISCOVER_FILTERS)}
+          userCoords={location.coords}
+          query={searchQuery}
+          activeFilters={activeFilters}
+          header={seedCard}
+          onSelectFacility={openFacility}
+          onSelectCoach={(c) => setEntity({ kind: "coach", data: c })}
+          onSelectClub={(cl) => setEntity({ kind: "club", data: cl })}
+          onResetFilters={resetAll}
+          onSelectSuggestion={(s) => {
+            setFilters(INITIAL_DISCOVER_FILTERS);
+            setSearchQuery(s);
+          }}
         />
       )}
 
-      {/* FILTER MODAL */}
       <DiscoverFilterModal
         visible={isFilterModalOpen}
         onClose={() => setIsFilterModalOpen(false)}
@@ -193,33 +180,12 @@ export function DiscoverView({ onCheckoutItem }: DiscoverViewProps) {
         totalResultsCount={totalCount}
       />
 
-      {/* FACILITY DETAIL SHEET */}
-      <FacilityDetailSheet
-        facility={selectedDetailFacility}
-        visible={!!selectedDetailFacility}
-        onClose={() => setSelectedDetailFacility(null)}
-        onSelectPass={(passOpt, fac) => {
-          setSelectedDetailFacility(null);
-          onCheckoutItem?.({
-            id: passOpt.id,
-            title: `${passOpt.title} • ${fac.name}`,
-            subtitle: passOpt.subtitle,
-            facilityId: fac.id,
-            facilityName: fac.name,
-            baseAmountPhp: passOpt.pricePhp,
-            billingKind: passOpt.billingKind,
-            splitNote: passOpt.splitNote,
-          });
-        }}
-      />
-
-      {/* COACH & CLUB DETAIL SHEET */}
       <DiscoverEntitySheet
-        entity={selectedEntityForSheet}
-        visible={!!selectedEntityForSheet}
-        onClose={() => setSelectedEntityForSheet(null)}
+        entity={entity}
+        visible={!!entity}
+        onClose={() => setEntity(null)}
         onConfirmBooking={(itemTitle, pricePhp, facId, facName) => {
-          setSelectedEntityForSheet(null);
+          setEntity(null);
           onCheckoutItem?.({
             id: `entity_book_${Date.now()}`,
             title: itemTitle,
@@ -234,3 +200,7 @@ export function DiscoverView({ onCheckoutItem }: DiscoverViewProps) {
     </View>
   );
 }
+
+const local = RNStyleSheet.create({
+  blocked: { justifyContent: "center", paddingBottom: 80 },
+});

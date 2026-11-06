@@ -1,13 +1,13 @@
 import React, { useState, useRef } from "react";
-import { View, StyleSheet, TouchableOpacity, Text, ActivityIndicator } from "react-native";
-import { WebView } from "react-native-webview";
+import { View, StyleSheet, TouchableOpacity, ActivityIndicator, type StyleProp, type ViewStyle } from "react-native";
+import { WebView, parseWebViewMessage, type WebViewHandle } from "../common/TypedWebView";
 import { Play, Pause, Volume2, VolumeX } from "lucide-react-native";
 
 interface PlayableVideoViewProps {
   videoUrl: string;
   posterUrl?: string;
   autoPlay?: boolean;
-  style?: any;
+  style?: StyleProp<ViewStyle>;
 }
 
 export function PlayableVideoView({
@@ -19,7 +19,7 @@ export function PlayableVideoView({
   const [isPlaying, setIsPlaying] = useState(autoPlay);
   const [isMuted, setIsMuted] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
-  const webViewRef = useRef<any>(null);
+  const webViewRef = useRef<WebViewHandle>(null);
 
   const htmlContent = `
 <!DOCTYPE html>
@@ -75,20 +75,17 @@ export function PlayableVideoView({
 
   return (
     <View style={[styles.container, style]}>
-      {React.createElement(WebView as any, {
-        ref: webViewRef,
-        source: { html: htmlContent },
-        style: styles.webView,
-        scrollEnabled: false,
-        allowsInlineMediaPlayback: true,
-        mediaPlaybackRequiresUserAction: false,
-        onMessage: (event: any) => {
-          try {
-            const data = JSON.parse(event.nativeEvent.data);
-            if (data.type === "READY") setIsLoading(false);
-          } catch (e) {}
-        },
-      })}
+      <WebView
+        ref={webViewRef}
+        source={{ html: htmlContent }}
+        style={styles.webView}
+        scrollEnabled={false}
+        allowsInlineMediaPlayback
+        mediaPlaybackRequiresUserAction={false}
+        onMessage={(event) => {
+          if (parseWebViewMessage(event)?.type === "READY") setIsLoading(false);
+        }}
+      />
 
       {isLoading && (
         <View style={styles.loadingOverlay}>
@@ -97,7 +94,7 @@ export function PlayableVideoView({
       )}
 
       {/* FLOATING PLAY / PAUSE BUTTON */}
-      <TouchableOpacity onPress={togglePlay} style={styles.centerPlayBtn} activeOpacity={0.8}>
+      <TouchableOpacity onPress={togglePlay} style={styles.centerPlayBtn} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel={isPlaying ? "Pause video" : "Play video"}>
         {!isPlaying ? (
           <View style={styles.iconCircle}>
             <Play size={24} color="#FFFFFF" fill="#FFFFFF" />
@@ -106,7 +103,7 @@ export function PlayableVideoView({
       </TouchableOpacity>
 
       {/* FLOATING MUTE / UNMUTE BUTTON */}
-      <TouchableOpacity onPress={toggleMute} style={styles.muteBtn} activeOpacity={0.8}>
+      <TouchableOpacity onPress={toggleMute} style={styles.muteBtn} activeOpacity={0.8} hitSlop={6} accessibilityRole="button" accessibilityLabel={isMuted ? "Unmute video" : "Mute video"}>
         {isMuted ? <VolumeX size={15} color="#FFFFFF" /> : <Volume2 size={15} color="#FFFFFF" />}
       </TouchableOpacity>
     </View>

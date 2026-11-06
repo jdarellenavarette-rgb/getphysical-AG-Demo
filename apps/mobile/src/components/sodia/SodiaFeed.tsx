@@ -1,125 +1,137 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView, Alert } from "react-native";
-import { Plus } from "lucide-react-native";
+import React, { useCallback, useMemo, useState } from "react";
+import { RefreshControl, StyleSheet, View } from "react-native";
+import { FlashList } from "@shopify/flash-list";
+import { Users } from "lucide-react-native";
+import type { SodiaPostRow } from "sodia-core";
 import { useEcosystemStore } from "../../store/ecosystemStore";
-import { useThemeStore } from "../../theme/theme";
+import { useColors } from "../../theme/theme";
 import { TenStateView } from "../common/TenStateView";
-import { createSuccessState, createEmptyState } from "sodia-core";
+import { SkeletonList } from "../states/Skeleton";
 import { SodiaPostCard } from "./SodiaPostCard";
+import { StoriesTray, type StoryBubble } from "./feed/StoriesTray";
+import { useFeedQuery } from "../../hooks/useFeedQuery";
+import { haptics } from "../../lib/haptics";
+import { toast } from "../../feedback/toastStore";
 
 interface SodiaFeedProps {
   onPressFacilityCTA?: (facilityId: string) => void;
   onOpenCreatePost?: () => void;
   onOpenStoryCamera?: () => void;
   onOpenStory?: (index: number) => void;
-  onOpenComments?: () => void;
+  onOpenComments?: (postId?: string) => void;
   onPressAuthor?: (userId: string, name: string, avatar?: string | null) => void;
 }
 
-export function SodiaFeed({
-  onPressFacilityCTA,
-  onOpenCreatePost,
-  onOpenStoryCamera,
-  onOpenStory,
-  onOpenComments,
-  onPressAuthor,
-}: SodiaFeedProps) {
-  const { posts, profile, userStory } = useEcosystemStore();
-  const { colors } = useThemeStore();
-  const [likedPosts, setLikedPosts] = useState<Record<string, boolean>>({});
-  const [savedPosts, setSavedPosts] = useState<Record<string, boolean>>({});
-  const [sharedPosts, setSharedPosts] = useState<Record<string, boolean>>({});
+const FOLLOWED_STORIES: readonly StoryBubble[] = [
+  { id: "s1", name: "Metro Core", hasStory: true, image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=200&q=80" },
+  { id: "s2", name: "Nexus Club", hasStory: true, image: "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?auto=format&fit=crop&w=200&q=80" },
+  { id: "s3", name: "Coach Miguel", hasStory: true, image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80" },
+  { id: "s4", name: "Coach Sofia", hasStory: true, image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80" },
+];
 
-  const toggleLike = (id: string) => setLikedPosts((prev) => ({ ...prev, [id]: !prev[id] }));
-  const toggleSave = (id: string) => setSavedPosts((prev) => ({ ...prev, [id]: !prev[id] }));
-  const handleShare = (id: string) => {
-    setSharedPosts((p) => ({ ...p, [id]: true }));
-    Alert.alert("Sent", "Shared to athlete direct message.");
-  };
+type FlagMap = Readonly<Record<string, boolean>>;
 
-  const stories = [
-    { id: "s0", name: "Your Story", isMe: true, hasStory: !!userStory, image: profile.avatar_url },
-    { id: "s1", name: "Metro Core", hasStory: true, image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=200&q=80" },
-    { id: "s2", name: "Nexus Club", hasStory: true, image: "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?auto=format&fit=crop&w=200&q=80" },
-    { id: "s3", name: "Coach Miguel", hasStory: true, image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80" },
-    { id: "s4", name: "Coach Sofia", hasStory: true, image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80" },
-  ];
+export function SodiaFeed({ onPressFacilityCTA, onOpenCreatePost, onOpenStoryCamera, onOpenStory, onOpenComments, onPressAuthor }: SodiaFeedProps) {
+  const profileAvatar = useEcosystemStore((s) => s.profile.avatar_url);
+  const userStory = useEcosystemStore((s) => s.userStory);
+  const colors = useColors();
+  const { state, refetch, isRefetching } = useFeedQuery();
+  const [liked, setLiked] = useState<FlagMap>({});
+  const [saved, setSaved] = useState<FlagMap>({});
+  const [shared, setShared] = useState<FlagMap>({});
 
-  const feedState = posts.length === 0
-    ? createEmptyState("Your community feed is quiet. Share your first workout or status.", "+ Create Post")
-    : createSuccessState(posts);
+  // Optimistic local toggles; counts derive from these immediately.
+  const toggleLike = useCallback((id: string) => {
+    haptics.light();
+    setLiked((p) => ({ ...p, [id]: !p[id] }));
+  }, []);
+  const like = useCallback((id: string) => {
+    haptics.light();
+    setLiked((p) => (p[id] ? p : { ...p, [id]: true }));
+  }, []);
+  const toggleSave = useCallback((id: string) => {
+    setSaved((p) => {
+      const next = !p[id];
+      toast.show({ tone: "info", title: next ? "Saved to collection" : "Removed from saved", durationMs: 1800 });
+      return { ...p, [id]: next };
+    });
+  }, []);
+  const share = useCallback((id: string) => {
+    setShared((p) => ({ ...p, [id]: true }));
+    toast.show({
+      tone: "success",
+      title: "Shared to direct message",
+      action: { label: "Undo", onPress: () => setShared((p) => ({ ...p, [id]: false })) },
+    });
+  }, []);
+
+  const stories = useMemo<readonly StoryBubble[]>(
+    () => [{ id: "s0", name: "Your Story", isMe: true, hasStory: !!userStory, image: profileAvatar }, ...FOLLOWED_STORIES],
+    [userStory, profileAvatar]
+  );
+
+  const header = (
+    <StoriesTray stories={stories} onOpenStory={(i) => onOpenStory?.(i)} onOpenCamera={() => onOpenStoryCamera?.()} />
+  );
+
+  const onRefresh = useCallback(() => {
+    haptics.selection();
+    refetch().catch(() => undefined);
+  }, [refetch]);
+
+  const renderPost = ({ item }: { item: SodiaPostRow }) => (
+    <SodiaPostCard
+      post={item}
+      profileAvatar={profileAvatar}
+      isLiked={liked[item.id] ?? false}
+      isSaved={saved[item.id] ?? false}
+      isShared={shared[item.id] ?? false}
+      onToggleLike={toggleLike}
+      onLike={like}
+      onToggleSave={toggleSave}
+      onShare={share}
+      onOpenComments={onOpenComments}
+      onPressFacilityCTA={onPressFacilityCTA}
+      onPressAuthor={onPressAuthor}
+    />
+  );
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.bgScreen }]} contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
-      {/* 1. STORIES TRAY */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.storiesContainer, { borderBottomColor: colors.borderColor }]}>
-        {stories.map((st, idx) => (
-          <TouchableOpacity
-            key={st.id}
-            onPress={() => {
-              if (st.isMe && !st.hasStory) {
-                onOpenStoryCamera?.();
-              } else {
-                onOpenStory?.(st.isMe ? 0 : idx - 1);
-              }
-            }}
-            style={styles.storyItem}
-          >
-            <View style={[styles.storyRing, { borderColor: colors.borderColor }, st.hasStory && styles.storyRingActive, st.isMe && !st.hasStory && { borderColor: colors.borderLight }]}>
-              <Image source={{ uri: st.image ?? "" }} style={styles.storyAvatar} />
-              {st.isMe && (
-                <TouchableOpacity
-                  onPress={(e) => {
-                    e.stopPropagation();
-                    onOpenStoryCamera?.();
-                  }}
-                  style={[styles.storyAddBadge, { borderColor: colors.bgScreen }]}
-                >
-                  <Plus size={11} color="#FFFFFF" strokeWidth={3.5} />
-                </TouchableOpacity>
-              )}
-            </View>
-            <Text numberOfLines={1} style={[styles.storyLabel, { color: colors.textSecondary }]}>{st.name}</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-
-      {/* 2. FEED POSTS */}
-      <TenStateView state={feedState} onRetry={onOpenCreatePost}>
-        {() => (
-          <View style={styles.feedList}>
-            {posts.map((post) => (
-              <SodiaPostCard
-                key={post.id}
-                post={post}
-                profileAvatar={profile.avatar_url}
-                isLiked={likedPosts[post.id] ?? false}
-                isSaved={savedPosts[post.id] ?? false}
-                isShared={sharedPosts[post.id] ?? false}
-                onToggleLike={toggleLike}
-                onToggleSave={toggleSave}
-                onShare={handleShare}
-                onOpenComments={onOpenComments}
-                onPressFacilityCTA={onPressFacilityCTA}
-                onPressAuthor={onPressAuthor}
-              />
-            ))}
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
+      <TenStateView
+        state={state}
+        skeleton={() => (
+          <View>
+            {header}
+            <SkeletonList variant="post" count={2} />
           </View>
         )}
+        emptyIcon={Users}
+        emptyTitle="Welcome to Sodia"
+        onPrimaryAction={onOpenCreatePost}
+        onRetry={onRefresh}
+      >
+        {(posts) => (
+          <FlashList
+            data={posts}
+            keyExtractor={(p) => p.id}
+            renderItem={renderPost}
+            ListHeaderComponent={header}
+            ItemSeparatorComponent={() => <View style={styles.sep} />}
+            extraData={{ liked, saved, shared }}
+            getItemType={(p) => (p.media_url ? "media" : "status")}
+            contentContainerStyle={styles.content}
+            showsVerticalScrollIndicator={false}
+            refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={onRefresh} tintColor={colors.accent} colors={[colors.accent]} />}
+          />
+        )}
       </TenStateView>
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  contentContainer: { paddingBottom: 110, paddingTop: 10 },
-  storiesContainer: { paddingHorizontal: 16, gap: 14, paddingBottom: 14, borderBottomWidth: 1 },
-  storyItem: { alignItems: "center", width: 68 },
-  storyRing: { width: 64, height: 64, borderRadius: 32, borderWidth: 2, padding: 2, alignItems: "center", justifyContent: "center", position: "relative" },
-  storyRingActive: { borderColor: "#E11D48" },
-  storyAvatar: { width: "100%", height: "100%", borderRadius: 28 },
-  storyAddBadge: { position: "absolute", bottom: 0, right: 0, width: 20, height: 20, borderRadius: 10, backgroundColor: "#E11D48", alignItems: "center", justifyContent: "center", borderWidth: 2 },
-  storyLabel: { fontSize: 11, fontWeight: "600", marginTop: 5, textAlign: "center" },
-  feedList: { gap: 18, marginTop: 12 },
+  content: { paddingBottom: 110 },
+  sep: { height: 14 },
 });

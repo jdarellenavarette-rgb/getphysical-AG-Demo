@@ -1,16 +1,7 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Image,
-  StyleSheet,
-  Modal,
-  TextInput,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-} from "react-native";
+import { View, Text, TouchableOpacity, Image, StyleSheet, TextInput, KeyboardAvoidingView, Platform } from "react-native";
+import { AppModal } from "../common/AppModal";
+import { toast } from "../../feedback/toastStore";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft, Camera, Heart, MessageCircle, Send, CheckCircle2, Sparkles } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
@@ -95,11 +86,11 @@ export function StoryViewerModal({ visible, onClose, onTapLocationTag, onOpenCom
   };
 
   const handleSendReaction = (emoji: string) => {
-    Alert.alert("Reaction Sent", `Sent ${emoji} to ${current.name}`);
+    toast.success(`Sent ${emoji} to ${current.name}`);
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <AppModal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <KeyboardAvoidingView
         style={styles.overlay}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -127,7 +118,7 @@ export function StoryViewerModal({ visible, onClose, onTapLocationTag, onOpenCom
             <CheckCircle2 size={13} color="#38BDF8" fill="#38BDF8" />
             <Text style={styles.timeAgo}>3h ago</Text>
           </View>
-          <TouchableOpacity onPress={onClose} style={styles.topIconBtn}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Close story" onPress={onClose} style={styles.topIconBtn}>
             <ArrowLeft size={20} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
@@ -154,7 +145,7 @@ export function StoryViewerModal({ visible, onClose, onTapLocationTag, onOpenCom
               onChangeText={setReplyText}
               onSubmitEditing={() => {
                 if (replyText.trim()) {
-                  Alert.alert("Message Sent", `Delivered to ${current.name}'s inbox.`);
+                  toast.success("Message sent", `Delivered to ${current.name}.`);
                   setReplyText("");
                 }
               }}
@@ -169,7 +160,7 @@ export function StoryViewerModal({ visible, onClose, onTapLocationTag, onOpenCom
           </View>
         </View>
       </KeyboardAvoidingView>
-    </Modal>
+    </AppModal>
   );
 }
 

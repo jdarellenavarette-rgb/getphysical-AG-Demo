@@ -1,5 +1,7 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView, Alert } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
+import { AppModal } from "../common/AppModal";
+import { toast } from "../../feedback/toastStore";
 import { X, Send, Award, Flame, Heart, MapPin, CheckCircle2, Footprints, Dumbbell, Apple } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import { useEcosystemStore } from "../../store/ecosystemStore";
@@ -40,12 +42,12 @@ export function MemoryDetailModal({ visible, item, onClose }: MemoryDetailModalP
       primaryMetric: item.cals,
       isVerified: true,
     });
-    Alert.alert("Shared to Feed!", "Your verified training memory has been posted to Sodia Feed.");
+    toast.success("Shared to Sodia", "Your training memory is on your feed.");
     onClose();
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <AppModal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={[styles.sheetCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
           {/* HEADER */}
@@ -53,7 +55,7 @@ export function MemoryDetailModal({ visible, item, onClose }: MemoryDetailModalP
             <View style={styles.badgePill}>
               <Text style={styles.badgePillText}>{item.badge}</Text>
             </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} style={styles.closeBtn}>
               <X size={20} color={colors.textMuted} />
             </TouchableOpacity>
           </View>
@@ -92,7 +94,7 @@ export function MemoryDetailModal({ visible, item, onClose }: MemoryDetailModalP
           </ScrollView>
         </View>
       </View>
-    </Modal>
+    </AppModal>
   );
 }
 
@@ -110,7 +112,7 @@ const styles = StyleSheet.create({
   metricCol: { alignItems: "center" },
   metricValHighlight: { fontSize: 24, fontWeight: "900", color: "#E11D48" },
   metricVal: { fontSize: 24, fontWeight: "900" },
-  metricLabel: { fontSize: 10, fontWeight: "700", marginTop: 4 },
+  metricLabel: { fontSize: 11, fontWeight: "700", marginTop: 4 },
   divider: { width: 1, height: 40 },
   sectionHeading: { fontSize: 14, fontWeight: "800", marginBottom: 8 },
   telemetryCard: { borderRadius: 12, padding: 14, borderWidth: 1, gap: 8, marginBottom: 20 },

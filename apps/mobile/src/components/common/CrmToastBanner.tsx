@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
-import { View, Text, TouchableOpacity, Image, StyleSheet, Animated } from "react-native";
+import { View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
+import Animated, { FadeOutUp, SlideInUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Bell, X, ArrowRight, Tag } from "lucide-react-native";
 import { useCrmMessagingStore } from "../../store/crmMessagingStore";
@@ -26,12 +27,17 @@ export function CrmToastBanner({ onPressToast }: CrmToastBannerProps) {
 
   return (
     <Animated.View
+      key={activeToast.id}
+      entering={SlideInUp.springify().damping(18)}
+      exiting={FadeOutUp.duration(180)}
+      accessibilityRole="alert"
+      accessibilityLiveRegion="polite"
       style={[
         styles.container,
         {
           top: Math.max(insets.top, 44) + 6,
           backgroundColor: colors.bgCard,
-          borderColor: "#E11D48",
+          borderColor: colors.accent,
         },
       ]}
     >
@@ -43,6 +49,8 @@ export function CrmToastBanner({ onPressToast }: CrmToastBannerProps) {
           onPressToast(tid);
         }}
         style={styles.innerTouch}
+        accessibilityRole="button"
+        accessibilityLabel={`${activeToast.title}. ${activeToast.body}. Open conversation`}
       >
         <Image source={{ uri: activeToast.senderAvatar }} style={styles.senderAvatar} />
 
@@ -65,13 +73,13 @@ export function CrmToastBanner({ onPressToast }: CrmToastBannerProps) {
 
           {activeToast.promoCode ? (
             <View style={styles.promoPill}>
-              <Tag size={10} color="#E11D48" />
+              <Tag size={10} color={colors.accent} />
               <Text style={styles.promoCodeText}>PROMO: {activeToast.promoCode}</Text>
             </View>
           ) : null}
         </View>
 
-        <TouchableOpacity onPress={dismissToast} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} style={styles.closeBtn}>
+        <TouchableOpacity onPress={dismissToast} hitSlop={12} style={styles.closeBtn} accessibilityRole="button" accessibilityLabel="Dismiss notification">
           <X size={16} color={colors.textMuted} />
         </TouchableOpacity>
       </TouchableOpacity>
@@ -127,12 +135,12 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     color: "#FFFFFF",
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: "900",
     letterSpacing: 0.5,
   },
   timeText: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: "600",
   },
   titleText: {
@@ -158,7 +166,7 @@ const styles = StyleSheet.create({
   },
   promoCodeText: {
     color: "#E11D48",
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: "900",
   },
   closeBtn: {

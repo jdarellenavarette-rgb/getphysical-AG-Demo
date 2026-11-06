@@ -1,5 +1,7 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { FlashList } from "@shopify/flash-list";
+import { AppModal } from "../common/AppModal";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft, QrCode, CheckCircle2, XCircle, Clock, Shield } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
@@ -59,7 +61,7 @@ export function StaffQuickdashModal({ visible, onClose }: StaffQuickdashModalPro
   };
 
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+    <AppModal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         {/* HEADER BAR */}
         <View style={[styles.topBar, { paddingTop: Math.max(insets.top, 50) + 10, backgroundColor: colors.bgHeader, borderBottomColor: colors.borderColor }]}>
@@ -68,12 +70,20 @@ export function StaffQuickdashModal({ visible, onClose }: StaffQuickdashModalPro
             <Text style={[styles.backBtnText, { color: colors.textPrimary }]}>Settings</Text>
           </TouchableOpacity>
           <View style={styles.badge}>
-            <Shield size={12} color="#10B981" />
+            <Shield size={12} color={colors.accentGreen} />
             <Text style={styles.badgeText}>STAFF SCANNER ACTIVE</Text>
           </View>
         </View>
 
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+        <FlashList
+          data={scanLogs}
+          keyExtractor={(it) => it.id}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+          ListHeaderComponent={
+            <View>
           {/* VENUE CARD */}
           <View style={[styles.venueCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
             <Text style={[styles.venueTitle, { color: colors.textPrimary }]}>Metro Core Arena • Turnstile Station #1</Text>
@@ -90,9 +100,9 @@ export function StaffQuickdashModal({ visible, onClose }: StaffQuickdashModalPro
               lastScanResult === "RED" && styles.viewportRed,
             ]}
           >
-            {lastScanResult === "GREEN" && <CheckCircle2 size={44} color="#10B981" />}
-            {lastScanResult === "BLUE" && <Clock size={44} color="#3B82F6" />}
-            {lastScanResult === "RED" && <XCircle size={44} color="#E11D48" />}
+            {lastScanResult === "GREEN" && <CheckCircle2 size={44} color={colors.accentGreen} />}
+            {lastScanResult === "BLUE" && <Clock size={44} color={colors.info} />}
+            {lastScanResult === "RED" && <XCircle size={44} color={colors.accent} />}
             {!lastScanResult && <QrCode size={44} color={colors.textMuted} />}
 
             <Text style={[styles.viewportStatus, { color: colors.textPrimary }]}>
@@ -106,44 +116,45 @@ export function StaffQuickdashModal({ visible, onClose }: StaffQuickdashModalPro
           {/* SIMULATOR QUICK ACTIONS */}
           <Text style={[styles.sectionHeader, { color: colors.textMuted }]}>TEST TURNSTILE TRIGGERS</Text>
           <View style={styles.actionRow}>
-            <TouchableOpacity onPress={() => handleSimulateScan("GREEN")} style={[styles.scanTriggerBtn, { backgroundColor: "rgba(16, 185, 129, 0.15)", borderColor: "#10B981" }]}>
-              <CheckCircle2 size={16} color="#10B981" />
-              <Text style={[styles.scanTriggerText, { color: "#10B981" }]}>Member Access (Gate Unlock)</Text>
+            <TouchableOpacity onPress={() => handleSimulateScan("GREEN")} style={[styles.scanTriggerBtn, { backgroundColor: "rgba(16, 185, 129, 0.15)", borderColor: colors.accentGreen }]}>
+              <CheckCircle2 size={16} color={colors.accentGreen} />
+              <Text style={[styles.scanTriggerText, { color: colors.accentGreen }]}>Member Access (Gate Unlock)</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => handleSimulateScan("BLUE")} style={[styles.scanTriggerBtn, { backgroundColor: "rgba(59, 130, 246, 0.15)", borderColor: "#3B82F6" }]}>
-              <Clock size={16} color="#3B82F6" />
-              <Text style={[styles.scanTriggerText, { color: "#3B82F6" }]}>Staff DTR Clock-In</Text>
+            <TouchableOpacity onPress={() => handleSimulateScan("BLUE")} style={[styles.scanTriggerBtn, { backgroundColor: "rgba(59, 130, 246, 0.15)", borderColor: colors.info }]}>
+              <Clock size={16} color={colors.info} />
+              <Text style={[styles.scanTriggerText, { color: colors.info }]}>Staff DTR Clock-In</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => handleSimulateScan("RED")} style={[styles.scanTriggerBtn, { backgroundColor: "rgba(225, 29, 72, 0.15)", borderColor: "#E11D48" }]}>
-              <XCircle size={16} color="#E11D48" />
-              <Text style={[styles.scanTriggerText, { color: "#E11D48" }]}>Invalid Pass (Red)</Text>
+            <TouchableOpacity onPress={() => handleSimulateScan("RED")} style={[styles.scanTriggerBtn, { backgroundColor: "rgba(225, 29, 72, 0.15)", borderColor: colors.accent }]}>
+              <XCircle size={16} color={colors.accent} />
+              <Text style={[styles.scanTriggerText, { color: colors.accent }]}>Invalid Pass (Red)</Text>
             </TouchableOpacity>
           </View>
 
           {/* SCAN LOGS */}
           <Text style={[styles.sectionHeader, { color: colors.textMuted }]}>RECENT TURNSTILE EVENTS ({scanLogs.length})</Text>
-          {scanLogs.length === 0 ? (
+            </View>
+          }
+          ListEmptyComponent={
             <View style={[styles.emptyLogBox, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
               <Shield size={28} color={colors.textMuted} />
               <Text style={[styles.emptyLogTitle, { color: colors.textPrimary }]}>No scan events yet</Text>
               <Text style={[styles.emptyLogSub, { color: colors.textMuted }]}>Tap one of the simulate buttons above to test gate unlocking.</Text>
             </View>
-          ) : (
-            scanLogs.map((log) => (
-              <View key={log.id} style={[styles.logRow, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
+          }
+          renderItem={({ item: log }) => (
+            <View style={[styles.logRow, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
                 <View style={styles.logLeft}>
                   <Text style={[styles.logName, { color: colors.textPrimary }]}>{log.name}</Text>
                   <Text style={[styles.logDetail, { color: colors.textMuted }]}>{log.detail}</Text>
                 </View>
                 <Text style={[styles.logTime, { color: colors.textMuted }]}>{log.time}</Text>
               </View>
-            ))
           )}
-        </ScrollView>
+        />
       </View>
-    </Modal>
+    </AppModal>
   );
 }
 
@@ -153,7 +164,7 @@ const styles = StyleSheet.create({
   backBtn: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 44, paddingVertical: 4 },
   backBtnText: { fontSize: 13, fontWeight: "700" },
   badge: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(16, 185, 129, 0.15)", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
-  badgeText: { color: "#10B981", fontSize: 10, fontWeight: "800" },
+  badgeText: { color: "#10B981", fontSize: 11, fontWeight: "800" },
   content: { padding: 16 },
   venueCard: { borderRadius: 12, padding: 14, marginBottom: 16, borderWidth: 1 },
   venueTitle: { fontSize: 14, fontWeight: "800" },

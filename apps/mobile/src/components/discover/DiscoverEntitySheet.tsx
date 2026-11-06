@@ -1,7 +1,11 @@
-import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Modal, Image, ScrollView } from "react-native";
-import { X, Star, Clock, MapPin, ShieldCheck, UserCheck, Users, Award, Sparkles } from "lucide-react-native";
-import { useThemeStore } from "../../theme/theme";
+import React, { useRef } from "react";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Award, Clock, MapPin, ShieldCheck, Sparkles, Star, UserCheck, Users, X, type LucideIcon } from "lucide-react-native";
+import { MIN_TOUCH_TARGET } from "sodia-core";
+import { useColors, type ColorPalette } from "../../theme/theme";
+import { AppBottomSheet } from "../sheets/AppBottomSheet";
 import type { DiscoverCoach, DiscoverCommunityClub } from "../../data/discoverData";
 
 export type DiscoverSelectedEntity =
@@ -16,160 +20,144 @@ interface DiscoverEntitySheetProps {
   onConfirmBooking: (itemTitle: string, pricePhp: number, facilityId?: string, facilityName?: string) => void;
 }
 
-export function DiscoverEntitySheet({
-  entity,
-  visible,
-  onClose,
-  onConfirmBooking,
-}: DiscoverEntitySheetProps) {
-  const { colors } = useThemeStore();
-  if (!visible || !entity) return null;
+interface EntityView {
+  badge: string;
+  badgeIcon: LucideIcon;
+  badgeColor: string;
+  title: string;
+  subtitle: string;
+  image: string;
+  rating: string;
+  ratingIcon: LucideIcon;
+  body: string;
+  details: readonly { icon: LucideIcon; label: string; value: string }[];
+  priceLabel: string;
+  pricePhp: number;
+  cta: string;
+  bookingTitle: string;
+  facilityId?: string;
+  facilityName?: string;
+  round: boolean;
+}
 
-  const isCoach = entity.kind === "coach";
-  const coach = isCoach ? entity.data : null;
-  const club = !isCoach ? entity.data : null;
+function toView(entity: NonNullable<DiscoverSelectedEntity>, colors: ColorPalette): EntityView {
+  if (entity.kind === "coach") {
+    const c = entity.data;
+    return {
+      badge: c.specialty.toUpperCase(), badgeIcon: UserCheck, badgeColor: colors.info,
+      title: c.name, subtitle: c.title, image: c.avatar, round: true,
+      rating: `${c.rating} (${c.reviewCount} reviews)`, ratingIcon: Star, body: c.bio,
+      details: [
+        { icon: Clock, label: "Schedule", value: c.schedule },
+        { icon: MapPin, label: "Location", value: `${c.homeFacilityName} • ${c.address}` },
+        { icon: ShieldCheck, label: "Credentials", value: c.credentials.join(" • ") },
+      ],
+      priceLabel: "1-on-1 session", pricePhp: c.hourlyRatePhp, cta: "Book Session",
+      bookingTitle: `Session with ${c.name}`, facilityId: c.homeFacilityId, facilityName: c.homeFacilityName,
+    };
+  }
+  const cl = entity.data;
+  const free = cl.dropInFeePhp === 0;
+  return {
+    badge: cl.category.toUpperCase(), badgeIcon: free ? Users : Award, badgeColor: free ? colors.accentGreen : colors.warning,
+    title: cl.name, subtitle: `${cl.category} • ${cl.sport}`, image: cl.coverImage, round: false,
+    rating: cl.paceOrLevel, ratingIcon: Sparkles, body: cl.description,
+    details: [
+      { icon: Clock, label: "Schedule", value: cl.schedule },
+      { icon: MapPin, label: "Location", value: cl.meetingPoint },
+      { icon: ShieldCheck, label: "Organizer", value: cl.organizer },
+    ],
+    priceLabel: "Community drop-in", pricePhp: cl.dropInFeePhp, cta: free ? "RSVP Free" : "Join & Register",
+    bookingTitle: `Entry to ${cl.name}`, facilityName: cl.meetingPoint,
+  };
+}
 
-  const title = isCoach ? coach!.name : club!.name;
-  const subtitle = isCoach ? coach!.title : `${club!.category} • ${club!.sport}`;
-  const avatarUrl = isCoach ? coach!.avatar : club!.coverImage;
-  const ratingOrLevel = isCoach ? `${coach!.rating} (${coach!.reviewCount} Reviews)` : club!.paceOrLevel;
-  const locationText = isCoach ? `${coach!.homeFacilityName} • ${coach!.address}` : club!.meetingPoint;
-  const scheduleText = isCoach ? coach!.schedule : club!.schedule;
-  const pricePhp = isCoach ? coach!.hourlyRatePhp : club!.dropInFeePhp;
-  const priceDisplay = pricePhp === 0 ? "Free Drop-In" : `₱${pricePhp.toLocaleString()}`;
+export function DiscoverEntitySheet({ entity, visible, onClose, onConfirmBooking }: DiscoverEntitySheetProps) {
+  const colors = useColors();
+  const insets = useSafeAreaInsets();
+  const last = useRef<DiscoverSelectedEntity>(entity);
+  if (entity) last.current = entity;
+  const v = last.current ? toView(last.current, colors) : null;
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={styles.overlay}>
-        <View style={[styles.sheetCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
-          {/* HEADER */}
+    <AppBottomSheet visible={visible && !!entity} onClose={onClose} snapPoints={["70%"]} accessibilityLabel={v ? `${v.title} details` : "Details"}>
+      {v ? (
+        <BottomSheetScrollView contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 24 }]}>
           <View style={styles.header}>
-            <View style={styles.badgeRow}>
-              {isCoach ? (
-                <View style={styles.coachBadge}>
-                  <UserCheck size={12} color="#3B82F6" />
-                  <Text style={styles.coachBadgeText}>{coach!.specialty.toUpperCase()}</Text>
-                </View>
-              ) : (
-                <View style={styles.meetBadge}>
-                  {club!.dropInFeePhp > 0 ? <Award size={12} color="#F59E0B" /> : <Users size={12} color="#10B981" />}
-                  <Text style={[styles.meetBadgeText, club!.dropInFeePhp === 0 && { color: "#10B981" }]}>
-                    {club!.category.toUpperCase()}
-                  </Text>
-                </View>
-              )}
+            <View style={[styles.badge, { backgroundColor: colors.bgCardTertiary }]}>
+              <v.badgeIcon size={13} color={v.badgeColor} />
+              <Text style={[styles.badgeText, { color: v.badgeColor }]}>{v.badge}</Text>
             </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+            <TouchableOpacity onPress={onClose} style={styles.close} accessibilityRole="button" accessibilityLabel="Close details">
               <X size={20} color={colors.textMuted} />
             </TouchableOpacity>
           </View>
 
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.sheetContent}>
-            {/* HERO SECTION */}
-            <View style={styles.heroSection}>
-              <Image source={{ uri: avatarUrl }} style={styles.avatar} />
-              <View style={{ flex: 1, marginLeft: 14 }}>
-                <Text style={[styles.entityName, { color: colors.textPrimary }]}>{title}</Text>
-                <Text style={[styles.entityRole, { color: colors.textMuted }]}>{subtitle}</Text>
-                <View style={styles.ratingRow}>
-                  {isCoach ? <Star size={12} color="#F59E0B" fill="#F59E0B" /> : <Sparkles size={12} color="#10B981" />}
-                  <Text style={[styles.ratingText, { color: isCoach ? colors.textPrimary : "#10B981" }]}>
-                    {ratingOrLevel}
-                  </Text>
-                </View>
+          <View style={styles.hero}>
+            <Image source={{ uri: v.image }} style={[styles.avatar, !v.round && styles.square]} />
+            <View style={styles.flex}>
+              <Text style={[styles.name, { color: colors.textPrimary }]} accessibilityRole="header">{v.title}</Text>
+              <Text style={[styles.role, { color: colors.textMuted }]}>{v.subtitle}</Text>
+              <View style={styles.ratingRow}>
+                <v.ratingIcon size={13} color={colors.warning} fill={v.ratingIcon === Star ? colors.warning : "none"} />
+                <Text style={[styles.ratingText, { color: colors.textPrimary }]}>{v.rating}</Text>
               </View>
             </View>
+          </View>
 
-            {/* BIO / DESCRIPTION */}
-            <Text style={[styles.bioText, { color: colors.textSecondary }]}>
-              {isCoach ? coach!.bio : club!.description}
-            </Text>
+          <Text style={[styles.bio, { color: colors.textSecondary }]}>{v.body}</Text>
 
-            {/* DETAILS ACCORDION */}
-            <View style={[styles.detailsBox, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}>
-              <View style={styles.detailRow}>
-                <Clock size={14} color={colors.textMuted} />
-                <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Schedule</Text>
-                <Text style={[styles.detailValue, { color: colors.textPrimary }]}>{scheduleText}</Text>
+          <View style={[styles.details, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}>
+            {v.details.map(({ icon: Icon, label, value }) => (
+              <View key={label} style={styles.detailRow}>
+                <Icon size={15} color={colors.textMuted} />
+                <Text style={[styles.detailLabel, { color: colors.textMuted }]}>{label}</Text>
+                <Text style={[styles.detailValue, { color: colors.textPrimary }]}>{value}</Text>
               </View>
+            ))}
+          </View>
 
-              <View style={styles.detailRow}>
-                <MapPin size={14} color={colors.textMuted} />
-                <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Location</Text>
-                <Text style={[styles.detailValue, { color: colors.textPrimary }]}>{locationText}</Text>
-              </View>
-
-              <View style={styles.detailRow}>
-                <ShieldCheck size={14} color={colors.textMuted} />
-                <Text style={[styles.detailLabel, { color: colors.textMuted }]}>
-                  {isCoach ? "Credentials" : "Organizer"}
-                </Text>
-                <Text style={[styles.detailValue, { color: colors.textPrimary }]}>
-                  {isCoach ? coach!.credentials.join(" • ") : club!.organizer}
-                </Text>
-              </View>
+          <View style={[styles.footer, { borderTopColor: colors.borderColor }]}>
+            <View>
+              <Text style={[styles.priceLabel, { color: colors.textMuted }]}>{v.priceLabel}</Text>
+              <Text style={[styles.price, { color: colors.accentGreen }]}>{v.pricePhp === 0 ? "Free" : `₱${v.pricePhp.toLocaleString()}`}</Text>
             </View>
-
-            {/* PRICING & BOOKING CTA */}
-            <View style={[styles.footerPricing, { borderTopColor: colors.borderColor }]}>
-              <View>
-                <Text style={[styles.totalPriceLabel, { color: colors.textMuted }]}>
-                  {isCoach ? "1-on-1 Session Rate" : "Community Drop-In Fee"}
-                </Text>
-                <Text style={[styles.totalPriceVal, { color: pricePhp === 0 ? "#10B981" : colors.accentGreen }]}>
-                  {priceDisplay}
-                </Text>
-              </View>
-
-              <TouchableOpacity
-                onPress={() => {
-                  onClose();
-                  onConfirmBooking(
-                    isCoach ? `Session with ${coach!.name}` : `Entry to ${club!.name}`,
-                    pricePhp,
-                    isCoach ? coach!.homeFacilityId : undefined,
-                    isCoach ? coach!.homeFacilityName : club!.meetingPoint
-                  );
-                }}
-                style={styles.bookCtaBtn}
-              >
-                <Text style={styles.bookCtaText}>
-                  {isCoach ? "Book Session" : pricePhp === 0 ? "RSVP Free" : "Join & Register"}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </ScrollView>
-        </View>
-      </View>
-    </Modal>
+            <TouchableOpacity
+              onPress={() => onConfirmBooking(v.bookingTitle, v.pricePhp, v.facilityId, v.facilityName)}
+              style={[styles.cta, { backgroundColor: colors.accent }]}
+              accessibilityRole="button"
+            >
+              <Text style={[styles.ctaText, { color: colors.textOnAccent }]}>{v.cta}</Text>
+            </TouchableOpacity>
+          </View>
+        </BottomSheetScrollView>
+      ) : null}
+    </AppBottomSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.65)", justifyContent: "flex-end" },
-  sheetCard: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, maxHeight: "85%", borderWidth: 1 },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 },
-  badgeRow: { flexDirection: "row" },
-  coachBadge: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "rgba(59,130,246,0.15)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
-  coachBadgeText: { color: "#60A5FA", fontSize: 10, fontWeight: "800" },
-  meetBadge: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "rgba(245,158,11,0.15)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
-  meetBadgeText: { color: "#FBBF24", fontSize: 10, fontWeight: "800" },
-  closeBtn: { minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" },
-  sheetContent: { paddingBottom: 24 },
-  heroSection: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
-  avatar: { width: 56, height: 56, borderRadius: 28 },
-  entityName: { fontSize: 16, fontWeight: "800" },
-  entityRole: { fontSize: 12, marginTop: 2 },
+  content: { paddingHorizontal: 20 },
+  flex: { flex: 1, marginLeft: 14 },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
+  badge: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999 },
+  badgeText: { fontSize: 11, fontWeight: "800" },
+  close: { width: MIN_TOUCH_TARGET, height: MIN_TOUCH_TARGET, alignItems: "center", justifyContent: "center" },
+  hero: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
+  avatar: { width: 60, height: 60, borderRadius: 30 },
+  square: { borderRadius: 12 },
+  name: { fontSize: 17, fontWeight: "800" },
+  role: { fontSize: 13, marginTop: 2 },
   ratingRow: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 4 },
-  ratingText: { fontSize: 11, fontWeight: "700" },
-  bioText: { fontSize: 13, lineHeight: 18, marginBottom: 14 },
-  detailsBox: { borderRadius: 14, padding: 14, gap: 12, marginBottom: 20, borderWidth: 1 },
+  ratingText: { fontSize: 12, fontWeight: "700" },
+  bio: { fontSize: 14, lineHeight: 20, marginBottom: 14 },
+  details: { borderRadius: 14, padding: 14, gap: 12, marginBottom: 20, borderWidth: 1 },
   detailRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   detailLabel: { fontSize: 12, width: 85 },
-  detailValue: { fontSize: 12, fontWeight: "600", flex: 1 },
-  footerPricing: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderTopWidth: 1, paddingTop: 16 },
-  totalPriceLabel: { fontSize: 11, fontWeight: "700" },
-  totalPriceVal: { fontSize: 18, fontWeight: "900" },
-  bookCtaBtn: { backgroundColor: "#E11D48", paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12 },
-  bookCtaText: { color: "#FFFFFF", fontSize: 13, fontWeight: "800" },
+  detailValue: { fontSize: 13, fontWeight: "600", flex: 1 },
+  footer: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderTopWidth: 1, paddingTop: 16 },
+  priceLabel: { fontSize: 12, fontWeight: "700" },
+  price: { fontSize: 20, fontWeight: "900" },
+  cta: { paddingHorizontal: 22, minHeight: 48, justifyContent: "center", borderRadius: 12 },
+  ctaText: { fontSize: 14, fontWeight: "800" },
 });

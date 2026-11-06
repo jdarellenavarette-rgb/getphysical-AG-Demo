@@ -21,15 +21,15 @@ export function PostMediaAttachmentBar({
       <Text style={[styles.attachTitle, { color: colors.textMuted }]}>ATTACH MULTIMEDIA:</Text>
       <View style={styles.attachBtnRow}>
         <TouchableOpacity onPress={onTakePhoto} style={styles.attachBtn}>
-          <Camera size={18} color="#E11D48" />
+          <Camera size={18} color={colors.accent} />
           <Text style={[styles.attachBtnText, { color: colors.textPrimary }]}>Take Photo</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={onRecordVideo} style={styles.attachBtn}>
-          <Video size={18} color="#3B82F6" />
+          <Video size={18} color={colors.info} />
           <Text style={[styles.attachBtnText, { color: colors.textPrimary }]}>Record Video</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={onPickLibrary} style={styles.attachBtn}>
-          <ImageIcon size={18} color="#10B981" />
+          <ImageIcon size={18} color={colors.accentGreen} />
           <Text style={[styles.attachBtnText, { color: colors.textPrimary }]}>Library</Text>
         </TouchableOpacity>
       </View>
@@ -39,7 +39,7 @@ export function PostMediaAttachmentBar({
 
 const styles = StyleSheet.create({
   attachmentBar: { borderRadius: 14, padding: 12, borderWidth: 1, marginVertical: 8 },
-  attachTitle: { fontSize: 10, fontWeight: "800", letterSpacing: 0.6, marginBottom: 8 },
+  attachTitle: { fontSize: 11, fontWeight: "800", letterSpacing: 0.6, marginBottom: 8 },
   attachBtnRow: { flexDirection: "row", justifyContent: "space-around" },
   attachBtn: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8 },
   attachBtnText: { fontSize: 12, fontWeight: "700" },

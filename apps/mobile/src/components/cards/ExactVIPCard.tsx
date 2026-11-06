@@ -1,38 +1,60 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { QrCode, RotateCw, ShieldCheck, Zap, Radio, Sparkles } from "lucide-react-native";
-import { generateDynamicPassTotp, type PassRow } from "sodia-core";
+import Animated, { interpolate, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import { QrCode, RotateCw, Zap, Radio } from "lucide-react-native";
+import { generateDynamicPassTotp, MOTION, type PassRow } from "sodia-core";
 import { useEcosystemStore } from "../../store/ecosystemStore";
+import { haptics } from "../../lib/haptics";
 
 interface ExactVIPCardProps {
   pass: PassRow;
   facilityName: string;
 }
 
+/**
+ * Apple-Wallet-style pass. Back face shows the 60s rolling TOTP generated
+ * locally from sodia-core (works offline; no server ping — AGENTS.md §7).
+ */
 export function ExactVIPCard({ pass, facilityName }: ExactVIPCardProps) {
-  const { profile } = useEcosystemStore();
+  const profile = useEcosystemStore((s) => s.profile);
   const [isFlipped, setIsFlipped] = useState(false);
-  const [totpData, setTotpData] = useState(() =>
-    generateDynamicPassTotp(profile.id, pass.id, pass.facility_id ?? "fac_001")
-  );
+  const flip = useSharedValue(0);
+  const [totpData, setTotpData] = useState(() => generateDynamicPassTotp(profile.id, pass.id, pass.facility_id ?? "fac_001"));
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setTotpData(
-        generateDynamicPassTotp(profile.id, pass.id, pass.facility_id ?? "fac_001")
-      );
+      setTotpData(generateDynamicPassTotp(profile.id, pass.id, pass.facility_id ?? "fac_001"));
     }, 1000);
     return () => clearInterval(timer);
   }, [profile.id, pass.id, pass.facility_id]);
 
+  const toggle = () => {
+    haptics.medium();
+    const next = !isFlipped;
+    setIsFlipped(next);
+    flip.value = withTiming(next ? 1 : 0, { duration: MOTION.slowMs + 120 });
+  };
+
+  const frontStyle = useAnimatedStyle(() => ({
+    transform: [{ perspective: 1000 }, { rotateY: `${interpolate(flip.value, [0, 1], [0, 180])}deg` }],
+  }));
+  const backStyle = useAnimatedStyle(() => ({
+    transform: [{ perspective: 1000 }, { rotateY: `${interpolate(flip.value, [0, 1], [180, 360])}deg` }],
+  }));
+
   return (
     <TouchableOpacity
-      activeOpacity={0.92}
-      onPress={() => setIsFlipped((prev) => !prev)}
+      activeOpacity={0.95}
+      onPress={toggle}
       style={styles.cardContainer}
+      accessibilityRole="button"
+      accessibilityLabel={
+        isFlipped
+          ? `Entry code ${totpData.formattedCode.split("").join(" ")}, refreshes in ${totpData.remainingSeconds} seconds. Tap to show card front.`
+          : `${facilityName} ${pass.pass_type} pass. Tap to show entry code.`
+      }
     >
-      {!isFlipped ? (
-        // FRONT FACE: HOLOGRAPHIC VIP CARD (PHOTO 2 STYLE)
+      <Animated.View style={[StyleSheet.absoluteFill, styles.face, frontStyle]} pointerEvents="none">
         <View style={styles.frontFace}>
           {/* TOP ROW: CHIP + NFC + REGISTRY BADGE */}
           <View style={styles.topRow}>
@@ -66,8 +88,8 @@ export function ExactVIPCard({ pass, facilityName }: ExactVIPCardProps) {
             </View>
           </View>
         </View>
-      ) : (
-        // BACK FACE: 60S DYNAMIC TOTP SCANNER PASS
+      </Animated.View>
+      <Animated.View style={[StyleSheet.absoluteFill, styles.face, backStyle]} pointerEvents="none">
         <View style={styles.backFace}>
           <View style={styles.qrHeader}>
             <View style={styles.qrTickingRow}>
@@ -90,19 +112,19 @@ export function ExactVIPCard({ pass, facilityName }: ExactVIPCardProps) {
             </Text>
           </View>
         </View>
-      )}
+      </Animated.View>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
+  face: { backfaceVisibility: "hidden" },
   cardContainer: {
     height: 224,
     borderRadius: 24,
     backgroundColor: "#16161A",
     borderWidth: 1.5,
     borderColor: "rgba(236, 72, 153, 0.4)",
-    overflow: "hidden",
     marginHorizontal: 4,
     marginVertical: 10,
     shadowColor: "#E11D48",
@@ -113,6 +135,8 @@ const styles = StyleSheet.create({
   },
   frontFace: {
     flex: 1,
+    borderRadius: 23,
+    overflow: "hidden",
     padding: 22,
     justifyContent: "space-between",
     backgroundColor: "#111115",
@@ -159,7 +183,7 @@ const styles = StyleSheet.create({
   },
   vipTag: {
     color: "#EC4899",
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: "900",
   },
   middleRow: {
@@ -184,21 +208,21 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
   },
   labelMuted: {
-    color: "#71717A",
-    fontSize: 9,
+    color: "#A1A1AA",
+    fontSize: 11,
     fontWeight: "800",
     letterSpacing: 0.8,
   },
   memberName: { color: "#FAFAFA", fontSize: 15, fontWeight: "800", marginTop: 2 },
   flipPill: { flexDirection: "row", alignItems: "center", backgroundColor: "#27272A", paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.15)" },
   flipPillText: { color: "#FAFAFA", fontSize: 11, fontWeight: "700" },
-  backFace: { flex: 1, padding: 16, alignItems: "center", justifyContent: "center", backgroundColor: "#0C0C0E" },
+  backFace: { flex: 1, borderRadius: 23, overflow: "hidden", padding: 16, alignItems: "center", justifyContent: "center", backgroundColor: "#0C0C0E" },
   qrHeader: { alignItems: "center", marginBottom: 6 },
   qrTickingRow: { flexDirection: "row", alignItems: "center" },
-  qrTickingText: { color: "#10B981", fontSize: 10, fontWeight: "800", letterSpacing: 0.5, marginLeft: 4 },
-  totpFallbackHeader: { color: "#71717A", fontSize: 9, fontWeight: "700", marginTop: 1 },
+  qrTickingText: { color: "#10B981", fontSize: 11, fontWeight: "800", letterSpacing: 0.5, marginLeft: 4 },
+  totpFallbackHeader: { color: "#A1A1AA", fontSize: 11, fontWeight: "700", marginTop: 1 },
   qrBox: { padding: 10, backgroundColor: "#FFFFFF", borderRadius: 14, marginVertical: 6 },
   totpCodeContainer: { alignItems: "center" },
   totpCodeText: { color: "#FAFAFA", fontSize: 22, fontWeight: "900", letterSpacing: 3 },
-  totpSubtext: { color: "#71717A", fontSize: 10, marginTop: 2 },
+  totpSubtext: { color: "#A1A1AA", fontSize: 11, marginTop: 2 },
 });

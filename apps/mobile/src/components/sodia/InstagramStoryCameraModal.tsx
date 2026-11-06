@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Modal, Image, TextInput, Alert } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Image, TextInput } from "react-native";
+import { AppModal } from "../common/AppModal";
+import { toast } from "../../feedback/toastStore";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
 import { X, Zap, ZapOff, RefreshCw, Music, Type, Grid3X3, Clock, Sparkles, ChevronLeft, MapPin, Send, Camera } from "lucide-react-native";
@@ -20,7 +22,7 @@ export function InstagramStoryCameraModal({ visible, onClose }: InstagramStoryCa
   const [locationTag, setLocationTag] = useState("📍 BGC High Street");
   const [cameraMode, setCameraMode] = useState<"STORY" | "REEL" | "POST">("STORY");
 
-  const cameraRef = useRef<any>(null);
+  const cameraRef = useRef<CameraView>(null);
 
   useEffect(() => {
     if (visible && !permission?.granted) {
@@ -57,30 +59,30 @@ export function InstagramStoryCameraModal({ visible, onClose }: InstagramStoryCa
   const handlePublishStory = (isCloseFriends = false) => {
     if (!selectedMediaUri) return;
     addUserStory(selectedMediaUri, storyText.trim() || undefined);
-    Alert.alert("Shared!", isCloseFriends ? "Shared to Close Friends ⭐" : "Added to Your Story ⚡");
+    toast.success(isCloseFriends ? "Shared to Close Friends" : "Added to your story");
     setSelectedMediaUri(null);
     setStoryText("");
     onClose();
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
+    <AppModal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
       <View style={styles.container}>
         {selectedMediaUri ? (
           <View style={styles.previewContainer}>
             <Image source={{ uri: selectedMediaUri }} style={styles.previewMedia} resizeMode="cover" />
             <View style={styles.previewTopBar}>
-              <TouchableOpacity onPress={() => setSelectedMediaUri(null)} style={styles.topIconBtn}>
+              <TouchableOpacity accessibilityRole="button" accessibilityLabel="Discard and go back" onPress={() => setSelectedMediaUri(null)} style={styles.topIconBtn}>
                 <ChevronLeft size={28} color="#FFFFFF" />
               </TouchableOpacity>
               <View style={styles.previewToolRow}>
-                <TouchableOpacity onPress={() => setStoryText((t) => (t ? "" : "Crushing session! 🔥"))} style={styles.topIconBtn}>
+                <TouchableOpacity accessibilityRole="button" accessibilityLabel="Add text" onPress={() => setStoryText((t) => (t ? "" : "Crushing session! 🔥"))} style={styles.topIconBtn}>
                   <Type size={22} color="#FFFFFF" />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => setLocationTag((l) => (l.includes("BGC") ? "📍 Metro Core Arena" : "📍 BGC High Street"))} style={styles.topIconBtn}>
+                <TouchableOpacity accessibilityRole="button" accessibilityLabel="Change location tag" onPress={() => setLocationTag((l) => (l.includes("BGC") ? "📍 Metro Core Arena" : "📍 BGC High Street"))} style={styles.topIconBtn}>
                   <MapPin size={22} color="#FFFFFF" />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => Alert.alert("Effects", "Sparkle glow applied ✨")} style={styles.topIconBtn}>
+                <TouchableOpacity accessibilityRole="button" accessibilityLabel="Effects" onPress={() => toast.info("Sparkle effect on")} style={styles.topIconBtn}>
                   <Sparkles size={22} color="#FFFFFF" />
                 </TouchableOpacity>
               </View>
@@ -110,7 +112,7 @@ export function InstagramStoryCameraModal({ visible, onClose }: InstagramStoryCa
                 <View style={styles.closeFriendsStar}><Text style={{ color: "#FFF", fontSize: 13, fontWeight: "900" }}>★</Text></View>
                 <Text style={styles.closeFriendsLabel}>Close Friends</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => handlePublishStory(false)} style={styles.sendCircleBtn}>
+              <TouchableOpacity accessibilityRole="button" accessibilityLabel="Share to your story" onPress={() => handlePublishStory(false)} style={styles.sendCircleBtn}>
                 <Send size={18} color="#000" />
               </TouchableOpacity>
             </View>
@@ -134,43 +136,43 @@ export function InstagramStoryCameraModal({ visible, onClose }: InstagramStoryCa
             )}
 
             <View style={styles.cameraTopBar}>
-              <TouchableOpacity onPress={onClose} style={styles.topIconBtn}>
+              <TouchableOpacity accessibilityRole="button" accessibilityLabel="Close camera" onPress={onClose} style={styles.topIconBtn}>
                 <X size={26} color="#FFFFFF" />
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => setFlash((f) => (f === "off" ? "on" : "off"))} style={styles.topIconBtn}>
+              <TouchableOpacity accessibilityRole="button" accessibilityLabel="Toggle flash" onPress={() => setFlash((f) => (f === "off" ? "on" : "off"))} style={styles.topIconBtn}>
                 {flash === "on" ? <Zap size={22} color="#FBBF24" fill="#FBBF24" /> : <ZapOff size={22} color="#FFFFFF" />}
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => Alert.alert("Audio", "Select background beat")} style={styles.topIconBtn}>
+              <TouchableOpacity accessibilityRole="button" accessibilityLabel="Music" onPress={() => toast.info("Music library", "Pick a track after you capture.")} style={styles.topIconBtn}>
                 <Music size={22} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
 
             <View style={styles.leftToolbar}>
-              <TouchableOpacity onPress={() => setSelectedMediaUri("https://images.unsplash.com/photo-1540497077202-7c8a3999166f?auto=format&fit=crop&w=1080&q=80")} style={styles.leftToolBtn}>
+              <TouchableOpacity accessibilityRole="button" accessibilityLabel="Create text story" onPress={() => setSelectedMediaUri("https://images.unsplash.com/photo-1540497077202-7c8a3999166f?auto=format&fit=crop&w=1080&q=80")} style={styles.leftToolBtn}>
                 <Type size={18} color="#FFFFFF" />
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => Alert.alert("Boomerang", "Boomerang loop active")} style={styles.leftToolBtn}>
+              <TouchableOpacity accessibilityRole="button" accessibilityLabel="Boomerang" onPress={() => toast.info("Boomerang mode on")} style={styles.leftToolBtn}>
                 <Text style={{ color: "#FFF", fontSize: 18, fontWeight: "900" }}>∞</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => Alert.alert("Layout", "2x2 grid active")} style={styles.leftToolBtn}>
+              <TouchableOpacity accessibilityRole="button" accessibilityLabel="Layout" onPress={() => toast.info("Layout: 2×2 grid")} style={styles.leftToolBtn}>
                 <Grid3X3 size={18} color="#FFFFFF" />
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => Alert.alert("Hands-Free", "3s timer set")} style={styles.leftToolBtn}>
+              <TouchableOpacity accessibilityRole="button" accessibilityLabel="Hands-free timer" onPress={() => toast.info("Hands-free: 3s timer")} style={styles.leftToolBtn}>
                 <Clock size={18} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
 
             <View style={styles.cameraBottomControls}>
               <View style={styles.shutterRow}>
-                <TouchableOpacity onPress={handlePickFromGallery} style={styles.galleryPreviewSquare}>
+                <TouchableOpacity accessibilityRole="button" accessibilityLabel="Open gallery" onPress={handlePickFromGallery} style={styles.galleryPreviewSquare}>
                   <Image source={{ uri: profile.avatar_url ?? "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80" }} style={styles.galleryThumb} />
                 </TouchableOpacity>
 
-                <TouchableOpacity onPress={handleCapture} activeOpacity={0.8} style={styles.shutterOuterRing}>
+                <TouchableOpacity accessibilityRole="button" accessibilityLabel="Capture" onPress={handleCapture} activeOpacity={0.8} style={styles.shutterOuterRing}>
                   <View style={styles.shutterInnerCircle} />
                 </TouchableOpacity>
 
-                <TouchableOpacity onPress={() => setFacing((f) => (f === "back" ? "front" : "back"))} style={styles.flipCameraBtn}>
+                <TouchableOpacity accessibilityRole="button" accessibilityLabel="Flip camera" onPress={() => setFacing((f) => (f === "back" ? "front" : "back"))} style={styles.flipCameraBtn}>
                   <RefreshCw size={22} color="#FFFFFF" />
                 </TouchableOpacity>
               </View>
@@ -186,7 +188,7 @@ export function InstagramStoryCameraModal({ visible, onClose }: InstagramStoryCa
           </View>
         )}
       </View>
-    </Modal>
+    </AppModal>
   );
 }
 
@@ -227,7 +229,7 @@ const styles = StyleSheet.create({
   yourStoryAvatarRing: { width: 30, height: 30, borderRadius: 15, position: "relative" },
   yourStoryAvatar: { width: "100%", height: "100%", borderRadius: 15 },
   storyAddBadge: { position: "absolute", bottom: -2, right: -2, width: 14, height: 14, borderRadius: 7, backgroundColor: "#E11D48", justifyContent: "center", alignItems: "center" },
-  storyAddPlus: { color: "#FFF", fontSize: 10, fontWeight: "900" },
+  storyAddPlus: { color: "#FFF", fontSize: 11, fontWeight: "900" },
   yourStoryLabel: { color: "#FFF", fontSize: 12, fontWeight: "800" },
   closeFriendsBtn: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(255,255,255,0.2)", paddingVertical: 8, paddingHorizontal: 14, borderRadius: 24, gap: 8 },
   closeFriendsStar: { width: 22, height: 22, borderRadius: 11, backgroundColor: "#10B981", justifyContent: "center", alignItems: "center" },

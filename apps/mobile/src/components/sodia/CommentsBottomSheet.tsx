@@ -1,20 +1,17 @@
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Image,
-  TextInput,
-  StyleSheet,
-  Modal,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-} from "react-native";
+import React, { useCallback, useState } from "react";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { BottomSheetFooter, useBottomSheetScrollableCreator } from "@gorhom/bottom-sheet";
+import { FlashList } from "@shopify/flash-list";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { X, Heart, Pin } from "lucide-react-native";
+import { MessageCircle, X } from "lucide-react-native";
+import { createEmptyState, createSuccessState, MIN_TOUCH_TARGET, postCaptionSchema } from "sodia-core";
 import { useEcosystemStore } from "../../store/ecosystemStore";
-import { useThemeStore } from "../../theme/theme";
+import { useColors } from "../../theme/theme";
+import { AppBottomSheet } from "../sheets/AppBottomSheet";
+import { TenStateView } from "../common/TenStateView";
+import { haptics } from "../../lib/haptics";
+import { CommentRow, type SodiaComment } from "./comments/CommentRow";
+import { CommentComposer } from "./comments/CommentComposer";
 
 interface CommentsBottomSheetProps {
   visible: boolean;
@@ -22,185 +19,95 @@ interface CommentsBottomSheetProps {
   postId?: string;
 }
 
-export function CommentsBottomSheet({ visible, onClose }: CommentsBottomSheetProps) {
+const SEED_COMMENTS: readonly SodiaComment[] = [
+  { id: "c1", author: "Coach Miguel Ramos", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80", text: "Textbook hip hinge on that final rep. Rest up for the Saturday ladder!", time: "2h", likes: 12, isLiked: false, isPinned: true },
+  { id: "c2", author: "Sarah Jenkins", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80", text: "Insane pull! Which rack at Metro Core was this on?", time: "45m", likes: 4, isLiked: true, isPinned: false },
+];
+const SNAP_POINTS = ["60%", "92%"] as const;
+const COMPOSER_SPACE = 150;
+
+export function CommentsBottomSheet({ visible, onClose, postId }: CommentsBottomSheetProps) {
   const insets = useSafeAreaInsets();
-  const { profile } = useEcosystemStore();
-  const { colors } = useThemeStore();
-  const [commentText, setCommentText] = useState("");
-  const [comments, setComments] = useState([
-    {
-      id: "c1",
-      author: "Coach Miguel Ramos",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80",
-      text: "Textbook hip hinge on that final rep. Rest up for the Saturday ladder!",
-      time: "2h ago",
-      likes: 12,
-      isLiked: false,
-      isPinned: true,
-    },
-    {
-      id: "c2",
-      author: "Sarah Jenkins",
-      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80",
-      text: "Insane pull! Which rack at Metro Core was this on?",
-      time: "45m ago",
-      likes: 4,
-      isLiked: true,
-      isPinned: false,
-    },
-  ]);
+  const colors = useColors();
+  const profile = useEcosystemStore((s) => s.profile);
+  const renderScrollComponent = useBottomSheetScrollableCreator();
+  const key = postId ?? "story";
+  const [threads, setThreads] = useState<Readonly<Record<string, readonly SodiaComment[]>>>({});
+  const [draft, setDraft] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const comments = threads[key] ?? SEED_COMMENTS;
 
-  const handlePost = () => {
-    if (!commentText.trim()) return;
-    setComments((prev) => [
-      ...prev,
-      {
-        id: `c_${Date.now()}`,
-        author: `${profile.first_name} ${profile.last_name}`,
-        avatar: profile.avatar_url ?? "",
-        text: commentText.trim(),
-        time: "Just now",
-        likes: 0,
-        isLiked: false,
-        isPinned: false,
-      },
+  const update = useCallback(
+    (fn: (list: readonly SodiaComment[]) => readonly SodiaComment[]) => setThreads((t) => ({ ...t, [key]: fn(t[key] ?? SEED_COMMENTS) })),
+    [key]
+  );
+
+  const changeDraft = (text: string) => {
+    setDraft(text);
+    const result = postCaptionSchema.safeParse(text);
+    setError(result.success ? null : (result.error.issues[0]?.message ?? "Comment is too long"));
+  };
+
+  const submit = () => {
+    const text = draft.trim();
+    if (!text || !postCaptionSchema.safeParse(text).success) return;
+    haptics.light();
+    update((list) => [
+      ...list,
+      { id: `c_${Date.now()}`, author: `${profile.first_name} ${profile.last_name}`, avatar: profile.avatar_url ?? "", text, time: "now", likes: 0, isLiked: false, isPinned: false },
     ]);
-    setCommentText("");
+    setDraft("");
+    setError(null);
   };
 
-  const toggleLike = (id: string) => {
-    setComments((prev) =>
-      prev.map((c) =>
-        c.id === id ? { ...c, isLiked: !c.isLiked, likes: c.isLiked ? c.likes - 1 : c.likes + 1 } : c
-      )
-    );
-  };
+  const toggleLike = useCallback(
+    (id: string) => {
+      haptics.selection();
+      update((list) => list.map((c) => (c.id === id ? { ...c, isLiked: !c.isLiked, likes: c.likes + (c.isLiked ? -1 : 1) } : c)));
+    },
+    [update]
+  );
+  const reply = useCallback((author: string) => changeDraft(`@${author} `), []);
+
+  const state = comments.length === 0 ? createEmptyState("Start the conversation.", "Add a comment") : createSuccessState(comments);
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <KeyboardAvoidingView
-        style={styles.overlay}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
-        <View
-          style={[
-            styles.sheetContainer,
-            {
-              backgroundColor: colors.bgCard,
-              borderColor: colors.borderColor,
-              borderWidth: 1,
-              paddingBottom: Math.max(insets.bottom, 16),
-            },
-          ]}
-        >
-          {/* HEADER */}
-          <View style={[styles.header, { borderBottomColor: colors.borderColor }]}>
-            <View style={[styles.dragPill, { backgroundColor: colors.borderColor }]} />
-            <View style={styles.titleRow}>
-              <Text style={[styles.title, { color: colors.textPrimary }]}>Comments ({comments.length})</Text>
-              <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-                <X size={20} color={colors.textMuted} />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* COMMENTS LIST */}
-          <ScrollView style={styles.commentsList} showsVerticalScrollIndicator={false}>
-            {comments.map((c) => (
-              <View key={c.id} style={styles.commentItem}>
-                <Image source={{ uri: c.avatar }} style={styles.commentAvatar} />
-                <View style={styles.commentBody}>
-                  {c.isPinned && (
-                    <View style={styles.pinnedRow}>
-                      <Pin size={10} color="#F59E0B" />
-                      <Text style={styles.pinnedText}>Pinned by author</Text>
-                    </View>
-                  )}
-                  <View style={styles.authorRow}>
-                    <Text style={[styles.commentAuthor, { color: colors.textPrimary }]}>{c.author}</Text>
-                    <Text style={[styles.commentTime, { color: colors.textMuted }]}>{c.time}</Text>
-                  </View>
-                  <Text style={[styles.commentText, { color: colors.textSecondary }]}>{c.text}</Text>
-                  <TouchableOpacity onPress={() => setCommentText(`@${c.author} `)} style={styles.replyTrigger}>
-                    <Text style={[styles.replyText, { color: colors.textMuted }]}>Reply</Text>
-                  </TouchableOpacity>
-                </View>
-                <TouchableOpacity onPress={() => toggleLike(c.id)} style={styles.likeBtn}>
-                  <Heart size={14} color={c.isLiked ? "#E11D48" : colors.textMuted} />
-                  {c.likes > 0 && (
-                    <Text style={[styles.likeCount, { color: colors.textMuted }, c.isLiked && styles.likeCountActive]}>
-                      {c.likes}
-                    </Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-            ))}
-          </ScrollView>
-
-          {/* EMOJI SHORTCUT STRIP */}
-          <View style={[styles.emojiRow, { borderTopColor: colors.borderColor }]}>
-            {["🔥", "💪", "👏", "❤️", "⚡"].map((emoji) => (
-              <TouchableOpacity
-                key={emoji}
-                onPress={() => setCommentText((prev) => prev + emoji)}
-                style={styles.emojiBtn}
-              >
-                <Text style={styles.emojiChar}>{emoji}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {/* INPUT BAR */}
-          <View style={styles.inputBar}>
-            <Image source={{ uri: profile.avatar_url ?? "" }} style={styles.inputAvatar} />
-            <TextInput
-              style={[styles.textInput, { backgroundColor: colors.bgInput, color: colors.textPrimary }]}
-              placeholder="Add a comment for the athlete..."
-              placeholderTextColor={colors.textMuted}
-              value={commentText}
-              onChangeText={setCommentText}
-            />
-            {commentText.trim().length > 0 && (
-              <TouchableOpacity onPress={handlePost} style={styles.postBtn}>
-                <Text style={styles.postBtnText}>Post</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
-      </KeyboardAvoidingView>
-    </Modal>
+    <AppBottomSheet
+      visible={visible}
+      onClose={onClose}
+      snapPoints={SNAP_POINTS}
+      accessibilityLabel="Comments"
+      footer={(props) => (
+        <BottomSheetFooter {...props}>
+          <CommentComposer value={draft} onChange={changeDraft} onSubmit={submit} avatarUrl={profile.avatar_url} error={error} bottomInset={insets.bottom} />
+        </BottomSheetFooter>
+      )}
+    >
+      <View style={[styles.header, { borderBottomColor: colors.borderColor }]}>
+        <Text style={[styles.title, { color: colors.textPrimary }]} accessibilityRole="header">
+          Comments ({comments.length})
+        </Text>
+        <TouchableOpacity onPress={onClose} style={styles.close} accessibilityRole="button" accessibilityLabel="Close comments">
+          <X size={20} color={colors.textMuted} />
+        </TouchableOpacity>
+      </View>
+      <TenStateView state={state} emptyIcon={MessageCircle} emptyTitle="No comments yet" compact>
+        {(list) => (
+          <FlashList
+            data={list}
+            keyExtractor={(c) => c.id}
+            renderItem={({ item }) => <CommentRow comment={item} onToggleLike={toggleLike} onReply={reply} />}
+            renderScrollComponent={renderScrollComponent}
+            contentContainerStyle={{ paddingTop: 8, paddingBottom: COMPOSER_SPACE + insets.bottom }}
+          />
+        )}
+      </TenStateView>
+    </AppBottomSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.65)", justifyContent: "flex-end" },
-  sheetContainer: { borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: "75%", paddingBottom: 20 },
-  header: { alignItems: "center", paddingVertical: 12, borderBottomWidth: 1 },
-  dragPill: { width: 36, height: 4, borderRadius: 2, marginBottom: 10 },
-  titleRow: { width: "100%", flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 20 },
-  title: { fontSize: 14, fontWeight: "800" },
-  closeBtn: { padding: 4 },
-  commentsList: { padding: 16 },
-  commentItem: { flexDirection: "row", marginBottom: 16, alignItems: "flex-start" },
-  commentAvatar: { width: 34, height: 34, borderRadius: 17, marginTop: 2 },
-  commentBody: { flex: 1, marginLeft: 12 },
-  pinnedRow: { flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 2 },
-  pinnedText: { color: "#F59E0B", fontSize: 10, fontWeight: "700" },
-  authorRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  commentAuthor: { fontSize: 13, fontWeight: "700" },
-  commentTime: { fontSize: 11 },
-  commentText: { fontSize: 13, marginTop: 4, lineHeight: 18 },
-  replyTrigger: { marginTop: 4 },
-  replyText: { fontSize: 11, fontWeight: "600" },
-  likeBtn: { alignItems: "center", paddingHorizontal: 6, paddingTop: 6 },
-  likeCount: { fontSize: 10, marginTop: 2, fontWeight: "600" },
-  likeCountActive: { color: "#E11D48" },
-  emojiRow: { flexDirection: "row", justifyContent: "space-around", paddingVertical: 8, borderTopWidth: 1 },
-  emojiBtn: { padding: 6 },
-  emojiChar: { fontSize: 18 },
-  inputBar: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingTop: 6, gap: 10 },
-  inputAvatar: { width: 32, height: 32, borderRadius: 16 },
-  textInput: { flex: 1, height: 38, borderRadius: 19, paddingHorizontal: 14, fontSize: 13 },
-  postBtn: { paddingHorizontal: 10, paddingVertical: 6 },
-  postBtnText: { color: "#E11D48", fontSize: 13, fontWeight: "800" },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingLeft: 20, paddingRight: 8, borderBottomWidth: 1 },
+  title: { fontSize: 15, fontWeight: "800" },
+  close: { width: MIN_TOUCH_TARGET, height: MIN_TOUCH_TARGET, alignItems: "center", justifyContent: "center" },
 });

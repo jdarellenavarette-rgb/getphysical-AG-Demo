@@ -1,5 +1,7 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, Image, StyleSheet, Modal, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
+import { FlashList } from "@shopify/flash-list";
+import { AppModal } from "../common/AppModal";
 import { X, CheckCircle2, UserPlus, MessageSquare, Award, Grid, Shield, ArrowLeft } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 
@@ -38,8 +40,15 @@ export function AthleteProfileModal({
   if (!visible || !athlete) return null;
 
   return (
-    <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
-      <ScrollView style={[styles.container, { backgroundColor: colors.bgScreen }]} contentContainerStyle={styles.content}>
+    <AppModal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
+      <FlashList
+        style={[styles.container, { backgroundColor: colors.bgScreen }]}
+        contentContainerStyle={styles.content}
+        data={activeTab === "grid" ? athlete.photos : []}
+        numColumns={3}
+        keyExtractor={(url, i) => `${i}_${url}`}
+        ListHeaderComponent={
+          <View>
         {/* COVER PHOTO & TOP BAR */}
         <View style={styles.coverContainer}>
           <Image
@@ -47,7 +56,7 @@ export function AthleteProfileModal({
             style={styles.coverPhoto}
           />
           <View style={styles.coverOverlay} />
-          <TouchableOpacity onPress={onClose} style={styles.backBtn}>
+          <TouchableOpacity onPress={onClose} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Back to feed">
             <ArrowLeft size={20} color="#FFFFFF" />
             <Text style={styles.backBtnText}>Feed</Text>
           </TouchableOpacity>
@@ -99,32 +108,27 @@ export function AthleteProfileModal({
 
           {/* TABS */}
           <View style={[styles.tabsHeader, { borderBottomColor: colors.borderColor }]}>
-            <TouchableOpacity onPress={() => setActiveTab("grid")} style={[styles.tabItem, activeTab === "grid" && styles.tabItemActive]}>
-              <Grid size={16} color={activeTab === "grid" ? "#E11D48" : "#71717A"} />
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Photos" onPress={() => setActiveTab("grid")} style={[styles.tabItem, activeTab === "grid" && styles.tabItemActive]}>
+              <Grid size={16} color={activeTab === "grid" ? colors.accent : colors.textMuted} />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => setActiveTab("pr")} style={[styles.tabItem, activeTab === "pr" && styles.tabItemActive]}>
-              <Award size={16} color={activeTab === "pr" ? "#E11D48" : "#71717A"} />
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Verified PRs" onPress={() => setActiveTab("pr")} style={[styles.tabItem, activeTab === "pr" && styles.tabItemActive]}>
+              <Award size={16} color={activeTab === "pr" ? colors.accent : colors.textMuted} />
             </TouchableOpacity>
           </View>
 
-          {/* TAB 1: PHOTO GRID */}
-          {activeTab === "grid" && (
-            <View style={styles.photoGrid}>
-              {athlete.photos.map((url, i) => (
-                <View key={i} style={styles.photoWrap}>
-                  <Image source={{ uri: url }} style={styles.gridImg} />
-                </View>
-              ))}
-            </View>
-          )}
-
+        </View>
+          </View>
+        }
+        ListFooterComponent={
+          <View>
+        <View style={styles.profileHeader}>
           {/* TAB 2: VERIFIED PR STAMP */}
           {activeTab === "pr" && (
             <View style={styles.prContainer}>
               <View style={[styles.prStampCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
                 <View style={styles.prStampHeader}>
                   <Text style={styles.prStampBadge}>LIFT STAMP • VERIFIED PR</Text>
-                  <Award size={14} color="#10B981" />
+                  <Award size={14} color={colors.accentGreen} />
                 </View>
                 <Text style={[styles.prMetric, { color: colors.textPrimary }]}>{athlete.prStamp?.metric ?? "225 KG"}</Text>
                 <Text style={[styles.prTitle, { color: colors.textSecondary }]}>{athlete.prStamp?.title ?? "Deadlift 1RM"} • {athlete.prStamp?.venue ?? "Metro Core Arena"}</Text>
@@ -132,8 +136,15 @@ export function AthleteProfileModal({
             </View>
           )}
         </View>
-      </ScrollView>
-    </Modal>
+          </View>
+        }
+        renderItem={({ item: url }) => (
+          <View style={styles.photoWrap}>
+            <Image source={{ uri: url }} style={styles.gridImg} accessibilityIgnoresInvertColors />
+          </View>
+        )}
+      />
+    </AppModal>
   );
 }
 
@@ -150,7 +161,7 @@ const styles = StyleSheet.create({
   avatar: { width: 80, height: 80, borderRadius: 40, borderWidth: 3 },
   onlinePill: { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "rgba(16,185,129,0.15)", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999 },
   greenDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "#10B981" },
-  onlineText: { color: "#10B981", fontSize: 10, fontWeight: "800" },
+  onlineText: { color: "#10B981", fontSize: 11, fontWeight: "800" },
   nameRow: { marginTop: 12 },
   fullNameRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   fullName: { fontSize: 20, fontWeight: "900" },
@@ -165,17 +176,16 @@ const styles = StyleSheet.create({
   metricsRow: { flexDirection: "row", justifyContent: "space-around", borderRadius: 14, paddingVertical: 14, marginTop: 16, borderWidth: 1 },
   metricItem: { alignItems: "center" },
   metricVal: { fontSize: 18, fontWeight: "900" },
-  metricLabel: { color: "#71717A", fontSize: 10, fontWeight: "700", marginTop: 2 },
+  metricLabel: { color: "#71717A", fontSize: 11, fontWeight: "700", marginTop: 2 },
   tabsHeader: { flexDirection: "row", borderBottomWidth: 1, marginTop: 16 },
   tabItem: { flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 12 },
   tabItemActive: { borderBottomWidth: 2, borderBottomColor: "#E11D48" },
-  photoGrid: { flexDirection: "row", flexWrap: "wrap", gap: 2, marginTop: 10 },
-  photoWrap: { width: "32.7%", aspectRatio: 1 },
+  photoWrap: { flex: 1, aspectRatio: 1, padding: 1 },
   gridImg: { width: "100%", height: "100%" },
   prContainer: { marginTop: 14 },
   prStampCard: { borderRadius: 14, padding: 16, borderWidth: 1 },
   prStampHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  prStampBadge: { color: "#10B981", fontSize: 10, fontWeight: "800" },
+  prStampBadge: { color: "#10B981", fontSize: 11, fontWeight: "800" },
   prMetric: { fontSize: 26, fontWeight: "900", marginTop: 6 },
   prTitle: { fontSize: 12, marginTop: 2 },
 });

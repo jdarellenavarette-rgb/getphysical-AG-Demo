@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
+import { AppModal } from "../common/AppModal";
 import { ArrowLeft, CheckCircle2, ShieldCheck } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import type { PassRow } from "sodia-core";
@@ -15,7 +16,7 @@ export function ReceiptModal({ visible, pass, onClose }: ReceiptModalProps) {
   if (!pass) return null;
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+    <AppModal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={[styles.sheetContainer, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
           {/* HEADER BAR */}
@@ -31,7 +32,7 @@ export function ReceiptModal({ visible, pass, onClose }: ReceiptModalProps) {
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
             {/* SUCCESS BANNER */}
             <View style={styles.successBanner}>
-              <CheckCircle2 size={36} color="#10B981" />
+              <CheckCircle2 size={36} color={colors.accentGreen} />
               <Text style={[styles.bannerTitle, { color: colors.textPrimary }]}>PAYMENT SETTLED</Text>
               <Text style={[styles.bannerSub, { color: colors.textMuted }]}>Immutable Sodia Ledger Record</Text>
             </View>
@@ -81,7 +82,7 @@ export function ReceiptModal({ visible, pass, onClose }: ReceiptModalProps) {
 
             {/* SECURITY WATERMARK */}
             <View style={styles.securityRow}>
-              <ShieldCheck size={14} color="#10B981" />
+              <ShieldCheck size={14} color={colors.accentGreen} />
               <Text style={styles.securityText}>Verified TOTP Dynamic Key Provisioned</Text>
             </View>
 
@@ -92,7 +93,7 @@ export function ReceiptModal({ visible, pass, onClose }: ReceiptModalProps) {
           </ScrollView>
         </View>
       </View>
-    </Modal>
+    </AppModal>
   );
 }
 

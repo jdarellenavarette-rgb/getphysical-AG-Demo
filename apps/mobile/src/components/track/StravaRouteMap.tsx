@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from "react";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
-import { WebView } from "react-native-webview";
+import { WebView, type WebViewHandle } from "../common/TypedWebView";
 import { Navigation, Maximize2 } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 
@@ -12,7 +12,7 @@ interface StravaRouteMapProps {
 
 export function StravaRouteMap({ routeCoords, currentPos, isTracking }: StravaRouteMapProps) {
   const { themeMode } = useThemeStore();
-  const webViewRef = useRef<any>(null);
+  const webViewRef = useRef<WebViewHandle>(null);
   const isLight = themeMode === "light";
   const initialPosRef = useRef(currentPos);
   const isMapReadyRef = useRef(false);

@@ -1,5 +1,7 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { FlashList } from "@shopify/flash-list";
+import { AppModal } from "../common/AppModal";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft, UserCheck, ShieldCheck, Users, Plus, CheckCircle, Sparkles } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
@@ -38,7 +40,7 @@ export function CoachQuickdashModal({ visible, onClose }: CoachQuickdashModalPro
   };
 
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+    <AppModal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         {/* TOP BAR WITH SAFE NOTCH INSET */}
         <View style={[styles.topBar, { paddingTop: Math.max(insets.top, 50) + 10, backgroundColor: colors.bgHeader, borderBottomColor: colors.borderColor }]}>
@@ -47,12 +49,20 @@ export function CoachQuickdashModal({ visible, onClose }: CoachQuickdashModalPro
             <Text style={[styles.backBtnText, { color: colors.textPrimary }]}>Back to Athlete App</Text>
           </TouchableOpacity>
           <View style={styles.badge}>
-            <Sparkles size={12} color="#3B82F6" />
+            <Sparkles size={12} color={colors.info} />
             <Text style={styles.badgeText}>COACHDASH ROSTER</Text>
           </View>
         </View>
 
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+        <FlashList
+          data={clients}
+          keyExtractor={(it) => it.id}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+          ListHeaderComponent={
+            <View>
           {/* COACH SUMMARY CARD */}
           <View style={[styles.summaryCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
             <Text style={[styles.summaryTitle, { color: colors.textPrimary }]}>Coach Floor Status • Metro Core Arena</Text>
@@ -70,7 +80,9 @@ export function CoachQuickdashModal({ visible, onClose }: CoachQuickdashModalPro
           {/* CLIENT LIST OR CLEAN EMPTY STATE */}
           <Text style={[styles.sectionHeader, { color: colors.textMuted }]}>CLIENTS ON FLOOR ({clients.length})</Text>
 
-          {clients.length === 0 ? (
+            </View>
+          }
+          ListEmptyComponent={
             <View style={[styles.emptyCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
               <Users size={32} color={colors.textMuted} />
               <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No clients detected on floor</Text>
@@ -78,9 +90,9 @@ export function CoachQuickdashModal({ visible, onClose }: CoachQuickdashModalPro
                 When your PT athletes scan through turnstiles, they will automatically appear here with floor fees split.
               </Text>
             </View>
-          ) : (
-            clients.map((c) => (
-              <View key={c.id} style={[styles.clientCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
+          }
+          renderItem={({ item: c }) => (
+            <View style={[styles.clientCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
                 <View style={styles.clientTop}>
                   <View>
                     <Text style={[styles.clientName, { color: colors.textPrimary }]}>{c.name}</Text>
@@ -93,7 +105,7 @@ export function CoachQuickdashModal({ visible, onClose }: CoachQuickdashModalPro
 
                 {/* SODIA SPLIT FEE BADGE */}
                 <View style={styles.splitFeeBox}>
-                  <ShieldCheck size={14} color="#10B981" />
+                  <ShieldCheck size={14} color={colors.accentGreen} />
                   <Text style={styles.splitFeeText}>
                     ₱{c.feeDeductedPhp} Floor Fee Deducted via Sodia Split (Venue Paid)
                   </Text>
@@ -109,11 +121,10 @@ export function CoachQuickdashModal({ visible, onClose }: CoachQuickdashModalPro
                   </TouchableOpacity>
                 </View>
               </View>
-            ))
           )}
-        </ScrollView>
+        />
       </View>
-    </Modal>
+    </AppModal>
   );
 }
 
@@ -123,7 +134,7 @@ const styles = StyleSheet.create({
   backBtn: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 44, paddingVertical: 4 },
   backBtnText: { fontSize: 13, fontWeight: "700" },
   badge: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(59, 130, 246, 0.15)", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
-  badgeText: { color: "#3B82F6", fontSize: 10, fontWeight: "800" },
+  badgeText: { color: "#3B82F6", fontSize: 11, fontWeight: "800" },
   content: { padding: 16 },
   summaryCard: { borderRadius: 12, padding: 14, marginBottom: 14, borderWidth: 1 },
   summaryTitle: { fontSize: 14, fontWeight: "800" },
@@ -139,7 +150,7 @@ const styles = StyleSheet.create({
   clientName: { fontSize: 15, fontWeight: "800" },
   clientStation: { fontSize: 12, marginTop: 2 },
   inBuildingPill: { backgroundColor: "rgba(16, 185, 129, 0.2)", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
-  inBuildingText: { color: "#10B981", fontSize: 10, fontWeight: "800" },
+  inBuildingText: { color: "#10B981", fontSize: 11, fontWeight: "800" },
   splitFeeBox: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "rgba(16, 185, 129, 0.08)", borderRadius: 8, padding: 10, marginTop: 10 },
   splitFeeText: { color: "#10B981", fontSize: 11, fontWeight: "600", flex: 1 },
   clientActions: { marginTop: 12 },

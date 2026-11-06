@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text, StyleSheet, Modal, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { AppModal } from "../common/AppModal";
 import { Compass, QrCode, X, ChevronRight, ShieldCheck } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 
@@ -19,7 +20,7 @@ export function AddMembershipChoiceModal({
   const { colors } = useThemeStore();
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <AppModal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={[styles.card, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
           <View style={styles.headerRow}>
@@ -27,7 +28,7 @@ export function AddMembershipChoiceModal({
               <Text style={[styles.title, { color: colors.textPrimary }]}>Add Membership</Text>
               <Text style={[styles.subtitle, { color: colors.textMuted }]}>Choose how you want to join a club</Text>
             </View>
-            <TouchableOpacity onPress={onClose} style={[styles.closeBtn, { backgroundColor: colors.bgCardSecondary }]}>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} style={[styles.closeBtn, { backgroundColor: colors.bgCardSecondary }]}>
               <X size={18} color={colors.textPrimary} />
             </TouchableOpacity>
           </View>
@@ -41,7 +42,7 @@ export function AddMembershipChoiceModal({
               style={[styles.optionItem, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}
             >
               <View style={[styles.iconWrap, { backgroundColor: "rgba(225,29,72,0.12)" }]}>
-                <Compass size={22} color="#E11D48" />
+                <Compass size={22} color={colors.accent} />
               </View>
               <View style={styles.optionTextWrap}>
                 <Text style={[styles.optionTitle, { color: colors.textPrimary }]}>Browse in Venues</Text>
@@ -60,7 +61,7 @@ export function AddMembershipChoiceModal({
               style={[styles.optionItem, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}
             >
               <View style={[styles.iconWrap, { backgroundColor: "rgba(16,185,129,0.12)" }]}>
-                <QrCode size={22} color="#10B981" />
+                <QrCode size={22} color={colors.accentGreen} />
               </View>
               <View style={styles.optionTextWrap}>
                 <Text style={[styles.optionTitle, { color: colors.textPrimary }]}>Scan QR Code</Text>
@@ -73,12 +74,12 @@ export function AddMembershipChoiceModal({
           </View>
 
           <View style={styles.securityRow}>
-            <ShieldCheck size={14} color="#10B981" />
+            <ShieldCheck size={14} color={colors.accentGreen} />
             <Text style={styles.securityText}>Dynamic TOTP 60s Encryption • Sodia Turnstile Gate</Text>
           </View>
         </View>
       </View>
-    </Modal>
+    </AppModal>
   );
 }
 

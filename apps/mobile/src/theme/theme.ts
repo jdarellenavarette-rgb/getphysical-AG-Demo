@@ -1,63 +1,45 @@
 import { create } from "zustand";
+import { DARK_PALETTE, LIGHT_PALETTE, type DesignPalette, type DesignThemeMode } from "sodia-core";
 
-export type ThemeMode = "dark" | "light";
+export type ThemeMode = DesignThemeMode;
 
-export interface ColorPalette {
-  mode: ThemeMode;
-  bgScreen: string;
-  bgHeader: string;
-  bgCard: string;
-  bgCardSecondary: string;
-  bgDock: string;
-  bgInput: string;
-  borderColor: string;
-  borderLight: string;
-  textPrimary: string;
-  textSecondary: string;
-  textMuted: string;
-  accent: string;
-  accentMuted: string;
-  accentGreen: string;
-  statusBarStyle: "light-content" | "dark-content";
+/**
+ * Mobile palette = sodia-core WCAG-AA design tokens + RN-only fields.
+ * Field names from the legacy palette (bgScreen, textMuted, accent...) are preserved.
+ */
+export interface ColorPalette extends DesignPalette {
+  readonly statusBarStyle: "light-content" | "dark-content";
+  /** Always-dark media scrim used for pills/badges rendered over photos & video. */
+  readonly mediaScrim: string;
+  /** Text/icon colour rendered on top of `mediaScrim` or imagery. */
+  readonly textOnMedia: string;
+  readonly textOnMediaMuted: string;
+  readonly verified: string;
 }
 
+const MEDIA_FIELDS = {
+  mediaScrim: "rgba(9, 9, 11, 0.82)",
+  textOnMedia: "#FAFAFA",
+  textOnMediaMuted: "#D4D4D8",
+} as const;
+
 export const darkTheme: ColorPalette = {
-  mode: "dark",
-  bgScreen: "#09090B",
-  bgHeader: "#09090B",
-  bgCard: "#141418",
-  bgCardSecondary: "#18181B",
-  bgDock: "#16161A",
-  bgInput: "#18181B",
-  borderColor: "#27272A",
-  borderLight: "#202026",
-  textPrimary: "#FAFAFA",
-  textSecondary: "#A1A1AA",
-  textMuted: "#71717A",
-  accent: "#E11D48",
-  accentMuted: "rgba(225, 29, 72, 0.15)",
-  accentGreen: "#10B981",
+  ...DARK_PALETTE,
+  ...MEDIA_FIELDS,
   statusBarStyle: "light-content",
+  verified: "#38BDF8",
 };
 
 export const lightTheme: ColorPalette = {
-  mode: "light",
-  bgScreen: "#F4F4F5",
-  bgHeader: "#FFFFFF",
-  bgCard: "#FFFFFF",
-  bgCardSecondary: "#F8FAFC",
-  bgDock: "#FFFFFF",
-  bgInput: "#E4E4E7",
-  borderColor: "#E2E8F0",
-  borderLight: "#F1F5F9",
-  textPrimary: "#09090B",
-  textSecondary: "#475569",
-  textMuted: "#64748B",
-  accent: "#E11D48",
-  accentMuted: "rgba(225, 29, 72, 0.1)",
-  accentGreen: "#059669",
+  ...LIGHT_PALETTE,
+  ...MEDIA_FIELDS,
   statusBarStyle: "dark-content",
+  verified: "#0284C7",
 };
+
+export function paletteForMode(mode: ThemeMode): ColorPalette {
+  return mode === "light" ? lightTheme : darkTheme;
+}
 
 interface ThemeState {
   themeMode: ThemeMode;
@@ -69,17 +51,15 @@ interface ThemeState {
 export const useThemeStore = create<ThemeState>((set) => ({
   themeMode: "light",
   colors: lightTheme,
-  setThemeMode: (mode) =>
-    set({
-      themeMode: mode,
-      colors: mode === "light" ? lightTheme : darkTheme,
-    }),
+  setThemeMode: (mode) => set({ themeMode: mode, colors: paletteForMode(mode) }),
   toggleTheme: () =>
     set((state) => {
-      const nextMode = state.themeMode === "light" ? "dark" : "light";
-      return {
-        themeMode: nextMode,
-        colors: nextMode === "light" ? lightTheme : darkTheme,
-      };
+      const nextMode: ThemeMode = state.themeMode === "light" ? "dark" : "light";
+      return { themeMode: nextMode, colors: paletteForMode(nextMode) };
     }),
 }));
+
+/** Selector hook — subscribes only to the palette. */
+export function useColors(): ColorPalette {
+  return useThemeStore((s) => s.colors);
+}

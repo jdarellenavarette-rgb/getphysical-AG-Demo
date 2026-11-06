@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView, Image } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image } from "react-native";
+import { AppModal } from "./AppModal";
 import { X, Home, Compass, Dumbbell, CreditCard, RefreshCw, Database, Settings as SettingsIcon, ChevronRight } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { useThemeStore } from "../../theme/theme";
@@ -30,13 +31,13 @@ export function MenuDrawerModal({
   const { colors } = useThemeStore();
 
   return (
-    <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
+    <AppModal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={[styles.drawerContainer, { backgroundColor: colors.bgCard, borderRightColor: colors.borderColor }]}>
           {/* TOP DRAWER HEADER */}
           <View style={[styles.header, { borderBottomColor: colors.borderColor }]}>
             <Text style={[styles.headerTitle, { color: colors.textMuted }]}>NAVIGATION & MENU</Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Close menu" onPress={onClose} style={styles.closeBtn}>
               <X size={20} color={colors.textPrimary} />
             </TouchableOpacity>
           </View>
@@ -163,7 +164,7 @@ export function MenuDrawerModal({
               }}
               style={[styles.toolBtn, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}
             >
-              <RefreshCw size={16} color="#EC4899" />
+              <RefreshCw size={16} color={colors.accentText} />
               <View style={styles.toolTextWrap}>
                 <Text style={[styles.toolTitle, { color: colors.textPrimary }]}>Reset to Empty State</Text>
                 <Text style={[styles.toolDesc, { color: colors.textMuted }]}>Clear active passes, workouts & posts</Text>
@@ -177,7 +178,7 @@ export function MenuDrawerModal({
               }}
               style={[styles.toolBtn, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}
             >
-              <Database size={16} color="#3B82F6" />
+              <Database size={16} color={colors.info} />
               <View style={styles.toolTextWrap}>
                 <Text style={[styles.toolTitle, { color: colors.textPrimary }]}>Load Demo Seed Data</Text>
                 <Text style={[styles.toolDesc, { color: colors.textMuted }]}>Populate 3 feed posts & BGC passes</Text>
@@ -186,7 +187,7 @@ export function MenuDrawerModal({
           </ScrollView>
         </View>
       </View>
-    </Modal>
+    </AppModal>
   );
 }
 
@@ -203,15 +204,15 @@ const styles = StyleSheet.create({
   userName: { fontSize: 15, fontWeight: "800" },
   userHandle: { fontSize: 11, marginTop: 1 },
   activeRoleBadge: { backgroundColor: "rgba(225, 29, 72, 0.15)", alignSelf: "flex-start", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginTop: 4 },
-  activeRoleText: { color: "#E11D48", fontSize: 9, fontWeight: "800" },
-  sectionHeader: { fontSize: 10, fontWeight: "800", letterSpacing: 0.8, marginBottom: 8, marginTop: 10 },
+  activeRoleText: { color: "#E11D48", fontSize: 11, fontWeight: "800" },
+  sectionHeader: { fontSize: 11, fontWeight: "800", letterSpacing: 0.8, marginBottom: 8, marginTop: 10 },
   navItem: { flexDirection: "row", alignItems: "center", borderRadius: 12, padding: 12, marginBottom: 8, borderWidth: 1 },
   navIconWrap: { width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center" },
   navTextWrap: { flex: 1, marginLeft: 10 },
   navTitle: { fontSize: 13, fontWeight: "700" },
-  navSubtitle: { fontSize: 10, marginTop: 1 },
+  navSubtitle: { fontSize: 11, marginTop: 1 },
   toolBtn: { flexDirection: "row", alignItems: "center", borderRadius: 12, padding: 12, marginBottom: 8, borderWidth: 1 },
   toolTextWrap: { flex: 1, marginLeft: 10 },
   toolTitle: { fontSize: 12, fontWeight: "700" },
-  toolDesc: { fontSize: 10, marginTop: 1 },
+  toolDesc: { fontSize: 11, marginTop: 1 },
 });

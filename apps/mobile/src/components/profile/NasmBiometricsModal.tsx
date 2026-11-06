@@ -1,16 +1,7 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Modal,
-  ScrollView,
-  TextInput,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-} from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, TextInput, KeyboardAvoidingView, Platform } from "react-native";
+import { AppModal } from "../common/AppModal";
+import { toast } from "../../feedback/toastStore";
 import { X, Sparkles, Calculator, Check, ArrowRight, HeartPulse, Scale, Flame } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import { useTrackingStore, type UserBiometrics } from "../../store/trackingStore";
@@ -67,12 +58,12 @@ export function NasmBiometricsModal({ visible, onClose }: NasmBiometricsModalPro
       { age: numAge, gender, heightCm: numHeight, weightKg: numWeight, activityLevel: activity, goal, bmr, tdee, bmi },
       { calories: targetCalories, protein: targetProtein, carbs: targetCarbs, fat: targetFat, hydration: +(numWeight * 0.038).toFixed(1) }
     );
-    Alert.alert("NASM Targets Synced!", `Daily Targets: ${targetCalories} kcal (P: ${targetProtein}g • C: ${targetCarbs}g • F: ${targetFat}g)`);
+    toast.success("Targets updated", `${targetCalories} kcal • P ${targetProtein}g • C ${targetCarbs}g • F ${targetFat}g`);
     onClose();
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <AppModal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView
         style={styles.overlay}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -80,10 +71,10 @@ export function NasmBiometricsModal({ visible, onClose }: NasmBiometricsModalPro
         <View style={[styles.sheetCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
           <View style={styles.header}>
             <View style={styles.badgeRow}>
-              <Calculator size={16} color="#E11D48" />
+              <Calculator size={16} color={colors.accent} />
               <Text style={styles.badgeText}>NASM BODY COMP & TARGETS</Text>
             </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}><X size={20} color={colors.textMuted} /></TouchableOpacity>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} style={styles.closeBtn}><X size={20} color={colors.textMuted} /></TouchableOpacity>
           </View>
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
@@ -92,9 +83,9 @@ export function NasmBiometricsModal({ visible, onClose }: NasmBiometricsModalPro
               <Text style={[styles.hudTitle, { color: colors.textMuted }]}>RECOMMENDED ATHLETIC TARGET</Text>
               <Text style={styles.hudCalories}>{targetCalories} <Text style={styles.hudKcal}>KCAL/DAY</Text></Text>
               <View style={styles.macrosSplitRow}>
-                <View style={styles.macroPill}><Text style={[styles.macroPillVal, { color: "#3B82F6" }]}>{targetProtein}g</Text><Text style={styles.macroPillLabel}>Protein</Text></View>
-                <View style={styles.macroPill}><Text style={[styles.macroPillVal, { color: "#10B981" }]}>{targetCarbs}g</Text><Text style={styles.macroPillLabel}>Carbs</Text></View>
-                <View style={styles.macroPill}><Text style={[styles.macroPillVal, { color: "#F59E0B" }]}>{targetFat}g</Text><Text style={styles.macroPillLabel}>Fats</Text></View>
+                <View style={styles.macroPill}><Text style={[styles.macroPillVal, { color: colors.info }]}>{targetProtein}g</Text><Text style={styles.macroPillLabel}>Protein</Text></View>
+                <View style={styles.macroPill}><Text style={[styles.macroPillVal, { color: colors.accentGreen }]}>{targetCarbs}g</Text><Text style={styles.macroPillLabel}>Carbs</Text></View>
+                <View style={styles.macroPill}><Text style={[styles.macroPillVal, { color: colors.warning }]}>{targetFat}g</Text><Text style={styles.macroPillLabel}>Fats</Text></View>
               </View>
               <Text style={[styles.hudMeta, { color: colors.textMuted }]}>BMR: {bmr} kcal • TDEE: {tdee} kcal • BMI: {bmi}</Text>
             </View>
@@ -152,7 +143,7 @@ export function NasmBiometricsModal({ visible, onClose }: NasmBiometricsModalPro
           </ScrollView>
         </View>
       </KeyboardAvoidingView>
-    </Modal>
+    </AppModal>
   );
 }
 
@@ -165,18 +156,18 @@ const styles = StyleSheet.create({
   closeBtn: { minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" },
   content: { paddingBottom: 24 },
   targetHud: { borderRadius: 16, padding: 16, alignItems: "center", borderWidth: 1, marginBottom: 16 },
-  hudTitle: { fontSize: 10, fontWeight: "800", letterSpacing: 0.6 },
+  hudTitle: { fontSize: 11, fontWeight: "800", letterSpacing: 0.6 },
   hudCalories: { fontSize: 36, fontWeight: "900", color: "#E11D48", marginVertical: 4 },
   hudKcal: { fontSize: 12, fontWeight: "800", color: "#E11D48" },
   macrosSplitRow: { flexDirection: "row", gap: 18, marginTop: 6 },
   macroPill: { alignItems: "center" },
   macroPillVal: { fontSize: 16, fontWeight: "900" },
-  macroPillLabel: { fontSize: 10, color: "#8E8E93", fontWeight: "700" },
+  macroPillLabel: { fontSize: 11, color: "#8E8E93", fontWeight: "700" },
   hudMeta: { fontSize: 11, marginTop: 10, fontWeight: "600" },
   labelTitle: { fontSize: 13, fontWeight: "800", marginBottom: 8 },
   inputsGrid: { flexDirection: "row", gap: 10, marginBottom: 10 },
   inputCol: { flex: 1 },
-  fieldLabel: { fontSize: 10, fontWeight: "700", marginBottom: 4 },
+  fieldLabel: { fontSize: 11, fontWeight: "700", marginBottom: 4 },
   inputBox: { height: 42, borderRadius: 10, borderWidth: 1, textAlign: "center", fontSize: 14, fontWeight: "800" },
   genderRow: { flexDirection: "row", gap: 10, marginBottom: 10 },
   genderBtn: { flex: 1, paddingVertical: 10, borderRadius: 10, borderWidth: 1, alignItems: "center" },

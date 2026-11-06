@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Modal } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { AppModal } from "../common/AppModal";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft, QrCode, ShieldCheck, RefreshCw } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
@@ -35,7 +36,7 @@ export function TurnstileQRModal({ visible, onClose, facilityName = "Metro Core 
   }, [visible]);
 
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+    <AppModal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         {/* TOP BAR */}
         <View style={[styles.topBar, { paddingTop: Math.max(insets.top, 50) + 10, backgroundColor: colors.bgHeader, borderBottomColor: colors.borderColor }]}>
@@ -62,14 +63,14 @@ export function TurnstileQRModal({ visible, onClose, facilityName = "Metro Core 
             <QrCode size={190} color="#09090B" />
             <Text style={styles.tokenText}>{totpToken}</Text>
             <View style={styles.timerRow}>
-              <RefreshCw size={12} color="#10B981" />
+              <RefreshCw size={12} color={colors.accentGreen} />
               <Text style={styles.timerText}>Refreshes in {secondsRemaining}s</Text>
             </View>
           </View>
 
           {/* SECURITY NOTICE */}
           <View style={styles.securityBox}>
-            <ShieldCheck size={16} color="#10B981" />
+            <ShieldCheck size={16} color={colors.accentGreen} />
             <Text style={styles.securityText}>
               Screenshots are disabled. Dynamic 60-second rolling token protects against pass-sharing.
             </Text>
@@ -80,7 +81,7 @@ export function TurnstileQRModal({ visible, onClose, facilityName = "Metro Core 
           </TouchableOpacity>
         </View>
       </View>
-    </Modal>
+    </AppModal>
   );
 }
 

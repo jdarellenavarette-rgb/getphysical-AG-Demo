@@ -1,21 +1,13 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  Image,
-  StyleSheet,
-  Modal,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-} from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
+import { haptics } from "../../lib/haptics";
+import { toast } from "../../feedback/toastStore";
+import { AppModal } from "../common/AppModal";
 import { X, MapPin, Award, Check } from "lucide-react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { useThemeStore } from "../../theme/theme";
-import { SODIA_FIELD_LIMITS } from "sodia-core";
+import { SODIA_FIELD_LIMITS, postCaptionSchema } from "sodia-core";
 import { PostMediaAttachmentBar } from "./PostMediaAttachmentBar";
 
 interface CreatePostModalProps {
@@ -25,19 +17,10 @@ interface CreatePostModalProps {
   defaultMode?: "post" | "status";
 }
 
-const BG_GRADIENTS = [
-  { id: "carbon", color: "#18181B" },
-  { id: "crimson", color: "#BE123C" },
-  { id: "emerald", color: "#047857" },
-  { id: "indigo", color: "#4338CA" },
-];
+/** Status-card backgrounds (all pass AA with white text). */
+const BG_GRADIENTS = [{ id: "carbon", color: "#18181B" }, { id: "crimson", color: "#BE123C" }, { id: "emerald", color: "#047857" }, { id: "indigo", color: "#4338CA" }];
 
-export function CreatePostModal({
-  visible,
-  onClose,
-  onOpenStoryCamera,
-  defaultMode = "post",
-}: CreatePostModalProps) {
+export function CreatePostModal({ visible, onClose, onOpenStoryCamera, defaultMode = "post" }: CreatePostModalProps) {
   const { profile, facilities, addPost } = useEcosystemStore();
   const { colors } = useThemeStore();
   const [activeTab, setActiveTab] = useState<"post" | "status">(defaultMode);
@@ -52,6 +35,10 @@ export function CreatePostModal({
 
   const selectedFac = facilities.find((f) => f.id === selectedFacilityId);
   const remainingChars = SODIA_FIELD_LIMITS.POST_CAPTION_MAX_CHARS - caption.length;
+  const captionCheck = postCaptionSchema.safeParse(caption);
+  const captionError = captionCheck.success ? null : (captionCheck.error.issues[0]?.message ?? "Caption is too long");
+  const canPublish = (caption.trim().length > 0 || !!attachedMediaUri) && captionError === null;
+  const counterColor = remainingChars < 0 ? colors.danger : remainingChars <= 20 ? colors.warning : colors.textMuted;
 
   const handleTakePhoto = async () => {
     try {
@@ -93,7 +80,7 @@ export function CreatePostModal({
   };
 
   const handlePublish = () => {
-    if (!caption.trim() && !attachedMediaUri) return;
+    if (!canPublish) return;
     if (activeTab === "status") {
       addPost(caption.trim(), selectedFacilityId ?? undefined, undefined, null);
     } else {
@@ -105,18 +92,20 @@ export function CreatePostModal({
       );
     }
     setCaption("");
+    haptics.success();
+    toast.success("Posted to Sodia");
     onClose();
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <AppModal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView
         style={styles.overlay}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <View style={[styles.container, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
           <View style={[styles.header, { borderBottomColor: colors.borderColor }]}>
-            <TouchableOpacity onPress={onClose} style={styles.cancelBtn}><Text style={[styles.cancelText, { color: colors.textMuted }]}>Cancel</Text></TouchableOpacity>
+            <TouchableOpacity onPress={onClose} style={styles.cancelBtn} accessibilityRole="button"><Text style={[styles.cancelText, { color: colors.textMuted }]}>Cancel</Text></TouchableOpacity>
             <View style={[styles.modeTabs, { backgroundColor: colors.bgInput }]}>
               <TouchableOpacity onPress={() => setActiveTab("post")} style={[styles.modeTab, activeTab === "post" && { backgroundColor: colors.bgCard }]}>
                 <Text style={[styles.modeTabText, { color: activeTab === "post" ? colors.textPrimary : colors.textMuted }]}>Post</Text>
@@ -125,10 +114,10 @@ export function CreatePostModal({
                 <Text style={[styles.modeTabText, { color: activeTab === "status" ? colors.textPrimary : colors.textMuted }]}>Status</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => { onClose(); onOpenStoryCamera?.(); }} style={styles.modeTab}>
-                <Text style={[styles.modeTabText, { color: "#E11D48" }]}>Story 📷</Text>
+                <Text style={[styles.modeTabText, { color: colors.accent }]}>Story 📷</Text>
               </TouchableOpacity>
             </View>
-            <TouchableOpacity onPress={handlePublish} disabled={(!caption.trim() && !attachedMediaUri) || remainingChars < 0} style={[styles.publishBtn, (!caption.trim() && !attachedMediaUri) && styles.publishBtnDisabled]}>
+            <TouchableOpacity onPress={handlePublish} disabled={!canPublish} style={[styles.publishBtn, !canPublish && styles.publishBtnDisabled]} accessibilityRole="button" accessibilityLabel="Publish post" accessibilityState={{ disabled: !canPublish }}>
               <Text style={styles.publishText}>Post</Text>
             </TouchableOpacity>
           </View>
@@ -151,34 +140,41 @@ export function CreatePostModal({
                   multiline
                   value={caption}
                   onChangeText={setCaption}
-                  maxLength={SODIA_FIELD_LIMITS.POST_CAPTION_MAX_CHARS}
+                  accessibilityLabel="Caption"
+                  accessibilityHint={`Up to ${SODIA_FIELD_LIMITS.POST_CAPTION_MAX_CHARS} characters`}
                 />
+                <View style={styles.counterRow}>
+                  {captionError ? <Text style={[styles.counterError, { color: colors.danger }]} accessibilityLiveRegion="polite">{captionError}</Text> : <View />}
+                  <Text style={[styles.counter, { color: counterColor }]} accessibilityLabel={`${remainingChars} characters remaining`}>
+                    {remainingChars}
+                  </Text>
+                </View>
                 {attachedMediaUri && (
                   <View style={styles.mediaPreviewCard}>
                     <Image source={{ uri: attachedMediaUri }} style={styles.previewImage} />
                     <View style={styles.mediaKindBadge}><Text style={styles.mediaKindText}>{mediaKind.toUpperCase()}</Text></View>
-                    <TouchableOpacity onPress={() => setAttachedMediaUri(null)} style={styles.removeMediaBtn}><X size={14} color="#FFF" /></TouchableOpacity>
+                    <TouchableOpacity onPress={() => setAttachedMediaUri(null)} style={styles.removeMediaBtn} hitSlop={10} accessibilityRole="button" accessibilityLabel="Remove attached media"><X size={14} color="#FFF" /></TouchableOpacity>
                   </View>
                 )}
                 <PostMediaAttachmentBar onTakePhoto={handleTakePhoto} onRecordVideo={handleRecordVideo} onPickLibrary={handlePickLibrary} />
                 {hasStampAttached && (
                   <View style={styles.stampCard}>
-                    <Award size={16} color="#10B981" />
+                    <Award size={16} color={colors.accentGreen} />
                     <View style={{ flex: 1, marginLeft: 8 }}>
                       <Text style={styles.stampTitle}>VERIFIED LIFT STAMP</Text>
                       <Text style={[styles.stampVal, { color: colors.textPrimary }]}>Conventional Deadlift: 225 kg x 1 rep</Text>
                     </View>
-                    <TouchableOpacity onPress={() => setHasStampAttached(false)}><X size={15} color={colors.textMuted} /></TouchableOpacity>
+                    <TouchableOpacity accessibilityRole="button" accessibilityLabel="Remove PR stamp" hitSlop={14} onPress={() => setHasStampAttached(false)}><X size={15} color={colors.textMuted} /></TouchableOpacity>
                   </View>
                 )}
                 {selectedFac && (
                   <View style={styles.venueCard}>
-                    <MapPin size={16} color="#E11D48" />
+                    <MapPin size={16} color={colors.accent} />
                     <View style={{ flex: 1, marginLeft: 8 }}>
                       <Text style={[styles.venueName, { color: colors.textPrimary }]}>{selectedFac.name}</Text>
                       <Text style={styles.venueSub}>Auto-attaches Drop-in POS Pill (₱{selectedFac.day_pass_price_php})</Text>
                     </View>
-                    <TouchableOpacity onPress={() => setSelectedFacilityId(null)}><X size={15} color={colors.textMuted} /></TouchableOpacity>
+                    <TouchableOpacity accessibilityRole="button" accessibilityLabel="Remove venue tag" hitSlop={14} onPress={() => setSelectedFacilityId(null)}><X size={15} color={colors.textMuted} /></TouchableOpacity>
                   </View>
                 )}
               </>
@@ -191,7 +187,7 @@ export function CreatePostModal({
                 </View>
                 <View style={styles.paletteRow}>
                   {BG_GRADIENTS.map((bg) => (
-                    <TouchableOpacity key={bg.id} onPress={() => setSelectedBgColor(bg.color)} style={[styles.colorDot, { backgroundColor: bg.color }, selectedBgColor === bg.color && styles.colorDotActive]}>
+                    <TouchableOpacity accessibilityRole="button" accessibilityLabel="Background colour" key={bg.id} onPress={() => setSelectedBgColor(bg.color)} style={[styles.colorDot, { backgroundColor: bg.color }, selectedBgColor === bg.color && styles.colorDotActive]}>
                       {selectedBgColor === bg.color && <Check size={12} color="#FFFFFF" strokeWidth={3} />}
                     </TouchableOpacity>
                   ))}
@@ -201,7 +197,7 @@ export function CreatePostModal({
           </ScrollView>
         </View>
       </KeyboardAvoidingView>
-    </Modal>
+    </AppModal>
   );
 }
 
@@ -224,13 +220,16 @@ const styles = StyleSheet.create({
   authorName: { fontSize: 14, fontWeight: "800" },
   privacyPill: { color: "#10B981", fontSize: 11, marginTop: 2, fontWeight: "600" },
   captionInput: { fontSize: 15, minHeight: 65, textAlignVertical: "top", lineHeight: 22 },
+  counterRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
+  counter: { fontSize: 12, fontWeight: "800", fontVariant: ["tabular-nums"] },
+  counterError: { fontSize: 12, flex: 1 },
   mediaPreviewCard: { width: "100%", height: 160, borderRadius: 14, overflow: "hidden", position: "relative", marginVertical: 8 },
   previewImage: { width: "100%", height: "100%" },
   mediaKindBadge: { position: "absolute", top: 8, left: 8, backgroundColor: "rgba(0,0,0,0.7)", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-  mediaKindText: { color: "#FFF", fontSize: 9, fontWeight: "800" },
+  mediaKindText: { color: "#FFF", fontSize: 11, fontWeight: "800" },
   removeMediaBtn: { position: "absolute", top: 8, right: 8, width: 24, height: 24, borderRadius: 12, backgroundColor: "rgba(0,0,0,0.75)", justifyContent: "center", alignItems: "center" },
   stampCard: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(16, 185, 129, 0.12)", borderWidth: 1, borderColor: "rgba(16, 185, 129, 0.3)", borderRadius: 12, padding: 12, marginVertical: 6 },
-  stampTitle: { color: "#10B981", fontSize: 10, fontWeight: "800" },
+  stampTitle: { color: "#10B981", fontSize: 11, fontWeight: "800" },
   stampVal: { fontSize: 12, fontWeight: "700", marginTop: 2 },
   venueCard: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(225, 29, 72, 0.1)", borderWidth: 1, borderColor: "rgba(225, 29, 72, 0.25)", borderRadius: 12, padding: 12, marginVertical: 6 },
   venueName: { fontSize: 13, fontWeight: "800" },

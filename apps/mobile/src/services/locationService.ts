@@ -1,4 +1,5 @@
 import * as Location from "expo-location";
+import { z } from "zod";
 
 export interface UserCoordinates {
   latitude: number;
@@ -14,6 +15,48 @@ export const DEFAULT_BGC_COORDS: UserCoordinates = {
   isSimulated: true,
   addressLabel: "Bonifacio Global City, Taguig",
 };
+
+export type LocationPermission = "granted" | "denied" | "undetermined";
+
+export interface LocationResult {
+  readonly coords: UserCoordinates;
+  readonly permission: LocationPermission;
+  readonly canAskAgain: boolean;
+}
+
+/** Requests foreground location and reports the permission outcome (drives `permission_denied`). */
+export async function requestUserLocation(): Promise<LocationResult> {
+  try {
+    const perm = await Location.requestForegroundPermissionsAsync();
+    if (perm.status !== "granted") {
+      return { coords: DEFAULT_BGC_COORDS, permission: perm.status === "denied" ? "denied" : "undetermined", canAskAgain: perm.canAskAgain };
+    }
+    return { coords: await requestAndFetchUserLocation(), permission: "granted", canAskAgain: true };
+  } catch {
+    return { coords: DEFAULT_BGC_COORDS, permission: "denied", canAskAgain: false };
+  }
+}
+
+/** Spec 3.6: manual seed must be a 4-digit PH postal code or a plausible city name. */
+export const locationSeedSchema = z
+  .string()
+  .trim()
+  .min(2, "Enter a city or 4-digit ZIP code")
+  .max(60, "That's too long for a city name")
+  .refine((v) => /^\d{4}$/.test(v) || /^[A-Za-zÀ-ÿñÑ .'-]{2,}$/.test(v), "Use a 4-digit PH ZIP code or a city name");
+
+/** Forward-geocodes a validated City/ZIP seed into map coordinates. */
+export async function geocodeLocationSeed(seed: string): Promise<UserCoordinates | null> {
+  const query = `${seed.trim()}, Philippines`;
+  try {
+    const results = await Location.geocodeAsync(query);
+    const first = results[0];
+    if (!first) return null;
+    return { latitude: first.latitude, longitude: first.longitude, isSimulated: true, addressLabel: seed.trim() };
+  } catch {
+    return null;
+  }
+}
 
 export async function requestAndFetchUserLocation(): Promise<UserCoordinates> {
   try {

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView, Switch } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Switch } from "react-native";
+import { AppModal } from "./AppModal";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft, Watch, Shield, Smartphone, Briefcase, UserCheck, Calendar, ChevronRight, Moon, Sun } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
@@ -29,7 +30,7 @@ export function SettingsModal({
   const [pushNotifications, setPushNotifications] = useState(true);
 
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+    <AppModal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         {/* TOP BAR */}
         <View style={[styles.topBar, { paddingTop: Math.max(insets.top, 50) + 10, borderBottomColor: colors.borderColor, backgroundColor: colors.bgHeader }]}>
@@ -45,7 +46,7 @@ export function SettingsModal({
           {/* THEME & APPEARANCE */}
           <View style={[styles.card, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
             <View style={styles.cardTitleRow}>
-              {themeMode === "dark" ? <Moon size={15} color="#6366F1" /> : <Sun size={15} color="#F59E0B" />}
+              {themeMode === "dark" ? <Moon size={15} color="#6366F1" /> : <Sun size={15} color={colors.warning} />}
               <Text style={styles.cardHeader}>APPEARANCE & THEME</Text>
             </View>
             <View style={[styles.themeToggleRow, { backgroundColor: colors.bgInput }]}>
@@ -82,7 +83,7 @@ export function SettingsModal({
           {/* WEARABLE SENSORS */}
           <View style={[styles.card, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
             <View style={styles.cardTitleRow}>
-              <Watch size={15} color="#EC4899" />
+              <Watch size={15} color={colors.accentText} />
               <Text style={styles.cardHeader}>WEARABLE SENSORS</Text>
             </View>
             <View style={[styles.switchRow, { borderBottomColor: colors.borderLight }]}>
@@ -90,21 +91,21 @@ export function SettingsModal({
                 <Text style={[styles.switchTitle, { color: colors.textPrimary }]}>Apple Health / Health Connect</Text>
                 <Text style={styles.switchSub}>Sync resting HR, active kcal & GPS runs</Text>
               </View>
-              <Switch value={appleHealthSync} onValueChange={setAppleHealthSync} thumbColor={appleHealthSync ? "#EC4899" : "#71717A"} trackColor={{ false: "#27272A", true: "rgba(236,72,153,0.4)" }} />
+              <Switch value={appleHealthSync} onValueChange={setAppleHealthSync} thumbColor={appleHealthSync ? colors.accentText : colors.textMuted} trackColor={{ false: "#27272A", true: "rgba(236,72,153,0.4)" }} />
             </View>
             <View style={[styles.switchRow, { borderBottomColor: colors.borderLight }]}>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.switchTitle, { color: colors.textPrimary }]}>Garmin Connect / Whoop 4.0</Text>
                 <Text style={styles.switchSub}>BLE strain & recovery telemetry</Text>
               </View>
-              <Switch value={garminSync} onValueChange={setGarminSync} thumbColor={garminSync ? "#EC4899" : "#71717A"} trackColor={{ false: "#27272A", true: "rgba(236,72,153,0.4)" }} />
+              <Switch value={garminSync} onValueChange={setGarminSync} thumbColor={garminSync ? colors.accentText : colors.textMuted} trackColor={{ false: "#27272A", true: "rgba(236,72,153,0.4)" }} />
             </View>
           </View>
 
           {/* SECURITY & ACCESS */}
           <View style={[styles.card, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
             <View style={styles.cardTitleRow}>
-              <Shield size={15} color="#10B981" />
+              <Shield size={15} color={colors.accentGreen} />
               <Text style={styles.cardHeader}>SECURITY & ACCESS</Text>
             </View>
             <View style={[styles.switchRow, { borderBottomColor: colors.borderLight }]}>
@@ -112,41 +113,41 @@ export function SettingsModal({
                 <Text style={[styles.switchTitle, { color: colors.textPrimary }]}>Biometric Pass Authorization</Text>
                 <Text style={styles.switchSub}>Require FaceID to display turnstile TOTP</Text>
               </View>
-              <Switch value={biometricsEnabled} onValueChange={setBiometricsEnabled} thumbColor={biometricsEnabled ? "#10B981" : "#71717A"} trackColor={{ false: "#27272A", true: "rgba(16,185,129,0.4)" }} />
+              <Switch value={biometricsEnabled} onValueChange={setBiometricsEnabled} thumbColor={biometricsEnabled ? colors.accentGreen : colors.textMuted} trackColor={{ false: "#27272A", true: "rgba(16,185,129,0.4)" }} />
             </View>
           </View>
 
           {/* CONCEALED BUSINESS WORKSPACES */}
           <View style={[styles.card, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
             <View style={styles.cardTitleRow}>
-              <Briefcase size={15} color="#71717A" />
+              <Briefcase size={15} color={colors.textMuted} />
               <Text style={styles.cardHeader}>BUSINESS WORKSPACES (OPERATOR ACCESS)</Text>
             </View>
             <TouchableOpacity onPress={() => { onClose(); onOpenStaffDash?.(); }} style={[styles.roleSubRow, { borderBottomColor: colors.borderLight }]}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                <Briefcase size={14} color="#10B981" />
+                <Briefcase size={14} color={colors.accentGreen} />
                 <Text style={[styles.roleSubTitle, { color: colors.textPrimary }]}>Staff Turnstile Scanner</Text>
               </View>
-              <ChevronRight size={14} color="#71717A" />
+              <ChevronRight size={14} color={colors.textMuted} />
             </TouchableOpacity>
             <TouchableOpacity onPress={() => { onClose(); onOpenCoachDash?.(); }} style={[styles.roleSubRow, { borderBottomColor: colors.borderLight }]}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                <UserCheck size={14} color="#3B82F6" />
+                <UserCheck size={14} color={colors.info} />
                 <Text style={[styles.roleSubTitle, { color: colors.textPrimary }]}>Coach Floor Roster & Split</Text>
               </View>
-              <ChevronRight size={14} color="#71717A" />
+              <ChevronRight size={14} color={colors.textMuted} />
             </TouchableOpacity>
             <TouchableOpacity onPress={() => { onClose(); onOpenOrganizer?.(); }} style={[styles.roleSubRow, { borderBottomColor: colors.borderLight }]}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                <Calendar size={14} color="#F59E0B" />
+                <Calendar size={14} color={colors.warning} />
                 <Text style={[styles.roleSubTitle, { color: colors.textPrimary }]}>Tournament Organizer Portal</Text>
               </View>
-              <ChevronRight size={14} color="#71717A" />
+              <ChevronRight size={14} color={colors.textMuted} />
             </TouchableOpacity>
           </View>
         </ScrollView>
       </View>
-    </Modal>
+    </AppModal>
   );
 }
 
@@ -159,7 +160,7 @@ const styles = StyleSheet.create({
   scrollContent: { padding: 16, paddingBottom: 60, gap: 14 },
   card: { borderRadius: 16, padding: 16, borderWidth: 1 },
   cardTitleRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 12 },
-  cardHeader: { color: "#71717A", fontSize: 10, fontWeight: "800", letterSpacing: 0.8 },
+  cardHeader: { color: "#71717A", fontSize: 11, fontWeight: "800", letterSpacing: 0.8 },
   themeToggleRow: { flexDirection: "row", backgroundColor: "#27272A", borderRadius: 10, padding: 3, gap: 4, marginTop: 4 },
   themeOptionBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 8, borderRadius: 8 },
   themeOptionBtnActive: { backgroundColor: "#E11D48" },

@@ -1,5 +1,7 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, TextInput } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, TextInput } from "react-native";
+import { FlashList } from "@shopify/flash-list";
+import { StateCard } from "../states/StateCard";
 import { Award, Dumbbell, Flame, Plus, ChevronRight, BookOpen } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import { useTrackingStore, type LiftSession, type ProgramDay, type ProgramExercise } from "../../store/trackingStore";
@@ -30,11 +32,18 @@ export function LiftLaunchpadView({
   };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.bgScreen }]} contentContainerStyle={styles.emptyContent}>
+    <View style={[styles.flex, { backgroundColor: colors.bgScreen }]}>
+      <FlashList
+        data={liftSessions}
+        keyExtractor={(sess) => sess.id}
+        contentContainerStyle={styles.listContent}
+        keyboardShouldPersistTaps="handled"
+        ListHeaderComponent={
+          <View>
       <View style={styles.prHeaderRow}>
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Personal Bests (1RM)</Text>
         <View style={styles.verifiedTrophyPill}>
-          <Award size={13} color="#10B981" />
+          <Award size={13} color={colors.accentGreen} />
           <Text style={styles.verifiedTrophyText}>VERIFIED</Text>
         </View>
       </View>
@@ -56,7 +65,7 @@ export function LiftLaunchpadView({
       </View>
 
       <View style={[styles.launchpadCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
-        <Dumbbell size={28} color="#E11D48" style={{ marginBottom: 6 }} />
+        <Dumbbell size={28} color={colors.accent} style={{ marginBottom: 6 }} />
         <Text style={[styles.launchpadTitle, { color: colors.textPrimary }]}>Quick Strength Session</Text>
         <TextInput
           style={[styles.customRoutineInput, { backgroundColor: colors.bgCardSecondary, color: colors.textPrimary, borderColor: colors.borderColor }]}
@@ -65,7 +74,7 @@ export function LiftLaunchpadView({
           placeholder="Routine Title (e.g. Heavy Squat & Pull)"
           placeholderTextColor={colors.textMuted}
         />
-        <TouchableOpacity onPress={() => onStartTraining()} style={styles.startWorkoutButton}>
+        <TouchableOpacity onPress={() => onStartTraining()} style={styles.startWorkoutButton} accessibilityRole="button">
           <Flame size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
           <Text style={styles.startWorkoutText}>Start Heavy Session</Text>
         </TouchableOpacity>
@@ -74,33 +83,39 @@ export function LiftLaunchpadView({
       {/* Training Programs Vault */}
       <View style={styles.programsSectionHeader}>
         <View style={styles.headerLeft}>
-          <BookOpen size={16} color="#E11D48" />
+          <BookOpen size={16} color={colors.accent} />
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Training Programs Vault</Text>
         </View>
-        <TouchableOpacity onPress={() => setIsCreateOpen(true)} style={styles.createProgBtn}>
-          <Plus size={13} color="#E11D48" />
+        <TouchableOpacity onPress={() => setIsCreateOpen(true)} style={styles.createProgBtn} accessibilityRole="button" accessibilityLabel="Create new program">
+          <Plus size={13} color={colors.accent} />
           <Text style={styles.createProgText}>+ New Program</Text>
         </TouchableOpacity>
       </View>
 
       {/* Program Selector Tabs */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.progTabsRow} contentContainerStyle={{ gap: 8 }}>
-        {savedPrograms.map((prog) => {
-          const isSelected = prog.id === activeProg?.id;
-          return (
-            <TouchableOpacity
-              key={prog.id}
-              onPress={() => setSelectedProgId(prog.id)}
-              style={[
-                styles.progTabPill,
-                { backgroundColor: isSelected ? "#E11D48" : colors.bgCard, borderColor: isSelected ? "#E11D48" : colors.borderColor },
-              ]}
-            >
-              <Text style={[styles.progTabTitle, { color: isSelected ? "#FFFFFF" : colors.textPrimary }]}>{prog.title}</Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
+      <View style={styles.progTabsRow}>
+        <FlashList
+          horizontal
+          data={savedPrograms}
+          extraData={activeProg?.id}
+          keyExtractor={(p) => p.id}
+          showsHorizontalScrollIndicator={false}
+          ItemSeparatorComponent={() => <View style={{ width: 8 }} />}
+          renderItem={({ item: prog }) => {
+            const isSelected = prog.id === activeProg?.id;
+            return (
+              <TouchableOpacity
+                onPress={() => setSelectedProgId(prog.id)}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: isSelected }}
+                style={[styles.progTabPill, { backgroundColor: isSelected ? colors.accent : colors.bgCard, borderColor: isSelected ? colors.accent : colors.borderColor }]}
+              >
+                <Text style={[styles.progTabTitle, { color: isSelected ? colors.textOnAccent : colors.textPrimary }]}>{prog.title}</Text>
+              </TouchableOpacity>
+            );
+          }}
+        />
+      </View>
 
       {/* Active Program Card */}
       {activeProg && (
@@ -121,7 +136,7 @@ export function LiftLaunchpadView({
                 </View>
                 <View style={styles.launchDayBtn}>
                   <Text style={styles.launchDayText}>Start Day</Text>
-                  <ChevronRight size={14} color="#E11D48" />
+                  <ChevronRight size={14} color={colors.accent} />
                 </View>
               </TouchableOpacity>
             ))}
@@ -129,34 +144,35 @@ export function LiftLaunchpadView({
         </View>
       )}
 
-      {/* History */}
-      <View style={[styles.historyBox, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
-        <Text style={[styles.historyHeaderTitle, { color: colors.textPrimary }]}>Strength Memories & History ({liftSessions.length})</Text>
-        {liftSessions.map((session) => (
-          <View key={session.id} style={[styles.historyRow, { borderBottomColor: colors.borderColor }]}>
-            <View>
+            <Text style={[styles.historyHeaderTitle, { color: colors.textPrimary }]}>Strength history ({liftSessions.length})</Text>
+          </View>
+        }
+        ListEmptyComponent={<StateCard compact icon={Dumbbell} title="No sessions yet" message="Start a session above — finished workouts land here." />}
+        ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+        renderItem={({ item: session }) => (
+          <View style={[styles.historyRow, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
+            <View style={styles.flex}>
               <Text style={[styles.historySessionTitle, { color: colors.textPrimary }]}>{session.title}</Text>
               <Text style={[styles.historySessionSub, { color: colors.textMuted }]}>
                 {session.exercises[0]?.name} • {session.totalSets} sets • {session.totalVolumeKg.toLocaleString()} kg vol
               </Text>
             </View>
             {session.isPR && (
-              <View style={styles.prBadge}>
-                <Text style={styles.prBadgeText}>PR</Text>
+              <View style={[styles.prBadge, { backgroundColor: colors.warning }]}>
+                <Text style={[styles.prBadgeText, { color: colors.textOnAccent }]}>PR</Text>
               </View>
             )}
           </View>
-        ))}
-      </View>
-
+        )}
+      />
       <CreateProgramModal visible={isCreateOpen} onClose={() => setIsCreateOpen(false)} />
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  emptyContent: { paddingBottom: 110 },
+  flex: { flex: 1 },
+  listContent: { padding: 16, paddingBottom: 110 },
   prHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 },
   sectionTitle: { fontSize: 16, fontWeight: "800" },
   verifiedTrophyPill: { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "rgba(16,185,129,0.12)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
@@ -165,19 +181,19 @@ const styles = StyleSheet.create({
   prRingItem: { alignItems: "center" },
   prRingCircle: { width: 78, height: 78, borderRadius: 39, borderWidth: 3, alignItems: "center", justifyContent: "center" },
   prRingWeight: { fontSize: 20, fontWeight: "900" },
-  prRingUnit: { color: "#8E8E93", fontSize: 10, fontWeight: "800", marginTop: -2 },
+  prRingUnit: { color: "#8E8E93", fontSize: 11, fontWeight: "800", marginTop: -2 },
   prRingLabel: { fontSize: 12, fontWeight: "700", marginTop: 6 },
   launchpadCard: { borderWidth: 1, borderRadius: 18, padding: 16, alignItems: "center", marginBottom: 16 },
   launchpadTitle: { fontSize: 16, fontWeight: "800", marginBottom: 8 },
   customRoutineInput: { width: "100%", borderWidth: 1, borderRadius: 10, padding: 10, fontSize: 13, fontWeight: "600", marginBottom: 10, textAlign: "center" },
-  startWorkoutButton: { backgroundColor: "#E11D48", borderRadius: 10, paddingVertical: 10, paddingHorizontal: 20, flexDirection: "row", alignItems: "center", width: "100%", justifyContent: "center" },
+  startWorkoutButton: { backgroundColor: "#E11D48", borderRadius: 10, minHeight: 48, paddingHorizontal: 20, flexDirection: "row", alignItems: "center", width: "100%", justifyContent: "center" },
   startWorkoutText: { color: "#FFFFFF", fontWeight: "800", fontSize: 13 },
   programsSectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10, marginTop: 4 },
   headerLeft: { flexDirection: "row", alignItems: "center", gap: 6 },
-  createProgBtn: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, backgroundColor: "rgba(225,29,72,0.1)" },
+  createProgBtn: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 10, minHeight: 44, borderRadius: 8, backgroundColor: "rgba(225,29,72,0.1)" },
   createProgText: { color: "#E11D48", fontSize: 11, fontWeight: "800" },
-  progTabsRow: { marginBottom: 12 },
-  progTabPill: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 7 },
+  progTabsRow: { marginBottom: 12, height: 44 },
+  progTabPill: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 14, minHeight: 44, justifyContent: "center" },
   progTabTitle: { fontSize: 12, fontWeight: "800" },
   activeProgCard: { borderWidth: 1, borderRadius: 14, padding: 14, marginBottom: 16 },
   activeProgDesc: { fontSize: 12, fontWeight: "600", marginBottom: 10 },
@@ -187,11 +203,10 @@ const styles = StyleSheet.create({
   dayItemMeta: { fontSize: 11 },
   launchDayBtn: { flexDirection: "row", alignItems: "center", gap: 2, paddingLeft: 8 },
   launchDayText: { color: "#E11D48", fontSize: 11, fontWeight: "800" },
-  historyBox: { borderWidth: 1, borderRadius: 16, padding: 14, marginBottom: 16 },
   historyHeaderTitle: { fontSize: 14, fontWeight: "800", marginBottom: 10 },
-  historyRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 8, borderBottomWidth: 1 },
+  historyRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 12, borderRadius: 12, borderWidth: 1 },
   historySessionTitle: { fontSize: 13, fontWeight: "700" },
   historySessionSub: { fontSize: 11, marginTop: 2 },
-  prBadge: { backgroundColor: "#10B981", borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
-  prBadgeText: { color: "#000000", fontSize: 10, fontWeight: "900" },
+  prBadge: { borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
+  prBadgeText: { fontSize: 11, fontWeight: "900" },
 });

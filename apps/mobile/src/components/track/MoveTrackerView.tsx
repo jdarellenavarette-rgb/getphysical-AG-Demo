@@ -8,6 +8,7 @@ import { useTrackingStore, type MoveSportType } from "../../store/trackingStore"
 import { requestAndFetchUserLocation, DEFAULT_BGC_COORDS, calculateHaversineKm } from "../../services/locationService";
 import { StravaRouteMap } from "./StravaRouteMap";
 import { SPORTS_LIST } from "./trackConstants";
+import { SportSelector } from "./SportSelector";
 import { styles } from "./MoveTrackerView.styles";
 
 export function MoveTrackerView() {
@@ -40,12 +41,10 @@ export function MoveTrackerView() {
 
   // 1. Elapsed Time Stopwatch: Smooth 1-second increment while active
   useEffect(() => {
-    let t: any = null;
-    if (isActive) {
-      t = setInterval(() => {
-        setSeconds((s) => s + 1);
-      }, 1000);
-    }
+    if (!isActive) return undefined;
+    const t = setInterval(() => {
+      setSeconds((s) => s + 1);
+    }, 1000);
     return () => clearInterval(t);
   }, [isActive]);
 
@@ -133,18 +132,7 @@ export function MoveTrackerView() {
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.bgScreen }]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       {/* 1. SPORT SELECTOR PILLS */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.sportSelectorRow} contentContainerStyle={{ gap: 8 }}>
-        {SPORTS_LIST.map((sp) => (
-          <TouchableOpacity
-            key={sp.id}
-            onPress={() => !isActive && setSelectedSport(sp.id)}
-            style={[styles.sportPill, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }, selectedSport === sp.id && styles.sportPillActive]}
-          >
-            <Text style={styles.sportEmoji}>{sp.icon}</Text>
-            <Text style={[styles.sportLabel, { color: colors.textMuted }, selectedSport === sp.id && styles.sportLabelActive]}>{sp.label}</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+      <SportSelector selected={selectedSport} disabled={isActive} onSelect={setSelectedSport} />
 
       {/* 2. GP GPS STATUS BADGE */}
       <View style={styles.statusRow}>

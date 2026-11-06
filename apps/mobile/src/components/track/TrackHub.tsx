@@ -42,7 +42,7 @@ export function TrackHub() {
         <TouchableOpacity onPress={() => setIsNasmOpen(true)} style={styles.summaryItem}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
             <Text style={[styles.summaryVal, { color: colors.textPrimary }]}>{dailyTargets.calories}</Text>
-            <Zap size={11} color="#E11D48" />
+            <Zap size={11} color={colors.accent} />
           </View>
           <Text style={[styles.summaryLabel, { color: "#E11D48", fontWeight: "700" }]}>NASM Goal</Text>
         </TouchableOpacity>
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
   summaryStrip: { flexDirection: "row", justifyContent: "space-around", paddingVertical: 10, borderBottomWidth: 1 },
   summaryItem: { alignItems: "center" },
   summaryVal: { fontSize: 13, fontWeight: "800" },
-  summaryLabel: { fontSize: 10, marginTop: 2 },
+  summaryLabel: { fontSize: 11, marginTop: 2 },
   toggleBar: { flexDirection: "row", marginHorizontal: 12, marginVertical: 8, borderRadius: 12, padding: 3, borderWidth: 1 },
   togglePill: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, paddingVertical: 8, borderRadius: 10 },
   togglePillActive: { backgroundColor: "#E11D48" },

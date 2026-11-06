@@ -1,71 +1,44 @@
-import React, { useEffect, useRef } from "react";
-import {
-  Image,
-  StyleSheet,
-  StatusBar,
-  Animated,
-  Text,
-  TouchableWithoutFeedback,
-} from "react-native";
+import React, { useCallback, useEffect, useRef } from "react";
+import { Image, StyleSheet, StatusBar, Text, TouchableWithoutFeedback } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 
 interface OpeningLoadingScreenProps {
   onFinish: () => void;
   durationMs?: number;
 }
 
-export function OpeningLoadingScreen({
-  onFinish,
-  durationMs = 2200,
-}: OpeningLoadingScreenProps) {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.94)).current;
+/** Branded launch splash; all motion runs on the UI thread (Reanimated). */
+export function OpeningLoadingScreen({ onFinish, durationMs = 2200 }: OpeningLoadingScreenProps) {
+  const opacity = useSharedValue(0);
+  const scale = useSharedValue(0.94);
   const isFinishedRef = useRef(false);
 
-  const dismissScreen = () => {
+  const dismissScreen = useCallback(() => {
     if (isFinishedRef.current) return;
     isFinishedRef.current = true;
-    Animated.timing(fadeAnim, {
-      toValue: 0,
-      duration: 300,
-      useNativeDriver: true,
-    }).start(() => {
-      onFinish();
+    opacity.value = withTiming(0, { duration: 300 }, (finished) => {
+      if (finished) scheduleOnRN(onFinish);
     });
-  };
+  }, [onFinish, opacity]);
 
   useEffect(() => {
-    // 1. Fluid entrance: smooth scale-up & fade-in
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 450,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        tension: 50,
-        friction: 8,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    // 2. Auto-transition into the app
-    const timer = setTimeout(() => {
-      dismissScreen();
-    }, durationMs);
-
+    opacity.value = withTiming(1, { duration: 450 });
+    scale.value = withSpring(1, { damping: 14, stiffness: 120 });
+    const timer = setTimeout(dismissScreen, durationMs);
     return () => clearTimeout(timer);
-  }, [durationMs]);
+  }, [durationMs, dismissScreen, opacity, scale]);
+
+  const fadeStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
+  const scaleStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
 
   return (
-    <TouchableWithoutFeedback onPress={dismissScreen}>
-      <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
+    <TouchableWithoutFeedback onPress={dismissScreen} accessibilityRole="button" accessibilityLabel="GetPhysical. Tap to continue">
+      <Animated.View style={[styles.container, fadeStyle]}>
         <StatusBar barStyle="light-content" />
 
         {/* HIGH-DEFINITION BRAND COMPOSITION */}
-        <Animated.View
-          style={[styles.centerBrandBlock, { transform: [{ scale: scaleAnim }] }]}
-        >
+        <Animated.View style={[styles.centerBrandBlock, scaleStyle]}>
           <Image
             source={require("../../../assets/gp_emblem_hd.png")}
             style={styles.gpEmblem}

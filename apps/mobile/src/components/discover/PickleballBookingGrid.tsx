@@ -75,7 +75,7 @@ export function PickleballBookingGrid({
     <View style={[styles.container, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}>
       <View style={styles.headerRow}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-          <Clock size={14} color="#E11D48" />
+          <Clock size={14} color={colors.accent} />
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>PICKLEBALL COURT GRID</Text>
         </View>
         <Text style={[styles.rateBadge, { color: colors.accentGreen }]}>₱{hourlyRate}/hr</Text>
@@ -179,25 +179,25 @@ const styles = StyleSheet.create({
   scrollContent: { paddingBottom: 4 },
   row: { flexDirection: "row", alignItems: "center" },
   timeHeaderCell: { width: 92, paddingVertical: 8, justifyContent: "center" },
-  timeLabel: { fontSize: 10, fontWeight: "700" },
-  columnLabel: { fontSize: 10, fontWeight: "800", letterSpacing: 0.5 },
+  timeLabel: { fontSize: 11, fontWeight: "700" },
+  columnLabel: { fontSize: 11, fontWeight: "800", letterSpacing: 0.5 },
   courtHeaderCell: { width: 96, paddingVertical: 6, alignItems: "center", borderBottomWidth: 1 },
   courtName: { fontSize: 11, fontWeight: "900" },
-  courtType: { fontSize: 9, fontWeight: "600" },
+  courtType: { fontSize: 11, fontWeight: "600" },
   tile: { width: 92, height: 46, margin: 2, borderRadius: 8, borderWidth: 1, alignItems: "center", justifyContent: "center" },
   tileBooked: { opacity: 0.55 },
   tileSelected: { backgroundColor: "#E11D48", borderColor: "#E11D48" },
   availableContent: { alignItems: "center" },
-  openTag: { fontSize: 9, fontWeight: "900", letterSpacing: 0.5 },
-  priceTag: { fontSize: 10, fontWeight: "800" },
+  openTag: { fontSize: 11, fontWeight: "900", letterSpacing: 0.5 },
+  priceTag: { fontSize: 11, fontWeight: "800" },
   bookedContent: { alignItems: "center", paddingHorizontal: 2 },
-  bookedTag: { fontSize: 8, fontWeight: "800" },
-  bookedUser: { fontSize: 8, fontWeight: "600" },
+  bookedTag: { fontSize: 11, fontWeight: "800" },
+  bookedUser: { fontSize: 11, fontWeight: "600" },
   selectedContent: { alignItems: "center", gap: 1 },
-  selectedText: { color: "#FFFFFF", fontSize: 8, fontWeight: "900", letterSpacing: 0.5 },
+  selectedText: { color: "#FFFFFF", fontSize: 11, fontWeight: "900", letterSpacing: 0.5 },
   bookActionRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 12, paddingTop: 12, borderTopWidth: 1 },
   bookCourtTitle: { fontSize: 12, fontWeight: "800" },
-  bookCourtTime: { fontSize: 10, fontWeight: "600", marginTop: 2 },
+  bookCourtTime: { fontSize: 11, fontWeight: "600", marginTop: 2 },
   confirmBtn: { backgroundColor: "#E11D48", paddingHorizontal: 14, paddingVertical: 9, borderRadius: 10 },
   confirmBtnText: { color: "#FFFFFF", fontSize: 11, fontWeight: "900" },
 });

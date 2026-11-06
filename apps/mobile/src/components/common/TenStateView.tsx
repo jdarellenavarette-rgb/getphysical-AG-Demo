@@ -1,134 +1,155 @@
 import React from "react";
-import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet } from "react-native";
-import { AlertCircle, WifiOff, Clock, Search, ShieldAlert, CheckCircle, RefreshCw } from "lucide-react-native";
-import type { TenStateEnvelope } from "sodia-core";
-import { useThemeStore } from "../../theme/theme";
+import { Linking, View } from "react-native";
+import { AlertCircle, Inbox, PenLine, RefreshCw, Search, ServerCrash, ShieldAlert, Fingerprint, type LucideIcon } from "lucide-react-native";
+import type { OSResourcePermission, TenStateEnvelope } from "sodia-core";
+import { useColors } from "../../theme/theme";
+import { SkeletonList, type SkeletonVariant } from "../states/Skeleton";
+import { NetworkBanner, StateCard, type StateAction } from "../states/StateCard";
 
-interface TenStateViewProps<T> {
+export interface TenStateViewProps<T> {
   state: TenStateEnvelope<T>;
-  onRetry?: () => void;
   children: (data: T) => React.ReactNode;
+  /** Layout-matched skeleton for `loading` — a variant or a custom render. */
+  skeleton?: SkeletonVariant | (() => React.ReactNode);
+  /** `empty` primary CTA (label comes from the envelope). */
+  onPrimaryAction?: () => void;
+  emptyIcon?: LucideIcon;
+  emptyTitle?: string;
+  onRetry?: () => void;
+  /** `no_search_results` — "Clear filters" reset. */
+  onClearSearch?: () => void;
+  /** `no_search_results` — shown when envelope allows manual entry. */
+  onManualEntry?: () => void;
+  manualEntryLabel?: string;
+  onSelectSuggestion?: (suggestion: string) => void;
+  /** `permission_denied` — contextual fallback UI (zip seed, manual lookup...). */
+  permissionFallback?: React.ReactNode;
+  /** `session_expired` — native biometric re-auth trigger. */
+  onUnlockSession?: () => void;
+  /** Render inline (inside sheets / list headers) instead of filling the screen. */
+  compact?: boolean;
 }
 
-export function TenStateView<T>({ state, onRetry, children }: TenStateViewProps<T>) {
-  const { colors } = useThemeStore();
+const PERMISSION_COPY: Record<OSResourcePermission, string> = {
+  location: "Location",
+  camera: "Camera",
+  microphone: "Microphone",
+  contacts: "Contacts",
+  photos: "Photos",
+  notifications: "Notifications",
+  health_kit: "Health",
+  biometrics: "Face ID / Biometrics",
+};
+
+function isServerFault(code: string): boolean {
+  return /^(5\d\d|E5|SRV|SERVER)/i.test(code);
+}
+
+export function TenStateView<T>(props: TenStateViewProps<T>) {
+  const { state, children, compact } = props;
+  const colors = useColors();
 
   switch (state.status) {
-    case "loading":
-      return (
-        <View style={[styles.centerContainer, { backgroundColor: colors.bgScreen }]}>
-          <ActivityIndicator size="large" color="#E11D48" />
-          <Text style={[styles.loadingText, { color: colors.textMuted }]}>Syncing GetPhysical state...</Text>
-        </View>
-      );
+    case "loading": {
+      if (typeof props.skeleton === "function") return <>{props.skeleton()}</>;
+      return <SkeletonList variant={props.skeleton ?? "row"} count={state.skeletonCount} />;
+    }
 
-    case "empty":
+    case "empty": {
+      const actions: StateAction[] = props.onPrimaryAction ? [{ label: state.primaryActionLabel, onPress: props.onPrimaryAction }] : [];
       return (
-        <View style={[styles.centerContainer, { backgroundColor: colors.bgScreen }]}>
-          <AlertCircle size={44} color={colors.textMuted} />
-          <Text style={[styles.stateTitle, { color: colors.textPrimary }]}>Nothing here yet</Text>
-          <Text style={[styles.stateSubtitle, { color: colors.textSecondary }]}>{state.emptyReason}</Text>
-          {onRetry && (
-            <TouchableOpacity style={styles.primaryButton} onPress={onRetry}>
-              <Text style={styles.primaryButtonText}>{state.primaryActionLabel}</Text>
-            </TouchableOpacity>
+        <StateCard compact={compact} icon={props.emptyIcon ?? Inbox} title={props.emptyTitle ?? "Nothing here yet"} message={state.emptyReason} actions={actions} />
+      );
+    }
+
+    case "error": {
+      const server = isServerFault(state.errorCode);
+      const actions: StateAction[] = state.retryable && props.onRetry ? [{ label: "Retry", onPress: props.onRetry, icon: RefreshCw }] : [];
+      return (
+        <StateCard
+          compact={compact}
+          icon={server ? ServerCrash : AlertCircle}
+          iconColor={colors.danger}
+          title={server ? "Our servers hit a snag" : "Something went wrong"}
+          message={state.userMessage}
+          footnote={`Reference code: ${state.errorCode}`}
+          actions={actions}
+        />
+      );
+    }
+
+    case "no_internet": {
+      const queued = state.offline.queuedMutationsCount;
+      const detail = queued > 0 ? `Offline • ${queued} change${queued === 1 ? "" : "s"} will sync when you reconnect` : "Offline • Showing saved content";
+      return (
+        <View style={{ flex: compact ? 0 : 1 }}>
+          <NetworkBanner kind="offline" detail={detail} />
+          {state.data !== null ? (
+            children(state.data)
+          ) : (
+            <StateCard compact={compact} icon={AlertCircle} title="You're offline" message="Reconnect to load fresh content." actions={props.onRetry ? [{ label: "Try again", onPress: props.onRetry, icon: RefreshCw }] : []} />
           )}
         </View>
       );
-
-    case "error":
-      return (
-        <View style={[styles.centerContainer, { backgroundColor: colors.bgScreen }]}>
-          <AlertCircle size={44} color="#EF4444" />
-          <Text style={[styles.stateTitle, { color: colors.textPrimary }]}>Unable to Load Data</Text>
-          <Text style={[styles.stateSubtitle, { color: colors.textSecondary }]}>{state.userMessage}</Text>
-          {state.retryable && onRetry && (
-            <TouchableOpacity style={[styles.retryButton, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor, borderWidth: 1 }]} onPress={onRetry}>
-              <RefreshCw size={16} color={colors.textPrimary} style={{ marginRight: 6 }} />
-              <Text style={[styles.primaryButtonText, { color: colors.textPrimary }]}>Retry</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      );
-
-    case "no_internet":
-      return (
-        <View style={{ flex: 1, backgroundColor: colors.bgScreen }}>
-          <View style={[styles.offlineBanner, { backgroundColor: colors.bgCard, borderColor: "#F59E0B" }]}>
-            <WifiOff size={16} color="#F59E0B" />
-            <Text style={styles.offlineText}>Offline Mode • Viewing Cached Content</Text>
-          </View>
-          {state.data ? children(state.data) : (
-            <View style={[styles.centerContainer, { backgroundColor: colors.bgScreen }]}>
-              <Text style={[styles.stateSubtitle, { color: colors.textSecondary }]}>Connect to the internet to fetch fresh records.</Text>
-            </View>
-          )}
-        </View>
-      );
+    }
 
     case "slow_network":
       return (
-        <View style={{ flex: 1, backgroundColor: colors.bgScreen }}>
-          <View style={[styles.slowBanner, { backgroundColor: colors.bgCard, borderColor: "#EAB308" }]}>
-            <Clock size={16} color="#EAB308" />
-            <Text style={styles.slowText}>Slow network detected ({state.network.latencyMs}ms). Optimistic mode active.</Text>
-          </View>
-          {state.data && children(state.data)}
+        <View style={{ flex: compact ? 0 : 1 }}>
+          <NetworkBanner kind="slow" detail={`Slow connection (${(state.network.latencyMs / 1000).toFixed(1)}s) • Using low-res previews`} />
+          {state.data !== null ? children(state.data) : <SkeletonList variant={typeof props.skeleton === "string" ? props.skeleton : "row"} count={3} />}
         </View>
       );
 
-    case "no_search_results":
+    case "no_search_results": {
+      const actions: StateAction[] = [];
+      if (props.onClearSearch) actions.push({ label: "Clear filters", onPress: props.onClearSearch, variant: "secondary" });
+      if (state.search.allowManualEntry && props.onManualEntry) actions.unshift({ label: props.manualEntryLabel ?? "Add it manually", onPress: props.onManualEntry, icon: PenLine });
+      const suggestions = props.onSelectSuggestion ? state.search.suggestedAlternatives : [];
       return (
-        <View style={[styles.centerContainer, { backgroundColor: colors.bgScreen }]}>
-          <Search size={44} color={colors.textMuted} />
-          <Text style={[styles.stateTitle, { color: colors.textPrimary }]}>No Results Found</Text>
-          <Text style={[styles.stateSubtitle, { color: colors.textSecondary }]}>No matches found for "{state.search.query}".</Text>
-          {onRetry && (
-            <TouchableOpacity style={styles.primaryButton} onPress={onRetry}>
-              <Text style={styles.primaryButtonText}>Clear Search & Filters</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+        <StateCard
+          compact={compact}
+          icon={Search}
+          title="No results"
+          message={state.search.query ? `Nothing matches "${state.search.query}".` : "Nothing matches your filters."}
+          actions={[...suggestions.slice(0, 3).map((s) => ({ label: `Try "${s}"`, onPress: () => props.onSelectSuggestion?.(s), variant: "secondary" as const })), ...actions]}
+        />
       );
+    }
 
-    case "permission_denied":
+    case "permission_denied": {
+      const name = PERMISSION_COPY[state.permissionMeta.permission];
       return (
-        <View style={[styles.centerContainer, { backgroundColor: colors.bgScreen }]}>
-          <ShieldAlert size={44} color="#F97316" />
-          <Text style={[styles.stateTitle, { color: colors.textPrimary }]}>Permission Required</Text>
-          <Text style={[styles.stateSubtitle, { color: colors.textSecondary }]}>
-            Access to {state.permissionMeta.permission} was denied. Enable it in device settings to use this feature.
-          </Text>
-          {onRetry && (
-            <TouchableOpacity style={styles.primaryButton} onPress={onRetry}>
-              <Text style={styles.primaryButtonText}>Open Settings</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+        <StateCard
+          compact={compact}
+          icon={ShieldAlert}
+          iconColor={colors.warning}
+          title={`${name} access is off`}
+          message={`Turn on ${name} in Settings, or continue below.`}
+          actions={[{ label: "Open Settings", onPress: () => { Linking.openSettings().catch(() => undefined); }, variant: "secondary" }]}
+        >
+          {props.permissionFallback}
+        </StateCard>
       );
+    }
 
     case "session_expired":
       return (
-        <View style={[styles.centerContainer, { backgroundColor: colors.bgScreen }]}>
-          <ShieldAlert size={44} color="#E11D48" />
-          <Text style={[styles.stateTitle, { color: colors.textPrimary }]}>Session Stale</Text>
-          <Text style={[styles.stateSubtitle, { color: colors.textSecondary }]}>Authenticate with biometrics or PIN to resume.</Text>
-          {onRetry && (
-            <TouchableOpacity style={styles.primaryButton} onPress={onRetry}>
-              <Text style={styles.primaryButtonText}>Unlock with FaceID / Biometrics</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+        <StateCard
+          compact={compact}
+          icon={Fingerprint}
+          iconColor={colors.accentText}
+          title="Session locked"
+          message="Your drafts are saved. Verify it's you to continue."
+          actions={props.onUnlockSession ? [{ label: "Unlock with Face ID", onPress: props.onUnlockSession, icon: Fingerprint }] : []}
+        />
       );
 
     case "form_validation":
       return (
-        <View style={[styles.centerContainer, { backgroundColor: colors.bgScreen }]}>
-          <AlertCircle size={44} color="#EF4444" />
-          <Text style={[styles.stateTitle, { color: colors.textPrimary }]}>Validation Required</Text>
-          {state.issues.map((iss, idx) => (
-            <Text key={idx} style={styles.issueText}>• {iss.field}: {iss.message}</Text>
-          ))}
+        <View style={{ flex: compact ? 0 : 1 }}>
+          <StateCard compact icon={AlertCircle} iconColor={colors.danger} title="Check the highlighted fields" message={state.issues.map((i) => i.message).join("\n")} />
+          {state.data !== null ? children(state.data) : null}
         </View>
       );
 
@@ -136,82 +157,3 @@ export function TenStateView<T>({ state, onRetry, children }: TenStateViewProps<
       return <>{children(state.data)}</>;
   }
 }
-
-const styles = StyleSheet.create({
-  centerContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  stateTitle: {
-    marginTop: 16,
-    fontSize: 18,
-    fontWeight: "700",
-  },
-  stateSubtitle: {
-    marginTop: 8,
-    fontSize: 14,
-    textAlign: "center",
-    maxWidth: 280,
-    lineHeight: 20,
-  },
-  primaryButton: {
-    marginTop: 20,
-    backgroundColor: "#E11D48",
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 999,
-  },
-  retryButton: {
-    marginTop: 20,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 8,
-  },
-  primaryButtonText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  offlineBanner: {
-    borderBottomWidth: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  offlineText: {
-    color: "#F59E0B",
-    fontSize: 12,
-    fontWeight: "600",
-    marginLeft: 8,
-  },
-  slowBanner: {
-    borderBottomWidth: 1,
-    paddingVertical: 6,
-    paddingHorizontal: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  slowText: {
-    color: "#EAB308",
-    fontSize: 11,
-    fontWeight: "500",
-    marginLeft: 6,
-  },
-  issueText: {
-    color: "#EF4444",
-    fontSize: 12,
-    marginTop: 4,
-  },
-});

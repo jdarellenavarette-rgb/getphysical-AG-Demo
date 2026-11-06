@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
+import { AppModal } from "../common/AppModal";
 import { X, Check, SlidersHorizontal, RotateCcw } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import type { DiscoverCategory, DiscoverFilterState } from "../../data/discoverData";
@@ -62,16 +63,16 @@ export function DiscoverFilterModal({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <AppModal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={[styles.sheet, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
           {/* HEADER */}
           <View style={[styles.header, { borderBottomColor: colors.borderColor }]}>
             <View style={styles.headerLeft}>
-              <SlidersHorizontal size={18} color="#E11D48" />
+              <SlidersHorizontal size={18} color={colors.accent} />
               <Text style={[styles.title, { color: colors.textPrimary }]}>Filters</Text>
             </View>
-            <TouchableOpacity onPress={onClose} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Close filters" onPress={onClose} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
               <X size={20} color={colors.textMuted} />
             </TouchableOpacity>
           </View>
@@ -88,7 +89,7 @@ export function DiscoverFilterModal({
                     onPress={() => setDraft((d) => ({ ...d, category: cat }))}
                     style={[
                       styles.chip,
-                      { backgroundColor: active ? "#E11D48" : colors.bgCardSecondary, borderColor: active ? "#E11D48" : colors.borderColor },
+                      { backgroundColor: active ? colors.accent : colors.bgCardSecondary, borderColor: active ? colors.accent : colors.borderColor },
                     ]}
                   >
                     <Text style={[styles.chipText, { color: active ? "#FFF" : colors.textPrimary }]}>{cat}</Text>
@@ -143,7 +144,7 @@ export function DiscoverFilterModal({
               style={[styles.toggleRow, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}
             >
               <Text style={[styles.toggleText, { color: colors.textPrimary }]}>Open Now Only</Text>
-              <View style={[styles.checkbox, draft.openNowOnly && { backgroundColor: "#10B981", borderColor: "#10B981" }]}>
+              <View style={[styles.checkbox, draft.openNowOnly && { backgroundColor: "#10B981", borderColor: colors.accentGreen }]}>
                 {draft.openNowOnly && <Check size={14} color="#FFF" />}
               </View>
             </TouchableOpacity>
@@ -164,7 +165,7 @@ export function DiscoverFilterModal({
           </View>
         </View>
       </View>
-    </Modal>
+    </AppModal>
   );
 }
 

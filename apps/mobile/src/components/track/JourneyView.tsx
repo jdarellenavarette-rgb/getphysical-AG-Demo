@@ -1,5 +1,7 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { FlashList } from "@shopify/flash-list";
+import { StateCard } from "../states/StateCard";
 import { Flame, Sparkles } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import { useTrackingStore } from "../../store/trackingStore";
@@ -59,19 +61,27 @@ export function JourneyView() {
   const displayedMemories = showAllActivities ? memories : memories.slice(0, 4);
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.bgScreen }]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
+      <FlashList
+        data={displayedMemories}
+        keyExtractor={(m) => m.id}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        ItemSeparatorComponent={() => <View style={styles.sep} />}
+        ListHeaderComponent={
+          <View>
       {/* 1. MY JOURNEY HERO HEADER */}
       <View style={[styles.heroCard, { backgroundColor: colors.bgCard, borderColor: colors.borderLight, borderWidth: 1 }]}>
         <View style={styles.heroTopRow}>
           <View>
             <Text style={[styles.heroTitle, { color: colors.textPrimary }]}>My Journey</Text>
             <View style={styles.progressSubtitleRow}>
-              <Sparkles size={13} color="#E11D48" />
+              <Sparkles size={13} color={colors.accent} />
               <Text style={styles.progressSubtitle}>Personal Progress & Memories</Text>
             </View>
           </View>
           <View style={styles.streakBadge}>
-            <Flame size={13} color="#F59E0B" fill="#F59E0B" />
+            <Flame size={13} color={colors.warning} fill={colors.warning} />
             <Text style={styles.streakBadgeText}>5d Streak</Text>
           </View>
         </View>
@@ -79,7 +89,7 @@ export function JourneyView() {
         {/* KCAL TOTAL BURNED */}
         <View style={styles.calHeroBlock}>
           <Text style={styles.calUnit}>Kcal </Text>
-          <Text style={[styles.calValue, { color: colors.textPrimary }]}>{totalBurned || 873}</Text>
+          <Text style={[styles.calValue, { color: colors.textPrimary }]}>{totalBurned.toLocaleString()}</Text>
         </View>
         <Text style={[styles.calSublabel, { color: colors.textSecondary }]}>Total Calories Burned Recorded</Text>
 
@@ -111,17 +121,20 @@ export function JourneyView() {
       {/* 2. ACTIVITY HISTORY & MEMORIES LIST */}
       <View style={styles.sectionHeaderRow}>
         <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>TRACK MEMORIES & HISTORY ({memories.length})</Text>
-        <TouchableOpacity onPress={() => setShowAllActivities(!showAllActivities)}>
+        <TouchableOpacity onPress={() => setShowAllActivities(!showAllActivities)} style={{ minHeight: 44, justifyContent: "center" }} accessibilityRole="button">
           <Text style={styles.viewAllText}>{showAllActivities ? "Show Less" : "View All"}</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.activitiesList}>
-        {displayedMemories.map((act) => (
+          </View>
+        }
+        ListEmptyComponent={<StateCard compact icon={Sparkles} title="No memories yet" message="Finish a lift, a GPS session or log a meal and it will appear here." />}
+        renderItem={({ item: act }) => (
           <TouchableOpacity
-            key={act.id}
             onPress={() => setSelectedMemory(act)}
             activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel={`${act.title}, ${act.duration}, ${act.cals}`}
             style={[styles.activityCard, { backgroundColor: colors.bgCard, borderColor: colors.borderLight }]}
           >
             <View style={styles.actLeft}>
@@ -137,17 +150,17 @@ export function JourneyView() {
               <Text style={styles.actCals}>{act.cals}</Text>
             </View>
           </TouchableOpacity>
-        ))}
-      </View>
-
+        )}
+      />
       <MemoryDetailModal visible={!!selectedMemory} item={selectedMemory} onClose={() => setSelectedMemory(null)} />
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 16, paddingBottom: 110 },
+  sep: { height: 10 },
   heroCard: { borderRadius: 24, padding: 20, shadowColor: "#000", shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 4, marginBottom: 20 },
   heroTopRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
   heroTitle: { fontSize: 20, fontWeight: "900" },
@@ -179,11 +192,11 @@ const styles = StyleSheet.create({
   activityCard: { flexDirection: "row", justifyContent: "space-between", padding: 14, borderRadius: 16, borderWidth: 1 },
   actLeft: { flex: 1 },
   actBadge: { alignSelf: "flex-start", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, marginBottom: 6 },
-  actBadgeText: { fontSize: 10, fontWeight: "700" },
+  actBadgeText: { fontSize: 11, fontWeight: "700" },
   actTitle: { fontSize: 14, fontWeight: "800" },
   actVenue: { fontSize: 11, marginTop: 2 },
   actRight: { alignItems: "flex-end", justifyContent: "center" },
   actDuration: { color: "#10B981", fontSize: 12, fontWeight: "800" },
-  actTime: { fontSize: 10, marginTop: 2 },
+  actTime: { fontSize: 11, marginTop: 2 },
   actCals: { color: "#E11D48", fontSize: 11, fontWeight: "700", marginTop: 2 },
 });

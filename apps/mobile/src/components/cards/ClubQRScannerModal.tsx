@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, Modal, TouchableOpacity, Alert } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { AppModal } from "../common/AppModal";
+import { toast } from "../../feedback/toastStore";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { X, Zap, ZapOff, QrCode, ShieldCheck, CheckCircle2, Sparkles } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
@@ -34,19 +36,9 @@ export function ClubQRScannerModal({ visible, onClose, onSuccessJoined }: ClubQR
     const facilityId = `fac_${clubName.toLowerCase().replace(/[^a-z0-9]/g, "_")}`;
     provisionPass(clubName, "recurring_subscription", price, passType, facilityId);
 
-    Alert.alert(
-      "Club Membership Activated!",
-      `Welcome to ${clubName}! Your VIP digital pass has been provisioned to your wallet with dynamic 60s TOTP turnstile access.`,
-      [
-        {
-          text: "Open Wallet Pass",
-          onPress: () => {
-            onSuccessJoined?.(clubName);
-            onClose();
-          },
-        },
-      ]
-    );
+    toast.success("Membership activated", `Welcome to ${clubName}! Your pass is in your wallet.`);
+    onSuccessJoined?.(clubName);
+    onClose();
   };
 
   const handleBarcodeScanned = (scanningResult: { data: string }) => {
@@ -62,7 +54,7 @@ export function ClubQRScannerModal({ visible, onClose, onSuccessJoined }: ClubQR
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
+    <AppModal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
       <View style={styles.container}>
         {permission?.granted ? (
           <CameraView
@@ -73,7 +65,7 @@ export function ClubQRScannerModal({ visible, onClose, onSuccessJoined }: ClubQR
           />
         ) : (
           <View style={[styles.permissionFallback, { backgroundColor: "#0A0A0A" }]}>
-            <QrCode size={64} color="#E11D48" />
+            <QrCode size={64} color={colors.accent} />
             <Text style={styles.fallbackTitle}>Camera Access Required</Text>
             <Text style={styles.fallbackSubtitle}>
               Grant camera access to scan club turnstiles or select a demo club below to join.
@@ -86,14 +78,14 @@ export function ClubQRScannerModal({ visible, onClose, onSuccessJoined }: ClubQR
 
         {/* TOP BAR */}
         <View style={styles.topBar}>
-          <TouchableOpacity onPress={onClose} style={styles.iconCircle}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Close scanner" onPress={onClose} style={styles.iconCircle}>
             <X size={20} color="#FFFFFF" />
           </TouchableOpacity>
           <View style={styles.headerTitleWrap}>
-            <QrCode size={16} color="#10B981" />
+            <QrCode size={16} color={colors.accentGreen} />
             <Text style={styles.headerTitle}>Scan Club QR</Text>
           </View>
-          <TouchableOpacity onPress={() => setFlash((f) => (f === "on" ? "off" : "on"))} style={styles.iconCircle}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Toggle flashlight" onPress={() => setFlash((f) => (f === "on" ? "off" : "on"))} style={styles.iconCircle}>
             {flash === "on" ? <Zap size={20} color="#FBBF24" /> : <ZapOff size={20} color="#FFFFFF" />}
           </TouchableOpacity>
         </View>
@@ -113,7 +105,7 @@ export function ClubQRScannerModal({ visible, onClose, onSuccessJoined }: ClubQR
         {/* BOTTOM DEMO / SIMULATION SHELF */}
         <View style={styles.bottomSheet}>
           <View style={styles.demoHeader}>
-            <Sparkles size={14} color="#10B981" />
+            <Sparkles size={14} color={colors.accentGreen} />
             <Text style={styles.demoTitle}>Test / Instant Join Club QR</Text>
           </View>
           <View style={styles.clubPillsRow}>
@@ -127,7 +119,7 @@ export function ClubQRScannerModal({ visible, onClose, onSuccessJoined }: ClubQR
                 onPress={() => handleJoinClub(club.name, club.pass, club.price)}
                 style={styles.clubPill}
               >
-                <CheckCircle2 size={13} color="#10B981" />
+                <CheckCircle2 size={13} color={colors.accentGreen} />
                 <Text style={styles.clubPillText}>{club.name}</Text>
               </TouchableOpacity>
             ))}
@@ -138,7 +130,7 @@ export function ClubQRScannerModal({ visible, onClose, onSuccessJoined }: ClubQR
           </View>
         </View>
       </View>
-    </Modal>
+    </AppModal>
   );
 }
 
@@ -169,5 +161,5 @@ const styles = StyleSheet.create({
   clubPill: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "rgba(255,255,255,0.08)", paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: "rgba(255,255,255,0.12)" },
   clubPillText: { color: "#FFFFFF", fontSize: 13, fontWeight: "700" },
   footerRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 14 },
-  footerText: { color: "#8E8E93", fontSize: 10, fontWeight: "600" },
+  footerText: { color: "#8E8E93", fontSize: 11, fontWeight: "600" },
 });

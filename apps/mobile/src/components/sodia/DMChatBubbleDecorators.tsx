@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Award, Flame, Briefcase, CheckCircle2 } from "lucide-react-native";
 import { chatStyles as styles } from "./DMChatView.styles";
+import type { ColorPalette } from "../../theme/theme";
 
 interface PRStampBubbleProps {
   themeMode: "light" | "dark";
@@ -37,7 +38,7 @@ export function PRStampBubble({ themeMode }: PRStampBubbleProps) {
 }
 
 interface CoachTelemetryBubbleProps {
-  colors: any;
+  colors: ColorPalette;
 }
 
 export function CoachTelemetryBubble({ colors }: CoachTelemetryBubbleProps) {
@@ -67,7 +68,7 @@ export function CoachTelemetryBubble({ colors }: CoachTelemetryBubbleProps) {
 }
 
 interface B2BHandshakeCardProps {
-  colors: any;
+  colors: ColorPalette;
 }
 
 export function B2BHandshakeCard({ colors }: B2BHandshakeCardProps) {

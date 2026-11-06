@@ -155,7 +155,7 @@ export const useEcosystemStore = create<MobileEcosystemState>((set) => ({
       const newPass: PassRow = {
         id: `pass_${Date.now()}`,
         owner_id: state.profile.id,
-        facility_id: (facilityId as any) ?? "fac_metro_core",
+        facility_id: facilityId ?? "fac_metro_core",
         sku_id: kind === "recurring_subscription" ? "sku_vip_monthly" : "sku_day_pass",
         pass_type: customTitle ?? (kind === "recurring_subscription" ? "VIP Monthly All-Access" : "Day Pass"),
         status: "active",

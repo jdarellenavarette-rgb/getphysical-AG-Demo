@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView, Switch } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowLeft, Watch, Shield, Smartphone, Briefcase, UserCheck, Calendar, ChevronRight, Moon, Sun } from "lucide-react-native";
+import { ArrowLeft, Watch, Shield, Briefcase, UserCheck, Calendar, ChevronRight, Moon, Sun, LogIn, LogOut } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { useThemeStore } from "../../theme/theme";
+import { signOut } from "../../services/authService";
 
 interface SettingsModalProps {
   visible: boolean;
@@ -21,12 +22,11 @@ export function SettingsModal({
   onOpenOrganizer,
 }: SettingsModalProps) {
   const insets = useSafeAreaInsets();
-  const { profile } = useEcosystemStore();
+  const { profile, isGuest, setIsGuest } = useEcosystemStore();
   const { colors, themeMode, setThemeMode } = useThemeStore();
   const [appleHealthSync, setAppleHealthSync] = useState(true);
   const [garminSync, setGarminSync] = useState(false);
   const [biometricsEnabled, setBiometricsEnabled] = useState(true);
-  const [pushNotifications, setPushNotifications] = useState(true);
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
@@ -77,6 +77,34 @@ export function SettingsModal({
               <Text style={[styles.label, { color: colors.textSecondary }]}>Handle</Text>
               <Text style={[styles.value, { color: colors.textPrimary }]}>@{profile.username}</Text>
             </View>
+          </View>
+
+          {/* ACCOUNT & AUTH */}
+          <View style={[styles.card, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
+            <Text style={styles.cardHeader}>ACCOUNT & AUTHENTICATION</Text>
+            <View style={[styles.row, { borderBottomColor: colors.borderLight }]}>
+              <Text style={[styles.label, { color: colors.textSecondary }]}>Session Mode</Text>
+              <Text style={[styles.value, { color: isGuest ? "#F59E0B" : "#10B981" }]}>
+                {isGuest ? "Guest Preview Demo" : "Signed In"}
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={async () => {
+                onClose();
+                if (isGuest) {
+                  setIsGuest(false);
+                } else {
+                  await signOut();
+                  setIsGuest(false);
+                }
+              }}
+              style={[styles.authActionBtn, { backgroundColor: isGuest ? "#E11D48" : "#27272A" }]}
+            >
+              {isGuest ? <LogIn size={15} color="#FFFFFF" /> : <LogOut size={15} color="#F87171" />}
+              <Text style={[styles.authActionBtnText, { color: isGuest ? "#FFFFFF" : "#F87171" }]}>
+                {isGuest ? "Sign In / Sign Up with Google" : "Sign Out"}
+              </Text>
+            </TouchableOpacity>
           </View>
 
           {/* WEARABLE SENSORS */}
@@ -168,6 +196,8 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 8, borderBottomWidth: 1 },
   label: { fontSize: 13 },
   value: { fontSize: 13, fontWeight: "700" },
+  authActionBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 12, borderRadius: 10, marginTop: 12 },
+  authActionBtnText: { fontSize: 13, fontWeight: "800" },
   switchRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 10, borderBottomWidth: 1 },
   switchTitle: { fontSize: 13, fontWeight: "700" },
   switchSub: { color: "#71717A", fontSize: 11, marginTop: 2 },

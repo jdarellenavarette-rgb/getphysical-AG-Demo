@@ -1,20 +1,24 @@
-import React, { useEffect, type ReactNode } from "react";
+import React, { useEffect, useState, type ReactNode } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { useAuthGate } from "../../hooks/useAuthGate";
 import { getSupabase } from "../../lib/supabase";
 import { useEcosystemStore } from "../../store/ecosystemStore";
+import { OpeningLoadingScreen } from "../common/OpeningLoadingScreen";
 import { ProfileSetupScreen } from "./ProfileSetupScreen";
 import { SignInScreen } from "./SignInScreen";
 
 /**
- * Wraps the app: sign-in → profile setup (age gate) → app.
- * Builds without Supabase config run the offline product preview.
+ * Entry Gate:
+ * 1. Shows Opening / Splash screen first on app launch.
+ * 2. Seamlessly transitions to Google Sign-In / Sign-Up if signed out.
+ * 3. Supports guest demo preview or authenticated profile.
  */
 export function AuthGate({ children }: { children: ReactNode }) {
+  const [splashFinished, setSplashFinished] = useState(false);
   const { state, refresh } = useAuthGate();
-  const setProfile = useEcosystemStore((store) => store.setProfile);
+  const { isGuest, setIsGuest, setProfile } = useEcosystemStore();
 
-  // Load the real profile once signed in (the preview profile stays for unconfigured builds).
+  // Load the real profile once signed in (the preview profile stays for guest/preview).
   useEffect(() => {
     const supabase = getSupabase();
     if (state !== "ready" || !supabase) return;
@@ -23,14 +27,29 @@ export function AuthGate({ children }: { children: ReactNode }) {
     });
   }, [state, setProfile]);
 
-  if (state === "loading") {
+  // 1. Landing / Splash screen always runs first on app mount
+  if (!splashFinished) {
+    return <OpeningLoadingScreen onFinish={() => setSplashFinished(true)} />;
+  }
+
+  // 2. Loading existing session from SecureStore
+  if (state === "loading" && !isGuest) {
     return (
       <View style={{ flex: 1, backgroundColor: "#09090B", alignItems: "center", justifyContent: "center" }}>
         <ActivityIndicator color="#E11D48" />
       </View>
     );
   }
-  if (state === "signed_out") return <SignInScreen />;
-  if (state === "needs_profile") return <ProfileSetupScreen onDone={() => void refresh()} />;
+
+  // 3. Authenticated user needs profile setup (first-time OAuth / email sign-in)
+  if (state === "needs_profile" && !isGuest) {
+    return <ProfileSetupScreen onDone={() => void refresh()} />;
+  }
+
+  // 4. Signed out or offline: prompt Google sign-in / sign-up or guest demo
+  if ((state === "signed_out" || state === "unconfigured") && !isGuest) {
+    return <SignInScreen onContinueAsGuest={() => setIsGuest(true)} />;
+  }
+
   return <>{children}</>;
 }

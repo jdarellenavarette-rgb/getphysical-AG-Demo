@@ -134,14 +134,25 @@ These were committed to git history and must be treated as public:
 - Supabase anon key for project `brctciqhsyjqxfoqyuoz` (anon keys are public by design, but that
   project's RLS is unknown — move to the new project above).
 
+## Mobile sign-in
+
+Passwordless email code (`signInWithOtp` → `verifyOtp`), then one-time profile setup (name, unique
+username with suggestions, private write-once DOB with the 13+ hard gate; 18+ is enforced at checkout).
+`AuthGate` wraps the app; builds without Supabase env run the offline preview.
+
+Required Auth settings (Dashboard → Authentication):
+- Email templates "Magic Link" and "Confirm signup" must contain `{{ .Token }}` (the code).
+- Email OTP length 6, expiry 600 s; minimum password length 8 (web).
+- Redirect URLs: `http://localhost:3000/auth/confirm`, `sodia://auth/callback` (+ production web domain).
+- Custom SMTP before inviting real users: the built-in sender only delivers to project team members
+  and is heavily rate-limited.
+
 ## Known gaps (next steps)
 
-- **Mobile sign-in UI** is not built yet. The client, secure session storage, inbox, gate codes,
-  nutrition and checkout all switch to live data as soon as a session exists; signed-out users see
-  the existing preview content.
-- **QR rendering:** the Cards screen shows the 6-digit code; drawing the `GP2:<pass>:<code>` payload
-  as a scannable QR needs a QR component library (not on the approved list yet).
-- **Staff scanner** UI should call `verify_pass_code` (RPC is ready and tested).
+- **Maps:** move Discover / run tracking from the WebView + Geoapify map to `@rnmapbox/maps` and call
+  `facilities_nearby()`; upload GPS tracks to `workouts_move.route_geojson`.
+- **Universal links:** host `apple-app-site-association` / `assetlinks.json` on the app domain so
+  `https://<domain>/q/<token>` and `/f/<slug>` open the app.
 - **Recurring billing:** `MONTHLY` is charged as a one-month purchase; move to Xendit recurring
   plans / Stripe subscriptions for auto-renewal. Court bookings need slot inventory before sale.
 - **Xendit refunds** are not wired to a webhook yet (Stripe refunds are).

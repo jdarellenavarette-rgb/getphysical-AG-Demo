@@ -1,0 +1,26 @@
+import { StyleSheet } from "react-native";
+
+export const authStyles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: "#09090B" },
+  content: { flexGrow: 1, justifyContent: "center", paddingHorizontal: 24, paddingVertical: 48 },
+  brand: { color: "#E11D48", fontSize: 13, fontWeight: "800", letterSpacing: 1.5 },
+  title: { color: "#FFFFFF", fontSize: 26, fontWeight: "800", marginTop: 8 },
+  subtitle: { color: "#A1A1AA", fontSize: 14, marginTop: 8, lineHeight: 20 },
+  field: { marginTop: 20 },
+  label: { color: "#D4D4D8", fontSize: 13, fontWeight: "600", marginBottom: 6 },
+  input: { backgroundColor: "#18181B", borderWidth: 1, borderColor: "#27272A", borderRadius: 12, color: "#FFFFFF", fontSize: 16, paddingHorizontal: 14, paddingVertical: 13 },
+  inputError: { borderColor: "#F87171" },
+  codeInput: { fontSize: 24, letterSpacing: 8, textAlign: "center", fontWeight: "700" },
+  error: { color: "#F87171", fontSize: 12, marginTop: 6 },
+  formError: { color: "#FCA5A5", backgroundColor: "#2A1418", padding: 12, borderRadius: 10, marginTop: 16, fontSize: 13 },
+  button: { backgroundColor: "#E11D48", borderRadius: 14, paddingVertical: 15, alignItems: "center", marginTop: 24 },
+  buttonDisabled: { opacity: 0.55 },
+  buttonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "800" },
+  link: { color: "#A1A1AA", fontSize: 14, textAlign: "center", marginTop: 18, textDecorationLine: "underline" },
+  row: { flexDirection: "row", gap: 12 },
+  half: { flex: 1 },
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 8 },
+  chip: { backgroundColor: "#27272A", paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999 },
+  chipText: { color: "#FFFFFF", fontSize: 13, fontWeight: "600" },
+  fine: { color: "#71717A", fontSize: 12, marginTop: 18, lineHeight: 17, textAlign: "center" },
+});

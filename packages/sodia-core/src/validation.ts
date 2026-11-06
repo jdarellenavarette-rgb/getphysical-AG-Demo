@@ -115,3 +115,28 @@ export const foodItemSchema = z.object({
   fatsGrams: z.number().min(0),
   mealType: z.enum(["breakfast", "lunch", "dinner", "snack"]),
 });
+
+// -----------------------------------------------------------------------------
+// Sign-in & profile setup (mobile + web)
+// -----------------------------------------------------------------------------
+export const emailSchema = z.string().trim().toLowerCase().email("Enter a valid email address");
+
+/** Email OTP. Supabase projects issue 6–8 digit codes depending on config. */
+export const emailOtpSchema = z
+  .string()
+  .trim()
+  .regex(/^\d{6,8}$/, "Enter the code from your email");
+
+export const dobSchema = z
+  .string()
+  .trim()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD")
+  .refine((v) => !Number.isNaN(new Date(`${v}T00:00:00Z`).getTime()) && new Date(`${v}T00:00:00Z`) < new Date(), "Enter a real date");
+
+export const profileSetupSchema = z.object({
+  firstName: z.string().trim().min(1, "First name is required").max(40),
+  lastName: z.string().trim().min(1, "Last name is required").max(40),
+  username: usernameSchema,
+  dob: dobSchema.pipe(ageGateSchema),
+});
+export type ProfileSetupInput = z.infer<typeof profileSetupSchema>;

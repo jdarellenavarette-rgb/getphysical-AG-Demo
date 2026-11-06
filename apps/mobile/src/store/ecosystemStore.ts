@@ -20,6 +20,8 @@ import { INITIAL_DARELLE_POSTS } from "../data/darelleSeedPosts";
 export interface MobileEcosystemState {
   currentRole: UserRole;
   profile: ProfileRow;
+  /** Replace the preview profile with the signed-in user's real profile. */
+  setProfile: (profile: ProfileRow) => void;
   facilities: readonly FacilityRow[];
   passes: readonly PassRow[];
   posts: readonly SodiaPostRow[];
@@ -86,6 +88,7 @@ const INITIAL_PROFILE: ProfileRow = {
 export const useEcosystemStore = create<MobileEcosystemState>((set) => ({
   currentRole: "individual",
   profile: INITIAL_PROFILE,
+  setProfile: (profile) => set({ profile }),
   facilities: SEED_FACILITIES,
   passes: [],
   posts: INITIAL_DARELLE_POSTS,

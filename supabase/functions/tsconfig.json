@@ -1,0 +1,21 @@
+{
+  "//": "Type-check only (tsc). Deno ignores this file and uses deno.json.",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "baseUrl": ".",
+    "paths": {
+      "zod": ["../../packages/sodia-core/node_modules/zod"],
+      "@supabase/supabase-js": ["../../packages/sodia-core/node_modules/@supabase/supabase-js"]
+    }
+  },
+  "include": ["**/*.ts"]
+}

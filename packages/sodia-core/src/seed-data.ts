@@ -3,7 +3,7 @@ import type {
   PRChallengeRow,
   SodiaPostRow,
   PassRow,
-} from "./database.types";
+} from "./db";
 
 export const SEED_FACILITIES: readonly FacilityRow[] = [
   {
@@ -39,7 +39,10 @@ export const SEED_FACILITIES: readonly FacilityRow[] = [
     has_active_challenge: true,
     challenge_title: "Heaviest Deadlift in BGC",
     spatial_assets: null,
+    owner_id: null,
+    plan: "FREE",
     created_at: "2026-10-31T00:00:00.000Z",
+    updated_at: null,
   },
   {
     id: "fac_nexus_club",
@@ -84,7 +87,10 @@ export const SEED_FACILITIES: readonly FacilityRow[] = [
         { id: "court_pickle_c", name: "Pickleball Court C", isLocked: false },
       ],
     },
+    owner_id: null,
+    plan: "FREE",
     created_at: "2026-10-31T00:00:00.000Z",
+    updated_at: null,
   },
 ];
 
@@ -244,9 +250,10 @@ export const SEED_PASSES: readonly PassRow[] = [
     facility_id: "fac_metro_core",
     sku_id: "sku_day_pass",
     pass_type: "Day Pass (All Access)",
-    status: "active",
+    status: "ACTIVE",
     valid_until: "2026-10-31T23:59:59.000Z",
     gifted_by_user_id: null,
+    payment_order_id: null,
     created_at: "2026-10-31T01:00:00.000Z",
   },
   {
@@ -255,9 +262,10 @@ export const SEED_PASSES: readonly PassRow[] = [
     facility_id: "fac_nexus_club",
     sku_id: "sku_court_single",
     pass_type: "Pickleball Court A (1 Hour)",
-    status: "active",
+    status: "ACTIVE",
     valid_until: "2026-11-01T18:00:00.000Z",
     gifted_by_user_id: null,
+    payment_order_id: null,
     created_at: "2026-10-30T10:00:00.000Z",
   },
 ];

@@ -1,101 +1,74 @@
 /**
- * Offline Dynamic TOTP & 60-Second QR Cryptographic Engine
- * Appendix E (#8) & Section 0.3 Locked Rules:
- * Generates and validates a deterministic 60-second dynamic hash and 6-digit TOTP code
- * seeded by the user token/secret and the current 60s epoch time window.
+ * Pass TOTP — RFC 6238 with HMAC-SHA256, 60-second step, 6 digits.
+ *
+ * The secret is a random 32-byte value provisioned per pass by the database
+ * (public.pass_credentials) and readable only by the pass owner, so the phone
+ * can render codes fully offline. Verification happens server-side in
+ * public.verify_pass_code(), which implements the identical algorithm,
+ * accepts ±1 step of clock drift, rejects replays and throttles guessing.
  */
+import { hexToBytes, hmacSha256 } from "./crypto";
 
-export interface TotpTokenResult {
-  readonly code: string; // e.g. "482911"
-  readonly formattedCode: string; // e.g. "482-911"
-  readonly dynamicHash: string; // e.g. "gp_sec_abc123_epoch928374"
-  readonly remainingSeconds: number; // 1-60
-  readonly epochWindow: number;
+export const PASS_TOTP_STEP_SECONDS = 60;
+export const PASS_TOTP_DIGITS = 6;
+const QR_PREFIX = "GP2";
+
+export interface PassTotp {
+  readonly code: string; // "482911"
+  readonly formattedCode: string; // "482-911"
+  readonly qrPayload: string; // "GP2:<pass_id>:482911"
+  readonly remainingSeconds: number; // 1..60
+  readonly counter: number;
+}
+
+function counterBytes(counter: number): Uint8Array {
+  const bytes = new Uint8Array(8);
+  const view = new DataView(bytes.buffer);
+  view.setUint32(0, Math.floor(counter / 0x100000000), false);
+  view.setUint32(4, counter >>> 0, false);
+  return bytes;
+}
+
+/** RFC 4226 HOTP over HMAC-SHA256. */
+export function hotpSha256(secret: Uint8Array, counter: number, digits = PASS_TOTP_DIGITS): string {
+  const mac = hmacSha256(secret, counterBytes(counter));
+  const offset = mac[mac.length - 1]! & 0x0f;
+  const binary =
+    ((mac[offset]! & 0x7f) << 24) |
+    (mac[offset + 1]! << 16) |
+    (mac[offset + 2]! << 8) |
+    mac[offset + 3]!;
+  return (binary % 10 ** digits).toString().padStart(digits, "0");
+}
+
+export function buildPassQrPayload(passId: string, code: string): string {
+  return `${QR_PREFIX}:${passId}:${code}`;
+}
+
+export function parsePassQrPayload(payload: string): { passId: string; code: string } | null {
+  const match = /^GP2:([0-9a-f-]{36}):(\d{6})$/i.exec(payload.trim());
+  if (!match) return null;
+  return { passId: match[1]!.toLowerCase(), code: match[2]! };
 }
 
 /**
- * FNV-1a 32-bit hash algorithm implementation (pure TypeScript, zero native dependencies)
+ * Generate the current code for a pass.
+ * @param secret pass_credentials.secret as returned by PostgREST ("\\x…" hex) or raw bytes
  */
-function fnv1a32(str: string): number {
-  let hash = 0x811c9dc5;
-  for (let i = 0; i < str.length; i++) {
-    hash ^= str.charCodeAt(i);
-    hash +=
-      (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
-  }
-  return hash >>> 0;
-}
-
-/**
- * Generates the dynamic 60s TOTP code and QR hash for a user pass
- */
-export function generateDynamicPassTotp(
-  userId: string,
+export function generatePassTotp(
   passId: string,
-  facilityId: string,
-  currentTimestampMs: number = Date.now()
-): TotpTokenResult {
-  const windowSeconds = 60;
-  const currentSeconds = Math.floor(currentTimestampMs / 1000);
-  const epochWindow = Math.floor(currentSeconds / windowSeconds);
-  const remainingSeconds = windowSeconds - (currentSeconds % windowSeconds);
-
-  // Deterministic seed combining user, pass, facility, and the current 60s window
-  const seed = `${userId}:${passId}:${facilityId}:${epochWindow}`;
-  const hashVal = fnv1a32(seed);
-
-  // 6-digit zero-padded code (000000 to 999999)
-  const codeNum = hashVal % 1000000;
-  const code = codeNum.toString().padStart(6, "0");
-  const formattedCode = `${code.slice(0, 3)}-${code.slice(3, 6)}`;
-
-  // Cryptographic dynamic hash for QR scanner camera feeds
-  const hexHash = hashVal.toString(16).padStart(8, "0");
-  const dynamicHash = `GP:${facilityId}:${passId}:${userId}:${epochWindow}:${hexHash}`;
-
+  secret: string | Uint8Array,
+  nowMs: number = Date.now()
+): PassTotp {
+  const key = typeof secret === "string" ? hexToBytes(secret) : secret;
+  const seconds = Math.floor(nowMs / 1000);
+  const counter = Math.floor(seconds / PASS_TOTP_STEP_SECONDS);
+  const code = hotpSha256(key, counter);
   return {
     code,
-    formattedCode,
-    dynamicHash,
-    remainingSeconds,
-    epochWindow,
+    formattedCode: `${code.slice(0, 3)}-${code.slice(3)}`,
+    qrPayload: buildPassQrPayload(passId, code),
+    remainingSeconds: PASS_TOTP_STEP_SECONDS - (seconds % PASS_TOTP_STEP_SECONDS),
+    counter,
   };
-}
-
-/**
- * Verifies a 6-digit TOTP or dynamic QR hash at the front desk (GymDash tablet)
- * Allows for a 1-window grace period (current window or immediate previous window)
- */
-export function verifyDynamicPassCode(
-  inputCodeOrHash: string,
-  userId: string,
-  passId: string,
-  facilityId: string,
-  currentTimestampMs: number = Date.now()
-): { isValid: boolean; windowDelta: number } {
-  const windowSeconds = 60;
-  const currentSeconds = Math.floor(currentTimestampMs / 1000);
-  const currentEpoch = Math.floor(currentSeconds / windowSeconds);
-
-  const cleanInput = inputCodeOrHash.replace(/[^a-zA-Z0-9:]/g, "");
-
-  // Check current window (0) and previous window (-1) to tolerate clock drift / network latency
-  for (const delta of [0, -1]) {
-    const testEpoch = currentEpoch + delta;
-    const testSeed = `${userId}:${passId}:${facilityId}:${testEpoch}`;
-    const hashVal = fnv1a32(testSeed);
-    const code = (hashVal % 1000000).toString().padStart(6, "0");
-    const hexHash = hashVal.toString(16).padStart(8, "0");
-    const dynamicHash = `GP:${facilityId}:${passId}:${userId}:${testEpoch}:${hexHash}`;
-
-    if (
-      cleanInput === code ||
-      cleanInput === code.replace("-", "") ||
-      cleanInput === dynamicHash
-    ) {
-      return { isValid: true, windowDelta: delta };
-    }
-  }
-
-  return { isValid: false, windowDelta: 0 };
 }

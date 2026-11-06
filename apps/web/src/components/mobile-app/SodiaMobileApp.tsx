@@ -74,15 +74,15 @@ export function SodiaMobileApp({ onOpenDesktopSuite }: SodiaMobileAppProps) {
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div onClick={() => showToast('Inbox: 2 unread DMs from Coach Sarah & Marco')} style={{ position: 'relative', cursor: 'pointer' }}>
-            <MessageSquareMore size={20} color="#ffffff" />
-            <span style={{ position: 'absolute', top: '-1px', right: '-1px', width: '7px', height: '7px', borderRadius: '50%', backgroundColor: '#ec4899' }} />
-          </div>
-          <div onClick={() => showToast('Notifications: 3 new PR challenge leaderboard alerts')} style={{ position: 'relative', cursor: 'pointer' }}>
-            <Bell size={20} color="#ffffff" />
-            <span style={{ position: 'absolute', top: '-1px', right: '-1px', width: '7px', height: '7px', borderRadius: '50%', backgroundColor: '#ec4899' }} />
-          </div>
-          <button onClick={() => setIsMenuOpen(true)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: 0 }}>
+          <button type="button" aria-label="Inbox, 2 unread" onClick={() => showToast('Inbox: 2 unread DMs from Coach Sarah & Marco')} style={{ position: 'relative', cursor: 'pointer', display: 'flex' }}>
+            <MessageSquareMore size={20} color="#ffffff" aria-hidden="true" />
+            <span aria-hidden="true" style={{ position: 'absolute', top: '-1px', right: '-1px', width: '7px', height: '7px', borderRadius: '50%', backgroundColor: '#ec4899' }} />
+          </button>
+          <button type="button" aria-label="Notifications, 3 new" onClick={() => showToast('Notifications: 3 new PR challenge leaderboard alerts')} style={{ position: 'relative', cursor: 'pointer', display: 'flex' }}>
+            <Bell size={20} color="#ffffff" aria-hidden="true" />
+            <span aria-hidden="true" style={{ position: 'absolute', top: '-1px', right: '-1px', width: '7px', height: '7px', borderRadius: '50%', backgroundColor: '#ec4899' }} />
+          </button>
+          <button type="button" aria-label="Open menu" onClick={() => setIsMenuOpen(true)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: 0 }}>
             <Settings size={20} />
           </button>
         </div>

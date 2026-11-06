@@ -1,104 +1,67 @@
-'use client';
-
 import React from 'react';
-import { SuiteMode } from './HeroPromoCard';
-import { useSuiteTheme } from './theme';
+import type { SuiteMode } from '../../lib/suite-routes';
+import { T } from '../../lib/theme-vars';
 
-interface EngagementGaugeCardProps {
-  suiteMode?: SuiteMode;
-}
+const GAUGES: Record<SuiteMode, { score: number; target: number; title: string; sub: string }> = {
+  GYMDASH: { score: 7.4, target: 8.0, title: 'Club Engagement Score', sub: 'Optimized and running smoothly' },
+  CLUBDASH: { score: 8.6, target: 9.0, title: 'Spatial Court Efficiency', sub: 'Optimized parent/child allocations' },
+  COACHDASH: { score: 9.1, target: 9.5, title: 'Athlete Compliance Score', sub: 'Client cycle check-ins on-track' },
+  ORGANIZERDASH: { score: 8.8, target: 9.0, title: 'Tournament Check-In Index', sub: 'All division rosters cleared' },
+};
 
-export function EngagementGaugeCard({ suiteMode = 'GYMDASH' }: EngagementGaugeCardProps) {
-  const { theme, isDark } = useSuiteTheme();
-  const getGaugeMeta = () => {
-    switch (suiteMode) {
-      case 'CLUBDASH':
-        return { score: 8.6, target: 9.0, title: 'Spatial Court Efficiency', sub: 'Optimized parent/child allocations' };
-      case 'COACHDASH':
-        return { score: 9.1, target: 9.5, title: 'Athlete Compliance Score', sub: 'Client cycle check-ins on-track' };
-      case 'ORGANIZERDASH':
-        return { score: 8.8, target: 9.0, title: 'Tournament Check-In Index', sub: 'All division rosters cleared' };
-      case 'GYMDASH':
-      default:
-        return { score: 7.4, target: 8.0, title: 'Club Engagement Score', sub: 'Optimized and running smoothly' };
-    }
-  };
+const RADIUS = 42;
+const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
-  const { score, target, title, sub } = getGaugeMeta();
-  const radius = 42;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (score / 10) * circumference;
-
+/** Server Component. */
+export function EngagementGaugeCard({ suiteMode }: { suiteMode: SuiteMode }) {
+  const { score, target, title, sub } = GAUGES[suiteMode];
+  const offset = CIRCUMFERENCE - (score / 10) * CIRCUMFERENCE;
   return (
-    <div
-      style={{
-        borderRadius: '24px',
-        backgroundColor: theme.bgCard,
-        border: `1px solid ${theme.borderColor}`,
-        padding: '22px 24px',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        minHeight: '165px',
-        boxShadow: theme.shadowCard,
-      }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div>
-          <h3 style={{ fontSize: '15px', fontWeight: 900, color: theme.textPrimary, letterSpacing: '-0.3px' }}>
+    <section className="gp-card" style={{ padding: '22px 24px', minHeight: 165 }} aria-labelledby="gp-gauge-title">
+      <div className="gp-row-between" style={{ alignItems: 'flex-start', flexWrap: 'nowrap' }}>
+        <div style={{ minWidth: 0 }}>
+          <h2 id="gp-gauge-title" style={{ fontSize: 15, fontWeight: 900, color: T.textPrimary, letterSpacing: -0.3 }}>
             {title}
-          </h3>
-          <p style={{ fontSize: '11px', color: theme.textMuted, marginTop: '3px', fontWeight: 500 }}>
-            {sub}
+          </h2>
+          <p style={{ fontSize: 12, color: T.textMuted, marginTop: 3, fontWeight: 500 }}>{sub}</p>
+          <p style={{ marginTop: 22, fontSize: 12, color: T.textMuted, fontWeight: 700 }}>
+            Target: <strong style={{ color: T.textPrimary }}>{target.toFixed(1)}</strong>
           </p>
-          <div style={{ marginTop: '22px', fontSize: '11px', color: theme.textMuted, fontWeight: 700 }}>
-            Target: <strong style={{ color: theme.textPrimary }}>{target.toFixed(1)}</strong>
-          </div>
         </div>
-
-        {/* Circular Gauge Ring */}
-        <div style={{ position: 'relative', width: '100px', height: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <svg width="100" height="100" viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)' }}>
-            <circle
-              cx="50"
-              cy="50"
-              r={radius}
-              stroke={isDark ? '#262B37' : '#E2E8F0'}
-              strokeWidth="7"
-              fill="transparent"
-            />
-            <circle
-              cx="50"
-              cy="50"
-              r={radius}
-              stroke="url(#coralGradLight)"
-              strokeWidth="7"
-              fill="transparent"
-              strokeDasharray={circumference}
-              strokeDashoffset={strokeDashoffset}
-              strokeLinecap="round"
-              style={{
-                transition: 'stroke-dashoffset 0.8s ease',
-                filter: 'drop-shadow(0 0 4px rgba(225, 29, 72, 0.4))',
-              }}
-            />
+        <div
+          role="meter"
+          aria-label={title}
+          aria-valuemin={0}
+          aria-valuemax={10}
+          aria-valuenow={score}
+          style={{ position: 'relative', width: 100, height: 100, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          <svg width="100" height="100" viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)' }} aria-hidden="true">
             <defs>
-              <linearGradient id="coralGradLight" x1="0%" y1="0%" x2="100%" y2="100%">
+              <linearGradient id="gp-gauge-grad" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#FFA69E" />
                 <stop offset="100%" stopColor="#E11D48" />
               </linearGradient>
             </defs>
+            <circle cx="50" cy="50" r={RADIUS} stroke={T.trackColor} strokeWidth="7" fill="transparent" />
+            <circle
+              cx="50"
+              cy="50"
+              r={RADIUS}
+              stroke="url(#gp-gauge-grad)"
+              strokeWidth="7"
+              fill="transparent"
+              strokeDasharray={CIRCUMFERENCE}
+              strokeDashoffset={offset}
+              strokeLinecap="round"
+            />
           </svg>
-
-          {/* Center Text */}
-          <div style={{ position: 'absolute', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <span style={{ fontSize: '20px', fontWeight: 900, color: theme.textPrimary, lineHeight: 1 }}>{score}</span>
-            <span style={{ fontSize: '9px', fontWeight: 800, color: theme.textMuted, marginTop: '2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Index
-            </span>
+          <div aria-hidden="true" style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <span style={{ fontSize: 20, fontWeight: 900, color: T.textPrimary, lineHeight: 1 }}>{score}</span>
+            <span style={{ fontSize: 11, fontWeight: 800, color: T.textMuted, marginTop: 2, textTransform: 'uppercase' }}>Index</span>
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

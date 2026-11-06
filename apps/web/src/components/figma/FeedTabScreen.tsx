@@ -44,7 +44,7 @@ export function FeedTabScreen({ onOpenComments, onShare, onSelectCreator }: Feed
       {/* Right Interaction Rail (TikTok / Instagram Reels Style) */}
       <div style={{ position: 'absolute', right: '16px', bottom: '95px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', zIndex: 30 }}>
         {/* Like */}
-        <button onClick={toggleLike} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', cursor: 'pointer' }}>
+        <button type="button" aria-pressed={isLiked} aria-label={`Like, ${likesCount} likes`} onClick={toggleLike} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', cursor: 'pointer' }}>
           <div style={{ width: '42px', height: '42px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Heart size={28} color={isLiked ? '#ec4899' : '#ffffff'} fill={isLiked ? '#ec4899' : 'none'} strokeWidth={1.8} />
           </div>

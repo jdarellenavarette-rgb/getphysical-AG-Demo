@@ -1,7 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
-import { KeyRound, Coins, ShieldCheck, AlertTriangle, CheckCircle2, Lock } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { AlertTriangle, CheckCircle2, Coins, KeyRound, Lock } from 'lucide-react';
+import { Dialog } from '../ui/Dialog';
+import { FormField } from '../ui/FormField';
+import { blindCountSchema, openShiftSchema } from '../../lib/schemas/shift';
+import { firstFieldErrors, type FieldErrors } from '../../lib/schemas/field-errors';
 
 export interface ShiftSession {
   staffId: string;
@@ -12,194 +16,203 @@ export interface ShiftSession {
 }
 
 interface FloatGateModalProps {
+  open: boolean;
   currentShift: ShiftSession | null;
   onOpenShift: (staffPin: string, openingFloat: number) => { success: boolean; message: string };
   onCloseShift: (countedCash: number) => { variance: number; flagged: boolean };
   onDismiss: () => void;
 }
 
-export function FloatGateModal({
-  currentShift,
-  onOpenShift,
-  onCloseShift,
-  onDismiss,
-}: FloatGateModalProps) {
+type OpenField = 'pin' | 'openingFloat';
+type CloseField = 'countedCash';
+
+function formatPeso(n: number): string {
+  return `₱${Math.abs(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+/** Shift-start float declaration and shift-end blind count (dual-control cash reconciliation). */
+export function FloatGateModal({ open, currentShift, onOpenShift, onCloseShift, onDismiss }: FloatGateModalProps) {
   const [pin, setPin] = useState('');
   const [openingCash, setOpeningCash] = useState('2500');
   const [closingCash, setClosingCash] = useState('');
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [openErrors, setOpenErrors] = useState<FieldErrors<OpenField>>({});
+  const [closeErrors, setCloseErrors] = useState<FieldErrors<CloseField>>({});
+  const [authError, setAuthError] = useState<string | null>(null);
   const [varianceResult, setVarianceResult] = useState<{ variance: number; flagged: boolean } | null>(null);
 
-  const handleOpen = () => {
-    if (pin.length < 4) {
-      setErrorMsg('Please enter a valid 4-digit staff PIN.');
+  useEffect(() => {
+    if (!open) return;
+    setPin('');
+    setClosingCash('');
+    setOpenErrors({});
+    setCloseErrors({});
+    setAuthError(null);
+    setVarianceResult(null);
+  }, [open]);
+
+  const shiftOpen = currentShift?.isOpen ?? false;
+
+  const handleOpen = (e: React.FormEvent) => {
+    e.preventDefault();
+    const parsed = openShiftSchema.safeParse({ pin, openingFloat: openingCash });
+    if (!parsed.success) {
+      setOpenErrors(firstFieldErrors<OpenField>(parsed.error));
       return;
     }
-    const floatAmount = parseFloat(openingCash);
-    if (isNaN(floatAmount) || floatAmount < 0) {
-      setErrorMsg('Invalid float amount.');
-      return;
-    }
-    const res = onOpenShift(pin, floatAmount);
+    setOpenErrors({});
+    const res = onOpenShift(parsed.data.pin, parsed.data.openingFloat);
     if (!res.success) {
-      setErrorMsg(res.message);
-    } else {
-      setErrorMsg(null);
-      onDismiss();
+      setAuthError(res.message);
+      setOpenErrors({ pin: 'PIN not accepted.' });
+      return;
     }
+    onDismiss();
   };
 
-  const handleClose = () => {
-    const counted = parseFloat(closingCash);
-    if (isNaN(counted) || counted < 0) {
-      setErrorMsg('Enter the actual counted physical cash in drawer.');
+  const handleClose = (e: React.FormEvent) => {
+    e.preventDefault();
+    const parsed = blindCountSchema.safeParse({ countedCash: closingCash });
+    if (!parsed.success) {
+      setCloseErrors(firstFieldErrors<CloseField>(parsed.error));
       return;
     }
-    const res = onCloseShift(counted);
-    setVarianceResult(res);
+    setCloseErrors({});
+    setVarianceResult(onCloseShift(parsed.data.countedCash));
   };
+
+  const icon = (
+    <span
+      aria-hidden="true"
+      style={{
+        width: 38,
+        height: 38,
+        borderRadius: 10,
+        flexShrink: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: shiftOpen ? 'rgba(59,130,246,0.12)' : 'var(--gp-accent-green-muted)',
+        color: shiftOpen ? 'var(--gp-info)' : 'var(--gp-accent-green)',
+      }}
+    >
+      {shiftOpen ? <Lock size={20} /> : <Coins size={20} />}
+    </span>
+  );
 
   return (
-    <div style={{
-      position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.85)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, backdropFilter: 'blur(4px)'
-    }}>
-      <div style={{
-        backgroundColor: '#111827', border: '1px solid #1f2937', borderRadius: '14px',
-        width: '460px', padding: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.6)'
-      }}>
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-          <div style={{
-            width: '38px', height: '38px', borderRadius: '10px',
-            backgroundColor: currentShift?.isOpen ? '#3b82f620' : '#10b98120',
-            display: 'flex', alignItems: 'center', justifyContent: 'center'
-          }}>
-            {currentShift?.isOpen ? <Lock size={20} color="#3b82f6" /> : <Coins size={20} color="#10b981" />}
+    <Dialog
+      open={open}
+      onClose={onDismiss}
+      maxWidth={460}
+      icon={icon}
+      title={varianceResult ? 'Drawer reconciled' : shiftOpen ? 'Shift end blind count' : 'Register float gate'}
+      description={shiftOpen ? 'Dual-control blind cash count reconciliation' : 'Mandatory shift-start opening cash declaration'}
+    >
+      {varianceResult ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div className={`gp-notice ${varianceResult.flagged ? 'gp-notice-danger' : 'gp-notice-success'}`} role="status" style={{ flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+            {varianceResult.flagged ? <AlertTriangle size={30} aria-hidden="true" /> : <CheckCircle2 size={30} aria-hidden="true" />}
+            <strong style={{ fontSize: 16 }}>{varianceResult.flagged ? 'Variance detected' : 'Perfect drawer reconciliation'}</strong>
+            <span>
+              Cash variance: {varianceResult.variance < 0 ? '−' : '+'}
+              {formatPeso(varianceResult.variance)}
+            </span>
+            {varianceResult.flagged && <span style={{ fontSize: 12 }}>The discrepancy was sent to the Manager Triage queue.</span>}
           </div>
-          <div>
-            <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#f9fafb' }}>
-              {currentShift?.isOpen ? 'Shift End Blind Count' : 'The Register Float Gate'}
-            </h3>
-            <p style={{ fontSize: '12px', color: '#9ca3af' }}>
-              {currentShift?.isOpen ? 'Dual-control blind cash count reconciliation' : 'Mandatory shift-start opening cash declaration'}
-            </p>
-          </div>
+          <button type="button" className="gp-btn gp-btn-primary" onClick={onDismiss} data-autofocus>
+            Close drawer & log out
+          </button>
         </div>
-
-        {errorMsg && (
-          <div style={{ backgroundColor: '#ef444420', border: '1px solid #ef444440', borderRadius: '8px', padding: '10px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <AlertTriangle size={16} color="#ef4444" />
-            <span style={{ fontSize: '13px', color: '#fca5a5' }}>{errorMsg}</span>
-          </div>
-        )}
-
-        {!currentShift?.isOpen ? (
-          /* Shift Open Flow */
-          <div>
-            <div style={{ marginBottom: '14px' }}>
-              <label style={{ display: 'block', fontSize: '12px', color: '#9ca3af', marginBottom: '6px' }}>Staff Authorization PIN</label>
+      ) : !shiftOpen ? (
+        <form noValidate onSubmit={handleOpen} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {authError && (
+            <div className="gp-notice gp-notice-danger" role="alert">
+              <AlertTriangle size={16} aria-hidden="true" style={{ flexShrink: 0 }} />
+              <span>{authError}</span>
+            </div>
+          )}
+          <FormField label="Staff authorization PIN" error={openErrors.pin} hint="4–6 digits. Demo PIN: 1234.">
+            {(props) => (
               <div style={{ position: 'relative' }}>
-                <KeyRound size={16} color="#6b7280" style={{ position: 'absolute', left: '12px', top: '12px' }} />
+                <KeyRound size={16} aria-hidden="true" style={{ position: 'absolute', left: 12, top: 13, color: 'var(--gp-text-muted)' }} />
                 <input
+                  {...props}
+                  className="gp-input"
                   type="password"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
                   maxLength={6}
-                  placeholder="Enter 4-digit PIN (e.g. 1234)"
                   value={pin}
-                  onChange={(e) => setPin(e.target.value)}
-                  style={{
-                    width: '100%', backgroundColor: '#1f2937', border: '1px solid #374151',
-                    borderRadius: '8px', padding: '10px 12px 10px 36px', color: '#f3f4f6', fontSize: '14px'
+                  onChange={(e) => {
+                    setPin(e.target.value);
+                    setAuthError(null);
+                    if (openErrors.pin) setOpenErrors((p) => ({ ...p, pin: undefined }));
                   }}
+                  style={{ paddingLeft: 36 }}
+                  data-autofocus
                 />
               </div>
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', fontSize: '12px', color: '#9ca3af', marginBottom: '6px' }}>Opening Drawer Float (₱)</label>
-              <div style={{ position: 'relative' }}>
-                <span style={{ position: 'absolute', left: '12px', top: '10px', color: '#10b981', fontWeight: 700 }}>₱</span>
-                <input
-                  type="number"
-                  placeholder="2500"
-                  value={openingCash}
-                  onChange={(e) => setOpeningCash(e.target.value)}
-                  style={{
-                    width: '100%', backgroundColor: '#1f2937', border: '1px solid #374151',
-                    borderRadius: '8px', padding: '10px 12px 10px 30px', color: '#f3f4f6', fontSize: '14px', fontWeight: 600
-                  }}
-                />
-              </div>
-              <p style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px' }}>Spec rule: POS & Turnstiles lock until float declaration is signed.</p>
-            </div>
-
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={onDismiss} style={{ flex: 1, padding: '10px', borderRadius: '8px', backgroundColor: '#374151', color: '#d1d5db', fontSize: '13px', fontWeight: 600 }}>Cancel</button>
-              <button onClick={handleOpen} style={{ flex: 2, padding: '10px', borderRadius: '8px', backgroundColor: '#10b981', color: '#000', fontSize: '13px', fontWeight: 700 }}>Unlock Register & Begin Shift</button>
-            </div>
+            )}
+          </FormField>
+          <FormField label="Opening drawer float (₱)" error={openErrors.openingFloat} hint="POS & turnstiles stay locked until the float is declared.">
+            {(props) => (
+              <input
+                {...props}
+                className="gp-input"
+                type="text"
+                inputMode="decimal"
+                value={openingCash}
+                onChange={(e) => {
+                  setOpeningCash(e.target.value);
+                  if (openErrors.openingFloat) setOpenErrors((p) => ({ ...p, openingFloat: undefined }));
+                }}
+              />
+            )}
+          </FormField>
+          <div className="gp-row" style={{ gap: 10 }}>
+            <button type="button" className="gp-btn gp-btn-secondary" style={{ flex: 1 }} onClick={onDismiss}>
+              Cancel
+            </button>
+            <button type="submit" className="gp-btn gp-btn-success" style={{ flex: 2 }}>
+              Unlock register & begin shift
+            </button>
           </div>
-        ) : varianceResult ? (
-          /* Variance Result Card */
-          <div>
-            <div style={{
-              backgroundColor: varianceResult.flagged ? '#ef444420' : '#10b98120',
-              border: `1px solid ${varianceResult.flagged ? '#ef444450' : '#10b98150'}`,
-              borderRadius: '10px', padding: '16px', marginBottom: '16px', textAlign: 'center'
-            }}>
-              {varianceResult.flagged ? <AlertTriangle size={32} color="#ef4444" style={{ margin: '0 auto 8px' }} /> : <CheckCircle2 size={32} color="#10b981" style={{ margin: '0 auto 8px' }} />}
-              <h4 style={{ fontSize: '16px', fontWeight: 700, color: varianceResult.flagged ? '#f87171' : '#34d399' }}>
-                {varianceResult.flagged ? 'Variance Detected' : 'Perfect Drawer Reconciliation'}
-              </h4>
-              <p style={{ fontSize: '13px', color: '#d1d5db', marginTop: '4px' }}>
-                Cash Variance: <strong style={{ color: varianceResult.variance === 0 ? '#10b981' : varianceResult.variance < 0 ? '#ef4444' : '#f59e0b' }}>
-                  {varianceResult.variance >= 0 ? `+₱${varianceResult.variance.toFixed(2)}` : `-₱${Math.abs(varianceResult.variance).toFixed(2)}`}
-                </strong>
-              </p>
-              {varianceResult.flagged && (
-                <p style={{ fontSize: '11px', color: '#fca5a5', marginTop: '6px' }}>Discrepancy has been dispatched to Manager Triage Queue for investigation.</p>
-              )}
-            </div>
-            <button onClick={onDismiss} style={{ width: '100%', padding: '10px', borderRadius: '8px', backgroundColor: '#3b82f6', color: '#fff', fontSize: '13px', fontWeight: 700 }}>Close Drawer & Log Out</button>
+        </form>
+      ) : (
+        <form noValidate onSubmit={handleClose} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <dl className="gp-subcard" style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 6, fontSize: 13 }}>
+            <dt style={{ color: 'var(--gp-text-muted)' }}>Active shift</dt>
+            <dd style={{ fontWeight: 700 }}>{currentShift?.staffName}</dd>
+            <dt style={{ color: 'var(--gp-text-muted)' }}>Opening float declared</dt>
+            <dd style={{ fontWeight: 700, color: 'var(--gp-accent-green)' }}>₱{currentShift?.openingFloat.toLocaleString()}</dd>
+          </dl>
+          <FormField label="Counted physical drawer cash (₱)" error={closeErrors.countedCash} hint="Blind rule: expected totals are hidden to prevent skim cover-ups.">
+            {(props) => (
+              <input
+                {...props}
+                className="gp-input"
+                type="text"
+                inputMode="decimal"
+                value={closingCash}
+                placeholder="Exact count, e.g. 3320.00"
+                onChange={(e) => {
+                  setClosingCash(e.target.value);
+                  if (closeErrors.countedCash) setCloseErrors({});
+                }}
+                data-autofocus
+              />
+            )}
+          </FormField>
+          <div className="gp-row" style={{ gap: 10 }}>
+            <button type="button" className="gp-btn gp-btn-secondary" style={{ flex: 1 }} onClick={onDismiss}>
+              Resume shift
+            </button>
+            <button type="submit" className="gp-btn gp-btn-primary" style={{ flex: 2 }}>
+              Submit blind count
+            </button>
           </div>
-        ) : (
-          /* Shift End Blind Count Input */
-          <div>
-            <div style={{ backgroundColor: '#1e293b', borderRadius: '8px', padding: '12px', marginBottom: '16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#9ca3af', marginBottom: '4px' }}>
-                <span>Active Shift:</span>
-                <span style={{ color: '#f3f4f6', fontWeight: 600 }}>{currentShift.staffName}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#9ca3af' }}>
-                <span>Opening Float Declared:</span>
-                <span style={{ color: '#10b981', fontWeight: 600 }}>₱{currentShift.openingFloat.toLocaleString()}</span>
-              </div>
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', fontSize: '12px', color: '#9ca3af', marginBottom: '6px' }}>Counted Physical Drawer Cash (₱)</label>
-              <div style={{ position: 'relative' }}>
-                <span style={{ position: 'absolute', left: '12px', top: '10px', color: '#3b82f6', fontWeight: 700 }}>₱</span>
-                <input
-                  type="number"
-                  placeholder="Enter exact count without system hint"
-                  value={closingCash}
-                  onChange={(e) => setClosingCash(e.target.value)}
-                  style={{
-                    width: '100%', backgroundColor: '#1f2937', border: '1px solid #374151',
-                    borderRadius: '8px', padding: '10px 12px 10px 30px', color: '#f3f4f6', fontSize: '14px', fontWeight: 600
-                  }}
-                />
-              </div>
-              <p style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px' }}>Blind Rule: System expected totals are intentionally hidden to prevent skim coverups.</p>
-            </div>
-
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={onDismiss} style={{ flex: 1, padding: '10px', borderRadius: '8px', backgroundColor: '#374151', color: '#d1d5db', fontSize: '13px', fontWeight: 600 }}>Resume Shift</button>
-              <button onClick={handleClose} style={{ flex: 2, padding: '10px', borderRadius: '8px', backgroundColor: '#f59e0b', color: '#000', fontSize: '13px', fontWeight: 700 }}>Submit Blind Count & Reconcile</button>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+        </form>
+      )}
+    </Dialog>
   );
 }

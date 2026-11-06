@@ -47,7 +47,7 @@ export function ProfileTabScreen({ onSwitchRole }: ProfileTabScreenProps) {
               </div>
               <div>
                 <div style={{ fontSize: '12px', fontWeight: 800, color: '#fff' }}>Front Desk Staff Quickdash</div>
-                <div style={{ fontSize: '10px', color: '#71717a' }}>Selfie Clock-In & Live Turnstile Scanner</div>
+                <div style={{ fontSize: '11px', color: '#71717a' }}>Selfie Clock-In & Live Turnstile Scanner</div>
               </div>
             </div>
             <ArrowRight size={14} color="#71717a" />
@@ -66,7 +66,7 @@ export function ProfileTabScreen({ onSwitchRole }: ProfileTabScreenProps) {
               </div>
               <div>
                 <div style={{ fontSize: '12px', fontWeight: 800, color: '#fff' }}>Coach Live Floor Roster</div>
-                <div style={{ fontSize: '10px', color: '#71717a' }}>Client Attendance & ₱150 Floor Fee Split</div>
+                <div style={{ fontSize: '11px', color: '#71717a' }}>Client Attendance & ₱150 Floor Fee Split</div>
               </div>
             </div>
             <ArrowRight size={14} color="#71717a" />
@@ -85,7 +85,7 @@ export function ProfileTabScreen({ onSwitchRole }: ProfileTabScreenProps) {
               </div>
               <div>
                 <div style={{ fontSize: '12px', fontWeight: 800, color: '#fff' }}>Organizer Pro Quick-Meet</div>
-                <div style={{ fontSize: '10px', color: '#71717a' }}>Tournament Brackets & Court Match Check-In</div>
+                <div style={{ fontSize: '11px', color: '#71717a' }}>Tournament Brackets & Court Match Check-In</div>
               </div>
             </div>
             <ArrowRight size={14} color="#71717a" />
@@ -101,11 +101,11 @@ export function ProfileTabScreen({ onSwitchRole }: ProfileTabScreenProps) {
         <div style={{ backgroundColor: '#18181b', borderRadius: '12px', border: '1px solid #27272a', padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '12px', fontWeight: 800, color: '#fff' }}>Metro Arena Titanium VIP</span>
-            <span style={{ fontSize: '10px', color: '#10b981', fontWeight: 700, backgroundColor: '#10b98120', padding: '2px 6px', borderRadius: '4px' }}>Active</span>
+            <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 700, backgroundColor: '#10b98120', padding: '2px 6px', borderRadius: '4px' }}>Active</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '12px', fontWeight: 800, color: '#fff' }}>GetPhysical+ Pro Subscription</span>
-            <span style={{ fontSize: '10px', color: '#ec4899', fontWeight: 700, backgroundColor: '#ec489920', padding: '2px 6px', borderRadius: '4px' }}>₱149/mo</span>
+            <span style={{ fontSize: '11px', color: '#ec4899', fontWeight: 700, backgroundColor: '#ec489920', padding: '2px 6px', borderRadius: '4px' }}>₱149/mo</span>
           </div>
         </div>
       </div>
@@ -119,12 +119,12 @@ export function ProfileTabScreen({ onSwitchRole }: ProfileTabScreenProps) {
           <div style={{ backgroundColor: '#18181b', borderRadius: '12px', border: '1px solid #27272a', padding: '12px' }}>
             <Award size={20} color="#ec4899" />
             <div style={{ fontSize: '14px', fontWeight: 900, color: '#fff', marginTop: '6px' }}>225 KG</div>
-            <div style={{ fontSize: '10px', color: '#71717a' }}>Deadlift PR • Video Verified</div>
+            <div style={{ fontSize: '11px', color: '#71717a' }}>Deadlift PR • Video Verified</div>
           </div>
           <div style={{ backgroundColor: '#18181b', borderRadius: '12px', border: '1px solid #27272a', padding: '12px' }}>
             <Award size={20} color="#38bdf8" />
             <div style={{ fontSize: '14px', fontWeight: 900, color: '#fff', marginTop: '6px' }}>22:40</div>
-            <div style={{ fontSize: '10px', color: '#71717a' }}>5KM Run • GPS Verified</div>
+            <div style={{ fontSize: '11px', color: '#71717a' }}>5KM Run • GPS Verified</div>
           </div>
         </div>
       </div>

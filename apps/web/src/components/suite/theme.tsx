@@ -1,111 +1,131 @@
 'use client';
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useSyncExternalStore } from 'react';
+import { DARK_PALETTE, LIGHT_PALETTE, type DesignThemeMode } from 'sodia-core/design-tokens';
+import { THEME_STORAGE_KEY, resolveEffects } from '../../lib/theme-css';
+import { T, type ThemeVars } from '../../lib/theme-vars';
 
-export interface WebTheme {
+/**
+ * Existing field names are preserved so every view keeps working. Values are
+ * `var(--gp-*)` references generated from the sodia-core palettes, so the same
+ * string renders on the server and the client and the browser swaps colours.
+ */
+export interface WebTheme extends ThemeVars {
   isDark: boolean;
-  bgScreen: string;
-  bgHeader: string;
-  bgCard: string;
-  bgCardSecondary: string;
-  bgCardTertiary: string;
-  bgDock: string;
-  borderColor: string;
-  borderLight: string;
-  textPrimary: string;
-  textSecondary: string;
-  textMuted: string;
-  accent: string;
-  accentHover: string;
-  accentMuted: string;
-  accentGreen: string;
-  accentGreenMuted: string;
-  shadowCard: string;
-  shadowPill: string;
-  waveStroke: string;
-  waveFill: string;
 }
 
-export const lightTheme: WebTheme = {
-  isDark: false,
-  bgScreen: '#F4F4F5',
-  bgHeader: '#FFFFFF',
-  bgCard: '#FFFFFF',
-  bgCardSecondary: '#F8FAFC',
-  bgCardTertiary: '#F1F5F9',
-  bgDock: '#FFFFFF',
-  borderColor: '#E2E8F0',
-  borderLight: '#F1F5F9',
-  textPrimary: '#09090B',
-  textSecondary: '#475569',
-  textMuted: '#64748B',
-  accent: '#E11D48',
-  accentHover: '#BE123C',
-  accentMuted: 'rgba(225, 29, 72, 0.08)',
-  accentGreen: '#059669',
-  accentGreenMuted: 'rgba(5, 150, 105, 0.1)',
-  shadowCard: '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
-  shadowPill: '0 4px 12px rgba(225, 29, 72, 0.25)',
-  waveStroke: '#E11D48',
-  waveFill: 'rgba(225, 29, 72, 0.14)',
-};
+/** Concrete (non-variable) theme objects for code that needs literal colours, e.g. WebGL. */
+function buildLiteralTheme(mode: DesignThemeMode): WebTheme {
+  const palette = mode === 'dark' ? DARK_PALETTE : LIGHT_PALETTE;
+  const effects = resolveEffects(mode);
+  return {
+    isDark: mode === 'dark',
+    bgScreen: palette.bgScreen,
+    bgHeader: palette.bgHeader,
+    bgCard: palette.bgCard,
+    bgCardSecondary: palette.bgCardSecondary,
+    bgCardTertiary: palette.bgCardTertiary,
+    bgDock: palette.bgDock,
+    bgInput: palette.bgInput,
+    borderColor: palette.borderColor,
+    borderLight: palette.borderLight,
+    textPrimary: palette.textPrimary,
+    textSecondary: palette.textSecondary,
+    textMuted: palette.textMuted,
+    textOnAccent: palette.textOnAccent,
+    accent: palette.accent,
+    accentHover: palette.accentHover,
+    accentText: palette.accentText,
+    accentMuted: palette.accentMuted,
+    accentGreen: palette.accentGreen,
+    accentGreenMuted: palette.accentGreenMuted,
+    warning: palette.warning,
+    danger: palette.danger,
+    info: palette.info,
+    skeletonBase: palette.skeletonBase,
+    skeletonHighlight: palette.skeletonHighlight,
+    overlayScrim: palette.overlayScrim,
+    focusRing: palette.focusRing,
+    ...effects,
+  };
+}
 
-export const darkTheme: WebTheme = {
-  isDark: true,
-  bgScreen: '#0D0F12',
-  bgHeader: '#12151B',
-  bgCard: '#161920',
-  bgCardSecondary: '#1E232E',
-  bgCardTertiary: '#252B38',
-  bgDock: '#13161C',
-  borderColor: '#262B37',
-  borderLight: '#1E232E',
-  textPrimary: '#FFFFFF',
-  textSecondary: '#94A3B8',
-  textMuted: '#64748B',
-  accent: '#FF4D6D',
-  accentHover: '#FB7185',
-  accentMuted: 'rgba(255, 77, 109, 0.16)',
-  accentGreen: '#10B981',
-  accentGreenMuted: 'rgba(16, 185, 129, 0.15)',
-  shadowCard: '0 12px 32px rgba(0, 0, 0, 0.45)',
-  shadowPill: '0 8px 24px rgba(255, 77, 109, 0.45)',
-  waveStroke: '#FF4D6D',
-  waveFill: 'rgba(255, 77, 109, 0.28)',
-};
+export const lightTheme: WebTheme = buildLiteralTheme('light');
+export const darkTheme: WebTheme = buildLiteralTheme('dark');
+
+const LIGHT_VARS: WebTheme = { ...T, isDark: false };
+const DARK_VARS: WebTheme = { ...T, isDark: true };
+
+// ---- Theme mode store (html[data-theme] + localStorage + prefers-color-scheme) ----
+
+const DARK_QUERY = '(prefers-color-scheme: dark)';
+const listeners = new Set<() => void>();
+
+function readMode(): DesignThemeMode {
+  const attr = document.documentElement.getAttribute('data-theme');
+  if (attr === 'light' || attr === 'dark') return attr;
+  return window.matchMedia(DARK_QUERY).matches ? 'dark' : 'light';
+}
+
+function subscribe(listener: () => void): () => void {
+  listeners.add(listener);
+  const mql = window.matchMedia(DARK_QUERY);
+  const onStorage = (e: StorageEvent) => {
+    if (e.key !== THEME_STORAGE_KEY) return;
+    if (e.newValue === 'light' || e.newValue === 'dark') {
+      document.documentElement.setAttribute('data-theme', e.newValue);
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+    }
+    listener();
+  };
+  mql.addEventListener('change', listener);
+  window.addEventListener('storage', onStorage);
+  return () => {
+    listeners.delete(listener);
+    mql.removeEventListener('change', listener);
+    window.removeEventListener('storage', onStorage);
+  };
+}
+
+function writeMode(mode: DesignThemeMode) {
+  document.documentElement.setAttribute('data-theme', mode);
+  try {
+    window.localStorage.setItem(THEME_STORAGE_KEY, mode);
+  } catch {
+    // Private mode / storage disabled: the choice still applies for this session.
+  }
+  listeners.forEach((l) => l());
+}
 
 interface ThemeContextValue {
   theme: WebTheme;
   isDark: boolean;
   toggleTheme: () => void;
-  setThemeMode: (mode: 'light' | 'dark') => void;
+  setThemeMode: (mode: DesignThemeMode) => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
-  theme: lightTheme,
+  theme: LIGHT_VARS,
   isDark: false,
   toggleTheme: () => {},
   setThemeMode: () => {},
 });
 
 export function SuiteThemeProvider({ children }: { children: React.ReactNode }) {
-  const [mode, setMode] = useState<'light' | 'dark'>('light');
+  // Server snapshot is 'light'; after hydration React re-reads the real mode.
+  // Colours never depend on this value (they are CSS variables), so there is no flash.
+  const mode = useSyncExternalStore<DesignThemeMode>(subscribe, readMode, () => 'light');
 
-  const toggleTheme = () => {
-    setMode((prev) => (prev === 'light' ? 'dark' : 'light'));
-  };
+  const setThemeMode = useCallback((next: DesignThemeMode) => writeMode(next), []);
+  const toggleTheme = useCallback(() => writeMode(readMode() === 'dark' ? 'light' : 'dark'), []);
 
-  const setThemeMode = (newMode: 'light' | 'dark') => {
-    setMode(newMode);
-  };
-
-  const currentTheme = mode === 'dark' ? darkTheme : lightTheme;
-
-  return (
-    <ThemeContext.Provider value={{ theme: currentTheme, isDark: mode === 'dark', toggleTheme, setThemeMode }}>
-      {children}
-    </ThemeContext.Provider>
+  const value = useMemo<ThemeContextValue>(
+    () => ({ theme: mode === 'dark' ? DARK_VARS : LIGHT_VARS, isDark: mode === 'dark', toggleTheme, setThemeMode }),
+    [mode, toggleTheme, setThemeMode]
   );
+
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
 export function useSuiteTheme() {

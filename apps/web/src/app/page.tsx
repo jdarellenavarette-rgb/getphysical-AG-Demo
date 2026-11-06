@@ -1,8 +1,6 @@
-'use client';
+import { redirect } from 'next/navigation';
+import { DEFAULT_SUITE, DEFAULT_TAB, suiteHref } from '../lib/suite-routes';
 
-import React from 'react';
-import { BusinessSuiteShell } from '../components/suite/BusinessSuiteShell';
-
-export default function AppRootPage() {
-  return <BusinessSuiteShell />;
+export default function RootPage() {
+  redirect(suiteHref(DEFAULT_SUITE, DEFAULT_TAB));
 }

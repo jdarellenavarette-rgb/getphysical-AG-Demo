@@ -34,17 +34,19 @@ export function TrackTabScreen() {
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: '#09090b', color: '#fff', overflowY: 'auto', padding: '16px 16px 90px' }}>
       {/* Trinity Mode Switcher */}
       <div style={{ display: 'flex', backgroundColor: '#18181b', borderRadius: '12px', padding: '4px', marginBottom: '16px', border: '1px solid #27272a' }}>
-        {[
-          { id: 'lift', label: 'Lift', icon: Dumbbell },
-          { id: 'move', label: 'Move (GPS)', icon: Footprints },
-          { id: 'food', label: 'Food (NASM)', icon: Utensils },
-        ].map((m) => {
+        {(
+          [
+            { id: 'lift', label: 'Lift', icon: Dumbbell },
+            { id: 'move', label: 'Move (GPS)', icon: Footprints },
+            { id: 'food', label: 'Food (NASM)', icon: Utensils },
+          ] as const
+        ).map((m) => {
           const Icon = m.icon;
           const active = trackMode === m.id;
           return (
             <button
               key={m.id}
-              onClick={() => setTrackMode(m.id as any)}
+              onClick={() => setTrackMode(m.id)}
               style={{
                 flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
                 padding: '8px 0', borderRadius: '8px', fontSize: '12px', fontWeight: 800,
@@ -88,7 +90,7 @@ export function TrackTabScreen() {
                 <span style={{ fontSize: '11px', color: '#a1a1aa' }}>Primary Posterior Chain • Target: 3 Working Sets</span>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '10px', color: '#10b981', fontWeight: 800 }}>EPLEY 1RM</div>
+                <div style={{ fontSize: '11px', color: '#10b981', fontWeight: 800 }}>EPLEY 1RM</div>
                 <div style={{ fontSize: '14px', fontWeight: 900, color: '#fff' }}>{estimated1RM} KG</div>
               </div>
             </div>
@@ -125,15 +127,15 @@ export function TrackTabScreen() {
             <div style={{ fontSize: '26px', fontWeight: 900, color: '#fff' }}>5.24 KM</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginTop: '12px' }}>
               <div style={{ backgroundColor: '#27272a', padding: '10px', borderRadius: '10px' }}>
-                <div style={{ fontSize: '10px', color: '#a1a1aa' }}>Duration</div>
+                <div style={{ fontSize: '11px', color: '#a1a1aa' }}>Duration</div>
                 <div style={{ fontSize: '14px', fontWeight: 900, color: '#fff' }}>28:14</div>
               </div>
               <div style={{ backgroundColor: '#27272a', padding: '10px', borderRadius: '10px' }}>
-                <div style={{ fontSize: '10px', color: '#a1a1aa' }}>Pace</div>
+                <div style={{ fontSize: '11px', color: '#a1a1aa' }}>Pace</div>
                 <div style={{ fontSize: '14px', fontWeight: 900, color: '#fff' }}>5'23"/km</div>
               </div>
               <div style={{ backgroundColor: '#27272a', padding: '10px', borderRadius: '10px' }}>
-                <div style={{ fontSize: '10px', color: '#a1a1aa' }}>Calories</div>
+                <div style={{ fontSize: '11px', color: '#a1a1aa' }}>Calories</div>
                 <div style={{ fontSize: '14px', fontWeight: 900, color: '#fff' }}>412 kcal</div>
               </div>
             </div>

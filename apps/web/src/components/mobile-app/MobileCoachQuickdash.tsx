@@ -37,7 +37,7 @@ export function MobileCoachQuickdash({ onBack }: MobileCoachQuickdashProps) {
             <div style={{ fontSize: '11px', color: '#a1a1aa' }}>Registry C • 3/3 Free Tier Clients</div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '10px', color: '#38bdf8', fontWeight: 800 }}>TODAY'S FLOOR FEES</div>
+            <div style={{ fontSize: '11px', color: '#38bdf8', fontWeight: 800 }}>TODAY'S FLOOR FEES</div>
             <div style={{ fontSize: '16px', fontWeight: 900, color: '#fff' }}>-₱150 settled</div>
           </div>
         </div>
@@ -57,17 +57,17 @@ export function MobileCoachQuickdash({ onBack }: MobileCoachQuickdashProps) {
                 <div style={{ fontSize: '11px', color: '#71717a', marginTop: '2px' }}>{c.session}</div>
               </div>
               {c.status === 'IN_BUILDING' && (
-                <span style={{ fontSize: '10px', fontWeight: 900, color: '#10b981', backgroundColor: '#10b98120', padding: '3px 8px', borderRadius: '6px' }}>
+                <span style={{ fontSize: '11px', fontWeight: 900, color: '#10b981', backgroundColor: '#10b98120', padding: '3px 8px', borderRadius: '6px' }}>
                   IN BUILDING (SCAN #01)
                 </span>
               )}
               {c.status === 'EXPECTED' && (
-                <span style={{ fontSize: '10px', fontWeight: 800, color: '#38bdf8', backgroundColor: '#38bdf820', padding: '3px 8px', borderRadius: '6px' }}>
+                <span style={{ fontSize: '11px', fontWeight: 800, color: '#38bdf8', backgroundColor: '#38bdf820', padding: '3px 8px', borderRadius: '6px' }}>
                   EXPECTED 11:00 AM
                 </span>
               )}
               {c.status === 'MISSED_TRIAGE' && (
-                <span style={{ fontSize: '10px', fontWeight: 800, color: '#f59e0b', backgroundColor: '#f59e0b20', padding: '3px 8px', borderRadius: '6px' }}>
+                <span style={{ fontSize: '11px', fontWeight: 800, color: '#f59e0b', backgroundColor: '#f59e0b20', padding: '3px 8px', borderRadius: '6px' }}>
                   COMPLIANCE ALERT
                 </span>
               )}
@@ -78,7 +78,7 @@ export function MobileCoachQuickdash({ onBack }: MobileCoachQuickdashProps) {
               {c.status === 'MISSED_TRIAGE' && (
                 <button
                   onClick={() => alert(`Nudge notification dispatched to ${c.name} on Sodia app!`)}
-                  style={{ backgroundColor: '#f59e0b', color: '#000', border: 'none', borderRadius: '6px', padding: '4px 8px', fontSize: '10px', fontWeight: 800, cursor: 'pointer' }}
+                  style={{ backgroundColor: '#f59e0b', color: '#000', border: 'none', borderRadius: '6px', padding: '4px 8px', fontSize: '11px', fontWeight: 800, cursor: 'pointer' }}
                 >
                   Send Nudge
                 </button>

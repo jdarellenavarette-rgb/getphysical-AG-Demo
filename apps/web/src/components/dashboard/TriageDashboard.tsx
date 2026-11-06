@@ -1,211 +1,140 @@
 'use client';
 
-import React, { useState } from 'react';
-import { AlertOctagon, TrendingDown, Send, CheckCircle2, UserX, ShieldAlert, Sparkles } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { AlertOctagon, CheckCircle2, Sparkles, TrendingDown } from 'lucide-react';
+import { createEmptyState, createSuccessState, type TenStateEnvelope } from 'sodia-core/states';
+import { StateView, SuccessNotice } from '../ui/StateView';
+import { INITIAL_AT_RISK, INITIAL_TRIAGE, type AtRiskMember, type TriageItem } from './triage-data';
 
-interface TriageItem {
-  id: string;
-  type: 'CASH_VARIANCE' | 'SQUATTER_BREACH' | 'OVERRIDE';
-  title: string;
-  detail: string;
-  severity: 'HIGH' | 'MEDIUM' | 'LOW';
-  timestamp: string;
-  resolved: boolean;
+function useToast() {
+  const [toast, setToast] = useState<string | null>(null);
+  const timer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+  return {
+    toast,
+    show: (msg: string) => {
+      setToast(msg);
+      window.clearTimeout(timer.current);
+      timer.current = window.setTimeout(() => setToast(null), 4000);
+    },
+  };
 }
 
-interface AtRiskMember {
-  id: string;
-  name: string;
-  avatar: string;
-  riskScore: number;
-  lastVisit: string;
-  attendanceDrop: string;
-  plan: string;
-  offerSent: boolean;
-}
-
-const INITIAL_TRIAGE: TriageItem[] = [
-  {
-    id: 't1',
-    type: 'CASH_VARIANCE',
-    title: 'Register 01 Shift Blind Count Discrepancy',
-    detail: 'Staff Jane D. reported ₱3,180. Expected drawer cash was ₱3,300 (-₱120.00 shortage).',
-    severity: 'HIGH',
-    timestamp: '14 mins ago',
-    resolved: false,
-  },
-  {
-    id: 't2',
-    type: 'SQUATTER_BREACH',
-    title: 'Gate-vs-Booking Squatter Breach (Court 01)',
-    detail: 'Court 01 booked for 10 players, but Quickdash recorded 14 valid Tier-0 entry scans (+4 overage).',
-    severity: 'HIGH',
-    timestamp: '32 mins ago',
-    resolved: false,
-  },
-  {
-    id: 't3',
-    type: 'OVERRIDE',
-    title: 'B2B Organizer Affiliation Handshake Pending',
-    detail: 'Organizer @bgc.pickleball requests verified club affiliation (wholesale court block + 70/30 split ledger).',
-    severity: 'MEDIUM',
-    timestamp: '1 hr ago',
-    resolved: false,
-  },
-];
-
-const INITIAL_AT_RISK: AtRiskMember[] = [
-  {
-    id: 'm1',
-    name: 'BGC Pickleball Club (Organizer)',
-    avatar: 'BP',
-    riskScore: 94,
-    lastVisit: '31 days dormant',
-    attendanceDrop: 'Weekly League → 0 bookings',
-    plan: 'Verified Affiliate Organizer',
-    offerSent: false,
-  },
-  {
-    id: 'm2',
-    name: 'Carlos Mendoza (Member)',
-    avatar: 'CM',
-    riskScore: 88,
-    lastVisit: '14 days ago',
-    attendanceDrop: '4x/wk → 0 visits',
-    plan: 'Nexus VIP Annual',
-    offerSent: false,
-  },
-  {
-    id: 'm3',
-    name: 'Patricia Lim (Member)',
-    avatar: 'PL',
-    riskScore: 76,
-    lastVisit: '9 days ago',
-    attendanceDrop: '3x/wk → 1 visit/mo',
-    plan: 'Monthly All-Access',
-    offerSent: false,
-  },
-];
-
+/** Manager triage queue + predictive attrition CRM. */
 export function TriageDashboard() {
   const [triage, setTriage] = useState<TriageItem[]>(INITIAL_TRIAGE);
   const [atRisk, setAtRisk] = useState<AtRiskMember[]>(INITIAL_AT_RISK);
-  const [activeToast, setActiveToast] = useState<string | null>(null);
+  const { toast, show } = useToast();
+  const pending = triage.filter((t) => !t.resolved).length;
 
-  const resolveTriage = (id: string) => {
-    setTriage((prev) => prev.map((t) => (t.id === id ? { ...t, resolved: true } : t)));
-    setActiveToast('Triage incident resolved and logged to audit trail.');
-    setTimeout(() => setActiveToast(null), 3000);
-  };
-
-  const sendWinBackOffer = (id: string, name: string) => {
-    setAtRisk((prev) => prev.map((m) => (m.id === id ? { ...m, offerSent: true } : m)));
-    setActiveToast(`Win-back perk (Complimentary 1-on-1 Recovery + Whey Shake) dispatched to ${name}'s VIP Wallet.`);
-    setTimeout(() => setActiveToast(null), 4000);
-  };
+  const queueState: TenStateEnvelope<readonly TriageItem[]> =
+    triage.length === 0 ? createEmptyState('No incidents have been raised this shift.', 'Refresh') : createSuccessState<readonly TriageItem[]>(triage);
+  const riskState: TenStateEnvelope<readonly AtRiskMember[]> =
+    atRisk.length === 0 ? createEmptyState('No members are currently flagged as at-risk.', 'Refresh') : createSuccessState<readonly AtRiskMember[]>(atRisk);
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr', gap: '20px' }}>
-      {/* LEFT: Needs Attention Triage Queue */}
-      <div style={{ backgroundColor: '#111827', border: '1px solid #1f2937', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <AlertOctagon size={20} color="#ef4444" />
-            <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#f9fafb' }}>Manager Triage Queue</h2>
-          </div>
-          <span style={{ fontSize: '11px', fontWeight: 700, padding: '3px 8px', borderRadius: '6px', backgroundColor: '#ef444420', color: '#f87171' }}>
-            {triage.filter((t) => !t.resolved).length} Pending Actions
-          </span>
+    <div className="gp-grid-auto-wide">
+      <section className="gp-card" aria-labelledby="gp-triage-title" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div className="gp-row-between">
+          <h2 id="gp-triage-title" className="gp-row gp-section-title" style={{ fontSize: 18 }}>
+            <AlertOctagon size={20} color="var(--gp-danger)" aria-hidden="true" /> Manager triage queue
+          </h2>
+          <span className={`gp-badge ${pending > 0 ? 'gp-badge-danger' : 'gp-badge-success'}`}>{pending > 0 ? `${pending} pending` : 'All clear'}</span>
         </div>
-
-        {activeToast && (
-          <div style={{ backgroundColor: '#10b98120', border: '1px solid #10b981', borderRadius: '8px', padding: '10px', marginBottom: '14px', fontSize: '12px', color: '#34d399', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <CheckCircle2 size={16} /> {activeToast}
-          </div>
-        )}
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {triage.map((item) => (
-            <div
-              key={item.id}
-              style={{
-                backgroundColor: item.resolved ? '#1e293b40' : '#1e293b',
-                border: `1px solid ${item.resolved ? '#334155' : item.severity === 'HIGH' ? '#ef444450' : '#f59e0b50'}`,
-                borderRadius: '10px', padding: '14px', opacity: item.resolved ? 0.6 : 1, transition: 'all 0.2s ease'
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
-                <span style={{ fontSize: '13px', fontWeight: 700, color: '#f1f5f9' }}>{item.title}</span>
-                <span style={{ fontSize: '10px', color: '#9ca3af' }}>{item.timestamp}</span>
-              </div>
-              <p style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '10px', lineHeight: 1.4 }}>{item.detail}</p>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', backgroundColor: item.severity === 'HIGH' ? '#ef444420' : '#f59e0b20', color: item.severity === 'HIGH' ? '#ef4444' : '#f59e0b' }}>
-                  {item.severity} SEVERITY
-                </span>
-                {!item.resolved ? (
-                  <button onClick={() => resolveTriage(item.id)} style={{ backgroundColor: '#374151', color: '#f9fafb', fontSize: '11px', fontWeight: 700, padding: '6px 12px', borderRadius: '6px' }}>Investigate & Resolve</button>
-                ) : (
-                  <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 700 }}>✓ Resolved</span>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* RIGHT: Predictive Attrition CRM */}
-      <div style={{ backgroundColor: '#111827', border: '1px solid #1f2937', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <TrendingDown size={20} color="#f59e0b" />
-            <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#f9fafb' }}>Predictive Attrition CRM</h2>
-          </div>
-          <span style={{ fontSize: '11px', color: '#9ca3af' }}>AI Velocity Drop Model</span>
-        </div>
-
-        <p style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '14px' }}>
-          Spec 4.2: Flags members with attendance velocity drop &gt;60% before cancellation happens.
-        </p>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {atRisk.map((member) => (
-            <div key={member.id} style={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '10px', padding: '14px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <div style={{ width: '34px', height: '34px', borderRadius: '17px', backgroundColor: '#3b82f630', color: '#60a5fa', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '12px' }}>
-                    {member.avatar}
+        {toast && <SuccessNotice>{toast}</SuccessNotice>}
+        <StateView state={queueState} compact>
+          {(items) => (
+            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {items.map((item) => (
+                <li
+                  key={item.id}
+                  className="gp-subcard"
+                  style={{ borderColor: item.resolved ? 'var(--gp-border-color)' : item.severity === 'HIGH' ? 'var(--gp-danger)' : 'var(--gp-warning)', opacity: item.resolved ? 0.7 : 1 }}
+                >
+                  <div className="gp-row-between" style={{ alignItems: 'flex-start', marginBottom: 6, flexWrap: 'nowrap' }}>
+                    <h3 style={{ fontSize: 14, fontWeight: 800 }}>{item.title}</h3>
+                    <span style={{ fontSize: 11, color: 'var(--gp-text-muted)', whiteSpace: 'nowrap' }}>{item.timestamp}</span>
                   </div>
-                  <div>
-                    <div style={{ fontSize: '13px', fontWeight: 700, color: '#f8fafc' }}>{member.name}</div>
-                    <div style={{ fontSize: '11px', color: '#94a3b8' }}>{member.plan} • Last visit: {member.lastVisit}</div>
+                  <p style={{ fontSize: 13, color: 'var(--gp-text-secondary)', marginBottom: 10, lineHeight: 1.45 }}>{item.detail}</p>
+                  <div className="gp-row-between">
+                    <span className={`gp-badge ${item.severity === 'HIGH' ? 'gp-badge-danger' : 'gp-badge-warning'}`}>{item.severity} severity</span>
+                    {item.resolved ? (
+                      <span className="gp-row" style={{ fontSize: 12, fontWeight: 800, color: 'var(--gp-accent-green)', gap: 4 }}>
+                        <CheckCircle2 size={14} aria-hidden="true" /> Resolved
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        className="gp-btn gp-btn-secondary gp-btn-sm"
+                        onClick={() => {
+                          setTriage((prev) => prev.map((t) => (t.id === item.id ? { ...t, resolved: true } : t)));
+                          show('Incident resolved and logged to the audit trail.');
+                        }}
+                      >
+                        Investigate & resolve
+                      </button>
+                    )}
                   </div>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '14px', fontWeight: 900, color: member.riskScore > 85 ? '#ef4444' : '#f59e0b', fontFamily: 'monospace' }}>
-                    {member.riskScore}%
-                  </div>
-                  <div style={{ fontSize: '9px', color: '#9ca3af', textTransform: 'uppercase' }}>Churn Risk</div>
-                </div>
-              </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </StateView>
+      </section>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0f172a', borderRadius: '6px', padding: '6px 10px', marginTop: '6px' }}>
-                <span style={{ fontSize: '11px', color: '#f87171' }}>Drop: {member.attendanceDrop}</span>
-                {member.offerSent ? (
-                  <span style={{ fontSize: '11px', color: '#34d399', fontWeight: 700 }}>✓ Win-Back Perk Active</span>
-                ) : (
-                  <button
-                    onClick={() => sendWinBackOffer(member.id, member.name)}
-                    style={{ backgroundColor: '#8b5cf6', color: '#fff', fontSize: '11px', fontWeight: 700, padding: '5px 10px', borderRadius: '5px', display: 'flex', alignItems: 'center', gap: '4px' }}
-                  >
-                    <Sparkles size={12} /> 1-Tap Win-Back Offer
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
+      <section className="gp-card" aria-labelledby="gp-attrition-title" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div className="gp-row-between">
+          <h2 id="gp-attrition-title" className="gp-row gp-section-title" style={{ fontSize: 18 }}>
+            <TrendingDown size={20} color="var(--gp-warning)" aria-hidden="true" /> Predictive attrition CRM
+          </h2>
+          <span style={{ fontSize: 12, color: 'var(--gp-text-muted)' }}>Velocity-drop model</span>
         </div>
-      </div>
+        <p style={{ fontSize: 13, color: 'var(--gp-text-muted)' }}>Flags members whose attendance velocity drops more than 60% before they cancel.</p>
+        <StateView state={riskState} compact>
+          {(members) => (
+            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {members.map((m) => (
+                <li key={m.id} className="gp-subcard">
+                  <div className="gp-row-between" style={{ marginBottom: 8, flexWrap: 'nowrap' }}>
+                    <div className="gp-row" style={{ gap: 10, minWidth: 0 }}>
+                      <span aria-hidden="true" style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: 'rgba(59,130,246,0.14)', color: 'var(--gp-info)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 12, flexShrink: 0 }}>
+                        {m.avatar}
+                      </span>
+                      <div style={{ minWidth: 0 }}>
+                        <h3 style={{ fontSize: 14, fontWeight: 700 }}>{m.name}</h3>
+                        <p style={{ fontSize: 12, color: 'var(--gp-text-muted)' }}>
+                          {m.plan} • Last visit: {m.lastVisit}
+                        </p>
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <div style={{ fontSize: 15, fontWeight: 900, fontVariantNumeric: 'tabular-nums', color: m.riskScore > 85 ? 'var(--gp-danger)' : 'var(--gp-warning)' }}>{m.riskScore}%</div>
+                      <div style={{ fontSize: 11, color: 'var(--gp-text-muted)', textTransform: 'uppercase' }}>Churn risk</div>
+                    </div>
+                  </div>
+                  <div className="gp-row-between" style={{ backgroundColor: 'var(--gp-bg-card)', borderRadius: 8, padding: '6px 10px' }}>
+                    <span style={{ fontSize: 12, color: 'var(--gp-danger)' }}>Drop: {m.attendanceDrop}</span>
+                    {m.offerSent ? (
+                      <span style={{ fontSize: 12, color: 'var(--gp-accent-green)', fontWeight: 800 }}>Win-back perk active</span>
+                    ) : (
+                      <button
+                        type="button"
+                        className="gp-btn gp-btn-primary gp-btn-sm"
+                        onClick={() => {
+                          setAtRisk((prev) => prev.map((x) => (x.id === m.id ? { ...x, offerSent: true } : x)));
+                          show(`Win-back perk (recovery session + shake) sent to ${m.name}'s VIP wallet.`);
+                        }}
+                      >
+                        <Sparkles size={12} aria-hidden="true" /> Send win-back offer
+                      </button>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </StateView>
+      </section>
     </div>
   );
 }

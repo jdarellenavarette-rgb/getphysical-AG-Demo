@@ -21,6 +21,10 @@
     "./database": {
       "types": "./src/database.types.ts",
       "default": "./src/database.types.ts"
+    },
+    "./design-tokens": {
+      "types": "./src/design-tokens.ts",
+      "default": "./src/design-tokens.ts"
     }
   },
   "scripts": {
@@ -34,5 +38,6 @@
   },
   "devDependencies": {
     "typescript": "^5.8.2"
-  }
+  },
+  "sideEffects": false
 }

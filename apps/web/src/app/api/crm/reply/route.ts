@@ -1,25 +1,15 @@
 import { NextResponse } from 'next/server';
-import { getSodiaSupabaseClient, CrmChatMessage } from 'sodia-core';
+import type { CrmChatMessage } from 'sodia-core';
+import { dispatchRealtime, listReplies, storeReply } from '../../../../lib/crm-server';
 
-declare global {
-  // eslint-disable-next-line no-var
-  var __GLOBAL_CRM_REPLIES__: CrmChatMessage[] | undefined;
-}
-
-if (!global.__GLOBAL_CRM_REPLIES__) {
-  global.__GLOBAL_CRM_REPLIES__ = [];
-}
-
+/** REST surface kept for the Sodia mobile app's athlete replies (HTTP fallback path). */
 export async function GET() {
-  return NextResponse.json({
-    success: true,
-    replies: global.__GLOBAL_CRM_REPLIES__ || [],
-  });
+  return NextResponse.json({ success: true, replies: listReplies() });
 }
 
 export async function POST(req: Request) {
   try {
-    const data = await req.json();
+    const data: Partial<CrmChatMessage> = await req.json();
     const reply: CrmChatMessage = {
       id: data.id || `crm_reply_${Date.now()}`,
       threadId: data.threadId || 'thread_metro_core',
@@ -30,27 +20,9 @@ export async function POST(req: Request) {
       createdAt: new Date().toISOString(),
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
-
-    global.__GLOBAL_CRM_REPLIES__ = [...(global.__GLOBAL_CRM_REPLIES__ || []), reply];
-
-    // Broadcast over Supabase Realtime channel so web CRM receives it
-    try {
-      const client = getSodiaSupabaseClient();
-      const channel = client.channel('sodia_crm_broadcasts');
-      await channel.send({
-        type: 'broadcast',
-        event: 'crm_reply',
-        payload: reply,
-      });
-    } catch (realtimeErr) {
-      console.warn('[CRM Reply API] Realtime dispatch warning:', realtimeErr);
-    }
-
-    return NextResponse.json({
-      success: true,
-      reply,
-      replies: global.__GLOBAL_CRM_REPLIES__,
-    });
+    const replies = storeReply(reply);
+    await dispatchRealtime('crm_reply', { ...reply });
+    return NextResponse.json({ success: true, reply, replies });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
     return NextResponse.json({ success: false, error: message }, { status: 500 });

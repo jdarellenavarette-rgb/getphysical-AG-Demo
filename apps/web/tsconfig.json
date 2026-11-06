@@ -16,6 +16,9 @@
       ],
       "sodia-core/*": [
         "../../packages/sodia-core/src/*"
+      ],
+      "zod": [
+        "../../packages/sodia-core/node_modules/zod"
       ]
     },
     "incremental": true

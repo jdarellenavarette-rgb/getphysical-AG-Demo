@@ -43,7 +43,20 @@ export function WalletTabScreen({ onOpenFullHistory, onSelectTx }: WalletTabScre
       </div>
 
       {/* 3D VIP CARD STACK (CLICK TO FLIP TO TOTP GATE CODE) */}
-      <div style={{ padding: '0 16px', cursor: 'pointer', zIndex: 20 }} onClick={() => setIsFlipped(!isFlipped)}>
+      <div
+        role="button"
+        tabIndex={0}
+        aria-pressed={isFlipped}
+        aria-label={isFlipped ? 'Show VIP card front' : 'Flip card to show gate TOTP code'}
+        style={{ padding: '0 16px', cursor: 'pointer', zIndex: 20 }}
+        onClick={() => setIsFlipped(!isFlipped)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setIsFlipped(!isFlipped);
+          }
+        }}
+      >
         {!isFlipped ? (
           <div style={{ position: 'relative' }}>
             <img
@@ -51,19 +64,19 @@ export function WalletTabScreen({ onOpenFullHistory, onSelectTx }: WalletTabScre
               alt="GetPhysical VIP Pass"
               style={{ width: '100%', height: 'auto', borderRadius: '16px', display: 'block' }}
             />
-            <div style={{ position: 'absolute', bottom: '12px', right: '14px', backgroundColor: 'rgba(0,0,0,0.65)', borderRadius: '99px', padding: '3px 10px', fontSize: '9px', color: '#ffffff', fontWeight: 800 }}>
+            <div style={{ position: 'absolute', bottom: '12px', right: '14px', backgroundColor: 'rgba(0,0,0,0.65)', borderRadius: '99px', padding: '3px 10px', fontSize: '11px', color: '#ffffff', fontWeight: 800 }}>
               TAP TO FLIP ↻
             </div>
           </div>
         ) : (
           <div style={{ backgroundColor: '#18181b', border: '1px solid #10b981', borderRadius: '16px', padding: '22px 18px', textAlign: 'center', color: '#fff', boxShadow: '0 10px 25px rgba(16,185,129,0.2)' }}>
             <QrCode size={68} color="#10b981" style={{ margin: '0 auto 6px' }} />
-            <div style={{ fontSize: '10px', color: '#9ca3af', fontWeight: 700 }}>OFFLINE 60S DYNAMIC TOTP GATE TOKEN</div>
+            <div style={{ fontSize: '11px', color: '#9ca3af', fontWeight: 700 }}>OFFLINE 60S DYNAMIC TOTP GATE TOKEN</div>
             <div style={{ fontSize: '28px', fontWeight: 900, fontFamily: 'monospace', letterSpacing: '3px', color: '#34d399', margin: '4px 0' }}>
               {totpCode}
             </div>
             <div style={{ fontSize: '11px', color: '#10b981', fontWeight: 700 }}>Rotates in {ttl}s • Matches Turnstile Gate 01</div>
-            <div style={{ fontSize: '10px', color: '#6b7280', marginTop: '6px' }}>Tap anywhere to flip back to VIP card face</div>
+            <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '6px' }}>Tap anywhere to flip back to VIP card face</div>
           </div>
         )}
       </div>
@@ -90,12 +103,12 @@ export function WalletTabScreen({ onOpenFullHistory, onSelectTx }: WalletTabScre
               </div>
               <div>
                 <div style={{ fontSize: '12px', fontWeight: 800, color: '#000' }}>Sprout Pickleball Club</div>
-                <div style={{ fontSize: '10px', color: '#a1a1aa' }}>Check-in: Today, 01:32PM</div>
+                <div style={{ fontSize: '11px', color: '#a1a1aa' }}>Check-in: Today, 01:32PM</div>
               </div>
             </div>
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: '11px', fontWeight: 900, color: '#000' }}>FREE/PASS</div>
-              <div style={{ fontSize: '10px', color: '#a1a1aa' }}>PHP 999</div>
+              <div style={{ fontSize: '11px', color: '#a1a1aa' }}>PHP 999</div>
             </div>
           </div>
 
@@ -110,12 +123,12 @@ export function WalletTabScreen({ onOpenFullHistory, onSelectTx }: WalletTabScre
               </div>
               <div>
                 <div style={{ fontSize: '12px', fontWeight: 800, color: '#000' }}>AMP FITNESS SJDM</div>
-                <div style={{ fontSize: '10px', color: '#a1a1aa' }}>Membership: Yesterday, 11:01AM</div>
+                <div style={{ fontSize: '11px', color: '#a1a1aa' }}>Membership: Yesterday, 11:01AM</div>
               </div>
             </div>
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: '11px', fontWeight: 900, color: '#000' }}>MONTHLY</div>
-              <div style={{ fontSize: '10px', color: '#a1a1aa' }}>PHP 799</div>
+              <div style={{ fontSize: '11px', color: '#a1a1aa' }}>PHP 799</div>
             </div>
           </div>
 
@@ -130,12 +143,12 @@ export function WalletTabScreen({ onOpenFullHistory, onSelectTx }: WalletTabScre
               </div>
               <div>
                 <div style={{ fontSize: '12px', fontWeight: 800, color: '#000' }}>GetPhysical+</div>
-                <div style={{ fontSize: '10px', color: '#a1a1aa' }}>Subscription: Yesterday, 06:48AM</div>
+                <div style={{ fontSize: '11px', color: '#a1a1aa' }}>Subscription: Yesterday, 06:48AM</div>
               </div>
             </div>
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: '11px', fontWeight: 900, color: '#000' }}>MONTHLY</div>
-              <div style={{ fontSize: '10px', color: '#a1a1aa' }}>PHP 149</div>
+              <div style={{ fontSize: '11px', color: '#a1a1aa' }}>PHP 149</div>
             </div>
           </div>
         </div>

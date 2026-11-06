@@ -53,7 +53,7 @@ export function MobileStaffQuickdash({ onBack }: MobileStaffQuickdashProps) {
             <div style={{ fontSize: '11px', color: '#a1a1aa' }}>Staff: Jane D. • Shift Open (₱2,500 Float)</div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '10px', color: '#10b981', fontWeight: 800 }}>INSIDE NOW</div>
+            <div style={{ fontSize: '11px', color: '#10b981', fontWeight: 800 }}>INSIDE NOW</div>
             <div style={{ fontSize: '18px', fontWeight: 900, color: '#fff' }}>{occupancy}/{maxCapacity}</div>
           </div>
         </div>
@@ -123,7 +123,7 @@ export function MobileStaffQuickdash({ onBack }: MobileStaffQuickdashProps) {
           <Camera size={16} color="#10b981" />
           <span style={{ fontSize: '12px', color: '#d4d4d8' }}>Selfie DTR Clock-In Verified (08:00 AM)</span>
         </div>
-        <span style={{ fontSize: '10px', fontWeight: 800, color: '#10b981' }}>ON DUTY</span>
+        <span style={{ fontSize: '11px', fontWeight: 800, color: '#10b981' }}>ON DUTY</span>
       </div>
     </div>
   );

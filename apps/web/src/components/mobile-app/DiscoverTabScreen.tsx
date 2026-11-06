@@ -74,7 +74,7 @@ export function DiscoverTabScreen() {
                   <div style={{ fontSize: '15px', fontWeight: 900, color: '#f4f4f5' }}>{venue.name}</div>
                   <div style={{ fontSize: '11px', color: '#71717a', marginTop: '2px' }}>{venue.address} • {venue.distance}</div>
                 </div>
-                <span style={{ fontSize: '10px', fontWeight: 800, padding: '2px 8px', borderRadius: '6px', backgroundColor: '#ec489920', color: '#ec4899' }}>
+                <span style={{ fontSize: '11px', fontWeight: 800, padding: '2px 8px', borderRadius: '6px', backgroundColor: '#ec489920', color: '#ec4899' }}>
                   {venue.category}
                 </span>
               </div>

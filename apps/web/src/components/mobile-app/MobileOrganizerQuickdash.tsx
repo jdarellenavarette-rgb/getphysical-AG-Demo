@@ -49,7 +49,7 @@ export function MobileOrganizerQuickdash({ onBack }: MobileOrganizerQuickdashPro
           <div key={m.id} style={{ backgroundColor: '#18181b', borderRadius: '12px', border: '1px solid #27272a', padding: '14px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <span style={{ fontSize: '11px', fontWeight: 800, color: '#f59e0b' }}>{m.court}</span>
-              <span style={{ fontSize: '10px', fontWeight: 800, color: m.status === 'COMPLETED' ? '#10b981' : '#38bdf8' }}>
+              <span style={{ fontSize: '11px', fontWeight: 800, color: m.status === 'COMPLETED' ? '#10b981' : '#38bdf8' }}>
                 {m.status}
               </span>
             </div>

@@ -14,6 +14,8 @@ export interface GetPhysicalClientOptions {
   storage?: SupportedStorage;
   persistSession?: boolean;
   detectSessionInUrl?: boolean;
+  /** "pkce" is required for OAuth (Google/Apple) in native apps. */
+  flowType?: "pkce" | "implicit";
 }
 
 export class SupabaseConfigError extends Error {
@@ -69,6 +71,7 @@ export function createGetPhysicalClient(
       persistSession: options.persistSession ?? true,
       autoRefreshToken: true,
       detectSessionInUrl: options.detectSessionInUrl ?? false,
+      flowType: options.flowType ?? "pkce",
     },
   });
 }

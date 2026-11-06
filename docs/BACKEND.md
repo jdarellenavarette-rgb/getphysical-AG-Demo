@@ -145,6 +145,7 @@ Required Auth settings (Dashboard → Authentication):
 - Email OTP length 6, expiry 600 s; minimum password length 8 (web).
 - Redirect URLs: `http://localhost:3000/auth/confirm`, `sodia://auth/callback` (+ production web domain).
 - Email provider, rate limits and launch checklist: see `docs/EMAIL_AND_AUTH_LIMITS.md`.
+- Google & Apple sign-in console setup: see `docs/SOCIAL_SIGN_IN.md`.
 - Custom SMTP before inviting real users: the built-in sender only delivers to project team members
   and is heavily rate-limited.
 

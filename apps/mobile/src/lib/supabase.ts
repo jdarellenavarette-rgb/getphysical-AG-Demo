@@ -64,7 +64,7 @@ export function getSupabase(): GetPhysicalClient | null {
         supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
         supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
       },
-      { storage: secureSessionStorage, persistSession: true, detectSessionInUrl: false }
+      { storage: secureSessionStorage, persistSession: true, detectSessionInUrl: false, flowType: "pkce" }
     );
   } catch (error) {
     if (error instanceof SupabaseConfigError) return null;

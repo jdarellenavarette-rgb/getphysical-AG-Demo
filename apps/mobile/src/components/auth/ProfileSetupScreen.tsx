@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Controller, useForm, type FieldPath } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { profileSetupSchema, type ProfileSetupInput } from "sodia-core";
-import { completeProfile, isUsernameAvailable, signOut } from "../../services/authService";
+import { completeProfile, getProfileDraft, isUsernameAvailable, signOut } from "../../services/authService";
 import { authStyles as s } from "./auth.styles";
 
 function suggestions(base: string): string[] {
@@ -21,6 +21,14 @@ export function ProfileSetupScreen({ onDone }: { onDone: () => void }) {
     mode: "onChange",
     defaultValues: { firstName: "", lastName: "", username: "", dob: "" },
   });
+
+  // Prefill names that Google / Apple already gave us.
+  useEffect(() => {
+    void getProfileDraft().then((draft) => {
+      if (draft.firstName) form.setValue("firstName", draft.firstName, { shouldValidate: true });
+      if (draft.lastName) form.setValue("lastName", draft.lastName, { shouldValidate: true });
+    });
+  }, [form]);
 
   const checkUsername = async (username: string) => {
     if (!username || form.getFieldState("username").invalid) return;

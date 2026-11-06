@@ -23,6 +23,9 @@ export default async function LoginPage({
         {params.error === "link_expired" && (
           <p role="alert" style={styles.alert}>That sign-in link has expired. Request a new one below.</p>
         )}
+        {params.error === "oauth_failed" && (
+          <p role="alert" style={styles.alert}>Sign-in with Apple or Google didn&apos;t complete. Please try again.</p>
+        )}
         <LoginForm next={params.next ?? "/"} />
       </section>
     </main>

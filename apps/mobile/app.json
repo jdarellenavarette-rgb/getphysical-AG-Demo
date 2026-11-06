@@ -20,7 +20,8 @@
         "NSMicrophoneUsageDescription": "Sodia needs microphone access to record audio with workout reels.",
         "NSPhotoLibraryUsageDescription": "Sodia needs photo library access to attach workout media.",
         "NSLocationWhenInUseUsageDescription": "Sodia uses your location to show gyms, clubs and courts near you and to map your runs."
-      }
+      },
+      "usesAppleSignIn": true
     },
     "android": {
       "package": "com.getphysical.sodia",
@@ -52,7 +53,9 @@
         }
       ],
       "expo-image-picker",
-      "expo-video"
+      "expo-video",
+      "expo-apple-authentication",
+      "expo-web-browser"
     ]
   }
 }

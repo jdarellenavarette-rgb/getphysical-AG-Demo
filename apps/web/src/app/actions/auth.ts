@@ -67,6 +67,19 @@ export async function sendMagicLink(_prev: AuthFormState, formData: FormData): P
   return { status: "success", message: "If that email has a Business Suite account, a sign-in link is on its way." };
 }
 
+/** Start Google / Apple sign-in; Supabase redirects back to /auth/callback. */
+export async function signInWithProvider(provider: "google" | "apple", formData: FormData): Promise<void> {
+  const nextRaw = formData.get("next");
+  const next = typeof nextRaw === "string" ? safeNext(nextRaw) : "/";
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider,
+    options: { redirectTo: `${siteUrl()}/auth/callback?next=${encodeURIComponent(next)}` },
+  });
+  if (error || !data.url) redirect("/login?error=oauth_failed");
+  redirect(data.url);
+}
+
 export async function signOut(): Promise<void> {
   const supabase = await createServerSupabase();
   await supabase.auth.signOut();

@@ -6,6 +6,7 @@ import { z } from "zod";
 import { emailOtpSchema, emailSchema } from "sodia-core";
 import { sendEmailCode, verifyEmailCode } from "../../services/authService";
 import { authStyles as s } from "./auth.styles";
+import { SocialSignInButtons } from "./SocialSignInButtons";
 
 const emailForm = z.object({ email: emailSchema });
 const codeForm = z.object({ code: emailOtpSchema });
@@ -42,8 +43,10 @@ export function SignInScreen() {
         <Text style={s.brand}>GETPHYSICAL · SODIA</Text>
         <Text style={s.title}>{email ? "Check your email" : "Sign in or create an account"}</Text>
         <Text style={s.subtitle}>
-          {email ? `We sent a code to ${email}. It expires in a few minutes.` : "We'll email you a one-time code. No password needed."}
+          {email ? `We sent a code to ${email}. It expires in a few minutes.` : "Continue with Apple or Google, or get a one-time code by email."}
         </Text>
+
+        {!email && <SocialSignInButtons onError={setFormError} />}
 
         {!email ? (
           <Controller

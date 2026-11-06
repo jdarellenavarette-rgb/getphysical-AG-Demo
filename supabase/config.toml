@@ -23,7 +23,7 @@ enabled = true
 [auth]
 enabled = true
 site_url = "http://localhost:3000"
-additional_redirect_urls = ["http://localhost:3000/auth/confirm", "sodia://auth/callback"]
+additional_redirect_urls = ["http://localhost:3000/auth/confirm", "http://localhost:3000/auth/callback", "sodia://auth/callback"]
 jwt_expiry = 3600
 enable_refresh_token_rotation = true
 refresh_token_reuse_interval = 10
@@ -38,6 +38,20 @@ enable_confirmations = true
 email_sent = 4
 sign_in_sign_ups = 30
 token_verifications = 30
+
+# Social sign-in. Secrets come from the environment (never commit them):
+#   SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID / _SECRET, SUPABASE_AUTH_EXTERNAL_APPLE_CLIENT_ID / _SECRET
+[auth.external.google]
+enabled = true
+client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
+skip_nonce_check = false
+
+[auth.external.apple]
+enabled = true
+# Comma-separated: the web Services ID first, then the iOS bundle ID (com.getphysical.sodia) for native sign-in.
+client_id = "env(SUPABASE_AUTH_EXTERNAL_APPLE_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_EXTERNAL_APPLE_SECRET)"
 
 [functions.nutrition-parse]
 verify_jwt = true

@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "sodia-core";
 
-const PUBLIC_PATHS = ["/login", "/auth/confirm"];
+const PUBLIC_PATHS = ["/login", "/auth/confirm", "/auth/callback"];
 
 /**
  * Refreshes the Supabase session cookie on every request and keeps signed-out

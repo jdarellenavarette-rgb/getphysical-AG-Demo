@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { sendMagicLink, signInWithPassword, type AuthFormState } from "../actions/auth";
+import { sendMagicLink, signInWithPassword, signInWithProvider, type AuthFormState } from "../actions/auth";
 
 const initialState: AuthFormState = { status: "idle" };
 
@@ -13,6 +13,18 @@ export function LoginForm({ next }: { next: string }) {
   const pending = mode === "password" ? passwordPending : magicPending;
 
   return (
+    <div style={{ display: "grid", gap: 14 }}>
+    <div style={{ display: "grid", gap: 10 }}>
+      {(["apple", "google"] as const).map((provider) => (
+        <form key={provider} action={signInWithProvider.bind(null, provider)}>
+          <input type="hidden" name="next" value={next} />
+          <button type="submit" style={provider === "apple" ? appleButtonStyle : googleButtonStyle}>
+            Continue with {provider === "apple" ? "Apple" : "Google"}
+          </button>
+        </form>
+      ))}
+      <p style={{ textAlign: "center", color: "#6B7280", fontSize: 12, margin: "4px 0 0" }}>or sign in with email</p>
+    </div>
     <form action={mode === "password" ? passwordAction : magicAction} noValidate style={{ display: "grid", gap: 14 }}>
       <input type="hidden" name="next" value={next} />
       <label style={labelStyle}>
@@ -62,6 +74,7 @@ export function LoginForm({ next }: { next: string }) {
         {mode === "password" ? "Use a one-time email link instead" : "Use my password instead"}
       </button>
     </form>
+    </div>
   );
 }
 
@@ -92,4 +105,21 @@ const linkButtonStyle = {
   fontSize: 13,
   cursor: "pointer",
   textDecoration: "underline",
+} as const;
+const appleButtonStyle = {
+  width: "100%",
+  padding: "12px 14px",
+  borderRadius: 10,
+  border: "none",
+  background: "#FFFFFF",
+  color: "#000000",
+  fontWeight: 700,
+  fontSize: 15,
+  cursor: "pointer",
+} as const;
+const googleButtonStyle = {
+  ...appleButtonStyle,
+  background: "#0B0D12",
+  color: "#F3F4F6",
+  border: "1px solid #2C3242",
 } as const;

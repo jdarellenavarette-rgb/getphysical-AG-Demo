@@ -22,5 +22,13 @@ export const authStyles = StyleSheet.create({
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 8 },
   chip: { backgroundColor: "#27272A", paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999 },
   chipText: { color: "#FFFFFF", fontSize: 13, fontWeight: "600" },
+  socialButton: { height: 50, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  socialApple: { backgroundColor: "#FFFFFF" },
+  socialAppleText: { color: "#000000", fontSize: 16, fontWeight: "700" },
+  socialGoogle: { backgroundColor: "#18181B", borderWidth: 1, borderColor: "#3F3F46" },
+  socialGoogleText: { color: "#FFFFFF", fontSize: 16, fontWeight: "700" },
+  dividerRow: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 8 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: "#27272A" },
+  dividerText: { color: "#71717A", fontSize: 12 },
   fine: { color: "#71717A", fontSize: 12, marginTop: 18, lineHeight: 17, textAlign: "center" },
 });

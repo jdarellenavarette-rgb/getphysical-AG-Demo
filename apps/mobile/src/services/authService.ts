@@ -30,6 +30,20 @@ export async function needsProfileSetup(): Promise<boolean> {
   return !data.username || !data.dob || !data.first_name;
 }
 
+/** Names already known from the auth provider (Google / Apple) or the profile row. */
+export async function getProfileDraft(): Promise<{ firstName: string; lastName: string }> {
+  const supabase = client();
+  const [{ data: profile }, { data: auth }] = await Promise.all([supabase.rpc("get_my_profile"), supabase.auth.getUser()]);
+  const meta = (auth.user?.user_metadata ?? {}) as Record<string, unknown>;
+  const text = (v: unknown) => (typeof v === "string" ? v.trim() : "");
+  const fullName = text(meta.full_name) || text(meta.name);
+  const [firstFromFull = "", ...rest] = fullName.split(/\s+/);
+  return {
+    firstName: profile?.first_name || text(meta.first_name) || text(meta.given_name) || firstFromFull,
+    lastName: profile?.last_name || text(meta.last_name) || text(meta.family_name) || rest.join(" "),
+  };
+}
+
 export async function isUsernameAvailable(username: string): Promise<boolean> {
   const { data } = await client().from("profiles").select("id").eq("username", username).maybeSingle();
   return !data;

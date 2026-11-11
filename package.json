@@ -12,7 +12,9 @@
     "test": "turbo run test",
     "db:test": "bash supabase/tests/run-db-tests.sh",
     "db:types:check": "cmp packages/sodia-core/src/database.types.ts supabase/functions/_shared/database.types.ts",
-    "clean": "turbo run clean"
+    "clean": "turbo run clean",
+    "mobile": "pnpm --filter @getphysical/mobile exec expo start --clear",
+    "mobile:tunnel": "pnpm --filter @getphysical/mobile exec expo start --clear --tunnel"
   },
   "devDependencies": {
     "turbo": "^2.4.4",

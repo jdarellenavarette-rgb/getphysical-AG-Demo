@@ -105,8 +105,11 @@ Deno; they answer `SERVER_MISCONFIGURED` until their secrets are set (Edge Funct
 2. `supabase link --project-ref <ref>` then `supabase db push`.
 3. `supabase secrets set --env-file supabase/functions/.env` then `supabase functions deploy`.
 4. Auth → URL configuration: add `https://<web-domain>/auth/confirm` and `sodia://auth/callback`.
-5. Vercel: set the project **Root Directory** to `apps/web` (uses `apps/web/vercel.json`), and set
-   `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SITE_URL`.
+5. Vercel (already connected to the repo): Settings → Build and Deployment → **Root Directory = `apps/web`**
+   (keep "Include files outside the root directory" on — the app imports `packages/sodia-core`). Framework
+   preset Next.js; build settings come from `apps/web/vercel.json`. Settings → Environment Variables:
+   `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SITE_URL` (Production + Preview).
+   Without them the site deploys but every page answers "Supabase is not configured".
 6. Mobile (EAS): set `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, `EXPO_PUBLIC_MAPS_API_KEY`.
 
 ### Payment providers

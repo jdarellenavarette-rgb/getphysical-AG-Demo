@@ -44,7 +44,7 @@ These apply to every screen and are the main distance between this app and a big
 | S8  | **Theme.** Defaults to light regardless of the phone's setting, is not remembered, and the splash and sign-in are always dark. Many colours are hard-coded and ignore the theme.                          | `theme/theme.ts:71`                                        |
 | S9  | **QA tools ship in the product.** The drawer has "QA & Demo Controls"; staff and coach portals have "Simulate" buttons.                                                                                   | `MenuDrawerModal.tsx:170-205`                              |
 | S10 | **Internal jargon in user copy.** "Registry A", "GymDash CRM", "TOTP Turnstile", "SOA ledger", "Universal Checkout", "Mobilizing GPS Radar".                                                              | Throughout                                                 |
-| S11 | **No Profile tab.** The profile is reachable only through the drawer. There is no edit profile, avatar change or privacy control.                                                                         | `BottomBar.tsx`, `ProfileHub.tsx`                          |
+| S11 | **The profile cannot be edited.** It lives in the hamburger menu by design, which is fine. Once there, there is no edit profile, avatar change or privacy control.                                        | `ProfileHub.tsx`                                           |
 | S12 | **Settings switches do nothing.** Apple Health, Garmin/Whoop and "Biometric Pass Authorization" are local toggles that reset when the screen closes.                                                      | `SettingsModal.tsx:40-42`                                  |
 | S13 | **Floating tab bar covers content.** The bottom row of each screen (for example a post's like and comment icons) sits under the dock until scrolled.                                                      | Seen in the running app                                    |
 | S14 | **Notification dot is always on** and never clears.                                                                                                                                                       | `HeaderBar.tsx:57`                                         |
@@ -202,7 +202,7 @@ Format, lint, type checks and both test suites pass after these changes.
 2. **Money path (about a week).** Sell only what the server can price; fetch passes from the backend; real receipt amounts; court booking with date, availability and a hold that is confirmed on payment.
 3. **Data foundation (1–2 weeks).** Add the data-fetching layer and on-device persistence, then move feed, comments, likes, messages, passes and tracking history onto it. This also delivers loading, error and offline states.
 4. **Tracking correctness (about a week).** Fix distance, session survival across navigation, multi-exercise sessions, discard, typed weights.
-5. **Platform polish (ongoing).** Real navigation and back handling, bottom sheets, virtualised lists, haptics, accessibility labels and 44pt targets, theme following the phone, a Profile tab.
+5. **Platform polish (ongoing).** Real navigation and back handling, bottom sheets, virtualised lists, haptics, accessibility labels and 44pt targets, theme following the phone, an edit-profile screen.
 6. **Demo content.** Separate demo accounts per role; one consistent set of numbers; local images.
 
 ## What already works well

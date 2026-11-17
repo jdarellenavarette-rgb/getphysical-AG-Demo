@@ -6,11 +6,11 @@ Read this before starting work in either app. Update it when a shared change lan
 
 ## Lanes
 
-| Lane                               | Owner                                                                                                                                   | Rule                                                                                                                                          |
-| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `apps/mobile`                      | Mobile session                                                                                                                          | Not edited from the web session                                                                                                               |
-| `apps/web`                         | Web session                                                                                                                             | Not edited from the mobile session                                                                                                            |
-| `supabase/`, `packages/sodia-core` | One session at a time (currently: web session; migrations `20261118000001` member relationships and `20261118000002` product catalogue) | Additive only. New migration files; never edit an applied one. Lands as its own small pull request with database tests and regenerated types. |
+| Lane                               | Owner                                                                                                                                                               | Rule                                                                                                                                          |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/mobile`                      | Mobile session                                                                                                                                                      | Not edited from the web session                                                                                                               |
+| `apps/web`                         | Web session                                                                                                                                                         | Not edited from the mobile session                                                                                                            |
+| `supabase/`, `packages/sodia-core` | One session at a time (currently: web session; migrations `20261118000001` member relationships, `20261118000002` product catalogue, `20261118000003` payout setup) | Additive only. New migration files; never edit an applied one. Lands as its own small pull request with database tests and regenerated types. |
 
 ## Contracts both apps rely on today
 
@@ -70,6 +70,14 @@ Venues define what they sell. Nothing is hard-coded to "day pass" and "monthly" 
 **Backwards compatible.** The current mobile build sends `DAY_PASS` / `MONTHLY` and keeps working: each venue's standard day pass and standard monthly membership are catalogue rows (`legacy_sku`), and their price is mirrored into the original price columns. Switching one off stops it being sold through the original SKU too.
 
 Shared helpers in `sodia-core` (`payments.ts`): `facilityProductSchema`, `productInputSchema`, `describeProductLength()`, and `checkoutRequestSchema` now accepting a product id.
+
+## Payout setup (added 2026-11-18)
+
+- `payments_mode()` returns `sandbox` or `live` for the whole platform (operator-set; `live` by default).
+- In `sandbox`, a venue owner connects Maya test payments from the Business Suite. Checkout is unchanged for
+  mobile: the same `payments-checkout` call returns a Maya sandbox checkout link.
+- A venue that has not connected payouts still answers `FACILITY_PAYOUTS_NOT_CONFIGURED` at checkout. Mobile
+  should show that as "This venue isn't taking payments yet", not as a generic error.
 
 ## What mobile needs to adjust so the two meet
 

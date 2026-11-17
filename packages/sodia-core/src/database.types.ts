@@ -672,6 +672,8 @@ export type Database = {
         Row: {
           charges_enabled: boolean;
           facility_id: string;
+          is_sandbox: boolean;
+          live_requested_at: string | null;
           maya_merchant_id: string | null;
           preferred_provider: Database["public"]["Enums"]["payment_provider"] | null;
           stripe_account_id: string | null;
@@ -681,6 +683,8 @@ export type Database = {
         Insert: {
           charges_enabled?: boolean;
           facility_id: string;
+          is_sandbox?: boolean;
+          live_requested_at?: string | null;
           maya_merchant_id?: string | null;
           preferred_provider?: Database["public"]["Enums"]["payment_provider"] | null;
           stripe_account_id?: string | null;
@@ -690,6 +694,8 @@ export type Database = {
         Update: {
           charges_enabled?: boolean;
           facility_id?: string;
+          is_sandbox?: boolean;
+          live_requested_at?: string | null;
           maya_merchant_id?: string | null;
           preferred_provider?: Database["public"]["Enums"]["payment_provider"] | null;
           stripe_account_id?: string | null;
@@ -1894,6 +1900,12 @@ export type Database = {
         };
         Returns: Database["public"]["Tables"]["payment_orders"]["Row"];
       };
+      connect_sandbox_payouts: {
+        Args: {
+          p_facility_id: string;
+        };
+        Returns: Database["public"]["Tables"]["facility_payout_accounts"]["Row"];
+      };
       consume_ai_quota: {
         Args: {
           p_feature: string;
@@ -1922,6 +1934,12 @@ export type Database = {
           p_price_php: number;
         };
         Returns: Database["public"]["Tables"]["facility_products"]["Row"];
+      };
+      disconnect_sandbox_payouts: {
+        Args: {
+          p_facility_id: string;
+        };
+        Returns: undefined;
       };
       end_membership: {
         Args: {
@@ -2025,6 +2043,10 @@ export type Database = {
         };
         Returns: string;
       };
+      payments_mode: {
+        Args: Record<PropertyKey, never>;
+        Returns: string;
+      };
       record_payment_webhook_event: {
         Args: {
           p_provider: Database["public"]["Enums"]["payment_provider"];
@@ -2046,6 +2068,12 @@ export type Database = {
           p_reason: string;
         };
         Returns: Database["public"]["Tables"]["payment_orders"]["Row"];
+      };
+      request_live_payouts: {
+        Args: {
+          p_facility_id: string;
+        };
+        Returns: string;
       };
       resolve_qr_code: {
         Args: {

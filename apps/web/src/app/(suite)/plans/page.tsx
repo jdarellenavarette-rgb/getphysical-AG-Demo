@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui
 import { EmptyState, Notice, PageHeader } from "../../../components/ui/states";
 import { Table, Td, Th } from "../../../components/ui/table";
 import { canManageFacility, requireSuiteSession } from "../../../lib/active-facility";
+import Link from "next/link";
+import { loadPayoutStatus } from "../../../lib/data/payouts";
 import { loadProducts, loadSellingSettings, type SellingSettings } from "../../../lib/data/products";
 import { formatPeso } from "../../../lib/format";
 import { ProductForm } from "./ProductForm";
@@ -28,8 +30,12 @@ function saleStatus(
 
 export default async function PlansPage() {
   const { active } = await requireSuiteSession();
-  const [products, settings] = await Promise.all([loadProducts(active.id), loadSellingSettings(active.id)]);
   const canEdit = canManageFacility(active.role);
+  const [products, settings, payouts] = await Promise.all([
+    loadProducts(active.id),
+    loadSellingSettings(active.id),
+    canEdit ? loadPayoutStatus(active.id, true) : null,
+  ]);
 
   return (
     <>
@@ -37,6 +43,23 @@ export default async function PlansPage() {
         title="Plans and prices"
         description={`What ${active.name} sells in the Sodia app. You choose the names, prices and lengths.`}
       />
+      {payouts?.state === "NOT_SET_UP" && (
+        <div className="mb-6">
+          <Notice tone="warning" role="note">
+            Members can&apos;t buy these plans yet because payouts aren&apos;t set up.{" "}
+            <Link href="/payouts" className="font-semibold underline">
+              Set up payouts
+            </Link>
+          </Notice>
+        </div>
+      )}
+      {payouts?.state === "TEST_MODE" && (
+        <div className="mb-6">
+          <Notice tone="warning" role="note">
+            Payments are in test mode: purchases use Maya&apos;s test system and no real money moves.
+          </Notice>
+        </div>
+      )}
       {!canEdit && (
         <div className="mb-6">
           <Notice tone="warning" role="note">

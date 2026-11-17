@@ -10,6 +10,7 @@ import {
   Settings,
   ShoppingCart,
   Tags,
+  Wallet,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -22,6 +23,7 @@ const ICONS: Record<SuiteNavItem["icon"], LucideIcon> = {
   checkin: ScanLine,
   inbox: MessageSquare,
   plans: Tags,
+  payouts: Wallet,
   schedule: CalendarDays,
   sales: ShoppingCart,
   settings: Settings,

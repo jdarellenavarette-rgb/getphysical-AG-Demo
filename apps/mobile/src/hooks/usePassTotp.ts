@@ -17,7 +17,13 @@ export function usePassTotp(passId: string | null, enabled = true): PassTotpStat
   const [state, setState] = useState<PassTotpState>({ status: "loading" });
 
   useEffect(() => {
-    if (!passId || !enabled) return;
+    // Never carry a secret over from another pass, or from before a pass was revoked.
+    setSecret(null);
+    if (!enabled) return;
+    if (!passId) {
+      setState({ status: "unavailable" });
+      return;
+    }
     let cancelled = false;
     setState({ status: "loading" });
     void loadPassSecret(passId).then((result) => {
@@ -32,7 +38,8 @@ export function usePassTotp(passId: string | null, enabled = true): PassTotpStat
 
   useEffect(() => {
     if (!passId || !secret || !enabled) return;
-    const tick = () => setState({ status: "ready", totp: generatePassTotp(passId, secret.value), offline: secret.offline });
+    const tick = () =>
+      setState({ status: "ready", totp: generatePassTotp(passId, secret.value), offline: secret.offline });
     tick();
     const timer = setInterval(tick, 1000);
     return () => clearInterval(timer);

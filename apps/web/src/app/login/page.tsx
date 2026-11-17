@@ -19,12 +19,18 @@ export default async function LoginPage({
     <main style={styles.page}>
       <section style={styles.card} aria-labelledby="login-title">
         <p style={styles.eyebrow}>GetPhysical Business Suite</p>
-        <h1 id="login-title" style={styles.title}>Sign in to GymDash, Clubdash &amp; CoachDash</h1>
+        <h1 id="login-title" style={styles.title}>
+          Sign in to GymDash, Clubdash &amp; CoachDash
+        </h1>
         {params.error === "link_expired" && (
-          <p role="alert" style={styles.alert}>That sign-in link has expired. Request a new one below.</p>
+          <p role="alert" style={styles.alert}>
+            That sign-in link has expired. Request a new one below.
+          </p>
         )}
         {params.error === "oauth_failed" && (
-          <p role="alert" style={styles.alert}>Sign-in with Apple or Google didn&apos;t complete. Please try again.</p>
+          <p role="alert" style={styles.alert}>
+            Sign-in with Apple or Google didn&apos;t complete. Please try again.
+          </p>
         )}
         <LoginForm next={params.next ?? "/"} />
       </section>
@@ -51,7 +57,14 @@ const styles = {
     borderRadius: 16,
     padding: 28,
   },
-  eyebrow: { margin: 0, fontSize: 12, letterSpacing: 1, textTransform: "uppercase" as const, color: "#FF5364", fontWeight: 700 },
+  eyebrow: {
+    margin: 0,
+    fontSize: 12,
+    letterSpacing: 1,
+    textTransform: "uppercase" as const,
+    color: "#FF5364",
+    fontWeight: 700,
+  },
   title: { margin: "8px 0 20px", fontSize: 22, lineHeight: 1.3 },
   alert: { background: "#2A1418", color: "#FCA5A5", padding: "10px 12px", borderRadius: 8, fontSize: 14 },
 } as const;

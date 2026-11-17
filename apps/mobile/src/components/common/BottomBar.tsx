@@ -3,6 +3,7 @@ import { View, TouchableOpacity, StyleSheet, Text } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Home, Compass, Plus, Dumbbell, CreditCard } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
+import { haptics } from "../../lib/haptics";
 
 export type MobileTab = "sodia" | "discover" | "track" | "cards" | "profile";
 
@@ -12,7 +13,11 @@ interface BottomBarProps {
   onPressCreate?: () => void;
 }
 
-export function BottomBar({ currentTab, onSelectTab, onPressCreate }: BottomBarProps) {
+export function BottomBar({ currentTab, onSelectTab: selectTab, onPressCreate }: BottomBarProps) {
+  const onSelectTab = (tab: MobileTab) => {
+    if (tab !== currentTab) haptics.tap();
+    selectTab(tab);
+  };
   const insets = useSafeAreaInsets();
   const bottomOffset = Math.max(insets.bottom, 10);
   const { colors, themeMode } = useThemeStore();
@@ -36,6 +41,9 @@ export function BottomBar({ currentTab, onSelectTab, onPressCreate }: BottomBarP
         <TouchableOpacity
           onPress={() => onSelectTab("sodia")}
           style={styles.tabButton}
+          accessibilityRole="tab"
+          accessibilityLabel="Feed"
+          accessibilityState={{ selected: currentTab === "sodia" }}
           hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
         >
           <Home
@@ -43,7 +51,13 @@ export function BottomBar({ currentTab, onSelectTab, onPressCreate }: BottomBarP
             color={currentTab === "sodia" ? "#E11D48" : colors.textMuted}
             strokeWidth={currentTab === "sodia" ? 2.4 : 1.8}
           />
-          <Text style={[styles.label, { color: currentTab === "sodia" ? "#E11D48" : colors.textMuted }, currentTab === "sodia" && styles.labelActive]}>
+          <Text
+            style={[
+              styles.label,
+              { color: currentTab === "sodia" ? "#E11D48" : colors.textMuted },
+              currentTab === "sodia" && styles.labelActive,
+            ]}
+          >
             Feed
           </Text>
         </TouchableOpacity>
@@ -52,6 +66,9 @@ export function BottomBar({ currentTab, onSelectTab, onPressCreate }: BottomBarP
         <TouchableOpacity
           onPress={() => onSelectTab("discover")}
           style={styles.tabButton}
+          accessibilityRole="tab"
+          accessibilityLabel="Venues"
+          accessibilityState={{ selected: currentTab === "discover" }}
           hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
         >
           <Compass
@@ -59,7 +76,13 @@ export function BottomBar({ currentTab, onSelectTab, onPressCreate }: BottomBarP
             color={currentTab === "discover" ? "#E11D48" : colors.textMuted}
             strokeWidth={currentTab === "discover" ? 2.4 : 1.8}
           />
-          <Text style={[styles.label, { color: currentTab === "discover" ? "#E11D48" : colors.textMuted }, currentTab === "discover" && styles.labelActive]}>
+          <Text
+            style={[
+              styles.label,
+              { color: currentTab === "discover" ? "#E11D48" : colors.textMuted },
+              currentTab === "discover" && styles.labelActive,
+            ]}
+          >
             Venues
           </Text>
         </TouchableOpacity>
@@ -68,6 +91,8 @@ export function BottomBar({ currentTab, onSelectTab, onPressCreate }: BottomBarP
         <View style={styles.centerBtnContainer}>
           <TouchableOpacity
             onPress={onPressCreate}
+            accessibilityRole="button"
+            accessibilityLabel="Create post"
             activeOpacity={0.85}
             style={[styles.centerCircledBtn, { borderColor: colors.bgDock }]}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -80,6 +105,9 @@ export function BottomBar({ currentTab, onSelectTab, onPressCreate }: BottomBarP
         <TouchableOpacity
           onPress={() => onSelectTab("track")}
           style={styles.tabButton}
+          accessibilityRole="tab"
+          accessibilityLabel="Track"
+          accessibilityState={{ selected: currentTab === "track" }}
           hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
         >
           <Dumbbell
@@ -87,7 +115,13 @@ export function BottomBar({ currentTab, onSelectTab, onPressCreate }: BottomBarP
             color={currentTab === "track" ? "#E11D48" : colors.textMuted}
             strokeWidth={currentTab === "track" ? 2.4 : 1.8}
           />
-          <Text style={[styles.label, { color: currentTab === "track" ? "#E11D48" : colors.textMuted }, currentTab === "track" && styles.labelActive]}>
+          <Text
+            style={[
+              styles.label,
+              { color: currentTab === "track" ? "#E11D48" : colors.textMuted },
+              currentTab === "track" && styles.labelActive,
+            ]}
+          >
             Track
           </Text>
         </TouchableOpacity>
@@ -96,6 +130,9 @@ export function BottomBar({ currentTab, onSelectTab, onPressCreate }: BottomBarP
         <TouchableOpacity
           onPress={() => onSelectTab("cards")}
           style={styles.tabButton}
+          accessibilityRole="tab"
+          accessibilityLabel="Wallet"
+          accessibilityState={{ selected: currentTab === "cards" }}
           hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
         >
           <CreditCard
@@ -103,7 +140,13 @@ export function BottomBar({ currentTab, onSelectTab, onPressCreate }: BottomBarP
             color={currentTab === "cards" ? "#E11D48" : colors.textMuted}
             strokeWidth={currentTab === "cards" ? 2.4 : 1.8}
           />
-          <Text style={[styles.label, { color: currentTab === "cards" ? "#E11D48" : colors.textMuted }, currentTab === "cards" && styles.labelActive]}>
+          <Text
+            style={[
+              styles.label,
+              { color: currentTab === "cards" ? "#E11D48" : colors.textMuted },
+              currentTab === "cards" && styles.labelActive,
+            ]}
+          >
             Wallet
           </Text>
         </TouchableOpacity>

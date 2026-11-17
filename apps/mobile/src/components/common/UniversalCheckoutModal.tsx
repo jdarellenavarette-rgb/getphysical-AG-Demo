@@ -1,40 +1,69 @@
-import React from "react";
-import { View, Text, StyleSheet, Modal, TouchableOpacity } from "react-native";
+import React, { useState } from "react";
+import { Animated, View, Text, StyleSheet, Modal, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Shield } from "lucide-react-native";
 import { calculateHybridServiceFee } from "sodia-core";
 import { useThemeStore } from "../../theme/theme";
+import { useEcosystemStore } from "../../store/ecosystemStore";
 import type { CheckoutRequest } from "../discover/DiscoverView";
+import { SheetBackdrop, SheetGrabber } from "./SheetParts";
+import { useSwipeDownToClose } from "../../hooks/useDismissGestures";
 
 interface UniversalCheckoutModalProps {
   item: CheckoutRequest | null;
   visible: boolean;
   onClose: () => void;
-  onConfirm: (item: CheckoutRequest) => void;
+  onConfirm: (item: CheckoutRequest) => void | Promise<void>;
 }
 
-export function UniversalCheckoutModal({
-  item,
-  visible,
-  onClose,
-  onConfirm,
-}: UniversalCheckoutModalProps) {
+export function UniversalCheckoutModal({ item, visible, onClose, onConfirm }: UniversalCheckoutModalProps) {
   const { colors } = useThemeStore();
+  const swipe = useSwipeDownToClose(() => onClose());
+  const { isGuest } = useEcosystemStore();
+  const [submitting, setSubmitting] = useState(false);
   if (!visible || !item) return null;
+
+  // One submission at a time: a second tap must not create a second pass or order.
+  const handleConfirm = async () => {
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      await onConfirm(item);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const fee = calculateHybridServiceFee(item.baseAmountPhp, item.billingKind);
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.modalOverlay}>
-        <View style={[styles.checkoutSheet, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
+        <SheetBackdrop onPress={onClose} />
+        <Animated.View
+          style={[
+            styles.checkoutSheet,
+            { backgroundColor: colors.bgCard, borderColor: colors.borderColor },
+            swipe.sheetStyle,
+          ]}
+        >
+          <SheetGrabber panHandlers={swipe.panHandlers} />
           <View style={styles.sheetHeader}>
-            <Text style={[styles.sheetTitle, { color: colors.textPrimary }]}>UNIVERSAL CHECKOUT</Text>
-            <TouchableOpacity onPress={onClose}>
+            <Text style={[styles.sheetTitle, { color: colors.textPrimary }]}>CHECKOUT</Text>
+            <TouchableOpacity
+              onPress={onClose}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              accessibilityRole="button"
+            >
               <Text style={[styles.closeBtn, { color: colors.textMuted }]}>Close</Text>
             </TouchableOpacity>
           </View>
 
-          <View style={[styles.inventoryItem, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor, borderWidth: 1 }]}>
+          <View
+            style={[
+              styles.inventoryItem,
+              { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor, borderWidth: 1 },
+            ]}
+          >
             <Text style={[styles.invTitle, { color: colors.textPrimary }]}>{item.title}</Text>
             <Text style={[styles.invSubtitle, { color: colors.textSecondary }]}>{item.subtitle}</Text>
             <Text style={styles.invPrice}>₱{item.baseAmountPhp.toFixed(2)}</Text>
@@ -63,17 +92,37 @@ export function UniversalCheckoutModal({
             </View>
           </View>
 
-          <TouchableOpacity onPress={() => onConfirm(item)} style={styles.payButton}>
-            <Shield size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
-            <Text style={styles.payButtonText}>Confirm & Pay with Biometrics</Text>
+          {isGuest && (
+            <Text style={[styles.previewNote, { color: colors.textMuted }]}>
+              Sign in or create an account to buy this pass.
+            </Text>
+          )}
+          <TouchableOpacity
+            onPress={() => void handleConfirm()}
+            disabled={submitting}
+            style={[styles.payButton, submitting && { opacity: 0.6 }]}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: submitting, busy: submitting }}
+          >
+            {submitting ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <>
+                <Shield size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+                <Text style={styles.payButtonText}>
+                  {isGuest ? "Sign In to Buy" : fee.totalChargePhp === 0 ? "Confirm" : "Continue to Payment"}
+                </Text>
+              </>
+            )}
           </TouchableOpacity>
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  previewNote: { fontSize: 12, textAlign: "center", marginBottom: 10 },
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" },
   checkoutSheet: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, borderWidth: 1 },
   sheetHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 },
@@ -83,7 +132,16 @@ const styles = StyleSheet.create({
   invTitle: { fontSize: 15, fontWeight: "700" },
   invSubtitle: { fontSize: 12, marginTop: 2 },
   invPrice: { color: "#10B981", fontSize: 16, fontWeight: "800", marginTop: 4 },
-  splitRow: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 8, backgroundColor: "rgba(16, 185, 129, 0.12)", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  splitRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    marginTop: 8,
+    backgroundColor: "rgba(16, 185, 129, 0.12)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
   splitText: { color: "#10B981", fontSize: 11, fontWeight: "700" },
   feeBreakdown: { borderTopWidth: 1, paddingTop: 12, marginBottom: 16 },
   feeRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 6 },
@@ -92,6 +150,13 @@ const styles = StyleSheet.create({
   totalRow: { borderTopWidth: 1, paddingTop: 8, marginTop: 4 },
   totalLabel: { fontSize: 14, fontWeight: "800" },
   totalVal: { fontSize: 18, fontWeight: "900" },
-  payButton: { backgroundColor: "#E11D48", borderRadius: 12, paddingVertical: 14, flexDirection: "row", alignItems: "center", justifyContent: "center" },
+  payButton: {
+    backgroundColor: "#E11D48",
+    borderRadius: 12,
+    paddingVertical: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   payButtonText: { color: "#FFFFFF", fontSize: 14, fontWeight: "700" },
 });

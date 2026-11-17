@@ -4,6 +4,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft, Ticket, FileText } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import type { PassRow } from "sodia-core";
+import { useEcosystemStore } from "../../store/ecosystemStore";
+import { formatPhp, isCourtPass, passCharge, passStatusLabel, passVenueName } from "../../lib/passDisplay";
+import { useEdgeSwipeBack } from "../../hooks/useDismissGestures";
 
 interface StatementOfAccountModalProps {
   visible: boolean;
@@ -12,43 +15,54 @@ interface StatementOfAccountModalProps {
   onSelectPass: (pass: PassRow) => void;
 }
 
-export function StatementOfAccountModal({
-  visible,
-  passes,
-  onClose,
-  onSelectPass,
-}: StatementOfAccountModalProps) {
+export function StatementOfAccountModal({ visible, passes, onClose, onSelectPass }: StatementOfAccountModalProps) {
   const insets = useSafeAreaInsets();
+  const edgeBack = useEdgeSwipeBack(() => onClose());
   const { colors } = useThemeStore();
   const [filter, setFilter] = useState<"all" | "passes" | "courts">("all");
 
-  const totalSpent = passes.length * 265;
+  const { facilities, purchases } = useEcosystemStore();
+
+  const shown = passes.filter((p) =>
+    filter === "all" ? true : filter === "courts" ? isCourtPass(p) : !isCourtPass(p),
+  );
+  const totalSpent = passes.reduce((sum, p) => sum + (passCharge(purchases[p.id])?.totalChargePhp ?? 0), 0);
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
+      <View {...edgeBack} style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         {/* HEADER BAR WITH SAFE NOTCH INSET */}
-        <View style={[styles.topBar, { paddingTop: Math.max(insets.top, 50) + 10, backgroundColor: colors.bgHeader, borderBottomColor: colors.borderColor }]}>
+        <View
+          style={[
+            styles.topBar,
+            {
+              paddingTop: insets.top + 10,
+              backgroundColor: colors.bgHeader,
+              borderBottomColor: colors.borderColor,
+            },
+          ]}
+        >
           <TouchableOpacity
             onPress={onClose}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             style={styles.backBtn}
           >
             <ArrowLeft size={20} color={colors.textPrimary} />
-            <Text style={[styles.backBtnText, { color: colors.textPrimary }]}>Cards Hub</Text>
+            <Text style={[styles.backBtnText, { color: colors.textPrimary }]}>Wallet</Text>
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>STATEMENT OF ACCOUNT</Text>
+          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>STATEMENT</Text>
           <View style={{ width: 44 }} />
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
           {/* LEDGER OVERVIEW CARD */}
           <View style={[styles.summaryCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
-            <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>TOTAL EXPENDITURE (CURRENT MONTH)</Text>
-            <Text style={[styles.summaryAmount, { color: colors.textPrimary }]}>₱{totalSpent.toFixed(2)}</Text>
+            <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>TOTAL SPENT</Text>
+            <Text style={[styles.summaryAmount, { color: colors.textPrimary }]}>{formatPhp(totalSpent)}</Text>
             <View style={styles.summaryMetaRow}>
-              <Text style={styles.summaryMeta}>{passes.length} Settled Transactions</Text>
-              <Text style={styles.summaryMeta}>• Zero Failed Invoices</Text>
+              <Text style={styles.summaryMeta}>
+                {passes.length} {passes.length === 1 ? "pass" : "passes"}
+              </Text>
             </View>
           </View>
 
@@ -58,42 +72,55 @@ export function StatementOfAccountModal({
               <TouchableOpacity
                 key={fil}
                 onPress={() => setFilter(fil)}
-                style={[styles.filterPill, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }, filter === fil && styles.filterPillActive]}
+                style={[
+                  styles.filterPill,
+                  { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor },
+                  filter === fil && styles.filterPillActive,
+                ]}
               >
-                <Text style={[styles.filterText, { color: colors.textMuted }, filter === fil && styles.filterTextActive]}>
-                  {fil === "all" ? `All (${passes.length})` : fil === "passes" ? "Day Passes" : "Courts & Meets"}
+                <Text
+                  style={[styles.filterText, { color: colors.textMuted }, filter === fil && styles.filterTextActive]}
+                >
+                  {fil === "all" ? `All (${passes.length})` : fil === "passes" ? "Passes" : "Courts"}
                 </Text>
               </TouchableOpacity>
             ))}
           </View>
 
           {/* TRANSACTION LIST OR EMPTY STATE */}
-          {passes.length === 0 ? (
+          {shown.length === 0 ? (
             <View style={[styles.emptyCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
               <Ticket size={36} color={colors.textMuted} />
-              <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No transaction history</Text>
+              <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
+                {passes.length === 0 ? "No purchases yet" : "Nothing in this category"}
+              </Text>
               <Text style={[styles.emptySub, { color: colors.textMuted }]}>
-                Your purchases, recurring memberships, and court splits will appear here.
+                Your passes, memberships and court bookings will appear here.
               </Text>
             </View>
           ) : (
             <View style={styles.txList}>
-              {passes.map((p) => (
+              {shown.map((p) => (
                 <TouchableOpacity
                   key={p.id}
                   onPress={() => onSelectPass(p)}
                   style={[styles.txRow, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}
                 >
                   <View style={styles.txIconWrap}>
-                    <FileText size={16} color="#EC4899" />
+                    <FileText size={16} color="#E11D48" />
                   </View>
                   <View style={styles.txDetails}>
                     <Text style={[styles.txTitle, { color: colors.textPrimary }]}>{p.pass_type}</Text>
-                    <Text style={[styles.txDate, { color: colors.textMuted }]}>{p.created_at ? new Date(p.created_at).toLocaleDateString() : "Active"} • Metro Core</Text>
+                    <Text style={[styles.txDate, { color: colors.textMuted }]}>
+                      {p.created_at ? new Date(p.created_at).toLocaleDateString() : ""} •{" "}
+                      {passVenueName(p, facilities, purchases[p.id])}
+                    </Text>
                   </View>
                   <View style={styles.txRight}>
-                    <Text style={[styles.txPrice, { color: colors.textPrimary }]}>₱265.00</Text>
-                    <Text style={styles.txStatus}>{p.status.toUpperCase()}</Text>
+                    <Text style={[styles.txPrice, { color: colors.textPrimary }]}>
+                      {formatPhp(passCharge(purchases[p.id])?.totalChargePhp ?? 0)}
+                    </Text>
+                    <Text style={styles.txStatus}>{passStatusLabel(p)}</Text>
                   </View>
                 </TouchableOpacity>
               ))}
@@ -112,7 +139,14 @@ export function StatementOfAccountModal({
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingBottom: 14, borderBottomWidth: 1 },
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+  },
   backBtn: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 44, paddingVertical: 4 },
   backBtnText: { fontSize: 13, fontWeight: "700" },
   headerTitle: { fontSize: 12, fontWeight: "900", letterSpacing: 0.8 },
@@ -132,7 +166,14 @@ const styles = StyleSheet.create({
   emptySub: { fontSize: 11, textAlign: "center", marginTop: 4, maxWidth: 260 },
   txList: { gap: 8, marginBottom: 16 },
   txRow: { flexDirection: "row", alignItems: "center", borderRadius: 12, padding: 12, borderWidth: 1 },
-  txIconWrap: { width: 34, height: 34, borderRadius: 8, backgroundColor: "rgba(236, 72, 153, 0.15)", alignItems: "center", justifyContent: "center" },
+  txIconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    backgroundColor: "rgba(225, 29, 72, 0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   txDetails: { flex: 1, marginLeft: 12 },
   txTitle: { fontSize: 13, fontWeight: "700" },
   txDate: { fontSize: 11, marginTop: 2 },

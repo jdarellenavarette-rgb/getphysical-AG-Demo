@@ -9,11 +9,7 @@ interface PostMediaAttachmentBarProps {
   onPickLibrary: () => void;
 }
 
-export function PostMediaAttachmentBar({
-  onTakePhoto,
-  onRecordVideo,
-  onPickLibrary,
-}: PostMediaAttachmentBarProps) {
+export function PostMediaAttachmentBar({ onTakePhoto, onRecordVideo, onPickLibrary }: PostMediaAttachmentBarProps) {
   const { colors } = useThemeStore();
 
   return (
@@ -41,6 +37,13 @@ const styles = StyleSheet.create({
   attachmentBar: { borderRadius: 14, padding: 12, borderWidth: 1, marginVertical: 8 },
   attachTitle: { fontSize: 10, fontWeight: "800", letterSpacing: 0.6, marginBottom: 8 },
   attachBtnRow: { flexDirection: "row", justifyContent: "space-around" },
-  attachBtn: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8 },
+  attachBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+  },
   attachBtnText: { fontSize: 12, fontWeight: "700" },
 });

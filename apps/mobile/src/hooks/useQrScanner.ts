@@ -1,10 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import {
-  describeDeniedScan,
-  describeRedeemResult,
-  parseQrScan,
-  type QrResolveResult,
-} from "sodia-core";
+import { describeDeniedScan, describeRedeemResult, parseQrScan, type QrResolveResult } from "sodia-core";
 import { APP_HOSTS } from "../lib/appLinks";
 import { redeemQr, resolveQr, verifyPassScan } from "../services/qrService";
 
@@ -34,7 +29,12 @@ export function useQrScanner() {
     const parsed = parseQrScan(raw, APP_HOSTS);
 
     if (parsed.type === "unknown") {
-      setState({ phase: "result", tone: "error", title: "Not a GetPhysical code", message: "This QR code isn't from GetPhysical." });
+      setState({
+        phase: "result",
+        tone: "error",
+        title: "Not a GetPhysical code",
+        message: "This QR code isn't from GetPhysical.",
+      });
       return;
     }
 
@@ -46,14 +46,15 @@ export function useQrScanner() {
           phase: "result",
           tone: "error",
           title: result.reason === "forbidden" ? "Staff only" : "Couldn't check pass",
-          message: result.reason === "forbidden" ? "Membership cards are checked in by facility staff." : result.message,
+          message:
+            result.reason === "forbidden" ? "Membership cards are checked in by facility staff." : result.message,
         });
         return;
       }
       setState(
         result.data.granted
           ? { phase: "result", tone: "success", title: "Entry granted", message: result.data.member_name ?? "Member" }
-          : { phase: "result", tone: "error", title: "Entry denied", message: describeDeniedScan(result.data.reason) }
+          : { phase: "result", tone: "error", title: "Entry denied", message: describeDeniedScan(result.data.reason) },
       );
       return;
     }
@@ -67,7 +68,10 @@ export function useQrScanner() {
         phase: "result",
         tone: "error",
         title: resolved.data.status === "REVOKED" ? "Code replaced" : "Code not found",
-        message: resolved.data.status === "REVOKED" ? "Its owner issued a new code. Ask them for the latest one." : "This code doesn't exist.",
+        message:
+          resolved.data.status === "REVOKED"
+            ? "Its owner issued a new code. Ask them for the latest one."
+            : "This code doesn't exist.",
       });
     } else {
       setState({ phase: "preview", token: parsed.token, preview: resolved.data });
@@ -79,10 +83,17 @@ export function useQrScanner() {
     setState({ phase: "working", label: "Just a moment…" });
     const result = await redeemQr(state.token);
     if (!result.ok) {
-      setState({ phase: "result", tone: "error", title: result.reason === "signed_out" ? "Sign in first" : "Couldn't complete", message: result.message });
+      setState({
+        phase: "result",
+        tone: "error",
+        title: result.reason === "signed_out" ? "Sign in first" : "Couldn't complete",
+        message: result.message,
+      });
       return;
     }
-    const good = ["ACCEPTED", "PENDING", "JOINED", "REGISTERED", "ALREADY_MEMBER", "ACTIVE"].includes(result.data.status);
+    const good = ["ACCEPTED", "PENDING", "JOINED", "REGISTERED", "ALREADY_MEMBER", "ACTIVE"].includes(
+      result.data.status,
+    );
     setState({
       phase: "result",
       tone: good ? "success" : result.data.status === "PURCHASE_REQUIRED" ? "info" : "error",

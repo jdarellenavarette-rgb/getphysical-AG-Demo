@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, TextInput } from "react-native";
-import { Award, Dumbbell, Flame, Plus, ChevronRight, BookOpen } from "lucide-react-native";
+import { Dumbbell, Flame, Plus, ChevronRight, BookOpen } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import { useTrackingStore, type LiftSession, type ProgramDay, type ProgramExercise } from "../../store/trackingStore";
 import { CreateProgramModal } from "./CreateProgramModal";
@@ -10,6 +10,22 @@ interface LiftLaunchpadViewProps {
   setWorkoutTitle: (t: string) => void;
   onStartTraining: (title?: string, exercises?: ProgramExercise[]) => void;
   liftSessions: LiftSession[];
+}
+
+const BEST_LIFTS = [
+  { name: "Deadlift", match: /deadlift/i },
+  { name: "Bench", match: /bench/i },
+  { name: "Squat", match: /squat/i },
+];
+
+/** Heaviest completed set across the person's own sessions for a lift. */
+function bestWeightFor(sessions: readonly LiftSession[], match: RegExp): number {
+  return sessions
+    .flatMap((session) => session.exercises)
+    .filter((exercise) => match.test(exercise.name))
+    .flatMap((exercise) => exercise.sets)
+    .filter((set) => set.isCompleted)
+    .reduce((best, set) => Math.max(best, set.weight), 0);
 }
 
 export function LiftLaunchpadView({
@@ -30,44 +46,52 @@ export function LiftLaunchpadView({
   };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.bgScreen }]} contentContainerStyle={styles.emptyContent}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
+      contentContainerStyle={styles.emptyContent}
+    >
       <View style={styles.prHeaderRow}>
-        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Personal Bests (1RM)</Text>
-        <View style={styles.verifiedTrophyPill}>
-          <Award size={13} color="#10B981" />
-          <Text style={styles.verifiedTrophyText}>VERIFIED</Text>
-        </View>
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Personal Bests</Text>
       </View>
 
       <View style={styles.prRingsRow}>
-        {[
-          { name: "Deadlift", val: "225", unit: "KG" },
-          { name: "Bench", val: "145", unit: "KG" },
-          { name: "Squat", val: "190", unit: "KG" },
-        ].map((pr) => (
-          <View key={pr.name} style={styles.prRingItem}>
-            <View style={[styles.prRingCircle, { backgroundColor: colors.bgCard, borderColor: colors.accent }]}>
-              <Text style={[styles.prRingWeight, { color: colors.textPrimary }]}>{pr.val}</Text>
-              <Text style={styles.prRingUnit}>{pr.unit}</Text>
+        {BEST_LIFTS.map((lift) => {
+          const best = bestWeightFor(liftSessions, lift.match);
+          return (
+            <View key={lift.name} style={styles.prRingItem}>
+              <View
+                style={[
+                  styles.prRingCircle,
+                  { backgroundColor: colors.bgCard, borderColor: best ? colors.accent : colors.borderColor },
+                ]}
+              >
+                <Text style={[styles.prRingWeight, { color: best ? colors.textPrimary : colors.textMuted }]}>
+                  {best || "—"}
+                </Text>
+                <Text style={styles.prRingUnit}>KG</Text>
+              </View>
+              <Text style={[styles.prRingLabel, { color: colors.textMuted }]}>{lift.name}</Text>
             </View>
-            <Text style={[styles.prRingLabel, { color: colors.textMuted }]}>{pr.name}</Text>
-          </View>
-        ))}
+          );
+        })}
       </View>
 
       <View style={[styles.launchpadCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
         <Dumbbell size={28} color="#E11D48" style={{ marginBottom: 6 }} />
-        <Text style={[styles.launchpadTitle, { color: colors.textPrimary }]}>Quick Strength Session</Text>
+        <Text style={[styles.launchpadTitle, { color: colors.textPrimary }]}>Quick workout</Text>
         <TextInput
-          style={[styles.customRoutineInput, { backgroundColor: colors.bgCardSecondary, color: colors.textPrimary, borderColor: colors.borderColor }]}
+          style={[
+            styles.customRoutineInput,
+            { backgroundColor: colors.bgCardSecondary, color: colors.textPrimary, borderColor: colors.borderColor },
+          ]}
           value={workoutTitle}
           onChangeText={setWorkoutTitle}
-          placeholder="Routine Title (e.g. Heavy Squat & Pull)"
+          placeholder="Workout name (optional)"
           placeholderTextColor={colors.textMuted}
         />
         <TouchableOpacity onPress={() => onStartTraining()} style={styles.startWorkoutButton}>
           <Flame size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
-          <Text style={styles.startWorkoutText}>Start Heavy Session</Text>
+          <Text style={styles.startWorkoutText}>Start Session</Text>
         </TouchableOpacity>
       </View>
 
@@ -75,16 +99,27 @@ export function LiftLaunchpadView({
       <View style={styles.programsSectionHeader}>
         <View style={styles.headerLeft}>
           <BookOpen size={16} color="#E11D48" />
-          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Training Programs Vault</Text>
+          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Programs</Text>
         </View>
         <TouchableOpacity onPress={() => setIsCreateOpen(true)} style={styles.createProgBtn}>
           <Plus size={13} color="#E11D48" />
-          <Text style={styles.createProgText}>+ New Program</Text>
+          <Text style={styles.createProgText}>New Program</Text>
         </TouchableOpacity>
       </View>
 
+      {savedPrograms.length === 0 && (
+        <Text style={[styles.emptyNote, { color: colors.textMuted }]}>
+          No programs yet. Create one to plan your training days.
+        </Text>
+      )}
+
       {/* Program Selector Tabs */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.progTabsRow} contentContainerStyle={{ gap: 8 }}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.progTabsRow}
+        contentContainerStyle={{ gap: 8 }}
+      >
         {savedPrograms.map((prog) => {
           const isSelected = prog.id === activeProg?.id;
           return (
@@ -93,10 +128,15 @@ export function LiftLaunchpadView({
               onPress={() => setSelectedProgId(prog.id)}
               style={[
                 styles.progTabPill,
-                { backgroundColor: isSelected ? "#E11D48" : colors.bgCard, borderColor: isSelected ? "#E11D48" : colors.borderColor },
+                {
+                  backgroundColor: isSelected ? "#E11D48" : colors.bgCard,
+                  borderColor: isSelected ? "#E11D48" : colors.borderColor,
+                },
               ]}
             >
-              <Text style={[styles.progTabTitle, { color: isSelected ? "#FFFFFF" : colors.textPrimary }]}>{prog.title}</Text>
+              <Text style={[styles.progTabTitle, { color: isSelected ? "#FFFFFF" : colors.textPrimary }]}>
+                {prog.title}
+              </Text>
             </TouchableOpacity>
           );
         })}
@@ -111,7 +151,10 @@ export function LiftLaunchpadView({
               <TouchableOpacity
                 key={day.id}
                 onPress={() => handleLaunchDay(day)}
-                style={[styles.dayItemRow, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}
+                style={[
+                  styles.dayItemRow,
+                  { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor },
+                ]}
               >
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.dayItemName, { color: colors.textPrimary }]}>{day.dayName}</Text>
@@ -131,13 +174,21 @@ export function LiftLaunchpadView({
 
       {/* History */}
       <View style={[styles.historyBox, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
-        <Text style={[styles.historyHeaderTitle, { color: colors.textPrimary }]}>Strength Memories & History ({liftSessions.length})</Text>
+        <Text style={[styles.historyHeaderTitle, { color: colors.textPrimary }]}>
+          Workout History ({liftSessions.length})
+        </Text>
+        {liftSessions.length === 0 && (
+          <Text style={[styles.emptyNote, { color: colors.textMuted }]}>
+            No workouts yet. Finish a session and it will be saved here.
+          </Text>
+        )}
         {liftSessions.map((session) => (
           <View key={session.id} style={[styles.historyRow, { borderBottomColor: colors.borderColor }]}>
             <View>
               <Text style={[styles.historySessionTitle, { color: colors.textPrimary }]}>{session.title}</Text>
               <Text style={[styles.historySessionSub, { color: colors.textMuted }]}>
-                {session.exercises[0]?.name} • {session.totalSets} sets • {session.totalVolumeKg.toLocaleString()} kg vol
+                {session.exercises[0]?.name} • {session.totalSets} sets • {session.totalVolumeKg.toLocaleString()} kg
+                vol
               </Text>
             </View>
             {session.isPR && (
@@ -155,26 +206,74 @@ export function LiftLaunchpadView({
 }
 
 const styles = StyleSheet.create({
+  emptyNote: { fontSize: 13, lineHeight: 19, paddingVertical: 12 },
   container: { flex: 1, padding: 16 },
   emptyContent: { paddingBottom: 110 },
   prHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 },
   sectionTitle: { fontSize: 16, fontWeight: "800" },
-  verifiedTrophyPill: { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "rgba(16,185,129,0.12)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
+  verifiedTrophyPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: "rgba(16,185,129,0.12)",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
   verifiedTrophyText: { color: "#10B981", fontSize: 11, fontWeight: "800" },
   prRingsRow: { flexDirection: "row", justifyContent: "space-around", marginBottom: 20 },
   prRingItem: { alignItems: "center" },
-  prRingCircle: { width: 78, height: 78, borderRadius: 39, borderWidth: 3, alignItems: "center", justifyContent: "center" },
+  prRingCircle: {
+    width: 78,
+    height: 78,
+    borderRadius: 39,
+    borderWidth: 3,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   prRingWeight: { fontSize: 20, fontWeight: "900" },
   prRingUnit: { color: "#8E8E93", fontSize: 10, fontWeight: "800", marginTop: -2 },
   prRingLabel: { fontSize: 12, fontWeight: "700", marginTop: 6 },
   launchpadCard: { borderWidth: 1, borderRadius: 18, padding: 16, alignItems: "center", marginBottom: 16 },
   launchpadTitle: { fontSize: 16, fontWeight: "800", marginBottom: 8 },
-  customRoutineInput: { width: "100%", borderWidth: 1, borderRadius: 10, padding: 10, fontSize: 13, fontWeight: "600", marginBottom: 10, textAlign: "center" },
-  startWorkoutButton: { backgroundColor: "#E11D48", borderRadius: 10, paddingVertical: 10, paddingHorizontal: 20, flexDirection: "row", alignItems: "center", width: "100%", justifyContent: "center" },
+  customRoutineInput: {
+    width: "100%",
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 10,
+    fontSize: 13,
+    fontWeight: "600",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  startWorkoutButton: {
+    backgroundColor: "#E11D48",
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
+    justifyContent: "center",
+  },
   startWorkoutText: { color: "#FFFFFF", fontWeight: "800", fontSize: 13 },
-  programsSectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10, marginTop: 4 },
+  programsSectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+    marginTop: 4,
+  },
   headerLeft: { flexDirection: "row", alignItems: "center", gap: 6 },
-  createProgBtn: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, backgroundColor: "rgba(225,29,72,0.1)" },
+  createProgBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    backgroundColor: "rgba(225,29,72,0.1)",
+  },
   createProgText: { color: "#E11D48", fontSize: 11, fontWeight: "800" },
   progTabsRow: { marginBottom: 12 },
   progTabPill: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 7 },
@@ -182,14 +281,27 @@ const styles = StyleSheet.create({
   activeProgCard: { borderWidth: 1, borderRadius: 14, padding: 14, marginBottom: 16 },
   activeProgDesc: { fontSize: 12, fontWeight: "600", marginBottom: 10 },
   daysList: { gap: 8 },
-  dayItemRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderRadius: 10, padding: 10, borderWidth: 1 },
+  dayItemRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderRadius: 10,
+    padding: 10,
+    borderWidth: 1,
+  },
   dayItemName: { fontSize: 13, fontWeight: "800", marginBottom: 2 },
   dayItemMeta: { fontSize: 11 },
   launchDayBtn: { flexDirection: "row", alignItems: "center", gap: 2, paddingLeft: 8 },
   launchDayText: { color: "#E11D48", fontSize: 11, fontWeight: "800" },
   historyBox: { borderWidth: 1, borderRadius: 16, padding: 14, marginBottom: 16 },
   historyHeaderTitle: { fontSize: 14, fontWeight: "800", marginBottom: 10 },
-  historyRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 8, borderBottomWidth: 1 },
+  historyRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+  },
   historySessionTitle: { fontSize: 13, fontWeight: "700" },
   historySessionSub: { fontSize: 11, marginTop: 2 },
   prBadge: { backgroundColor: "#10B981", borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },

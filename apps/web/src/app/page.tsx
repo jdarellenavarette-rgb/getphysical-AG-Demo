@@ -16,15 +16,44 @@ export default async function SuiteRootPage() {
 
   if (!session.active) {
     return (
-      <main style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px 16px", background: "#0B0D12", color: "#F3F4F6", fontFamily: "system-ui, sans-serif" }}>
-        <section style={{ width: "100%", maxWidth: 460, background: "#12151C", border: "1px solid #232836", borderRadius: 16, padding: 28 }}>
+      <main
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "24px 16px",
+          background: "#0B0D12",
+          color: "#F3F4F6",
+          fontFamily: "system-ui, sans-serif",
+        }}
+      >
+        <section
+          style={{
+            width: "100%",
+            maxWidth: 460,
+            background: "#12151C",
+            border: "1px solid #232836",
+            borderRadius: 16,
+            padding: 28,
+          }}
+        >
           <h1 style={{ margin: "0 0 6px", fontSize: 22 }}>Set up your first facility</h1>
           <p style={{ margin: "0 0 20px", color: "#9CA3AF", fontSize: 14 }}>
             Signed in as {session.email}. If your gym already uses GetPhysical, ask its owner to add you as staff.
           </p>
           <CreateFacilityForm />
           <form action={signOut} style={{ marginTop: 16 }}>
-            <button type="submit" style={{ background: "none", border: "none", color: "#9CA3AF", textDecoration: "underline", cursor: "pointer" }}>
+            <button
+              type="submit"
+              style={{
+                background: "none",
+                border: "none",
+                color: "#9CA3AF",
+                textDecoration: "underline",
+                cursor: "pointer",
+              }}
+            >
               Sign out
             </button>
           </form>
@@ -34,10 +63,6 @@ export default async function SuiteRootPage() {
   }
 
   return (
-    <BusinessSuiteShell
-      facility={session.active}
-      facilities={session.facilities}
-      operatorName={session.displayName}
-    />
+    <BusinessSuiteShell facility={session.active} facilities={session.facilities} operatorName={session.displayName} />
   );
 }

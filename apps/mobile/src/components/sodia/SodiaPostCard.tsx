@@ -1,45 +1,55 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Image, Alert } from "react-native";
-import { Heart, MessageCircle, Bookmark, Send, MapPin, MoreHorizontal, CheckCircle2, Award, Play, Trophy, Sparkles, Tag } from "lucide-react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Image, Alert, Share } from "react-native";
+import { Heart, MessageCircle, Send, MapPin, MoreHorizontal, Play, Trophy, Tag } from "lucide-react-native";
 import type { SodiaPostRow } from "sodia-core";
 import { useThemeStore } from "../../theme/theme";
 import { PlayableVideoView } from "./PlayableVideoView";
+import { Avatar } from "../common/Avatar";
+import { DoubleTapLike } from "./DoubleTapLike";
+import { formatTimeAgo } from "../../services/messagingService";
 
 interface SodiaPostCardProps {
   post: SodiaPostRow;
   profileAvatar?: string | null;
   isLiked: boolean;
-  isSaved: boolean;
-  isShared: boolean;
+  /** True when the signed-in person wrote this post. */
+  isOwn: boolean;
+  isChallengeJoined: boolean;
+  commentCount: number;
   onToggleLike: (id: string) => void;
-  onToggleSave: (id: string) => void;
-  onShare: (id: string) => void;
-  onOpenComments?: () => void;
+  onToggleChallenge: (challengeId: string) => void;
+  onDelete: (id: string) => void;
+  onOpenComments?: (postId: string) => void;
   onPressFacilityCTA?: (facilityId: string) => void;
   onPressAuthor?: (userId: string, name: string, avatar?: string | null) => void;
 }
+
+const HIT_SLOP = { top: 12, bottom: 12, left: 12, right: 12 };
 
 export function SodiaPostCard({
   post,
   profileAvatar,
   isLiked,
-  isSaved,
-  isShared,
+  isOwn,
+  isChallengeJoined,
+  commentCount,
   onToggleLike,
-  onToggleSave,
-  onShare,
+  onToggleChallenge,
+  onDelete,
   onOpenComments,
   onPressFacilityCTA,
   onPressAuthor,
 }: SodiaPostCardProps) {
   const { colors } = useThemeStore();
 
-  const facTag = post.facility_tag && typeof post.facility_tag === "object" && !Array.isArray(post.facility_tag)
-    ? (post.facility_tag as Record<string, string | number>)
-    : null;
-  const stampObj = post.stamp && typeof post.stamp === "object" && !Array.isArray(post.stamp)
-    ? (post.stamp as Record<string, string | number | boolean>)
-    : null;
+  const facTag =
+    post.facility_tag && typeof post.facility_tag === "object" && !Array.isArray(post.facility_tag)
+      ? (post.facility_tag as Record<string, string | number>)
+      : null;
+  const stampObj =
+    post.stamp && typeof post.stamp === "object" && !Array.isArray(post.stamp)
+      ? (post.stamp as Record<string, string | number | boolean>)
+      : null;
 
   const postType = (stampObj?.type as string) || (post.media_url ? "photo" : "status");
   const isReel = postType === "reel";
@@ -47,6 +57,18 @@ export function SodiaPostCard({
   const isAd = postType === "ad";
   const isStatus = postType === "status" || !post.media_url;
   const likes = (post.likes_count ?? 0) + (isLiked ? 1 : 0);
+  const challengeId = String(stampObj?.challengeId ?? post.id);
+
+  const sharePost = () => {
+    void Share.share({ message: `${post.author_name ?? "Someone"} on GetPhysical: ${post.content ?? ""}`.trim() });
+  };
+
+  const confirmDelete = () => {
+    Alert.alert("Delete this post?", "This can't be undone.", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Delete", style: "destructive", onPress: () => onDelete(post.id) },
+    ]);
+  };
 
   return (
     <View style={[styles.postCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
@@ -57,37 +79,58 @@ export function SodiaPostCard({
           style={{ flexDirection: "row", alignItems: "center", flex: 1 }}
         >
           <View style={[styles.authorAvatarRing, isAd && { borderColor: "#F59E0B" }]}>
-            <Image source={{ uri: post.author_avatar ?? profileAvatar ?? "" }} style={styles.postAvatar} />
+            <Avatar
+              uri={post.author_avatar ?? (isOwn ? profileAvatar : null)}
+              name={post.author_name}
+              size={32}
+              style={styles.postAvatar}
+            />
           </View>
           <View style={styles.postAuthorInfo}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
               <Text style={[styles.postAuthorName, { color: colors.textPrimary }]}>{post.author_name}</Text>
-              {isAd ? (
-                <View style={styles.sponsoredBadge}><Text style={styles.sponsoredText}>SPONSORED</Text></View>
-              ) : (
-                <CheckCircle2 size={12} color="#38BDF8" fill="#38BDF8" />
+              {isAd && (
+                <View style={styles.sponsoredBadge}>
+                  <Text style={styles.sponsoredText}>SPONSORED</Text>
+                </View>
               )}
             </View>
             <Text style={[styles.postSubtitle, { color: colors.textMuted }]}>
-              {facTag ? String(facTag.name) : "Metro Manila"} • {isAd ? "Promoted" : "2h ago"}
+              {facTag ? `${String(facTag.name)} • ` : ""}
+              {isAd ? "Promoted" : formatTimeAgo(post.created_at)}
             </Text>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => Alert.alert("Post Options", "Post link copied to clipboard.")} style={styles.moreBtn}>
-          <MoreHorizontal size={18} color={colors.textMuted} />
-        </TouchableOpacity>
+        {isOwn && (
+          <TouchableOpacity
+            onPress={confirmDelete}
+            style={styles.moreBtn}
+            hitSlop={HIT_SLOP}
+            accessibilityRole="button"
+            accessibilityLabel="Post options"
+          >
+            <MoreHorizontal size={18} color={colors.textMuted} />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* 2. MEDIA / CONTENT BODY */}
       {isStatus ? (
-        <View style={styles.statusPostCard}>
+        <View
+          style={[
+            styles.statusPostCard,
+            typeof stampObj?.bgColor === "string" && { backgroundColor: stampObj.bgColor },
+          ]}
+        >
           <Text style={styles.statusPostText}>"{post.content}"</Text>
           <Text style={styles.statusAuthorSign}>— {post.author_name}</Text>
         </View>
       ) : isReel ? (
         <View style={[styles.mediaContainer, styles.reelMediaContainer]}>
           <PlayableVideoView
-            videoUrl={String(stampObj?.videoUrl ?? "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4")}
+            videoUrl={String(
+              stampObj?.videoUrl ?? "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+            )}
             posterUrl={post.media_url ?? undefined}
             autoPlay={false}
           />
@@ -101,7 +144,7 @@ export function SodiaPostCard({
           </View>
         </View>
       ) : (
-        <TouchableOpacity activeOpacity={0.9} onPress={() => onToggleLike(post.id)} style={styles.mediaContainer}>
+        <DoubleTapLike onLike={() => !isLiked && onToggleLike(post.id)} style={styles.mediaContainer}>
           <Image source={{ uri: post.media_url ?? "" }} style={styles.mediaPhoto} resizeMode="cover" />
 
           {/* PR CHALLENGE FLOATING BADGE */}
@@ -122,40 +165,52 @@ export function SodiaPostCard({
 
           {/* VENUE PILL */}
           {facTag && !isAd && (
-            <TouchableOpacity onPress={() => onPressFacilityCTA?.(String(facTag.id ?? ""))} style={styles.venueFloatingPill}>
+            <TouchableOpacity
+              onPress={() => onPressFacilityCTA?.(String(facTag.id ?? ""))}
+              style={styles.venueFloatingPill}
+            >
               <MapPin size={12} color="#10B981" />
               <Text style={styles.venueFloatingName}>@{facTag.name}</Text>
               <View style={styles.venuePillCta}>
-                <Text style={styles.venuePillCtaText}>{facTag.actionCTA} • ₱{facTag.price}</Text>
+                <Text style={styles.venuePillCtaText}>
+                  {facTag.actionCTA} • ₱{facTag.price}
+                </Text>
               </View>
             </TouchableOpacity>
           )}
-        </TouchableOpacity>
+        </DoubleTapLike>
       )}
 
       {/* 3. CHALLENGE BANNER CALLOUT (FOR PR CHALLENGE POSTS) */}
       {isChallenge && (
-        <View style={[styles.challengeBanner, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}>
+        <View
+          style={[styles.challengeBanner, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}
+        >
           <View style={{ flex: 1 }}>
             <Text style={[styles.challengeBannerTitle, { color: colors.textPrimary }]}>
               🏆 {String(stampObj?.title ?? "PR Challenge")}
             </Text>
             <Text style={[styles.challengeBannerMeta, { color: colors.textMuted }]}>
-              {String(stampObj?.benchmark ?? "Benchmark")} • {String(stampObj?.participantsCount ?? 40)} Athletes • {String(stampObj?.daysLeft ?? 5)} Days Left
+              {String(stampObj?.benchmark ?? "Benchmark")} • {String(stampObj?.participantsCount ?? 40)} Athletes •{" "}
+              {String(stampObj?.daysLeft ?? 5)} Days Left
             </Text>
           </View>
           <TouchableOpacity
-            onPress={() => Alert.alert("Challenge Joined!", "You're registered! Record and upload your lift video to submit.")}
-            style={styles.challengeJoinBtn}
+            onPress={() => onToggleChallenge(challengeId)}
+            style={[styles.challengeJoinBtn, isChallengeJoined && { backgroundColor: colors.accentGreen }]}
+            accessibilityRole="button"
+            accessibilityState={{ selected: isChallengeJoined }}
           >
-            <Text style={styles.challengeJoinBtnText}>Join Challenge</Text>
+            <Text style={styles.challengeJoinBtnText}>{isChallengeJoined ? "Joined ✓" : "Join Challenge"}</Text>
           </TouchableOpacity>
         </View>
       )}
 
       {/* 4. AD ACTION BANNER (FOR GYM AD POSTS) */}
       {isAd && (
-        <View style={[styles.adCtaBanner, { backgroundColor: colors.bgCardSecondary, borderTopColor: colors.borderColor }]}>
+        <View
+          style={[styles.adCtaBanner, { backgroundColor: colors.bgCardSecondary, borderTopColor: colors.borderColor }]}
+        >
           <View style={{ flex: 1 }}>
             <Text style={[styles.adCtaTitle, { color: colors.textPrimary }]}>7-Day VIP Guest Pass</Text>
             <Text style={[styles.adCtaSub, { color: colors.textMuted }]}>Olympic platforms, sauna, & cold plunge</Text>
@@ -173,30 +228,52 @@ export function SodiaPostCard({
       <View style={styles.postFooter}>
         <View style={styles.interactionRow}>
           <View style={{ flexDirection: "row", gap: 14, alignItems: "center" }}>
-            <TouchableOpacity onPress={() => onToggleLike(post.id)}>
+            <TouchableOpacity
+              onPress={() => onToggleLike(post.id)}
+              hitSlop={HIT_SLOP}
+              accessibilityRole="button"
+              accessibilityLabel={isLiked ? "Unlike" : "Like"}
+            >
               <Heart size={22} color={isLiked ? "#E11D48" : colors.textPrimary} fill={isLiked ? "#E11D48" : "none"} />
             </TouchableOpacity>
-            <TouchableOpacity onPress={onOpenComments}>
+            <TouchableOpacity
+              onPress={() => onOpenComments?.(post.id)}
+              hitSlop={HIT_SLOP}
+              accessibilityRole="button"
+              accessibilityLabel="Comments"
+            >
               <MessageCircle size={22} color={colors.textPrimary} />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => onShare(post.id)}>
-              <Send size={20} color={isShared ? "#3B82F6" : colors.textPrimary} />
+            <TouchableOpacity
+              onPress={sharePost}
+              hitSlop={HIT_SLOP}
+              accessibilityRole="button"
+              accessibilityLabel="Share"
+            >
+              <Send size={20} color={colors.textPrimary} />
             </TouchableOpacity>
           </View>
-          <TouchableOpacity onPress={() => onToggleSave(post.id)}>
-            <Bookmark size={22} color={isSaved ? "#F59E0B" : colors.textPrimary} fill={isSaved ? "#F59E0B" : "none"} />
-          </TouchableOpacity>
         </View>
 
-        <Text style={[styles.likesCountText, { color: colors.textPrimary }]}>Liked by coach.miguel and {likes} others</Text>
+        {likes > 0 && (
+          <Text style={[styles.likesCountText, { color: colors.textPrimary }]}>
+            {likes.toLocaleString()} {likes === 1 ? "like" : "likes"}
+          </Text>
+        )}
         {!isStatus && (
           <Text style={[styles.captionBody, { color: colors.textPrimary }]}>
             <Text style={[styles.captionAuthor, { color: colors.textPrimary }]}>{post.author_name} </Text>
             {post.content}
           </Text>
         )}
-        <TouchableOpacity onPress={onOpenComments} style={styles.commentTeaserRow}>
-          <Text style={[styles.commentTeaserText, { color: colors.textMuted }]}>View all {post.comments_count ?? 4} comments</Text>
+        <TouchableOpacity onPress={() => onOpenComments?.(post.id)} style={styles.commentTeaserRow}>
+          <Text style={[styles.commentTeaserText, { color: colors.textMuted }]}>
+            {commentCount === 0
+              ? "Add a comment"
+              : commentCount === 1
+                ? "View 1 comment"
+                : `View all ${commentCount} comments`}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -208,42 +285,144 @@ const styles = StyleSheet.create({
   postTopBar: { flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 10 },
   authorAvatarRing: { width: 38, height: 38, borderRadius: 19, borderWidth: 1.5, borderColor: "#E11D48", padding: 1 },
   postAvatar: { width: "100%", height: "100%", borderRadius: 18 },
-  postAuthorInfo: { flex: 1, marginLeft: 10 }, postAuthorName: { fontSize: 13, fontWeight: "800" },
+  postAuthorInfo: { flex: 1, marginLeft: 10 },
+  postAuthorName: { fontSize: 13, fontWeight: "800" },
   postSubtitle: { fontSize: 11, marginTop: 1 },
-  sponsoredBadge: { backgroundColor: "rgba(245,158,11,0.15)", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  sponsoredBadge: {
+    backgroundColor: "rgba(245,158,11,0.15)",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
   sponsoredText: { color: "#F59E0B", fontSize: 9, fontWeight: "900", letterSpacing: 0.5 },
   moreBtn: { minWidth: 36, minHeight: 36, alignItems: "center", justifyContent: "center" },
   mediaContainer: { position: "relative", width: "100%", height: 310 },
   reelMediaContainer: { height: 380 },
   mediaPhoto: { width: "100%", height: "100%" },
-  reelBadge: { position: "absolute", top: 12, left: 12, flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "rgba(0,0,0,0.75)", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999 },
+  reelBadge: {
+    position: "absolute",
+    top: 12,
+    left: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: "rgba(0,0,0,0.75)",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+  },
   reelBadgeText: { color: "#FFF", fontSize: 10, fontWeight: "800" },
   reelCenterPlay: { position: "absolute", top: "42%", left: "44%" },
-  playIconCircle: { width: 48, height: 48, borderRadius: 24, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "center", alignItems: "center", borderWidth: 2, borderColor: "#FFF" },
-  reelAudioTicker: { position: "absolute", bottom: 12, left: 12, flexDirection: "row", alignItems: "center", backgroundColor: "rgba(0,0,0,0.7)", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
-  reelAudioText: { color: "#FFF", fontSize: 10, fontWeight: "700" }, reelViewsText: { color: "#94A3B8", fontSize: 10, marginLeft: 4 },
-  challengeFloatingStamp: { position: "absolute", top: 12, right: 12, flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "rgba(9,9,11,0.85)", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, borderWidth: 1, borderColor: "#F59E0B" },
+  playIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#FFF",
+  },
+  reelAudioTicker: {
+    position: "absolute",
+    bottom: 12,
+    left: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.7)",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
+  reelAudioText: { color: "#FFF", fontSize: 10, fontWeight: "700" },
+  reelViewsText: { color: "#94A3B8", fontSize: 10, marginLeft: 4 },
+  challengeFloatingStamp: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: "rgba(9,9,11,0.85)",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "#F59E0B",
+  },
   challengeFloatingText: { color: "#FBBF24", fontSize: 10, fontWeight: "900" },
-  adFloatingPill: { position: "absolute", top: 12, right: 12, flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "rgba(9,9,11,0.85)", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, borderWidth: 1, borderColor: "#10B981" },
+  adFloatingPill: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: "rgba(9,9,11,0.85)",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "#10B981",
+  },
   adPromoText: { color: "#10B981", fontSize: 10, fontWeight: "800" },
-  venueFloatingPill: { position: "absolute", bottom: 12, left: 12, right: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: "rgba(9, 9, 11, 0.88)", borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.15)" },
+  venueFloatingPill: {
+    position: "absolute",
+    bottom: 12,
+    left: 12,
+    right: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "rgba(9, 9, 11, 0.88)",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.15)",
+  },
   venueFloatingName: { color: "#FAFAFA", fontSize: 12, fontWeight: "800", flex: 1, marginLeft: 6 },
   venuePillCta: { backgroundColor: "#E11D48", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 },
   venuePillCtaText: { color: "#FFFFFF", fontSize: 10, fontWeight: "800" },
-  statusPostCard: { backgroundColor: "#881337", padding: 26, minHeight: 180, justifyContent: "center", alignItems: "center" },
+  statusPostCard: {
+    backgroundColor: "#881337",
+    padding: 26,
+    minHeight: 180,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   statusPostText: { color: "#FFFFFF", fontSize: 17, fontWeight: "800", textAlign: "center", lineHeight: 26 },
   statusAuthorSign: { color: "rgba(255,255,255,0.7)", fontSize: 12, fontWeight: "700", marginTop: 10 },
-  challengeBanner: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 14, paddingVertical: 12, borderWidth: 1, borderTopWidth: 0 },
-  challengeBannerTitle: { fontSize: 13, fontWeight: "800" }, challengeBannerMeta: { fontSize: 11, marginTop: 2 },
+  challengeBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderTopWidth: 0,
+  },
+  challengeBannerTitle: { fontSize: 13, fontWeight: "800" },
+  challengeBannerMeta: { fontSize: 11, marginTop: 2 },
   challengeJoinBtn: { backgroundColor: "#E11D48", paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8 },
   challengeJoinBtnText: { color: "#FFF", fontSize: 11, fontWeight: "800" },
-  adCtaBanner: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 14, paddingVertical: 12, borderTopWidth: 1 },
-  adCtaTitle: { fontSize: 13, fontWeight: "800" }, adCtaSub: { fontSize: 11, marginTop: 2 },
+  adCtaBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+  },
+  adCtaTitle: { fontSize: 13, fontWeight: "800" },
+  adCtaSub: { fontSize: 11, marginTop: 2 },
   adClaimBtn: { backgroundColor: "#10B981", paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8 },
   adClaimBtnText: { color: "#FFF", fontSize: 11, fontWeight: "800" },
   postFooter: { paddingHorizontal: 14, paddingTop: 10, paddingBottom: 14 },
   interactionRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
   likesCountText: { fontSize: 13, fontWeight: "800", marginBottom: 6 },
-  captionBody: { fontSize: 13, lineHeight: 18, marginBottom: 4 }, captionAuthor: { fontWeight: "800" },
-  commentTeaserRow: { marginTop: 3 }, commentTeaserText: { fontSize: 12, fontWeight: "600" },
+  captionBody: { fontSize: 13, lineHeight: 18, marginBottom: 4 },
+  captionAuthor: { fontWeight: "800" },
+  commentTeaserRow: { marginTop: 3 },
+  commentTeaserText: { fontSize: 12, fontWeight: "600" },
 });

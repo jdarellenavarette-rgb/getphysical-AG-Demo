@@ -1,13 +1,13 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Modal, Image, ScrollView } from "react-native";
+import { Animated, View, Text, TouchableOpacity, StyleSheet, Modal, Image, ScrollView } from "react-native";
 import { X, Star, Clock, MapPin, ShieldCheck, UserCheck, Users, Award, Sparkles } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import type { DiscoverCoach, DiscoverCommunityClub } from "../../data/discoverData";
+import { SheetBackdrop, SheetGrabber } from "../common/SheetParts";
+import { useSwipeDownToClose } from "../../hooks/useDismissGestures";
 
 export type DiscoverSelectedEntity =
-  | { kind: "coach"; data: DiscoverCoach }
-  | { kind: "club"; data: DiscoverCommunityClub }
-  | null;
+  { kind: "coach"; data: DiscoverCoach } | { kind: "club"; data: DiscoverCommunityClub } | null;
 
 interface DiscoverEntitySheetProps {
   entity: DiscoverSelectedEntity;
@@ -16,13 +16,9 @@ interface DiscoverEntitySheetProps {
   onConfirmBooking: (itemTitle: string, pricePhp: number, facilityId?: string, facilityName?: string) => void;
 }
 
-export function DiscoverEntitySheet({
-  entity,
-  visible,
-  onClose,
-  onConfirmBooking,
-}: DiscoverEntitySheetProps) {
+export function DiscoverEntitySheet({ entity, visible, onClose, onConfirmBooking }: DiscoverEntitySheetProps) {
   const { colors } = useThemeStore();
+  const swipe = useSwipeDownToClose(() => onClose());
   if (!visible || !entity) return null;
 
   const isCoach = entity.kind === "coach";
@@ -41,7 +37,15 @@ export function DiscoverEntitySheet({
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
-        <View style={[styles.sheetCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
+        <SheetBackdrop onPress={onClose} />
+        <Animated.View
+          style={[
+            styles.sheetCard,
+            { backgroundColor: colors.bgCard, borderColor: colors.borderColor },
+            swipe.sheetStyle,
+          ]}
+        >
+          <SheetGrabber panHandlers={swipe.panHandlers} />
           {/* HEADER */}
           <View style={styles.header}>
             <View style={styles.badgeRow}>
@@ -86,7 +90,9 @@ export function DiscoverEntitySheet({
             </Text>
 
             {/* DETAILS ACCORDION */}
-            <View style={[styles.detailsBox, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}>
+            <View
+              style={[styles.detailsBox, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}
+            >
               <View style={styles.detailRow}>
                 <Clock size={14} color={colors.textMuted} />
                 <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Schedule</Text>
@@ -128,7 +134,7 @@ export function DiscoverEntitySheet({
                     isCoach ? `Session with ${coach!.name}` : `Entry to ${club!.name}`,
                     pricePhp,
                     isCoach ? coach!.homeFacilityId : undefined,
-                    isCoach ? coach!.homeFacilityName : club!.meetingPoint
+                    isCoach ? coach!.homeFacilityName : club!.meetingPoint,
                   );
                 }}
                 style={styles.bookCtaBtn}
@@ -139,7 +145,7 @@ export function DiscoverEntitySheet({
               </TouchableOpacity>
             </View>
           </ScrollView>
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );
@@ -150,9 +156,25 @@ const styles = StyleSheet.create({
   sheetCard: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, maxHeight: "85%", borderWidth: 1 },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 },
   badgeRow: { flexDirection: "row" },
-  coachBadge: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "rgba(59,130,246,0.15)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
+  coachBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "rgba(59,130,246,0.15)",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
   coachBadgeText: { color: "#60A5FA", fontSize: 10, fontWeight: "800" },
-  meetBadge: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "rgba(245,158,11,0.15)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
+  meetBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "rgba(245,158,11,0.15)",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
   meetBadgeText: { color: "#FBBF24", fontSize: 10, fontWeight: "800" },
   closeBtn: { minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" },
   sheetContent: { paddingBottom: 24 },
@@ -167,7 +189,13 @@ const styles = StyleSheet.create({
   detailRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   detailLabel: { fontSize: 12, width: 85 },
   detailValue: { fontSize: 12, fontWeight: "600", flex: 1 },
-  footerPricing: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderTopWidth: 1, paddingTop: 16 },
+  footerPricing: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderTopWidth: 1,
+    paddingTop: 16,
+  },
   totalPriceLabel: { fontSize: 11, fontWeight: "700" },
   totalPriceVal: { fontSize: 18, fontWeight: "900" },
   bookCtaBtn: { backgroundColor: "#E11D48", paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12 },

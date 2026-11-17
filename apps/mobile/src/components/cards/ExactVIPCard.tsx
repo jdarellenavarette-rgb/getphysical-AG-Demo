@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { QrCode, RotateCw, ShieldCheck, Zap, Radio, Sparkles } from "lucide-react-native";
+import { QrCode, RotateCw, Zap, Radio } from "lucide-react-native";
 import type { PassRow } from "sodia-core";
 import { usePassTotp } from "../../hooks/usePassTotp";
 import { QrCodeView } from "../common/QrCodeView";
@@ -26,14 +26,10 @@ export function ExactVIPCard({ pass, facilityName }: ExactVIPCardProps) {
           ? "Loading secure code…"
           : totpState.offline
             ? "Offline code • Touch to flip back"
-            : "Turnstile Gate A Scan • Touch to flip back";
+            : "Scan at the gate • Touch to flip back";
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.92}
-      onPress={() => setIsFlipped((prev) => !prev)}
-      style={styles.cardContainer}
-    >
+    <TouchableOpacity activeOpacity={0.92} onPress={() => setIsFlipped((prev) => !prev)} style={styles.cardContainer}>
       {!isFlipped ? (
         // FRONT FACE: HOLOGRAPHIC VIP CARD (PHOTO 2 STYLE)
         <View style={styles.frontFace}>
@@ -60,12 +56,14 @@ export function ExactVIPCard({ pass, facilityName }: ExactVIPCardProps) {
           {/* BOTTOM ROW: MEMBER CREDENTIALS & FLIP ACTION */}
           <View style={styles.bottomRow}>
             <View>
-              <Text style={styles.labelMuted}>VIP ATHLETE</Text>
-              <Text style={styles.memberName}>{profile.name ?? "Darelle Navarette"}</Text>
+              <Text style={styles.labelMuted}>MEMBER</Text>
+              <Text style={styles.memberName}>
+                {profile.name ?? `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim()}
+              </Text>
             </View>
             <View style={styles.flipPill}>
               <RotateCw size={11} color="#FFFFFF" style={{ marginRight: 4 }} />
-              <Text style={styles.flipPillText}>TOTP Turnstile</Text>
+              <Text style={styles.flipPillText}>Show QR</Text>
             </View>
           </View>
         </View>
@@ -75,11 +73,9 @@ export function ExactVIPCard({ pass, facilityName }: ExactVIPCardProps) {
           <View style={styles.qrHeader}>
             <View style={styles.qrTickingRow}>
               <Zap size={13} color="#10B981" />
-              <Text style={styles.qrTickingText}>
-                ROLLING KEY • {totp ? `${totp.remainingSeconds}s REFRESH` : "—"}
-              </Text>
+              <Text style={styles.qrTickingText}>ROLLING KEY • {totp ? `${totp.remainingSeconds}s REFRESH` : "—"}</Text>
             </View>
-            <Text style={styles.totpFallbackHeader}>60-SEC HARDWARE TOTP</Text>
+            <Text style={styles.totpFallbackHeader}>ENTRY CODE</Text>
           </View>
 
           <View style={styles.qrBox}>
@@ -91,7 +87,10 @@ export function ExactVIPCard({ pass, facilityName }: ExactVIPCardProps) {
           </View>
 
           <View style={styles.totpCodeContainer}>
-            <Text style={styles.totpCodeText} accessibilityLabel={totp ? `Gate code ${totp.code.split("").join(" ")}` : undefined}>
+            <Text
+              style={styles.totpCodeText}
+              accessibilityLabel={totp ? `Gate code ${totp.code.split("").join(" ")}` : undefined}
+            >
               {totp?.formattedCode ?? "––– –––"}
             </Text>
             <Text style={styles.totpSubtext}>{totpStatusText}</Text>
@@ -108,7 +107,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     backgroundColor: "#16161A",
     borderWidth: 1.5,
-    borderColor: "rgba(236, 72, 153, 0.4)",
+    borderColor: "rgba(225, 29, 72, 0.4)",
     overflow: "hidden",
     marginHorizontal: 4,
     marginVertical: 10,
@@ -165,7 +164,7 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   vipTag: {
-    color: "#EC4899",
+    color: "#E11D48",
     fontSize: 10,
     fontWeight: "900",
   },
@@ -179,7 +178,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
   },
   passType: {
-    color: "#EC4899",
+    color: "#E11D48",
     fontSize: 12,
     marginTop: 4,
     fontWeight: "800",
@@ -197,7 +196,16 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
   memberName: { color: "#FAFAFA", fontSize: 15, fontWeight: "800", marginTop: 2 },
-  flipPill: { flexDirection: "row", alignItems: "center", backgroundColor: "#27272A", paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.15)" },
+  flipPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#27272A",
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.15)",
+  },
   flipPillText: { color: "#FAFAFA", fontSize: 11, fontWeight: "700" },
   backFace: { flex: 1, padding: 16, alignItems: "center", justifyContent: "center", backgroundColor: "#0C0C0E" },
   qrHeader: { alignItems: "center", marginBottom: 6 },

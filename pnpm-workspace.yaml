@@ -3,3 +3,11 @@ packages:
   - "packages/*"
 allowBuilds:
   esbuild: false
+  "@parcel/watcher": false
+
+# Security patches for transitive dependencies (pnpm audit), same major versions:
+#   postcss: Next.js pins 8.4.31 (GHSA-qx2v-qp2m-jg93, -6g55-p6wh-862q, -fxqj-rqcc-2cmp, -r28c-9q8g-f849)
+#   node-forge: used by Expo's developer CLI (GHSA-6889-vf6x-f3g5 and related)
+overrides:
+  postcss: ^8.5.23
+  node-forge: ^1.4.3

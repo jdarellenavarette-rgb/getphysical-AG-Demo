@@ -33,11 +33,7 @@ function counterBytes(counter: number): Uint8Array {
 export function hotpSha256(secret: Uint8Array, counter: number, digits = PASS_TOTP_DIGITS): string {
   const mac = hmacSha256(secret, counterBytes(counter));
   const offset = mac[mac.length - 1]! & 0x0f;
-  const binary =
-    ((mac[offset]! & 0x7f) << 24) |
-    (mac[offset + 1]! << 16) |
-    (mac[offset + 2]! << 8) |
-    mac[offset + 3]!;
+  const binary = ((mac[offset]! & 0x7f) << 24) | (mac[offset + 1]! << 16) | (mac[offset + 2]! << 8) | mac[offset + 3]!;
   return (binary % 10 ** digits).toString().padStart(digits, "0");
 }
 
@@ -55,11 +51,7 @@ export function parsePassQrPayload(payload: string): { passId: string; code: str
  * Generate the current code for a pass.
  * @param secret pass_credentials.secret as returned by PostgREST ("\\x…" hex) or raw bytes
  */
-export function generatePassTotp(
-  passId: string,
-  secret: string | Uint8Array,
-  nowMs: number = Date.now()
-): PassTotp {
+export function generatePassTotp(passId: string, secret: string | Uint8Array, nowMs: number = Date.now()): PassTotp {
   const key = typeof secret === "string" ? hexToBytes(secret) : secret;
   const seconds = Math.floor(nowMs / 1000);
   const counter = Math.floor(seconds / PASS_TOTP_STEP_SECONDS);

@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import {
+  Animated,
   View,
   Text,
   TouchableOpacity,
-  Image,
   TextInput,
   StyleSheet,
   Modal,
@@ -12,77 +12,50 @@ import {
   Platform,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { X, Heart, Pin } from "lucide-react-native";
+import { X, Heart } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { useThemeStore } from "../../theme/theme";
+import { useFeedStore } from "../../store/feedStore";
+import { Avatar } from "../common/Avatar";
+import { useRequireAccount } from "../../hooks/useRequireAccount";
+import { formatTimeAgo } from "../../services/messagingService";
+import { SODIA_FIELD_LIMITS } from "sodia-core";
+import { SheetBackdrop, SheetGrabber } from "../common/SheetParts";
+import { useSwipeDownToClose } from "../../hooks/useDismissGestures";
 
 interface CommentsBottomSheetProps {
   visible: boolean;
   onClose: () => void;
-  postId?: string;
+  /** The post whose comments are shown. */
+  postId: string | null;
 }
 
-export function CommentsBottomSheet({ visible, onClose }: CommentsBottomSheetProps) {
+export function CommentsBottomSheet({ visible, onClose, postId }: CommentsBottomSheetProps) {
   const insets = useSafeAreaInsets();
   const { profile } = useEcosystemStore();
   const { colors } = useThemeStore();
+  const swipe = useSwipeDownToClose(() => onClose());
+  const { commentsByPost, addComment, toggleCommentLike } = useFeedStore();
+  const requireAccount = useRequireAccount();
   const [commentText, setCommentText] = useState("");
-  const [comments, setComments] = useState([
-    {
-      id: "c1",
-      author: "Coach Miguel Ramos",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80",
-      text: "Textbook hip hinge on that final rep. Rest up for the Saturday ladder!",
-      time: "2h ago",
-      likes: 12,
-      isLiked: false,
-      isPinned: true,
-    },
-    {
-      id: "c2",
-      author: "Sarah Jenkins",
-      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80",
-      text: "Insane pull! Which rack at Metro Core was this on?",
-      time: "45m ago",
-      likes: 4,
-      isLiked: true,
-      isPinned: false,
-    },
-  ]);
+  const comments = postId ? (commentsByPost[postId] ?? []) : [];
 
   const handlePost = () => {
-    if (!commentText.trim()) return;
-    setComments((prev) => [
-      ...prev,
-      {
-        id: `c_${Date.now()}`,
-        author: `${profile.first_name} ${profile.last_name}`,
-        avatar: profile.avatar_url ?? "",
-        text: commentText.trim(),
-        time: "Just now",
-        likes: 0,
-        isLiked: false,
-        isPinned: false,
-      },
-    ]);
+    const text = commentText.trim();
+    if (!text || !postId || !requireAccount("comment")) return;
+    addComment(postId, {
+      author: `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim(),
+      avatar: profile.avatar_url ?? "",
+      text,
+    });
     setCommentText("");
-  };
-
-  const toggleLike = (id: string) => {
-    setComments((prev) =>
-      prev.map((c) =>
-        c.id === id ? { ...c, isLiked: !c.isLiked, likes: c.isLiked ? c.likes - 1 : c.likes + 1 } : c
-      )
-    );
   };
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <KeyboardAvoidingView
-        style={styles.overlay}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
-        <View
+      <KeyboardAvoidingView style={styles.overlay} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <SheetBackdrop onPress={onClose} />
+        <Animated.View
           style={[
             styles.sheetContainer,
             {
@@ -91,14 +64,21 @@ export function CommentsBottomSheet({ visible, onClose }: CommentsBottomSheetPro
               borderWidth: 1,
               paddingBottom: Math.max(insets.bottom, 16),
             },
+            swipe.sheetStyle,
           ]}
         >
+          <SheetGrabber panHandlers={swipe.panHandlers} />
           {/* HEADER */}
           <View style={[styles.header, { borderBottomColor: colors.borderColor }]}>
-            <View style={[styles.dragPill, { backgroundColor: colors.borderColor }]} />
             <View style={styles.titleRow}>
               <Text style={[styles.title, { color: colors.textPrimary }]}>Comments ({comments.length})</Text>
-              <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+              <TouchableOpacity
+                onPress={onClose}
+                style={styles.closeBtn}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                accessibilityRole="button"
+                accessibilityLabel="Close comments"
+              >
                 <X size={20} color={colors.textMuted} />
               </TouchableOpacity>
             </View>
@@ -106,27 +86,34 @@ export function CommentsBottomSheet({ visible, onClose }: CommentsBottomSheetPro
 
           {/* COMMENTS LIST */}
           <ScrollView style={styles.commentsList} showsVerticalScrollIndicator={false}>
+            {comments.length === 0 && (
+              <Text style={[styles.emptyText, { color: colors.textMuted }]}>No comments yet. Be the first.</Text>
+            )}
             {comments.map((c) => (
               <View key={c.id} style={styles.commentItem}>
-                <Image source={{ uri: c.avatar }} style={styles.commentAvatar} />
+                <Avatar uri={c.avatar} name={c.author} size={34} style={styles.commentAvatar} />
                 <View style={styles.commentBody}>
-                  {c.isPinned && (
-                    <View style={styles.pinnedRow}>
-                      <Pin size={10} color="#F59E0B" />
-                      <Text style={styles.pinnedText}>Pinned by author</Text>
-                    </View>
-                  )}
                   <View style={styles.authorRow}>
                     <Text style={[styles.commentAuthor, { color: colors.textPrimary }]}>{c.author}</Text>
-                    <Text style={[styles.commentTime, { color: colors.textMuted }]}>{c.time}</Text>
+                    <Text style={[styles.commentTime, { color: colors.textMuted }]}>{formatTimeAgo(c.createdAt)}</Text>
                   </View>
                   <Text style={[styles.commentText, { color: colors.textSecondary }]}>{c.text}</Text>
                   <TouchableOpacity onPress={() => setCommentText(`@${c.author} `)} style={styles.replyTrigger}>
                     <Text style={[styles.replyText, { color: colors.textMuted }]}>Reply</Text>
                   </TouchableOpacity>
                 </View>
-                <TouchableOpacity onPress={() => toggleLike(c.id)} style={styles.likeBtn}>
-                  <Heart size={14} color={c.isLiked ? "#E11D48" : colors.textMuted} />
+                <TouchableOpacity
+                  onPress={() => postId && toggleCommentLike(postId, c.id)}
+                  style={styles.likeBtn}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  accessibilityRole="button"
+                  accessibilityLabel={c.isLiked ? "Unlike comment" : "Like comment"}
+                >
+                  <Heart
+                    size={14}
+                    color={c.isLiked ? "#E11D48" : colors.textMuted}
+                    fill={c.isLiked ? "#E11D48" : "none"}
+                  />
                   {c.likes > 0 && (
                     <Text style={[styles.likeCount, { color: colors.textMuted }, c.isLiked && styles.likeCountActive]}>
                       {c.likes}
@@ -152,13 +139,17 @@ export function CommentsBottomSheet({ visible, onClose }: CommentsBottomSheetPro
 
           {/* INPUT BAR */}
           <View style={styles.inputBar}>
-            <Image source={{ uri: profile.avatar_url ?? "" }} style={styles.inputAvatar} />
+            <Avatar uri={profile.avatar_url} name={profile.name} size={32} style={styles.inputAvatar} />
             <TextInput
               style={[styles.textInput, { backgroundColor: colors.bgInput, color: colors.textPrimary }]}
-              placeholder="Add a comment for the athlete..."
+              placeholder="Add a comment..."
               placeholderTextColor={colors.textMuted}
               value={commentText}
               onChangeText={setCommentText}
+              onSubmitEditing={handlePost}
+              returnKeyType="send"
+              maxLength={SODIA_FIELD_LIMITS.COMMENT_MAX_CHARS}
+              accessibilityLabel="Comment"
             />
             {commentText.trim().length > 0 && (
               <TouchableOpacity onPress={handlePost} style={styles.postBtn}>
@@ -166,7 +157,7 @@ export function CommentsBottomSheet({ visible, onClose }: CommentsBottomSheetPro
               </TouchableOpacity>
             )}
           </View>
-        </View>
+        </Animated.View>
       </KeyboardAvoidingView>
     </Modal>
   );
@@ -176,11 +167,17 @@ const styles = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.65)", justifyContent: "flex-end" },
   sheetContainer: { borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: "75%", paddingBottom: 20 },
   header: { alignItems: "center", paddingVertical: 12, borderBottomWidth: 1 },
-  dragPill: { width: 36, height: 4, borderRadius: 2, marginBottom: 10 },
-  titleRow: { width: "100%", flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 20 },
+  titleRow: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
   title: { fontSize: 14, fontWeight: "800" },
   closeBtn: { padding: 4 },
   commentsList: { padding: 16 },
+  emptyText: { textAlign: "center", fontSize: 13, paddingVertical: 24 },
   commentItem: { flexDirection: "row", marginBottom: 16, alignItems: "flex-start" },
   commentAvatar: { width: 34, height: 34, borderRadius: 17, marginTop: 2 },
   commentBody: { flex: 1, marginLeft: 12 },

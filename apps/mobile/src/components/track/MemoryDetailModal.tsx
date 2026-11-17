@@ -1,8 +1,10 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView, Alert } from "react-native";
-import { X, Send, Award, Flame, Heart, MapPin, CheckCircle2, Footprints, Dumbbell, Apple } from "lucide-react-native";
+import { Animated, View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView, Alert } from "react-native";
+import { X, Send } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import { useEcosystemStore } from "../../store/ecosystemStore";
+import { SheetBackdrop, SheetGrabber } from "../common/SheetParts";
+import { useSwipeDownToClose } from "../../hooks/useDismissGestures";
 
 export interface JourneyMemoryItem {
   id: string;
@@ -28,26 +30,35 @@ interface MemoryDetailModalProps {
 
 export function MemoryDetailModal({ visible, item, onClose }: MemoryDetailModalProps) {
   const { colors } = useThemeStore();
+  const swipe = useSwipeDownToClose(() => onClose());
   const { addPost } = useEcosystemStore();
 
   if (!visible || !item) return null;
 
   const handleShareToFeed = () => {
-    addPost(`Shared from my Training Memories: ${item.title} (${item.duration})! ⚡`, undefined, {
+    addPost(`${item.title} (${item.duration})`, undefined, {
       id: `stamp_mem_${Date.now()}`,
-      type: item.badge.includes("STRENGTH") ? "lift" : "run",
+      type: item.badge.includes("STRENGTH") ? "lift" : "move",
       title: item.title,
       primaryMetric: item.cals,
-      isVerified: true,
+      isVerified: false,
     });
-    Alert.alert("Shared to Feed!", "Your verified training memory has been posted to Sodia Feed.");
+    Alert.alert("Shared to feed", "Your session has been posted.");
     onClose();
   };
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
-        <View style={[styles.sheetCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
+        <SheetBackdrop onPress={onClose} />
+        <Animated.View
+          style={[
+            styles.sheetCard,
+            { backgroundColor: colors.bgCard, borderColor: colors.borderColor },
+            swipe.sheetStyle,
+          ]}
+        >
+          <SheetGrabber panHandlers={swipe.panHandlers} />
           {/* HEADER */}
           <View style={styles.header}>
             <View style={styles.badgePill}>
@@ -60,10 +71,14 @@ export function MemoryDetailModal({ visible, item, onClose }: MemoryDetailModalP
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
             <Text style={[styles.memoryTitle, { color: colors.textPrimary }]}>{item.title}</Text>
-            <Text style={[styles.memorySub, { color: colors.textMuted }]}>{item.venue} • {item.time}</Text>
+            <Text style={[styles.memorySub, { color: colors.textMuted }]}>
+              {item.venue} • {item.time}
+            </Text>
 
             {/* KEY METRICS GRID */}
-            <View style={[styles.metricsGrid, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}>
+            <View
+              style={[styles.metricsGrid, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}
+            >
               <View style={styles.metricCol}>
                 <Text style={styles.metricValHighlight}>{item.cals}</Text>
                 <Text style={[styles.metricLabel, { color: colors.textMuted }]}>ENERGY</Text>
@@ -75,22 +90,13 @@ export function MemoryDetailModal({ visible, item, onClose }: MemoryDetailModalP
               </View>
             </View>
 
-            {/* TELEMETRY & BREAKDOWN */}
-            <Text style={[styles.sectionHeading, { color: colors.textPrimary }]}>Workout Telemetry & Notes</Text>
-            <View style={[styles.telemetryCard, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}>
-              <Text style={[styles.telemetryLine, { color: colors.textSecondary }]}>• Heart Rate Zone: 148 - 162 BPM (Aerobic Threshold)</Text>
-              <Text style={[styles.telemetryLine, { color: colors.textSecondary }]}>• Verified GPS Location: Bonifacio Global City Loop</Text>
-              <Text style={[styles.telemetryLine, { color: colors.textSecondary }]}>• Elevation Gain: +24m • Weather: 28°C Clear</Text>
-              <Text style={[styles.telemetryLine, { color: colors.textSecondary }]}>• Recovery Score: 92% (High Readiness)</Text>
-            </View>
-
             {/* ACTIONS */}
             <TouchableOpacity onPress={handleShareToFeed} style={styles.shareBtn}>
               <Send size={16} color="#FFF" style={{ marginRight: 8 }} />
-              <Text style={styles.shareBtnText}>Share Stamp to Sodia Feed</Text>
+              <Text style={styles.shareBtnText}>Share to Feed</Text>
             </TouchableOpacity>
           </ScrollView>
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );
@@ -106,7 +112,14 @@ const styles = StyleSheet.create({
   content: { paddingBottom: 24 },
   memoryTitle: { fontSize: 20, fontWeight: "900", marginBottom: 4 },
   memorySub: { fontSize: 12, marginBottom: 16 },
-  metricsGrid: { flexDirection: "row", borderRadius: 14, padding: 16, borderWidth: 1, marginBottom: 20, justifyContent: "space-around" },
+  metricsGrid: {
+    flexDirection: "row",
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+    marginBottom: 20,
+    justifyContent: "space-around",
+  },
   metricCol: { alignItems: "center" },
   metricValHighlight: { fontSize: 24, fontWeight: "900", color: "#E11D48" },
   metricVal: { fontSize: 24, fontWeight: "900" },
@@ -115,6 +128,13 @@ const styles = StyleSheet.create({
   sectionHeading: { fontSize: 14, fontWeight: "800", marginBottom: 8 },
   telemetryCard: { borderRadius: 12, padding: 14, borderWidth: 1, gap: 8, marginBottom: 20 },
   telemetryLine: { fontSize: 12, lineHeight: 18 },
-  shareBtn: { backgroundColor: "#E11D48", flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 14, borderRadius: 14 },
+  shareBtn: {
+    backgroundColor: "#E11D48",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 14,
+    borderRadius: 14,
+  },
   shareBtnText: { color: "#FFF", fontSize: 14, fontWeight: "800" },
 });

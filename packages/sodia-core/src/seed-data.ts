@@ -1,9 +1,7 @@
-import type {
-  FacilityRow,
-  PRChallengeRow,
-  SodiaPostRow,
-  PassRow,
-} from "./db";
+import type { FacilityRow, PRChallengeRow, SodiaPostRow, PassRow } from "./db";
+
+/** Seed timestamps are relative to launch so the feed never looks stale. */
+const hoursAgo = (hours: number): string => new Date(Date.now() - hours * 3_600_000).toISOString();
 
 export const SEED_FACILITIES: readonly FacilityRow[] = [
   {
@@ -129,7 +127,8 @@ export const SEED_POSTS: readonly SodiaPostRow[] = [
     author_name: "Coach Sofia Chen",
     author_avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=300&q=80",
     author_role: "coach",
-    content: "Quick 30s Reformer Flow: Targeting pelvic tilt control, deep transverse abdominis engagement, and hamstring length. Save this sequence for your next core block! 🧘‍♀️✨",
+    content:
+      "Quick 30s Reformer Flow: Targeting pelvic tilt control, deep transverse abdominis engagement, and hamstring length. Save this sequence for your next core block! 🧘‍♀️✨",
     media_url: "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=800&q=80",
     likes_count: 428,
     comments_count: 31,
@@ -147,7 +146,7 @@ export const SEED_POSTS: readonly SodiaPostRow[] = [
       audioTrack: "Original Audio • sofia.pilates",
       viewsCount: "14.8k",
     },
-    created_at: "2026-11-04T05:00:00.000Z",
+    created_at: hoursAgo(5),
   },
   // 2. A STATUS UPDATE
   {
@@ -156,7 +155,8 @@ export const SEED_POSTS: readonly SodiaPostRow[] = [
     author_name: "Darelle Navarette",
     author_avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
     author_role: "coach",
-    content: "Unpopular training truth: If you're not taking at least 2 full rest days a week, your central nervous system is borrowing strength from next month. Sleep 8 hours, drink 3L water, and hit the sauna. Growth happens during recovery, not the workout.",
+    content:
+      "Unpopular training truth: If you're not taking at least 2 full rest days a week, your central nervous system is borrowing strength from next month. Sleep 8 hours, drink 3L water, and hit the sauna. Growth happens during recovery, not the workout.",
     media_url: null,
     likes_count: 89,
     comments_count: 19,
@@ -164,7 +164,7 @@ export const SEED_POSTS: readonly SodiaPostRow[] = [
     stamp: {
       type: "status",
     },
-    created_at: "2026-11-04T04:20:00.000Z",
+    created_at: hoursAgo(9),
   },
   // 3. A PR CHALLENGE
   {
@@ -173,7 +173,8 @@ export const SEED_POSTS: readonly SodiaPostRow[] = [
     author_name: "Coach Miguel Ramos",
     author_avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80",
     author_role: "coach",
-    content: "⚡ BGC DEADLIFT CHALLENGE: Metro Core Arena leaderboard is heating up! Current top mark is 225 kg. Submit your verified attempt video before Friday to win an Eleiko lifting belt.",
+    content:
+      "⚡ BGC DEADLIFT CHALLENGE: Metro Core Arena leaderboard is heating up! Current top mark is 225 kg. Submit your verified attempt video before Friday to win an Eleiko lifting belt.",
     media_url: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80",
     likes_count: 315,
     comments_count: 42,
@@ -194,7 +195,7 @@ export const SEED_POSTS: readonly SodiaPostRow[] = [
       participantsCount: 47,
       daysLeft: 6,
     },
-    created_at: "2026-11-04T03:15:00.000Z",
+    created_at: hoursAgo(20),
   },
   // 4. A PHOTO POST
   {
@@ -203,7 +204,8 @@ export const SEED_POSTS: readonly SodiaPostRow[] = [
     author_name: "Coach Rafael Santos",
     author_avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80",
     author_role: "coach",
-    content: "Sunset finals under the floodlights at Nexus Court Club 🎾🔥 Pure energy from our doubles bracket tonight. Third-shot drops were dialed in all evening!",
+    content:
+      "Sunset finals under the floodlights at Nexus Court Club 🎾🔥 Pure energy from our doubles bracket tonight. Third-shot drops were dialed in all evening!",
     media_url: "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?auto=format&fit=crop&w=800&q=80",
     likes_count: 172,
     comments_count: 14,
@@ -217,7 +219,7 @@ export const SEED_POSTS: readonly SodiaPostRow[] = [
     stamp: {
       type: "photo",
     },
-    created_at: "2026-11-04T02:30:00.000Z",
+    created_at: hoursAgo(30),
   },
   // 5. A GYM AD
   {
@@ -226,7 +228,8 @@ export const SEED_POSTS: readonly SodiaPostRow[] = [
     author_name: "Metro Core Arena",
     author_avatar: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=200&q=80",
     author_role: "sponsor",
-    content: "🔥 7-DAY VIP ALL-ACCESS TRIAL: Experience BGC's premier strength facility. Olympic platforms, dry Finnish sauna, cold plunge suites, and recovery lounge. Claim 100% OFF your first visit with code SODIA2026.",
+    content:
+      "🔥 7-DAY VIP ALL-ACCESS TRIAL: Experience BGC's premier strength facility. Olympic platforms, dry Finnish sauna, cold plunge suites, and recovery lounge. Claim 100% OFF your first visit with code SODIA2026.",
     media_url: "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?auto=format&fit=crop&w=800&q=80",
     likes_count: 540,
     comments_count: 23,
@@ -243,9 +246,12 @@ export const SEED_POSTS: readonly SodiaPostRow[] = [
       promoCode: "SODIA2026",
       badge: "SPONSORED",
     },
-    created_at: "2026-11-04T01:00:00.000Z",
+    created_at: hoursAgo(44),
   },
 ];
+
+/** Relative to launch so demo passes are never already expired. */
+const hoursFromNow = (hours: number): string => new Date(Date.now() + hours * 3_600_000).toISOString();
 
 export const SEED_PASSES: readonly PassRow[] = [
   {
@@ -255,10 +261,10 @@ export const SEED_PASSES: readonly PassRow[] = [
     sku_id: "sku_day_pass",
     pass_type: "Day Pass (All Access)",
     status: "ACTIVE",
-    valid_until: "2026-10-31T23:59:59.000Z",
+    valid_until: hoursFromNow(12),
     gifted_by_user_id: null,
     payment_order_id: null,
-    created_at: "2026-10-31T01:00:00.000Z",
+    created_at: hoursFromNow(-2),
   },
   {
     id: "pass_vip_002",
@@ -267,9 +273,9 @@ export const SEED_PASSES: readonly PassRow[] = [
     sku_id: "sku_court_single",
     pass_type: "Pickleball Court A (1 Hour)",
     status: "ACTIVE",
-    valid_until: "2026-11-01T18:00:00.000Z",
+    valid_until: hoursFromNow(26),
     gifted_by_user_id: null,
     payment_order_id: null,
-    created_at: "2026-10-30T10:00:00.000Z",
+    created_at: hoursFromNow(-20),
   },
 ];

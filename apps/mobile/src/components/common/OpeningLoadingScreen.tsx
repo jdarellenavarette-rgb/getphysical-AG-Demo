@@ -1,27 +1,19 @@
-import React, { useEffect, useRef } from "react";
-import {
-  Image,
-  StyleSheet,
-  StatusBar,
-  Animated,
-  Text,
-  TouchableWithoutFeedback,
-} from "react-native";
+import React, { useCallback, useEffect, useRef } from "react";
+import { Image, StyleSheet, StatusBar, Animated, Text, TouchableWithoutFeedback } from "react-native";
 
 interface OpeningLoadingScreenProps {
   onFinish: () => void;
   durationMs?: number;
 }
 
-export function OpeningLoadingScreen({
-  onFinish,
-  durationMs = 2200,
-}: OpeningLoadingScreenProps) {
+export function OpeningLoadingScreen({ onFinish, durationMs = 2200 }: OpeningLoadingScreenProps) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.94)).current;
   const isFinishedRef = useRef(false);
+  const onFinishRef = useRef(onFinish);
+  onFinishRef.current = onFinish;
 
-  const dismissScreen = () => {
+  const dismissScreen = useCallback(() => {
     if (isFinishedRef.current) return;
     isFinishedRef.current = true;
     Animated.timing(fadeAnim, {
@@ -29,9 +21,9 @@ export function OpeningLoadingScreen({
       duration: 300,
       useNativeDriver: true,
     }).start(() => {
-      onFinish();
+      onFinishRef.current();
     });
-  };
+  }, [fadeAnim]);
 
   useEffect(() => {
     // 1. Fluid entrance: smooth scale-up & fade-in
@@ -55,7 +47,7 @@ export function OpeningLoadingScreen({
     }, durationMs);
 
     return () => clearTimeout(timer);
-  }, [durationMs]);
+  }, [durationMs, dismissScreen, fadeAnim, scaleAnim]);
 
   return (
     <TouchableWithoutFeedback onPress={dismissScreen}>
@@ -63,14 +55,8 @@ export function OpeningLoadingScreen({
         <StatusBar barStyle="light-content" />
 
         {/* HIGH-DEFINITION BRAND COMPOSITION */}
-        <Animated.View
-          style={[styles.centerBrandBlock, { transform: [{ scale: scaleAnim }] }]}
-        >
-          <Image
-            source={require("../../../assets/gp_emblem_hd.png")}
-            style={styles.gpEmblem}
-            resizeMode="contain"
-          />
+        <Animated.View style={[styles.centerBrandBlock, { transform: [{ scale: scaleAnim }] }]}>
+          <Image source={require("../../../assets/gp_emblem_hd.png")} style={styles.gpEmblem} resizeMode="contain" />
           <Text style={styles.brandTitle}>getphysical</Text>
           <Text style={styles.brandSubtitle}>Welcome to GetPhysical</Text>
         </Animated.View>

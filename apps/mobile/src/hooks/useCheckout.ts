@@ -5,11 +5,12 @@ import { getSessionUserId } from "../lib/supabase";
 import { startCheckout } from "../services/paymentService";
 
 /**
- * Handles "Pay" from the checkout sheet. Signed-in users go through the real
- * provider checkout; the idempotency key is stable per item so double taps
- * and retries reuse the same order instead of charging twice.
+ * Handles "Pay" from the checkout sheet. Buying needs an account, so a guest
+ * is asked to sign in. Signed-in users go through the real provider checkout;
+ * the idempotency key is stable per item so double taps and retries reuse the
+ * same order instead of charging twice.
  */
-export function useCheckout(onSignedOutPreview: (item: CheckoutRequest) => void) {
+export function useCheckout(onSignedOut: () => void) {
   const [pending, setPending] = useState(false);
   const keys = useRef(new Map<string, string>());
 
@@ -17,8 +18,8 @@ export function useCheckout(onSignedOutPreview: (item: CheckoutRequest) => void)
     async (item: CheckoutRequest): Promise<boolean> => {
       if (pending) return false;
       if (!(await getSessionUserId())) {
-        onSignedOutPreview(item);
-        return true;
+        onSignedOut();
+        return false;
       }
       let key = keys.current.get(item.id);
       if (!key) {
@@ -33,14 +34,17 @@ export function useCheckout(onSignedOutPreview: (item: CheckoutRequest) => void)
       });
       setPending(false);
       if (!result.ok) {
-        Alert.alert("Checkout unavailable", result.correlationId ? `${result.message}\n\nRef: ${result.correlationId}` : result.message);
+        Alert.alert(
+          "Checkout unavailable",
+          result.correlationId ? `${result.message}\n\nRef: ${result.correlationId}` : result.message,
+        );
         return false;
       }
       keys.current.delete(item.id);
       await Linking.openURL(result.data.checkoutUrl);
       return true;
     },
-    [pending, onSignedOutPreview]
+    [pending, onSignedOut],
   );
 
   return { confirm, pending };

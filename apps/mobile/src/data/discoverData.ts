@@ -1,19 +1,14 @@
 import type { FacilityRow } from "sodia-core";
 
-export type DiscoverCategory =
-  | "All"
-  | "Gyms"
-  | "Pilates Studios"
-  | "Sports Facilities"
-  | "Coaches"
-  | "Community Clubs";
+export type DiscoverCategory = "All" | "Gyms" | "Pilates Studios" | "Sports Facilities" | "Coaches" | "Community Clubs";
 
 export interface DiscoverCoach {
   id: string;
   name: string;
   roleType: "coach";
   title: string;
-  specialty: "Strength & Conditioning" | "Pilates & Mobility" | "Racket Sports" | "Hyrox & Endurance" | "Boxing & Combat";
+  specialty:
+    "Strength & Conditioning" | "Pilates & Mobility" | "Racket Sports" | "Hyrox & Endurance" | "Boxing & Combat";
   sports: string[];
   avatar: string;
   rating: number;
@@ -34,7 +29,7 @@ export interface DiscoverCommunityClub {
   id: string;
   name: string;
   roleType: "community_club";
-  category: "Running Crew" | "Cycling Peloton" | "Basketball Guild" | "Volleyball Collective";
+  category: "Running Crew" | "Cycling Peloton" | "Basketball Guild" | "Volleyball Collective" | "Racket Club";
   sport: string;
   sports: string[];
   coverImage: string;
@@ -532,12 +527,13 @@ export const EXPANDED_CLUBS: readonly DiscoverCommunityClub[] = [
     memberCount: 215,
     meetingPoint: "BGC High Street South Assembly",
     address: "28th St & 7th Ave, BGC",
-    lat: 14.550,
+    lat: 14.55,
     lng: 121.051,
     schedule: "Sunday 5:00 AM (60km MOA/Sierra Madre Loop)",
     dropInFeePhp: 0,
     paceOrLevel: "Paced 28-32 km/h (No-drop ride)",
-    description: "Weekend road and gravel cycling group. Tight paceline etiquette, safety marshal escort, and team breakfast.",
+    description:
+      "Weekend road and gravel cycling group. Tight paceline etiquette, safety marshal escort, and team breakfast.",
     organizer: "Peloton Lead Paolo",
   },
   {
@@ -564,7 +560,7 @@ export const EXPANDED_CLUBS: readonly DiscoverCommunityClub[] = [
     id: "club_sunset_open_meet",
     name: "BGC Sunset Open 2026",
     roleType: "community_club",
-    category: "Racket Club" as any,
+    category: "Racket Club",
     sport: "Pickleball",
     sports: ["Pickleball", "Tournament"],
     coverImage: "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?auto=format&fit=crop&w=800&q=80",
@@ -577,7 +573,8 @@ export const EXPANDED_CLUBS: readonly DiscoverCommunityClub[] = [
     schedule: "Tonight • 6:00 PM - 9:30 PM",
     dropInFeePhp: 500,
     paceOrLevel: "DUPR 3.0 - 4.0 Bracket",
-    description: "Official DUPR sanctioned doubles tournament. 12/16 pairs registered. Bracket play with medals and cash pot.",
+    description:
+      "Official DUPR sanctioned doubles tournament. 12/16 pairs registered. Bracket play with medals and cash pot.",
     organizer: "Metro Pickleball League",
   },
 ];

@@ -19,17 +19,66 @@ export interface QrMatrix {
 // [ecc codewords per block, group-1 blocks, group-1 data cw, group-2 blocks, group-2 data cw]
 type BlockSpec = readonly [number, number, number, number, number];
 const BLOCKS: Record<QrEcc, readonly BlockSpec[]> = {
-  L: [[7, 1, 19, 0, 0], [10, 1, 34, 0, 0], [15, 1, 55, 0, 0], [20, 1, 80, 0, 0], [26, 1, 108, 0, 0],
-      [18, 2, 68, 0, 0], [20, 2, 78, 0, 0], [24, 2, 97, 0, 0], [30, 2, 116, 0, 0], [18, 2, 68, 2, 69]],
-  M: [[10, 1, 16, 0, 0], [16, 1, 28, 0, 0], [26, 1, 44, 0, 0], [18, 2, 32, 0, 0], [24, 2, 43, 0, 0],
-      [16, 4, 27, 0, 0], [18, 4, 31, 0, 0], [22, 2, 38, 2, 39], [22, 3, 36, 2, 37], [26, 4, 43, 1, 44]],
-  Q: [[13, 1, 13, 0, 0], [22, 1, 22, 0, 0], [18, 2, 17, 0, 0], [26, 2, 24, 0, 0], [18, 2, 15, 2, 16],
-      [24, 4, 19, 0, 0], [18, 2, 14, 4, 15], [22, 4, 18, 2, 19], [20, 4, 16, 4, 17], [24, 6, 19, 2, 20]],
-  H: [[17, 1, 9, 0, 0], [28, 1, 16, 0, 0], [22, 2, 13, 0, 0], [16, 4, 9, 0, 0], [22, 2, 11, 2, 12],
-      [28, 4, 15, 0, 0], [26, 4, 13, 1, 14], [26, 4, 14, 2, 15], [24, 4, 12, 4, 13], [28, 6, 15, 2, 16]],
+  L: [
+    [7, 1, 19, 0, 0],
+    [10, 1, 34, 0, 0],
+    [15, 1, 55, 0, 0],
+    [20, 1, 80, 0, 0],
+    [26, 1, 108, 0, 0],
+    [18, 2, 68, 0, 0],
+    [20, 2, 78, 0, 0],
+    [24, 2, 97, 0, 0],
+    [30, 2, 116, 0, 0],
+    [18, 2, 68, 2, 69],
+  ],
+  M: [
+    [10, 1, 16, 0, 0],
+    [16, 1, 28, 0, 0],
+    [26, 1, 44, 0, 0],
+    [18, 2, 32, 0, 0],
+    [24, 2, 43, 0, 0],
+    [16, 4, 27, 0, 0],
+    [18, 4, 31, 0, 0],
+    [22, 2, 38, 2, 39],
+    [22, 3, 36, 2, 37],
+    [26, 4, 43, 1, 44],
+  ],
+  Q: [
+    [13, 1, 13, 0, 0],
+    [22, 1, 22, 0, 0],
+    [18, 2, 17, 0, 0],
+    [26, 2, 24, 0, 0],
+    [18, 2, 15, 2, 16],
+    [24, 4, 19, 0, 0],
+    [18, 2, 14, 4, 15],
+    [22, 4, 18, 2, 19],
+    [20, 4, 16, 4, 17],
+    [24, 6, 19, 2, 20],
+  ],
+  H: [
+    [17, 1, 9, 0, 0],
+    [28, 1, 16, 0, 0],
+    [22, 2, 13, 0, 0],
+    [16, 4, 9, 0, 0],
+    [22, 2, 11, 2, 12],
+    [28, 4, 15, 0, 0],
+    [26, 4, 13, 1, 14],
+    [26, 4, 14, 2, 15],
+    [24, 4, 12, 4, 13],
+    [28, 6, 15, 2, 16],
+  ],
 };
 const ALIGNMENT: readonly (readonly number[])[] = [
-  [], [6, 18], [6, 22], [6, 26], [6, 30], [6, 34], [6, 22, 38], [6, 24, 42], [6, 26, 46], [6, 28, 50],
+  [],
+  [6, 18],
+  [6, 22],
+  [6, 26],
+  [6, 30],
+  [6, 34],
+  [6, 22, 38],
+  [6, 24, 42],
+  [6, 26, 46],
+  [6, 28, 50],
 ];
 const ECC_FORMAT_BITS: Record<QrEcc, number> = { L: 1, M: 0, Q: 3, H: 2 };
 const MAX_VERSION = 10;
@@ -120,14 +169,22 @@ function buildCodewords(bytes: Uint8Array, version: number, ecc: QrEcc): number[
 // ---------------------------------------------------------------- matrix
 function maskBit(mask: number, x: number, y: number): boolean {
   switch (mask) {
-    case 0: return (x + y) % 2 === 0;
-    case 1: return y % 2 === 0;
-    case 2: return x % 3 === 0;
-    case 3: return (x + y) % 3 === 0;
-    case 4: return (Math.floor(x / 3) + Math.floor(y / 2)) % 2 === 0;
-    case 5: return ((x * y) % 2) + ((x * y) % 3) === 0;
-    case 6: return (((x * y) % 2) + ((x * y) % 3)) % 2 === 0;
-    default: return (((x + y) % 2) + ((x * y) % 3)) % 2 === 0;
+    case 0:
+      return (x + y) % 2 === 0;
+    case 1:
+      return y % 2 === 0;
+    case 2:
+      return x % 3 === 0;
+    case 3:
+      return (x + y) % 3 === 0;
+    case 4:
+      return (Math.floor(x / 3) + Math.floor(y / 2)) % 2 === 0;
+    case 5:
+      return ((x * y) % 2) + ((x * y) % 3) === 0;
+    case 6:
+      return (((x * y) % 2) + ((x * y) % 3)) % 2 === 0;
+    default:
+      return (((x + y) % 2) + ((x * y) % 3)) % 2 === 0;
   }
 }
 
@@ -144,7 +201,11 @@ function buildMatrix(codewords: readonly number[], version: number, ecc: QrEcc, 
     set(6, i, i % 2 === 0);
     set(i, 6, i % 2 === 0);
   }
-  for (const [cx, cy] of [[3, 3], [size - 4, 3], [3, size - 4]] as const) {
+  for (const [cx, cy] of [
+    [3, 3],
+    [size - 4, 3],
+    [3, size - 4],
+  ] as const) {
     for (let dy = -4; dy <= 4; dy++) {
       for (let dx = -4; dx <= 4; dx++) {
         const x = cx + dx;
@@ -162,7 +223,7 @@ function buildMatrix(codewords: readonly number[], version: number, ecc: QrEcc, 
       if ((i === 0 && j === 0) || (i === 0 && j === last) || (i === last && j === 0)) return;
       for (let dy = -2; dy <= 2; dy++)
         for (let dx = -2; dx <= 2; dx++) set(ax + dx, ay + dy, Math.max(Math.abs(dx), Math.abs(dy)) !== 1);
-    })
+    }),
   );
 
   // Format bits (both copies) + dark module.
@@ -252,16 +313,14 @@ function penalty(m: readonly (readonly boolean[])[]): number {
   return score;
 }
 
-export function encodeQr(
-  text: string,
-  options: { ecc?: QrEcc; version?: number; mask?: number } = {}
-): QrMatrix {
+export function encodeQr(text: string, options: { ecc?: QrEcc; version?: number; mask?: number } = {}): QrMatrix {
   const ecc = options.ecc ?? "M";
   const bytes = new TextEncoder().encode(text);
   const fits = (v: number) => 4 + (v <= 9 ? 8 : 16) + bytes.length * 8 <= dataCapacity(v, ecc) * 8;
   let version = options.version ?? 1;
   if (options.version !== undefined) {
-    if (version < 1 || version > MAX_VERSION || !fits(version)) throw new Error("encodeQr: data does not fit the requested version");
+    if (version < 1 || version > MAX_VERSION || !fits(version))
+      throw new Error("encodeQr: data does not fit the requested version");
   } else {
     while (version <= MAX_VERSION && !fits(version)) version++;
     if (version > MAX_VERSION) throw new Error("encodeQr: data too long (max version 10)");

@@ -2,6 +2,31 @@
 
 **Date:** 2026-11-17 · **Build assessed:** branch `claude/tender-allen-wallk8` · **Scope:** the consumer mobile app only.
 
+## Progress
+
+**Phase 1 (truthfulness) is done.** The app no longer shows invented content or confirms things that did not happen. Verified by lint, type checks, both test suites and a 28-step run of the app in a phone-sized browser.
+
+| Area         | What changed                                                                                                                                                                         |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Composer     | Opens empty. Camera and library failures explain themselves instead of attaching a stock photo. Video posts play. The status colour is saved. Venue tagging is optional.             |
+| Story camera | Fake tools (audio, boomerang, layout, timer, effects, Close Friends, mode switch) removed. A permanent camera denial links to Settings.                                              |
+| Stories      | The tray and the viewer share one list, the tapped story opens, the timer pauses while typing, and replies and reactions are real direct messages.                                   |
+| Feed         | Real timestamps and like counts; likes, follows and challenge joins survive tab switches; share opens the system share sheet; you can delete your own post.                          |
+| Comments     | Each post has its own thread and its count matches.                                                                                                                                  |
+| Chat         | Your messages sit on the right. The fake greeting, PR card and staff-invitation card are gone. Opening a chat marks it read. A failed send shows an error. Previews match the chats. |
+| Inbox        | Fake notes, the compose button and the requests tab removed. A chat started from a profile now appears in the inbox. Back inside a chat returns to the list.                         |
+| Activity     | Sample notifications show only in the guest preview; a real account starts empty. The bell dot clears.                                                                               |
+| Wallet       | Each pass shows its real venue, status and expiry (a day pass ends at midnight). The fake card number, bell, "Send" and "Pay" are gone. A guest can sign in from the QR screen.      |
+| Receipts     | Real subtotal, fee (₱15 or 5%) and total. Guest passes are labelled as demo passes with no payment taken. Statement totals and filters work.                                         |
+| Pass QR      | A revoked or replaced pass can no longer keep showing the previous code.                                                                                                             |
+| Checkout     | Guest button reads "Get Demo Pass"; a double tap can no longer create two passes.                                                                                                    |
+| Lifting      | Sessions start with untouched sets. Only completed sets are saved. A PR is a heavier set than your own history. "Keep Training" and "Discard Workout" added.                         |
+| Move         | Invented heart rate and elevation removed. Activities under 10 seconds are not saved. Shares no longer claim to be verified.                                                         |
+| Settings     | Switches that did nothing removed. Workspaces appear only for roles the account holds.                                                                                               |
+| Drawer       | QA tools appear only in development builds.                                                                                                                                          |
+
+Not covered by the browser run: confirmation dialogs (discard workout, delete post) and the camera, which need a real device.
+
 ## How this was tested
 
 - Every source file under `apps/mobile/src` (about 16,700 lines) was read line by line, split into four areas: social, tracking, venues and checkout, wallet/profile/role portals.

@@ -6,6 +6,15 @@ import { useEcosystemStore } from "../../store/ecosystemStore";
 import { useTrackingStore, type LoggedSet, type ProgramExercise } from "../../store/trackingStore";
 import { LiftLaunchpadView } from "./LiftLaunchpadView";
 
+const REST_SECONDS = 90;
+
+/** A new session starts with untouched sets; nothing counts until it is ticked. */
+const BLANK_SETS: LoggedSet[] = [
+  { setNumber: 1, weight: 60, reps: 5, isCompleted: false },
+  { setNumber: 2, weight: 60, reps: 5, isCompleted: false },
+  { setNumber: 3, weight: 60, reps: 5, isCompleted: false },
+];
+
 export function LiftTracker() {
   const { colors } = useThemeStore();
   const { addPost } = useEcosystemStore();
@@ -16,11 +25,7 @@ export function LiftTracker() {
   const [activeExerciseName, setActiveExerciseName] = useState("Conventional Deadlift");
   const [restSeconds, setRestSeconds] = useState(0);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [sets, setSets] = useState<LoggedSet[]>([
-    { setNumber: 1, weight: 140, reps: 5, isCompleted: true },
-    { setNumber: 2, weight: 180, reps: 3, isCompleted: true },
-    { setNumber: 3, weight: 225, reps: 1, isCompleted: false },
-  ]);
+  const [sets, setSets] = useState<LoggedSet[]>(BLANK_SETS);
   const [isFinishModalOpen, setIsFinishModalOpen] = useState(false);
 
   useEffect(() => {
@@ -35,15 +40,8 @@ export function LiftTracker() {
   }, [isTraining]);
 
   const toggleSet = (idx: number) => {
-    setSets((prev) =>
-      prev.map((s, i) => {
-        if (i === idx) {
-          if (!s.isCompleted) setRestSeconds(90);
-          return { ...s, isCompleted: !s.isCompleted };
-        }
-        return s;
-      }),
-    );
+    if (!sets[idx]?.isCompleted) setRestSeconds(REST_SECONDS);
+    setSets((prev) => prev.map((s, i) => (i === idx ? { ...s, isCompleted: !s.isCompleted } : s)));
   };
 
   const adjustWeight = (idx: number, delta: number) => {
@@ -60,45 +58,74 @@ export function LiftTracker() {
     ]);
   };
 
+  const completedSets = sets.filter((s) => s.isCompleted);
+  const totalVolumeKg = completedSets.reduce((sum, s) => sum + s.weight * s.reps, 0);
+
+  const endSession = () => {
+    setIsFinishModalOpen(false);
+    setIsTraining(false);
+    setElapsedSeconds(0);
+    setRestSeconds(0);
+    setSets(BLANK_SETS);
+  };
+
+  const confirmDiscard = () => {
+    Alert.alert("Discard this workout?", "Nothing from this session will be saved.", [
+      { text: "Keep training", style: "cancel" },
+      { text: "Discard", style: "destructive", onPress: endSession },
+    ]);
+  };
+
   const handleFinishSession = (shareToFeed = false) => {
-    const completedSets = sets.filter((s) => s.isCompleted);
-    const totalVol = completedSets.reduce((sum, s) => sum + s.weight * s.reps, 0);
-    const maxWeight = Math.max(...sets.map((s) => s.weight), 0);
-    const isPR = maxWeight >= 225;
+    const topSet = completedSets.reduce<LoggedSet | null>(
+      (best, s) => (!best || s.weight > best.weight ? s : best),
+      null,
+    );
+    if (!topSet) return;
+
+    // A PR is a heavier completed set than any earlier session of the same exercise.
+    const exerciseKey = activeExerciseName.trim().toLowerCase();
+    const previousBest = liftSessions
+      .flatMap((session) => session.exercises)
+      .filter((exercise) => exercise.name.trim().toLowerCase() === exerciseKey)
+      .flatMap((exercise) => exercise.sets)
+      .filter((set) => set.isCompleted)
+      .reduce((best, set) => Math.max(best, set.weight), 0);
+    const isPR = previousBest > 0 && topSet.weight > previousBest;
 
     saveLiftSession({
       title: workoutTitle,
-      durationSeconds: elapsedSeconds || 1800,
-      exercises: [{ id: `ex_${Date.now()}`, name: activeExerciseName, sets }],
-      totalVolumeKg: totalVol,
-      totalSets: sets.length,
+      durationSeconds: elapsedSeconds,
+      exercises: [{ id: `ex_${Date.now()}`, name: activeExerciseName, sets: completedSets }],
+      totalVolumeKg,
+      totalSets: completedSets.length,
       isPR,
     });
 
     if (shareToFeed) {
       addPost(
-        `${workoutTitle} completed! Verified PR stamp attached. Total volume: ${totalVol.toLocaleString()} kg.`,
-        "fac_metro_core",
+        `${workoutTitle}: ${completedSets.length} sets, ${totalVolumeKg.toLocaleString()} kg total volume.${isPR ? " New personal best!" : ""}`,
+        undefined,
         {
-          id: `stamp_pr_${Date.now()}`,
+          id: `stamp_lift_${Date.now()}`,
           type: "lift",
-          title: `${activeExerciseName} 1RM`,
-          primaryMetric: `${maxWeight} kg`,
-          isVerified: true,
+          title: `${activeExerciseName} top set`,
+          primaryMetric: `${topSet.weight} kg × ${topSet.reps}`,
+          isVerified: false,
           isPR,
         },
       );
     }
 
-    setIsFinishModalOpen(false);
-    setIsTraining(false);
-    setElapsedSeconds(0);
-    setRestSeconds(0);
-    Alert.alert("Workout Saved!", "Your lift session and volume have been recorded to your athletic memories.");
+    endSession();
+    Alert.alert("Workout saved", "Your session is in your training history.");
   };
 
   const handleStartWorkout = (title?: string, exercises?: ProgramExercise[]) => {
     if (title) setWorkoutTitle(title);
+    setSets(BLANK_SETS);
+    setElapsedSeconds(0);
+    setRestSeconds(0);
     if (exercises && exercises.length > 0 && exercises[0]) {
       const first = exercises[0];
       setActiveExerciseName(first.name);
@@ -242,17 +269,40 @@ export function LiftTracker() {
         <View style={styles.modalOverlay}>
           <View style={[styles.finishSummaryCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
             <Award size={44} color="#10B981" />
-            <Text style={[styles.finishModalTitle, { color: colors.textPrimary }]}>Save Strength Session</Text>
+            <Text style={[styles.finishModalTitle, { color: colors.textPrimary }]}>Finish Workout</Text>
             <Text style={[styles.finishModalSubtitle, { color: colors.textMuted }]}>
-              {sets.filter((s) => s.isCompleted).length} sets completed •{" "}
-              {sets.reduce((s, c) => s + (c.isCompleted ? c.weight * c.reps : 0), 0)} kg total volume
+              {completedSets.length === 0
+                ? "Tick at least one set to save this workout."
+                : `${completedSets.length} sets completed • ${totalVolumeKg.toLocaleString()} kg total volume`}
             </Text>
-            <TouchableOpacity onPress={() => handleFinishSession(true)} style={styles.shareFeedBtn}>
-              <Flame size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
-              <Text style={styles.shareFeedText}>Post PR Stamp to Sodia Feed</Text>
+            {completedSets.length > 0 && (
+              <>
+                <TouchableOpacity
+                  onPress={() => handleFinishSession(true)}
+                  style={styles.shareFeedBtn}
+                  accessibilityRole="button"
+                >
+                  <Flame size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+                  <Text style={styles.shareFeedText}>Save & Share to Feed</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => handleFinishSession(false)}
+                  style={styles.saveQuietlyBtn}
+                  accessibilityRole="button"
+                >
+                  <Text style={[styles.saveQuietlyText, { color: colors.textPrimary }]}>Save Privately</Text>
+                </TouchableOpacity>
+              </>
+            )}
+            <TouchableOpacity
+              onPress={() => setIsFinishModalOpen(false)}
+              style={styles.saveQuietlyBtn}
+              accessibilityRole="button"
+            >
+              <Text style={[styles.saveQuietlyText, { color: colors.textMuted }]}>Keep Training</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleFinishSession(false)} style={styles.saveQuietlyBtn}>
-              <Text style={[styles.saveQuietlyText, { color: colors.textMuted }]}>Save to Personal Memories</Text>
+            <TouchableOpacity onPress={confirmDiscard} style={styles.saveQuietlyBtn} accessibilityRole="button">
+              <Text style={[styles.saveQuietlyText, { color: "#E11D48" }]}>Discard Workout</Text>
             </TouchableOpacity>
           </View>
         </View>

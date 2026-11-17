@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Image, StyleSheet, Modal, ScrollView } from "react-native";
 import { CheckCircle2, UserPlus, MessageSquare, Award, Grid, ArrowLeft } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
+import { useEcosystemStore } from "../../store/ecosystemStore";
+import { useFeedStore } from "../../store/feedStore";
 
 export interface AthleteProfileData {
   userId: string;
@@ -27,10 +29,14 @@ interface AthleteProfileModalProps {
 
 export function AthleteProfileModal({ visible, athlete, onClose, onMessageAthlete }: AthleteProfileModalProps) {
   const { colors } = useThemeStore();
-  const [isFollowing, setIsFollowing] = useState(false);
+  const { profile } = useEcosystemStore();
+  const { followedUserIds, toggleFollow } = useFeedStore();
   const [activeTab, setActiveTab] = useState<"grid" | "pr">("grid");
 
   if (!visible || !athlete) return null;
+
+  const isFollowing = followedUserIds[athlete.userId] ?? false;
+  const isSelf = athlete.userId === profile.id;
 
   return (
     <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
@@ -71,31 +77,36 @@ export function AthleteProfileModal({ visible, athlete, onClose, onMessageAthlet
               {athlete.isVerified && <CheckCircle2 size={16} color="#38BDF8" fill="#38BDF8" />}
             </View>
             <Text style={[styles.username, { color: colors.textSecondary }]}>
-              @{athlete.username} • {athlete.specialty}
+              @{athlete.username}
+              {athlete.specialty ? ` • ${athlete.specialty}` : ""}
             </Text>
-            <Text style={[styles.bioText, { color: colors.textPrimary }]}>{athlete.bio}</Text>
+            {athlete.bio ? <Text style={[styles.bioText, { color: colors.textPrimary }]}>{athlete.bio}</Text> : null}
           </View>
 
-          {/* DUAL ACTION BUTTONS */}
-          <View style={styles.actionBtnRow}>
-            <TouchableOpacity
-              onPress={() => setIsFollowing(!isFollowing)}
-              style={[styles.followBtn, isFollowing && styles.followingBtn]}
-            >
-              <UserPlus size={15} color="#FFFFFF" style={{ marginRight: 6 }} />
-              <Text style={styles.followBtnText}>{isFollowing ? "Following" : "Follow Athlete"}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => {
-                onClose();
-                onMessageAthlete?.(athlete);
-              }}
-              style={[styles.msgBtn, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}
-            >
-              <MessageSquare size={15} color={colors.textPrimary} style={{ marginRight: 6 }} />
-              <Text style={[styles.msgBtnText, { color: colors.textPrimary }]}>Message</Text>
-            </TouchableOpacity>
-          </View>
+          {/* DUAL ACTION BUTTONS (not on your own profile) */}
+          {!isSelf && (
+            <View style={styles.actionBtnRow}>
+              <TouchableOpacity
+                onPress={() => toggleFollow(athlete.userId)}
+                style={[styles.followBtn, isFollowing && styles.followingBtn]}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isFollowing }}
+              >
+                <UserPlus size={15} color="#FFFFFF" style={{ marginRight: 6 }} />
+                <Text style={styles.followBtnText}>{isFollowing ? "Following" : "Follow"}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  onClose();
+                  onMessageAthlete?.(athlete);
+                }}
+                style={[styles.msgBtn, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}
+              >
+                <MessageSquare size={15} color={colors.textPrimary} style={{ marginRight: 6 }} />
+                <Text style={[styles.msgBtnText, { color: colors.textPrimary }]}>Message</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           {/* ATHLETIC STATS */}
           <View style={[styles.metricsRow, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
@@ -132,6 +143,9 @@ export function AthleteProfileModal({ visible, athlete, onClose, onMessageAthlet
           {/* TAB 1: PHOTO GRID */}
           {activeTab === "grid" && (
             <View style={styles.photoGrid}>
+              {athlete.photos.length === 0 && (
+                <Text style={[styles.noPhotos, { color: colors.textMuted }]}>No posts to show yet.</Text>
+              )}
               {athlete.photos.map((url, i) => (
                 <View key={i} style={styles.photoWrap}>
                   <Image source={{ uri: url }} style={styles.gridImg} />
@@ -164,6 +178,7 @@ export function AthleteProfileModal({ visible, athlete, onClose, onMessageAthlet
 }
 
 const styles = StyleSheet.create({
+  noPhotos: { width: "100%", textAlign: "center", fontSize: 13, paddingVertical: 28 },
   container: { flex: 1 },
   content: { paddingBottom: 60 },
   coverContainer: { position: "relative", width: "100%", height: 140 },

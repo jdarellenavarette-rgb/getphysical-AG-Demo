@@ -66,12 +66,14 @@ export function MenuDrawerModal({
               <Image source={{ uri: profile.avatar_url ?? DARELLE_AVATAR }} style={styles.avatar} />
               <View style={styles.userInfo}>
                 <Text style={[styles.userName, { color: colors.textPrimary }]}>
-                  {profile.name ?? "Darelle Navarette"}
+                  {profile.name ?? `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim()}
                 </Text>
                 <Text style={[styles.userHandle, { color: colors.textMuted }]}>@{profile.username} • View Profile</Text>
-                <View style={styles.activeRoleBadge}>
-                  <Text style={styles.activeRoleText}>IFBB CPFT COACH</Text>
-                </View>
+                {profile.active_role && profile.active_role !== "individual" ? (
+                  <View style={styles.activeRoleBadge}>
+                    <Text style={styles.activeRoleText}>{profile.active_role.toUpperCase()}</Text>
+                  </View>
+                ) : null}
               </View>
               <ChevronRight size={18} color={colors.textMuted} />
             </TouchableOpacity>
@@ -108,9 +110,7 @@ export function MenuDrawerModal({
               </View>
               <View style={styles.navTextWrap}>
                 <Text style={[styles.navTitle, { color: colors.textPrimary }]}>Venues & Coaches</Text>
-                <Text style={[styles.navSubtitle, { color: colors.textMuted }]}>
-                  GPS radar, pickleball & gym drop-in
-                </Text>
+                <Text style={[styles.navSubtitle, { color: colors.textMuted }]}>Gyms, courts & coaches near you</Text>
               </View>
               <ChevronRight size={16} color={colors.textMuted} />
             </TouchableOpacity>
@@ -144,9 +144,7 @@ export function MenuDrawerModal({
               </View>
               <View style={styles.navTextWrap}>
                 <Text style={[styles.navTitle, { color: colors.textPrimary }]}>Passes & VIP Wallet</Text>
-                <Text style={[styles.navSubtitle, { color: colors.textMuted }]}>
-                  Turnstile TOTP, SOA ledger & billing
-                </Text>
+                <Text style={[styles.navSubtitle, { color: colors.textMuted }]}>Entry QR, passes & receipts</Text>
               </View>
               <ChevronRight size={16} color={colors.textMuted} />
             </TouchableOpacity>
@@ -168,38 +166,44 @@ export function MenuDrawerModal({
               <ChevronRight size={16} color={colors.textMuted} />
             </TouchableOpacity>
 
-            {/* 3. QA STATE TESTING TOOLS */}
-            <Text style={[styles.sectionHeader, { color: colors.textMuted }]}>QA & DEMO CONTROLS</Text>
+            {/* 3. QA state tools: development builds only */}
+            {__DEV__ && (
+              <>
+                <Text style={[styles.sectionHeader, { color: colors.textMuted }]}>DEVELOPER TOOLS</Text>
 
-            <TouchableOpacity
-              onPress={() => {
-                resetToEmpty();
-                onClose();
-              }}
-              style={[styles.toolBtn, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}
-            >
-              <RefreshCw size={16} color="#EC4899" />
-              <View style={styles.toolTextWrap}>
-                <Text style={[styles.toolTitle, { color: colors.textPrimary }]}>Reset to Empty State</Text>
-                <Text style={[styles.toolDesc, { color: colors.textMuted }]}>
-                  Clear active passes, workouts & posts
-                </Text>
-              </View>
-            </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    resetToEmpty();
+                    onClose();
+                  }}
+                  style={[styles.toolBtn, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}
+                >
+                  <RefreshCw size={16} color="#EC4899" />
+                  <View style={styles.toolTextWrap}>
+                    <Text style={[styles.toolTitle, { color: colors.textPrimary }]}>Reset to Empty State</Text>
+                    <Text style={[styles.toolDesc, { color: colors.textMuted }]}>
+                      Clear active passes, workouts & posts
+                    </Text>
+                  </View>
+                </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={() => {
-                loadDemoData();
-                onClose();
-              }}
-              style={[styles.toolBtn, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}
-            >
-              <Database size={16} color="#3B82F6" />
-              <View style={styles.toolTextWrap}>
-                <Text style={[styles.toolTitle, { color: colors.textPrimary }]}>Load Demo Seed Data</Text>
-                <Text style={[styles.toolDesc, { color: colors.textMuted }]}>Populate 3 feed posts & BGC passes</Text>
-              </View>
-            </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    loadDemoData();
+                    onClose();
+                  }}
+                  style={[styles.toolBtn, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}
+                >
+                  <Database size={16} color="#3B82F6" />
+                  <View style={styles.toolTextWrap}>
+                    <Text style={[styles.toolTitle, { color: colors.textPrimary }]}>Load Demo Seed Data</Text>
+                    <Text style={[styles.toolDesc, { color: colors.textMuted }]}>
+                      Populate 3 feed posts & BGC passes
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </>
+            )}
           </ScrollView>
         </View>
       </View>

@@ -120,7 +120,7 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
             style={[styles.secondaryActionBtn, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}
           >
             <MessageSquare size={15} color={colors.textPrimary} style={{ marginRight: 6 }} />
-            <Text style={[styles.secondaryActionText, { color: colors.textPrimary }]}>Message</Text>
+            <Text style={[styles.secondaryActionText, { color: colors.textPrimary }]}>Messages</Text>
           </TouchableOpacity>
         </View>
 

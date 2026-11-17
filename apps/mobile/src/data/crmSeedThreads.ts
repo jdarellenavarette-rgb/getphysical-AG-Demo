@@ -8,20 +8,20 @@ import type { DMThread } from "../components/sodia/InboxView";
 export const SIGNED_OUT_THREADS: DMThread[] = [
   {
     id: "thread_metro_core",
-    name: "Metro Core Arena (GymDash)",
+    name: "Metro Core Arena",
     avatar: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=200&q=80",
-    lastMessage: "Facility Broadcast: Flash 48-Hour Recovery Clinic & Sauna Access",
-    timeAgo: "Just now",
+    lastMessage: "📢 Flash 48-Hour Recovery Clinic & Sauna Access",
+    timeAgo: "2h ago",
     unreadCount: 1,
     isOnline: true,
-    type: "handshake",
-    badgeText: "GYMDASH CRM",
+    type: "facility",
+    badgeText: "FACILITY",
   },
   {
     id: "thread_coach_ramos",
     name: "Coach Miguel Ramos",
     avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80",
-    lastMessage: "Shared your Lift PR: View Raw Data (sets, reps & RPE)",
+    lastMessage: "Bar path looked clean. Add 2.5 kg next week.",
     timeAgo: "12m ago",
     unreadCount: 0,
     isOnline: true,
@@ -51,16 +51,75 @@ export const SIGNED_OUT_THREADS: DMThread[] = [
   },
 ];
 
+const minutesAgo = (minutes: number): string => new Date(Date.now() - minutes * 60_000).toISOString();
+
+function line(
+  threadId: string,
+  index: number,
+  senderId: string,
+  senderName: string,
+  text: string,
+  time: string,
+  minutes: number,
+): CrmChatMessage {
+  return {
+    id: `m_seed_${threadId}_${index}`,
+    threadId,
+    senderId,
+    senderName,
+    text,
+    time,
+    createdAt: minutesAgo(minutes),
+  };
+}
+
 export const SIGNED_OUT_MESSAGES: Record<string, CrmChatMessage[]> = {
+  thread_coach_ramos: [
+    line("thread_coach_ramos", 1, "me", "You", "Sent you this morning's deadlift video.", "25m ago", 25),
+    line("thread_coach_ramos", 2, "usr_coach_miguel", "Coach Miguel Ramos", "Got it. Watching now.", "20m ago", 20),
+    line(
+      "thread_coach_ramos",
+      3,
+      "usr_coach_miguel",
+      "Coach Miguel Ramos",
+      "Bar path looked clean. Add 2.5 kg next week.",
+      "12m ago",
+      12,
+    ),
+  ],
+  thread_bgc_pickleball: [
+    line("thread_bgc_pickleball", 1, "usr_group_bea", "Bea", "Are we still on for Saturday?", "4h ago", 240),
+    line("thread_bgc_pickleball", 2, "me", "You", "I'm in. Who is booking?", "4h ago", 235),
+    line(
+      "thread_bgc_pickleball",
+      3,
+      "usr_group_dave",
+      "Dave",
+      "Court A booked for 4:00 PM. See everyone there!",
+      "3h ago",
+      180,
+    ),
+  ],
+  thread_sarah: [
+    line(
+      "thread_sarah",
+      1,
+      "usr_sarah",
+      "Sarah Jenkins",
+      "Sent you a 1-day pass for Metro Core Arena 🎟️",
+      "1d ago",
+      1440,
+    ),
+  ],
   thread_metro_core: [
     {
       id: "m_seed_core_01",
       threadId: "thread_metro_core",
       senderId: "business",
-      senderName: "Metro Core Arena (GymDash)",
+      senderName: "Metro Core Arena",
       text: "Welcome Darelle! Flash 48-Hour Recovery Clinic & Sauna Access is now live for all Titanium VIP members. Use code METROVIP2026 at the front desk.",
-      time: "08:30 AM",
-      createdAt: new Date(Date.now() - 7200000).toISOString(),
+      time: "2h ago",
+      createdAt: minutesAgo(120),
       isCrmBroadcast: true,
       broadcastData: {
         title: "Flash 48-Hour Recovery Clinic & Sauna Access",

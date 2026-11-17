@@ -4,6 +4,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft, Ticket, FileText } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import type { PassRow } from "sodia-core";
+import { useEcosystemStore } from "../../store/ecosystemStore";
+import { formatPhp, isCourtPass, passCharge, passStatusLabel, passVenueName } from "../../lib/passDisplay";
 
 interface StatementOfAccountModalProps {
   visible: boolean;
@@ -17,7 +19,12 @@ export function StatementOfAccountModal({ visible, passes, onClose, onSelectPass
   const { colors } = useThemeStore();
   const [filter, setFilter] = useState<"all" | "passes" | "courts">("all");
 
-  const totalSpent = passes.length * 265;
+  const { facilities, purchases } = useEcosystemStore();
+
+  const shown = passes.filter((p) =>
+    filter === "all" ? true : filter === "courts" ? isCourtPass(p) : !isCourtPass(p),
+  );
+  const totalSpent = passes.reduce((sum, p) => sum + (passCharge(purchases[p.id])?.totalChargePhp ?? 0), 0);
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
@@ -39,20 +46,21 @@ export function StatementOfAccountModal({ visible, passes, onClose, onSelectPass
             style={styles.backBtn}
           >
             <ArrowLeft size={20} color={colors.textPrimary} />
-            <Text style={[styles.backBtnText, { color: colors.textPrimary }]}>Cards Hub</Text>
+            <Text style={[styles.backBtnText, { color: colors.textPrimary }]}>Wallet</Text>
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>STATEMENT OF ACCOUNT</Text>
+          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>STATEMENT</Text>
           <View style={{ width: 44 }} />
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
           {/* LEDGER OVERVIEW CARD */}
           <View style={[styles.summaryCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
-            <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>TOTAL EXPENDITURE (CURRENT MONTH)</Text>
-            <Text style={[styles.summaryAmount, { color: colors.textPrimary }]}>₱{totalSpent.toFixed(2)}</Text>
+            <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>TOTAL SPENT</Text>
+            <Text style={[styles.summaryAmount, { color: colors.textPrimary }]}>{formatPhp(totalSpent)}</Text>
             <View style={styles.summaryMetaRow}>
-              <Text style={styles.summaryMeta}>{passes.length} Settled Transactions</Text>
-              <Text style={styles.summaryMeta}>• Zero Failed Invoices</Text>
+              <Text style={styles.summaryMeta}>
+                {passes.length} {passes.length === 1 ? "pass" : "passes"}
+              </Text>
             </View>
           </View>
 
@@ -71,24 +79,26 @@ export function StatementOfAccountModal({ visible, passes, onClose, onSelectPass
                 <Text
                   style={[styles.filterText, { color: colors.textMuted }, filter === fil && styles.filterTextActive]}
                 >
-                  {fil === "all" ? `All (${passes.length})` : fil === "passes" ? "Day Passes" : "Courts & Meets"}
+                  {fil === "all" ? `All (${passes.length})` : fil === "passes" ? "Passes" : "Courts"}
                 </Text>
               </TouchableOpacity>
             ))}
           </View>
 
           {/* TRANSACTION LIST OR EMPTY STATE */}
-          {passes.length === 0 ? (
+          {shown.length === 0 ? (
             <View style={[styles.emptyCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
               <Ticket size={36} color={colors.textMuted} />
-              <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No transaction history</Text>
+              <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
+                {passes.length === 0 ? "No purchases yet" : "Nothing in this category"}
+              </Text>
               <Text style={[styles.emptySub, { color: colors.textMuted }]}>
-                Your purchases, recurring memberships, and court splits will appear here.
+                Your passes, memberships and court bookings will appear here.
               </Text>
             </View>
           ) : (
             <View style={styles.txList}>
-              {passes.map((p) => (
+              {shown.map((p) => (
                 <TouchableOpacity
                   key={p.id}
                   onPress={() => onSelectPass(p)}
@@ -100,12 +110,15 @@ export function StatementOfAccountModal({ visible, passes, onClose, onSelectPass
                   <View style={styles.txDetails}>
                     <Text style={[styles.txTitle, { color: colors.textPrimary }]}>{p.pass_type}</Text>
                     <Text style={[styles.txDate, { color: colors.textMuted }]}>
-                      {p.created_at ? new Date(p.created_at).toLocaleDateString() : "Active"} • Metro Core
+                      {p.created_at ? new Date(p.created_at).toLocaleDateString() : ""} •{" "}
+                      {passVenueName(p, facilities, purchases[p.id])}
                     </Text>
                   </View>
                   <View style={styles.txRight}>
-                    <Text style={[styles.txPrice, { color: colors.textPrimary }]}>₱265.00</Text>
-                    <Text style={styles.txStatus}>{p.status.toUpperCase()}</Text>
+                    <Text style={[styles.txPrice, { color: colors.textPrimary }]}>
+                      {formatPhp(passCharge(purchases[p.id])?.totalChargePhp ?? 0)}
+                    </Text>
+                    <Text style={styles.txStatus}>{passStatusLabel(p)}</Text>
                   </View>
                 </TouchableOpacity>
               ))}

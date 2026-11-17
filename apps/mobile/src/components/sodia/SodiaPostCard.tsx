@@ -1,44 +1,39 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Image, Alert } from "react-native";
-import {
-  Heart,
-  MessageCircle,
-  Bookmark,
-  Send,
-  MapPin,
-  MoreHorizontal,
-  CheckCircle2,
-  Play,
-  Trophy,
-  Tag,
-} from "lucide-react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Image, Alert, Share } from "react-native";
+import { Heart, MessageCircle, Send, MapPin, MoreHorizontal, Play, Trophy, Tag } from "lucide-react-native";
 import type { SodiaPostRow } from "sodia-core";
 import { useThemeStore } from "../../theme/theme";
 import { PlayableVideoView } from "./PlayableVideoView";
+import { formatTimeAgo } from "../../services/messagingService";
 
 interface SodiaPostCardProps {
   post: SodiaPostRow;
   profileAvatar?: string | null;
   isLiked: boolean;
-  isSaved: boolean;
-  isShared: boolean;
+  /** True when the signed-in person wrote this post. */
+  isOwn: boolean;
+  isChallengeJoined: boolean;
+  commentCount: number;
   onToggleLike: (id: string) => void;
-  onToggleSave: (id: string) => void;
-  onShare: (id: string) => void;
-  onOpenComments?: () => void;
+  onToggleChallenge: (challengeId: string) => void;
+  onDelete: (id: string) => void;
+  onOpenComments?: (postId: string) => void;
   onPressFacilityCTA?: (facilityId: string) => void;
   onPressAuthor?: (userId: string, name: string, avatar?: string | null) => void;
 }
+
+const HIT_SLOP = { top: 12, bottom: 12, left: 12, right: 12 };
 
 export function SodiaPostCard({
   post,
   profileAvatar,
   isLiked,
-  isSaved,
-  isShared,
+  isOwn,
+  isChallengeJoined,
+  commentCount,
   onToggleLike,
-  onToggleSave,
-  onShare,
+  onToggleChallenge,
+  onDelete,
   onOpenComments,
   onPressFacilityCTA,
   onPressAuthor,
@@ -60,6 +55,18 @@ export function SodiaPostCard({
   const isAd = postType === "ad";
   const isStatus = postType === "status" || !post.media_url;
   const likes = (post.likes_count ?? 0) + (isLiked ? 1 : 0);
+  const challengeId = String(stampObj?.challengeId ?? post.id);
+
+  const sharePost = () => {
+    void Share.share({ message: `${post.author_name ?? "An athlete"} on Sodia: ${post.content ?? ""}`.trim() });
+  };
+
+  const confirmDelete = () => {
+    Alert.alert("Delete this post?", "This can't be undone.", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Delete", style: "destructive", onPress: () => onDelete(post.id) },
+    ]);
+  };
 
   return (
     <View style={[styles.postCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
@@ -75,30 +82,39 @@ export function SodiaPostCard({
           <View style={styles.postAuthorInfo}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
               <Text style={[styles.postAuthorName, { color: colors.textPrimary }]}>{post.author_name}</Text>
-              {isAd ? (
+              {isAd && (
                 <View style={styles.sponsoredBadge}>
                   <Text style={styles.sponsoredText}>SPONSORED</Text>
                 </View>
-              ) : (
-                <CheckCircle2 size={12} color="#38BDF8" fill="#38BDF8" />
               )}
             </View>
             <Text style={[styles.postSubtitle, { color: colors.textMuted }]}>
-              {facTag ? String(facTag.name) : "Metro Manila"} • {isAd ? "Promoted" : "2h ago"}
+              {facTag ? `${String(facTag.name)} • ` : ""}
+              {isAd ? "Promoted" : formatTimeAgo(post.created_at)}
             </Text>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => Alert.alert("Post Options", "Post link copied to clipboard.")}
-          style={styles.moreBtn}
-        >
-          <MoreHorizontal size={18} color={colors.textMuted} />
-        </TouchableOpacity>
+        {isOwn && (
+          <TouchableOpacity
+            onPress={confirmDelete}
+            style={styles.moreBtn}
+            hitSlop={HIT_SLOP}
+            accessibilityRole="button"
+            accessibilityLabel="Post options"
+          >
+            <MoreHorizontal size={18} color={colors.textMuted} />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* 2. MEDIA / CONTENT BODY */}
       {isStatus ? (
-        <View style={styles.statusPostCard}>
+        <View
+          style={[
+            styles.statusPostCard,
+            typeof stampObj?.bgColor === "string" && { backgroundColor: stampObj.bgColor },
+          ]}
+        >
           <Text style={styles.statusPostText}>"{post.content}"</Text>
           <Text style={styles.statusAuthorSign}>— {post.author_name}</Text>
         </View>
@@ -121,7 +137,7 @@ export function SodiaPostCard({
           </View>
         </View>
       ) : (
-        <TouchableOpacity activeOpacity={0.9} onPress={() => onToggleLike(post.id)} style={styles.mediaContainer}>
+        <View style={styles.mediaContainer}>
           <Image source={{ uri: post.media_url ?? "" }} style={styles.mediaPhoto} resizeMode="cover" />
 
           {/* PR CHALLENGE FLOATING BADGE */}
@@ -155,7 +171,7 @@ export function SodiaPostCard({
               </View>
             </TouchableOpacity>
           )}
-        </TouchableOpacity>
+        </View>
       )}
 
       {/* 3. CHALLENGE BANNER CALLOUT (FOR PR CHALLENGE POSTS) */}
@@ -173,12 +189,12 @@ export function SodiaPostCard({
             </Text>
           </View>
           <TouchableOpacity
-            onPress={() =>
-              Alert.alert("Challenge Joined!", "You're registered! Record and upload your lift video to submit.")
-            }
-            style={styles.challengeJoinBtn}
+            onPress={() => onToggleChallenge(challengeId)}
+            style={[styles.challengeJoinBtn, isChallengeJoined && { backgroundColor: colors.accentGreen }]}
+            accessibilityRole="button"
+            accessibilityState={{ selected: isChallengeJoined }}
           >
-            <Text style={styles.challengeJoinBtnText}>Join Challenge</Text>
+            <Text style={styles.challengeJoinBtnText}>{isChallengeJoined ? "Joined ✓" : "Join Challenge"}</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -205,33 +221,51 @@ export function SodiaPostCard({
       <View style={styles.postFooter}>
         <View style={styles.interactionRow}>
           <View style={{ flexDirection: "row", gap: 14, alignItems: "center" }}>
-            <TouchableOpacity onPress={() => onToggleLike(post.id)}>
+            <TouchableOpacity
+              onPress={() => onToggleLike(post.id)}
+              hitSlop={HIT_SLOP}
+              accessibilityRole="button"
+              accessibilityLabel={isLiked ? "Unlike" : "Like"}
+            >
               <Heart size={22} color={isLiked ? "#E11D48" : colors.textPrimary} fill={isLiked ? "#E11D48" : "none"} />
             </TouchableOpacity>
-            <TouchableOpacity onPress={onOpenComments}>
+            <TouchableOpacity
+              onPress={() => onOpenComments?.(post.id)}
+              hitSlop={HIT_SLOP}
+              accessibilityRole="button"
+              accessibilityLabel="Comments"
+            >
               <MessageCircle size={22} color={colors.textPrimary} />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => onShare(post.id)}>
-              <Send size={20} color={isShared ? "#3B82F6" : colors.textPrimary} />
+            <TouchableOpacity
+              onPress={sharePost}
+              hitSlop={HIT_SLOP}
+              accessibilityRole="button"
+              accessibilityLabel="Share"
+            >
+              <Send size={20} color={colors.textPrimary} />
             </TouchableOpacity>
           </View>
-          <TouchableOpacity onPress={() => onToggleSave(post.id)}>
-            <Bookmark size={22} color={isSaved ? "#F59E0B" : colors.textPrimary} fill={isSaved ? "#F59E0B" : "none"} />
-          </TouchableOpacity>
         </View>
 
-        <Text style={[styles.likesCountText, { color: colors.textPrimary }]}>
-          Liked by coach.miguel and {likes} others
-        </Text>
+        {likes > 0 && (
+          <Text style={[styles.likesCountText, { color: colors.textPrimary }]}>
+            {likes.toLocaleString()} {likes === 1 ? "like" : "likes"}
+          </Text>
+        )}
         {!isStatus && (
           <Text style={[styles.captionBody, { color: colors.textPrimary }]}>
             <Text style={[styles.captionAuthor, { color: colors.textPrimary }]}>{post.author_name} </Text>
             {post.content}
           </Text>
         )}
-        <TouchableOpacity onPress={onOpenComments} style={styles.commentTeaserRow}>
+        <TouchableOpacity onPress={() => onOpenComments?.(post.id)} style={styles.commentTeaserRow}>
           <Text style={[styles.commentTeaserText, { color: colors.textMuted }]}>
-            View all {post.comments_count ?? 4} comments
+            {commentCount === 0
+              ? "Add a comment"
+              : commentCount === 1
+                ? "View 1 comment"
+                : `View all ${commentCount} comments`}
           </Text>
         </TouchableOpacity>
       </View>

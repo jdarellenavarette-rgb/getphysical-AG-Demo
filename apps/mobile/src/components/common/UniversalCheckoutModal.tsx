@@ -1,20 +1,34 @@
-import React from "react";
-import { View, Text, StyleSheet, Modal, TouchableOpacity } from "react-native";
+import React, { useState } from "react";
+import { View, Text, StyleSheet, Modal, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Shield } from "lucide-react-native";
 import { calculateHybridServiceFee } from "sodia-core";
 import { useThemeStore } from "../../theme/theme";
+import { useEcosystemStore } from "../../store/ecosystemStore";
 import type { CheckoutRequest } from "../discover/DiscoverView";
 
 interface UniversalCheckoutModalProps {
   item: CheckoutRequest | null;
   visible: boolean;
   onClose: () => void;
-  onConfirm: (item: CheckoutRequest) => void;
+  onConfirm: (item: CheckoutRequest) => void | Promise<void>;
 }
 
 export function UniversalCheckoutModal({ item, visible, onClose, onConfirm }: UniversalCheckoutModalProps) {
   const { colors } = useThemeStore();
+  const { isGuest } = useEcosystemStore();
+  const [submitting, setSubmitting] = useState(false);
   if (!visible || !item) return null;
+
+  // One submission at a time: a second tap must not create a second pass or order.
+  const handleConfirm = async () => {
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      await onConfirm(item);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const fee = calculateHybridServiceFee(item.baseAmountPhp, item.billingKind);
 
@@ -23,8 +37,12 @@ export function UniversalCheckoutModal({ item, visible, onClose, onConfirm }: Un
       <View style={styles.modalOverlay}>
         <View style={[styles.checkoutSheet, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
           <View style={styles.sheetHeader}>
-            <Text style={[styles.sheetTitle, { color: colors.textPrimary }]}>UNIVERSAL CHECKOUT</Text>
-            <TouchableOpacity onPress={onClose}>
+            <Text style={[styles.sheetTitle, { color: colors.textPrimary }]}>CHECKOUT</Text>
+            <TouchableOpacity
+              onPress={onClose}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              accessibilityRole="button"
+            >
               <Text style={[styles.closeBtn, { color: colors.textMuted }]}>Close</Text>
             </TouchableOpacity>
           </View>
@@ -63,9 +81,28 @@ export function UniversalCheckoutModal({ item, visible, onClose, onConfirm }: Un
             </View>
           </View>
 
-          <TouchableOpacity onPress={() => onConfirm(item)} style={styles.payButton}>
-            <Shield size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
-            <Text style={styles.payButtonText}>Confirm & Pay with Biometrics</Text>
+          {isGuest && (
+            <Text style={[styles.previewNote, { color: colors.textMuted }]}>
+              Guest preview: no payment is taken. Sign in to buy a real pass.
+            </Text>
+          )}
+          <TouchableOpacity
+            onPress={() => void handleConfirm()}
+            disabled={submitting}
+            style={[styles.payButton, submitting && { opacity: 0.6 }]}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: submitting, busy: submitting }}
+          >
+            {submitting ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <>
+                <Shield size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+                <Text style={styles.payButtonText}>
+                  {isGuest ? "Get Demo Pass" : fee.totalChargePhp === 0 ? "Confirm" : "Continue to Payment"}
+                </Text>
+              </>
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -74,6 +111,7 @@ export function UniversalCheckoutModal({ item, visible, onClose, onConfirm }: Un
 }
 
 const styles = StyleSheet.create({
+  previewNote: { fontSize: 12, textAlign: "center", marginBottom: 10 },
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" },
   checkoutSheet: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, borderWidth: 1 },
   sheetHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 },

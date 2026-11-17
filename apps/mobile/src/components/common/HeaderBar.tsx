@@ -10,9 +10,18 @@ interface HeaderBarProps {
   onOpenActivity?: () => void;
   onOpenInbox?: () => void;
   onPressLogo?: () => void;
+  /** Shows the dot on the bell until the activity screen has been opened. */
+  hasUnseenActivity?: boolean;
 }
 
-export function HeaderBar({ onOpenMenu, onOpenSettings, onOpenActivity, onOpenInbox, onPressLogo }: HeaderBarProps) {
+export function HeaderBar({
+  onOpenMenu,
+  onOpenSettings,
+  onOpenActivity,
+  onOpenInbox,
+  onPressLogo,
+  hasUnseenActivity = false,
+}: HeaderBarProps) {
   const { colors } = useThemeStore();
   const { threads } = useCrmMessagingStore();
   const unreadCount = threads.reduce((acc, t) => acc + (t.unreadCount || 0), 0);
@@ -25,6 +34,8 @@ export function HeaderBar({ onOpenMenu, onOpenSettings, onOpenActivity, onOpenIn
           onPress={onOpenMenu}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           style={styles.menuIconBtn}
+          accessibilityRole="button"
+          accessibilityLabel="Open menu"
         >
           <Menu size={22} color={colors.textPrimary} strokeWidth={2.2} />
         </TouchableOpacity>
@@ -42,6 +53,8 @@ export function HeaderBar({ onOpenMenu, onOpenSettings, onOpenActivity, onOpenIn
           onPress={onOpenInbox}
           hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }}
           style={styles.iconCircle}
+          accessibilityRole="button"
+          accessibilityLabel="Messages"
         >
           <MessageSquare size={19} color={colors.textPrimary} strokeWidth={2} />
           {unreadCount > 0 && <View style={[styles.notificationDot, { borderColor: colors.bgHeader }]} />}
@@ -51,15 +64,19 @@ export function HeaderBar({ onOpenMenu, onOpenSettings, onOpenActivity, onOpenIn
           onPress={onOpenActivity}
           hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }}
           style={styles.iconCircle}
+          accessibilityRole="button"
+          accessibilityLabel="Activity"
         >
           <Bell size={19} color={colors.textPrimary} strokeWidth={2} />
-          <View style={[styles.notificationDot, { borderColor: colors.bgHeader }]} />
+          {hasUnseenActivity && <View style={[styles.notificationDot, { borderColor: colors.bgHeader }]} />}
         </TouchableOpacity>
 
         <TouchableOpacity
           onPress={onOpenSettings}
           hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }}
           style={styles.iconCircle}
+          accessibilityRole="button"
+          accessibilityLabel="Settings"
         >
           <Settings size={19} color={colors.textSecondary} strokeWidth={2} />
         </TouchableOpacity>

@@ -1,39 +1,33 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
-import { Plus, Wallet, Ticket, ChevronRight, Send, QrCode, Eye, EyeOff, Copy, Check, Bell } from "lucide-react-native";
+import { Plus, Wallet, Ticket, ChevronRight, QrCode } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { ExactVIPCard } from "./ExactVIPCard";
 import { ReceiptModal } from "./ReceiptModal";
 import { StatementOfAccountModal } from "./StatementOfAccountModal";
 import { TurnstileQRModal } from "./TurnstileQRModal";
-import { GiftPassModal } from "./GiftPassModal";
 import { AddMembershipChoiceModal } from "./AddMembershipChoiceModal";
 import { QrScannerModal } from "./QrScannerModal";
 import { useThemeStore } from "../../theme/theme";
 import type { PassRow } from "sodia-core";
+import { isPassUsable, passStatusLabel, passVenueName } from "../../lib/passDisplay";
 
 interface CardsHubProps {
   onBrowseVenues?: () => void;
 }
 
 export function CardsHub({ onBrowseVenues }: CardsHubProps) {
-  const { passes, profile } = useEcosystemStore();
+  const { passes, profile, facilities, purchases, setIsGuest } = useEcosystemStore();
   const { colors } = useThemeStore();
   const [selectedPassForReceipt, setSelectedPassForReceipt] = useState<PassRow | null>(null);
   const [isSoaOpen, setIsSoaOpen] = useState(false);
   const [isQrOpen, setIsQrOpen] = useState(false);
-  const [isGiftOpen, setIsGiftOpen] = useState(false);
   const [isAddMembershipChoiceOpen, setIsAddMembershipChoiceOpen] = useState(false);
   const [isClubScannerOpen, setIsClubScannerOpen] = useState(false);
-  const [showFullCardNum, setShowFullCardNum] = useState(false);
-  const [copied, setCopied] = useState(false);
 
-  const activePass = passes[0] ?? null;
-
-  const handleCopyCard = () => {
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  // The card on top is the first pass that can still open a gate.
+  const activePass = passes.find((p) => isPassUsable(p)) ?? passes[0] ?? null;
+  const activeVenue = activePass ? passVenueName(activePass, facilities, purchases[activePass.id]) : "";
 
   return (
     <ScrollView
@@ -45,17 +39,14 @@ export function CardsHub({ onBrowseVenues }: CardsHubProps) {
       <View style={styles.userGreetingRow}>
         <View>
           <Text style={[styles.userName, { color: colors.textPrimary }]}>Hello, {profile.first_name}</Text>
-          <Text style={[styles.userHandle, { color: colors.textMuted }]}>VIP Account</Text>
+          <Text style={[styles.userHandle, { color: colors.textMuted }]}>Your passes and memberships</Text>
         </View>
-        <TouchableOpacity style={[styles.bellBtn, { backgroundColor: colors.bgCardSecondary }]}>
-          <Bell size={20} color={colors.textPrimary} />
-        </TouchableOpacity>
       </View>
 
       {/* 3D VIP CARD STACK OR EMPTY CARD OUTLINE */}
       {activePass ? (
         <View style={styles.cardWrapper}>
-          <ExactVIPCard pass={activePass} facilityName="Metro Core Arena" />
+          <ExactVIPCard pass={activePass} facilityName={activeVenue} />
         </View>
       ) : (
         <View style={styles.emptyCardContainer}>
@@ -63,11 +54,11 @@ export function CardsHub({ onBrowseVenues }: CardsHubProps) {
             <Wallet size={40} color="#EC4899" />
             <Text style={[styles.emptyCardTitle, { color: colors.textPrimary }]}>No Active Passes</Text>
             <Text style={[styles.emptyCardDesc, { color: colors.textSecondary }]}>
-              Add a day pass, court booking, or VIP membership to unlock turnstiles with 60s dynamic TOTP.
+              Add a day pass or membership to get your entry QR code.
             </Text>
             <TouchableOpacity onPress={() => setIsAddMembershipChoiceOpen(true)} style={styles.getPassButton}>
               <Plus size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
-              <Text style={styles.getPassButtonText}>+ Add Membership</Text>
+              <Text style={styles.getPassButtonText}>Add Membership</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -80,27 +71,23 @@ export function CardsHub({ onBrowseVenues }: CardsHubProps) {
           style={[styles.actionPill, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}
         >
           <Plus size={16} color="#EC4899" />
-          <Text style={[styles.actionPillText, { color: colors.textPrimary }]}>+ Add</Text>
+          <Text style={[styles.actionPillText, { color: colors.textPrimary }]}>Add Pass</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => setIsGiftOpen(true)}
-          style={[styles.actionPill, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}
+          onPress={() => (activePass ? setIsQrOpen(true) : setIsAddMembershipChoiceOpen(true))}
+          style={[styles.actionPill, styles.actionPillPrimary]}
+          accessibilityRole="button"
         >
-          <Send size={15} color="#EC4899" />
-          <Text style={[styles.actionPillText, { color: colors.textPrimary }]}>Send ↗</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => setIsQrOpen(true)} style={[styles.actionPill, styles.actionPillPrimary]}>
           <QrCode size={16} color="#FFFFFF" />
-          <Text style={[styles.actionPillText, { color: "#FFFFFF" }]}>Pay ⛶</Text>
+          <Text style={[styles.actionPillText, { color: "#FFFFFF" }]}>Show Entry QR</Text>
         </TouchableOpacity>
       </View>
 
       {/* RECENT TRANSACTIONS SHEET */}
       <View style={[styles.historySheet, { backgroundColor: colors.bgCard }]}>
         <View style={styles.historyHeader}>
-          <Text style={[styles.historyTitle, { color: colors.textPrimary }]}>Recent Transaction</Text>
+          <Text style={[styles.historyTitle, { color: colors.textPrimary }]}>Your Passes</Text>
           {passes.length > 0 && (
             <TouchableOpacity onPress={() => setIsSoaOpen(true)}>
               <Text style={styles.viewAllText}>View All</Text>
@@ -111,9 +98,9 @@ export function CardsHub({ onBrowseVenues }: CardsHubProps) {
         {passes.length === 0 ? (
           <View style={styles.emptyLedgerBox}>
             <Ticket size={28} color={colors.textMuted} />
-            <Text style={[styles.emptyLedgerTitle, { color: colors.textPrimary }]}>No transactions recorded</Text>
+            <Text style={[styles.emptyLedgerTitle, { color: colors.textPrimary }]}>No passes yet</Text>
             <Text style={[styles.emptyLedgerSubtitle, { color: colors.textMuted }]}>
-              Purchases, passes, and statements will automatically record here.
+              Passes you buy or receive will appear here.
             </Text>
           </View>
         ) : (
@@ -126,44 +113,20 @@ export function CardsHub({ onBrowseVenues }: CardsHubProps) {
               >
                 <View>
                   <Text style={[styles.txName, { color: colors.textPrimary }]}>{p.pass_type}</Text>
-                  <Text style={[styles.txTime, { color: colors.textMuted }]}>Metro Core Arena • Turnstile Valid</Text>
+                  <Text style={[styles.txTime, { color: colors.textMuted }]}>
+                    {passVenueName(p, facilities, purchases[p.id])}
+                  </Text>
                 </View>
                 <View style={styles.txRight}>
-                  <Text style={styles.txStatus}>ACTIVE</Text>
+                  <Text style={[styles.txStatus, !isPassUsable(p) && { color: colors.textMuted }]}>
+                    {passStatusLabel(p)}
+                  </Text>
                   <ChevronRight size={16} color={colors.textMuted} />
                 </View>
               </TouchableOpacity>
             ))}
           </View>
         )}
-
-        {/* CARD NUMBER METADATA */}
-        <View style={[styles.cardDetailSection, { borderTopColor: colors.borderColor }]}>
-          <View style={styles.cardDetailHeader}>
-            <Text style={[styles.cardDetailTitle, { color: colors.textPrimary }]}>Card Details</Text>
-            <TouchableOpacity onPress={handleCopyCard} style={styles.copyRow}>
-              {copied ? <Check size={13} color="#10B981" /> : <Copy size={13} color={colors.textMuted} />}
-              <Text style={[styles.copyText, { color: copied ? "#10B981" : colors.textMuted }]}>
-                {copied ? "Copied" : "Copy ID"}
-              </Text>
-            </TouchableOpacity>
-          </View>
-          <View style={[styles.detailRow, { borderBottomColor: colors.borderColor }]}>
-            <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Digital Pass ID</Text>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-              <Text style={[styles.detailValMono, { color: colors.textPrimary }]}>
-                {showFullCardNum ? "4912 • 8820 • 3014 • 9901" : "•••• •••• •••• 9901"}
-              </Text>
-              <TouchableOpacity onPress={() => setShowFullCardNum(!showFullCardNum)}>
-                {showFullCardNum ? (
-                  <EyeOff size={15} color={colors.textMuted} />
-                ) : (
-                  <Eye size={15} color={colors.textMuted} />
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
       </View>
 
       <ReceiptModal
@@ -183,14 +146,12 @@ export function CardsHub({ onBrowseVenues }: CardsHubProps) {
       <TurnstileQRModal
         visible={isQrOpen}
         onClose={() => setIsQrOpen(false)}
-        facilityName="Metro Core Arena"
-        passId={activePass?.id ?? null}
-      />
-      <GiftPassModal
-        visible={isGiftOpen}
-        passes={passes}
-        onClose={() => setIsGiftOpen(false)}
-        onSendPass={() => setIsGiftOpen(false)}
+        facilityName={activeVenue}
+        passId={activePass && isPassUsable(activePass) ? activePass.id : null}
+        onSignIn={() => {
+          setIsQrOpen(false);
+          setIsGuest(false);
+        }}
       />
       <AddMembershipChoiceModal
         visible={isAddMembershipChoiceOpen}

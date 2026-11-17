@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowLeft, Flame } from "lucide-react-native";
+import { ArrowLeft, Bell, Flame } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
+import { useEcosystemStore } from "../../store/ecosystemStore";
 
 interface ActivityViewProps {
   onBack: () => void;
@@ -12,41 +13,44 @@ interface ActivityViewProps {
 export function ActivityView({ onBack, onNavigateToLift }: ActivityViewProps) {
   const insets = useSafeAreaInsets();
   const { colors } = useThemeStore();
-  const [activeTab, setActiveTab] = useState<"all" | "requests">("all");
+  // Sample notifications belong to the guest preview only; a real account starts empty.
+  const { isGuest } = useEcosystemStore();
   const [followedMap, setFollowedMap] = useState<Record<string, boolean>>({});
   const [acceptedChallenge, setAcceptedChallenge] = useState(false);
 
-  const activities = [
-    {
-      id: "act_1",
-      type: "challenge_alert",
-      title: "Leaderboard Alert",
-      text: "Dave passed your 225kg Deadlift score with 230kg on the BGC Leaderboard!",
-      time: "25m ago",
-      section: "Today",
-      urgent: true,
-    },
-    {
-      id: "act_2",
-      type: "like",
-      user: "Sarah Jenkins",
-      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80",
-      text: "liked your post with Metro Core Arena tag.",
-      time: "2h ago",
-      section: "Today",
-      postThumb: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=200&q=80",
-    },
-    {
-      id: "act_3",
-      type: "follow",
-      user: "Coach Miguel Ramos",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80",
-      text: "started following you.",
-      time: "1d ago",
-      section: "This Week",
-      hasFollowBack: true,
-    },
-  ];
+  const activities = !isGuest
+    ? []
+    : [
+        {
+          id: "act_1",
+          type: "challenge_alert",
+          title: "Leaderboard Alert",
+          text: "Dave passed your 225kg Deadlift score with 230kg on the BGC Leaderboard!",
+          time: "25m ago",
+          section: "Today",
+          urgent: true,
+        },
+        {
+          id: "act_2",
+          type: "like",
+          user: "Sarah Jenkins",
+          avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80",
+          text: "liked your post with Metro Core Arena tag.",
+          time: "2h ago",
+          section: "Today",
+          postThumb: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=200&q=80",
+        },
+        {
+          id: "act_3",
+          type: "follow",
+          user: "Coach Miguel Ramos",
+          avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80",
+          text: "started following you.",
+          time: "1d ago",
+          section: "This Week",
+          hasFollowBack: true,
+        },
+      ];
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
@@ -66,6 +70,8 @@ export function ActivityView({ onBack, onNavigateToLift }: ActivityViewProps) {
           onPress={onBack}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           style={styles.backBtn}
+          accessibilityRole="button"
+          accessibilityLabel="Close activity"
         >
           <ArrowLeft size={22} color={colors.textPrimary} />
         </TouchableOpacity>
@@ -73,112 +79,93 @@ export function ActivityView({ onBack, onNavigateToLift }: ActivityViewProps) {
         <View style={{ width: 44 }} />
       </View>
 
-      {/* SEGMENTED TABS */}
-      <View style={[styles.tabRow, { borderBottomColor: colors.borderColor }]}>
-        <TouchableOpacity
-          onPress={() => setActiveTab("all")}
-          style={[styles.tabItem, activeTab === "all" && styles.tabItemActive]}
-        >
-          <Text
-            style={[
-              styles.tabText,
-              { color: activeTab === "all" ? colors.textPrimary : colors.textMuted },
-              activeTab === "all" && styles.tabTextActive,
-            ]}
-          >
-            All Activity
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setActiveTab("requests")}
-          style={[styles.tabItem, activeTab === "requests" && styles.tabItemActive]}
-        >
-          <Text
-            style={[
-              styles.tabText,
-              { color: activeTab === "requests" ? colors.textPrimary : colors.textMuted },
-              activeTab === "requests" && styles.tabTextActive,
-            ]}
-          >
-            Follow Requests (1)
-          </Text>
-        </TouchableOpacity>
-      </View>
-
       {/* ACTIVITY LIST */}
-      <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
-        <Text style={[styles.sectionHeader, { color: colors.textMuted }]}>TODAY</Text>
-        {activities
-          .filter((a) => a.section === "Today")
-          .map((a) => (
-            <View key={a.id} style={[styles.activityRow, a.urgent && styles.urgentCard]}>
-              {a.type === "challenge_alert" ? (
-                <View style={styles.alertIcon}>
-                  <Flame size={16} color="#F97316" />
-                </View>
-              ) : (
-                <Image source={{ uri: a.avatar }} style={styles.avatar} />
-              )}
+      {activities.length === 0 ? (
+        <View style={styles.emptyState}>
+          <Bell size={36} color={colors.textMuted} />
+          <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No activity yet</Text>
+          <Text style={[styles.emptyBody, { color: colors.textMuted }]}>
+            Likes, follows and challenge updates will show up here.
+          </Text>
+        </View>
+      ) : (
+        <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
+          <Text style={[styles.sectionHeader, { color: colors.textMuted }]}>TODAY</Text>
+          {activities
+            .filter((a) => a.section === "Today")
+            .map((a) => (
+              <View key={a.id} style={[styles.activityRow, a.urgent && styles.urgentCard]}>
+                {a.type === "challenge_alert" ? (
+                  <View style={styles.alertIcon}>
+                    <Flame size={16} color="#F97316" />
+                  </View>
+                ) : (
+                  <Image source={{ uri: a.avatar }} style={styles.avatar} />
+                )}
 
-              <View style={styles.meta}>
-                <Text style={[styles.titleText, { color: colors.textSecondary }]}>
-                  {a.user ? <Text style={[styles.userName, { color: colors.textPrimary }]}>{a.user} </Text> : null}
-                  {a.text}
-                </Text>
-                <Text style={[styles.timeText, { color: colors.textMuted }]}>{a.time}</Text>
-              </View>
-
-              {a.type === "challenge_alert" && (
-                <TouchableOpacity
-                  onPress={() => {
-                    setAcceptedChallenge(true);
-                    onNavigateToLift?.();
-                  }}
-                  style={[styles.viewChallengeBtn, acceptedChallenge && { backgroundColor: "#10B981" }]}
-                >
-                  <Text style={styles.viewChallengeText}>{acceptedChallenge ? "Accepted ✓" : "Defend PR"}</Text>
-                </TouchableOpacity>
-              )}
-
-              {a.postThumb && <Image source={{ uri: a.postThumb }} style={styles.postThumb} />}
-            </View>
-          ))}
-
-        <Text style={[styles.sectionHeader, { marginTop: 24, color: colors.textMuted }]}>THIS WEEK</Text>
-        {activities
-          .filter((a) => a.section === "This Week")
-          .map((a) => (
-            <View key={a.id} style={styles.activityRow}>
-              <Image source={{ uri: a.avatar }} style={styles.avatar} />
-              <View style={styles.meta}>
-                <Text style={[styles.titleText, { color: colors.textSecondary }]}>
-                  <Text style={[styles.userName, { color: colors.textPrimary }]}>{a.user} </Text>
-                  {a.text}
-                </Text>
-                <Text style={[styles.timeText, { color: colors.textMuted }]}>{a.time}</Text>
-              </View>
-              {a.hasFollowBack && (
-                <TouchableOpacity
-                  onPress={() => setFollowedMap((prev) => ({ ...prev, [a.id]: !prev[a.id] }))}
-                  style={[
-                    styles.followBackBtn,
-                    { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor },
-                    followedMap[a.id] && { backgroundColor: colors.bgInput },
-                  ]}
-                >
-                  <Text style={[styles.followBackText, { color: colors.textPrimary }]}>
-                    {followedMap[a.id] ? "Following" : "Follow Back"}
+                <View style={styles.meta}>
+                  <Text style={[styles.titleText, { color: colors.textSecondary }]}>
+                    {a.user ? <Text style={[styles.userName, { color: colors.textPrimary }]}>{a.user} </Text> : null}
+                    {a.text}
                   </Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          ))}
-      </ScrollView>
+                  <Text style={[styles.timeText, { color: colors.textMuted }]}>{a.time}</Text>
+                </View>
+
+                {a.type === "challenge_alert" && (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setAcceptedChallenge(true);
+                      onNavigateToLift?.();
+                    }}
+                    style={[styles.viewChallengeBtn, acceptedChallenge && { backgroundColor: "#10B981" }]}
+                  >
+                    <Text style={styles.viewChallengeText}>{acceptedChallenge ? "Accepted ✓" : "Defend PR"}</Text>
+                  </TouchableOpacity>
+                )}
+
+                {a.postThumb && <Image source={{ uri: a.postThumb }} style={styles.postThumb} />}
+              </View>
+            ))}
+
+          <Text style={[styles.sectionHeader, { marginTop: 24, color: colors.textMuted }]}>THIS WEEK</Text>
+          {activities
+            .filter((a) => a.section === "This Week")
+            .map((a) => (
+              <View key={a.id} style={styles.activityRow}>
+                <Image source={{ uri: a.avatar }} style={styles.avatar} />
+                <View style={styles.meta}>
+                  <Text style={[styles.titleText, { color: colors.textSecondary }]}>
+                    <Text style={[styles.userName, { color: colors.textPrimary }]}>{a.user} </Text>
+                    {a.text}
+                  </Text>
+                  <Text style={[styles.timeText, { color: colors.textMuted }]}>{a.time}</Text>
+                </View>
+                {a.hasFollowBack && (
+                  <TouchableOpacity
+                    onPress={() => setFollowedMap((prev) => ({ ...prev, [a.id]: !prev[a.id] }))}
+                    style={[
+                      styles.followBackBtn,
+                      { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor },
+                      followedMap[a.id] && { backgroundColor: colors.bgInput },
+                    ]}
+                  >
+                    <Text style={[styles.followBackText, { color: colors.textPrimary }]}>
+                      {followedMap[a.id] ? "Following" : "Follow Back"}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            ))}
+        </ScrollView>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  emptyState: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 40, gap: 10 },
+  emptyTitle: { fontSize: 16, fontWeight: "800" },
+  emptyBody: { fontSize: 13, textAlign: "center", lineHeight: 19 },
   container: { flex: 1 },
   header: {
     flexDirection: "row",

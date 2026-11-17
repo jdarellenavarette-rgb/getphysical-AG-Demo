@@ -77,16 +77,17 @@ export const ATHLETE_ROSTER: Record<string, AthleteProfileData> = {
 export function getAthleteProfile(name: string, avatar?: string | null): AthleteProfileData {
   const match = ATHLETE_ROSTER[name];
   if (match) return match;
+  // Not in the roster: show only what the post itself told us, never another person's photos.
   return {
-    userId: `u_${Date.now()}`,
+    userId: `u_${name.toLowerCase().replace(/[^a-z0-9]+/g, "_")}`,
     name,
     username: name.toLowerCase().replace(/\s+/g, "."),
-    avatar: avatar || DARELLE_AVATAR,
-    bio: "Active athlete in the Metro community. Training consistently on GetPhysical.",
-    specialty: "Functional Athlete",
+    avatar: avatar ?? "",
+    bio: "",
+    specialty: "",
     isVerified: false,
-    followersCount: "1.2k",
-    workoutsCount: "180",
-    photos: [DARELLE_PHYSIQUE, DARELLE_TENNIS_JUMP],
+    followersCount: "—",
+    workoutsCount: "—",
+    photos: [],
   };
 }

@@ -8,6 +8,9 @@ import {
   DARELLE_BOXING,
 } from "../constants/darelleAssets";
 
+/** Seed timestamps are relative to launch so the feed never looks stale. */
+const hoursAgo = (hours: number): string => new Date(Date.now() - hours * 3_600_000).toISOString();
+
 export const INITIAL_DARELLE_POSTS: SodiaPostRow[] = [
   {
     id: "post_darelle_physique",
@@ -33,7 +36,7 @@ export const INITIAL_DARELLE_POSTS: SodiaPostRow[] = [
       duration: "1h 15m",
       calories: 620,
     },
-    created_at: "2026-11-04T07:15:00.000Z",
+    created_at: hoursAgo(2),
   },
   {
     id: "post_darelle_tennis",
@@ -59,7 +62,7 @@ export const INITIAL_DARELLE_POSTS: SodiaPostRow[] = [
       duration: "1h 30m",
       calories: 740,
     },
-    created_at: "2026-11-04T05:30:00.000Z",
+    created_at: hoursAgo(26),
   },
   {
     id: "post_darelle_boxing",
@@ -85,7 +88,7 @@ export const INITIAL_DARELLE_POSTS: SodiaPostRow[] = [
       duration: "45m",
       calories: 480,
     },
-    created_at: "2026-11-03T18:00:00.000Z",
+    created_at: hoursAgo(50),
   },
   {
     id: "post_darelle_gear",
@@ -107,7 +110,7 @@ export const INITIAL_DARELLE_POSTS: SodiaPostRow[] = [
     stamp: {
       type: "status",
     },
-    created_at: "2026-11-03T09:00:00.000Z",
+    created_at: hoursAgo(75),
   },
   ...SEED_POSTS.filter((p) => p.user_id !== "usr_athlete_01"),
 ];

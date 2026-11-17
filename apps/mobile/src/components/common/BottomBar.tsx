@@ -36,6 +36,9 @@ export function BottomBar({ currentTab, onSelectTab, onPressCreate }: BottomBarP
         <TouchableOpacity
           onPress={() => onSelectTab("sodia")}
           style={styles.tabButton}
+          accessibilityRole="tab"
+          accessibilityLabel="Feed"
+          accessibilityState={{ selected: currentTab === "sodia" }}
           hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
         >
           <Home
@@ -58,6 +61,9 @@ export function BottomBar({ currentTab, onSelectTab, onPressCreate }: BottomBarP
         <TouchableOpacity
           onPress={() => onSelectTab("discover")}
           style={styles.tabButton}
+          accessibilityRole="tab"
+          accessibilityLabel="Venues"
+          accessibilityState={{ selected: currentTab === "discover" }}
           hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
         >
           <Compass
@@ -80,6 +86,8 @@ export function BottomBar({ currentTab, onSelectTab, onPressCreate }: BottomBarP
         <View style={styles.centerBtnContainer}>
           <TouchableOpacity
             onPress={onPressCreate}
+            accessibilityRole="button"
+            accessibilityLabel="Create post"
             activeOpacity={0.85}
             style={[styles.centerCircledBtn, { borderColor: colors.bgDock }]}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -92,6 +100,9 @@ export function BottomBar({ currentTab, onSelectTab, onPressCreate }: BottomBarP
         <TouchableOpacity
           onPress={() => onSelectTab("track")}
           style={styles.tabButton}
+          accessibilityRole="tab"
+          accessibilityLabel="Track"
+          accessibilityState={{ selected: currentTab === "track" }}
           hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
         >
           <Dumbbell
@@ -114,6 +125,9 @@ export function BottomBar({ currentTab, onSelectTab, onPressCreate }: BottomBarP
         <TouchableOpacity
           onPress={() => onSelectTab("cards")}
           style={styles.tabButton}
+          accessibilityRole="tab"
+          accessibilityLabel="Wallet"
+          accessibilityState={{ selected: currentTab === "cards" }}
           hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
         >
           <CreditCard

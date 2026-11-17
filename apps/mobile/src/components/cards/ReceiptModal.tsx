@@ -1,8 +1,10 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView } from "react-native";
-import { ArrowLeft, CheckCircle2, ShieldCheck } from "lucide-react-native";
+import { ArrowLeft, CheckCircle2 } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import type { PassRow } from "sodia-core";
+import { useEcosystemStore } from "../../store/ecosystemStore";
+import { formatPhp, passCharge, passVenueName } from "../../lib/passDisplay";
 
 interface ReceiptModalProps {
   visible: boolean;
@@ -12,7 +14,12 @@ interface ReceiptModalProps {
 
 export function ReceiptModal({ visible, pass, onClose }: ReceiptModalProps) {
   const { colors } = useThemeStore();
+  const { facilities, purchases } = useEcosystemStore();
   if (!pass) return null;
+
+  const purchase = purchases[pass.id];
+  const charge = passCharge(purchase);
+  const isRecurring = purchase?.billingKind === "recurring_subscription";
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
@@ -24,7 +31,7 @@ export function ReceiptModal({ visible, pass, onClose }: ReceiptModalProps) {
               <ArrowLeft size={18} color={colors.textPrimary} />
               <Text style={[styles.backBtnText, { color: colors.textPrimary }]}>Back</Text>
             </TouchableOpacity>
-            <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>OFFICIAL RECEIPT</Text>
+            <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>RECEIPT</Text>
             <View style={{ width: 40 }} />
           </View>
 
@@ -32,8 +39,12 @@ export function ReceiptModal({ visible, pass, onClose }: ReceiptModalProps) {
             {/* SUCCESS BANNER */}
             <View style={styles.successBanner}>
               <CheckCircle2 size={36} color="#10B981" />
-              <Text style={[styles.bannerTitle, { color: colors.textPrimary }]}>PAYMENT SETTLED</Text>
-              <Text style={[styles.bannerSub, { color: colors.textMuted }]}>Immutable Sodia Ledger Record</Text>
+              <Text style={[styles.bannerTitle, { color: colors.textPrimary }]}>
+                {purchase?.isPreview ? "DEMO PASS" : "PASS ISSUED"}
+              </Text>
+              <Text style={[styles.bannerSub, { color: colors.textMuted }]}>
+                {purchase?.isPreview ? "Preview only. No payment was taken." : "Thank you for your purchase."}
+              </Text>
             </View>
 
             {/* RECEIPT TICKET */}
@@ -46,10 +57,12 @@ export function ReceiptModal({ visible, pass, onClose }: ReceiptModalProps) {
               </View>
               <View style={styles.row}>
                 <Text style={[styles.label, { color: colors.textMuted }]}>Venue</Text>
-                <Text style={[styles.value, { color: colors.textPrimary }]}>Metro Core Arena</Text>
+                <Text style={[styles.value, { color: colors.textPrimary }]}>
+                  {passVenueName(pass, facilities, purchase)}
+                </Text>
               </View>
               <View style={styles.row}>
-                <Text style={[styles.label, { color: colors.textMuted }]}>Transaction ID</Text>
+                <Text style={[styles.label, { color: colors.textMuted }]}>Reference</Text>
                 <Text style={styles.monoValue}>TX-{pass.id.toUpperCase().slice(0, 12)}</Text>
               </View>
               <View style={styles.row}>
@@ -61,39 +74,35 @@ export function ReceiptModal({ visible, pass, onClose }: ReceiptModalProps) {
               <View style={styles.row}>
                 <Text style={[styles.label, { color: colors.textMuted }]}>Valid Until</Text>
                 <Text style={[styles.value, { color: colors.textPrimary }]}>
-                  {pass.valid_until ? new Date(pass.valid_until).toLocaleDateString() : "Lifetime"}
+                  {pass.valid_until ? new Date(pass.valid_until).toLocaleDateString() : "No expiry"}
                 </Text>
               </View>
-              <View style={styles.row}>
-                <Text style={[styles.label, { color: colors.textMuted }]}>Payment Rail</Text>
-                <Text style={[styles.value, { color: colors.textPrimary }]}>GCash / Biometric Auth</Text>
-              </View>
-
-              <View style={[styles.divider, { backgroundColor: colors.borderColor }]} />
-
-              <View style={styles.row}>
-                <Text style={[styles.label, { color: colors.textMuted }]}>Subtotal Base</Text>
-                <Text style={[styles.value, { color: colors.textPrimary }]}>₱250.00</Text>
-              </View>
-              <View style={styles.row}>
-                <Text style={[styles.label, { color: colors.textMuted }]}>Sodia Hybrid Fee</Text>
-                <Text style={[styles.value, { color: colors.textPrimary }]}>₱15.00</Text>
-              </View>
-              <View style={[styles.row, styles.totalRow]}>
-                <Text style={[styles.totalLabel, { color: colors.textPrimary }]}>Total Charged</Text>
-                <Text style={[styles.totalValue, { color: colors.accent }]}>₱265.00</Text>
-              </View>
-            </View>
-
-            {/* SECURITY WATERMARK */}
-            <View style={styles.securityRow}>
-              <ShieldCheck size={14} color="#10B981" />
-              <Text style={styles.securityText}>Verified TOTP Dynamic Key Provisioned</Text>
+              {charge && (
+                <>
+                  <View style={[styles.divider, { backgroundColor: colors.borderColor }]} />
+                  <View style={styles.row}>
+                    <Text style={[styles.label, { color: colors.textMuted }]}>Subtotal</Text>
+                    <Text style={[styles.value, { color: colors.textPrimary }]}>{formatPhp(charge.baseAmountPhp)}</Text>
+                  </View>
+                  <View style={styles.row}>
+                    <Text style={[styles.label, { color: colors.textMuted }]}>
+                      Service fee{isRecurring ? " (5%)" : ""}
+                    </Text>
+                    <Text style={[styles.value, { color: colors.textPrimary }]}>{formatPhp(charge.serviceFeePhp)}</Text>
+                  </View>
+                  <View style={[styles.row, styles.totalRow]}>
+                    <Text style={[styles.totalLabel, { color: colors.textPrimary }]}>Total</Text>
+                    <Text style={[styles.totalValue, { color: colors.accent }]}>
+                      {formatPhp(charge.totalChargePhp)}
+                    </Text>
+                  </View>
+                </>
+              )}
             </View>
 
             {/* BACK / CLOSE BUTTON */}
             <TouchableOpacity onPress={onClose} style={styles.closeFullBtn}>
-              <Text style={styles.closeFullText}>Done & Return to Wallet</Text>
+              <Text style={styles.closeFullText}>Done</Text>
             </TouchableOpacity>
           </ScrollView>
         </View>

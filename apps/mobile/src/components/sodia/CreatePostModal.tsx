@@ -11,12 +11,12 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { X, MapPin, Award, Check } from "lucide-react-native";
-import * as ImagePicker from "expo-image-picker";
+import { X, MapPin, Check, Video } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { useThemeStore } from "../../theme/theme";
 import { SODIA_FIELD_LIMITS } from "sodia-core";
 import { PostMediaAttachmentBar } from "./PostMediaAttachmentBar";
+import { formatClipDuration, usePostMedia } from "../../hooks/usePostMedia";
 
 interface CreatePostModalProps {
   visible: boolean;
@@ -24,6 +24,8 @@ interface CreatePostModalProps {
   onOpenStoryCamera?: () => void;
   defaultMode?: "post" | "status";
 }
+
+const STATUS_MAX_CHARS = 200;
 
 const BG_GRADIENTS = [
   { id: "carbon", color: "#18181B" },
@@ -38,90 +40,59 @@ export function CreatePostModal({ visible, onClose, onOpenStoryCamera, defaultMo
   const [activeTab, setActiveTab] = useState<"post" | "status">(defaultMode);
   const [caption, setCaption] = useState("");
   const [selectedBgColor, setSelectedBgColor] = useState(BG_GRADIENTS[0]!.color);
-  const [selectedFacilityId, setSelectedFacilityId] = useState<string | null>("fac_metro_core");
-  const [hasStampAttached, setHasStampAttached] = useState(true);
-  const [attachedMediaUri, setAttachedMediaUri] = useState<string | null>(
-    "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80",
-  );
-  const [mediaKind, setMediaKind] = useState<"photo" | "video">("photo");
+  const [selectedFacilityId, setSelectedFacilityId] = useState<string | null>(null);
+  const { media, takePhoto, recordVideo, pickFromLibrary, clear: clearMedia } = usePostMedia();
 
   const selectedFac = facilities.find((f) => f.id === selectedFacilityId);
-  const remainingChars = SODIA_FIELD_LIMITS.POST_CAPTION_MAX_CHARS - caption.length;
+  const limit = activeTab === "status" ? STATUS_MAX_CHARS : SODIA_FIELD_LIMITS.POST_CAPTION_MAX_CHARS;
+  const remainingChars = limit - caption.length;
+  const hasText = caption.trim().length > 0;
+  // A status is text only; a post needs a caption or media.
+  const canPublish = remainingChars >= 0 && (activeTab === "status" ? hasText : hasText || media !== null);
 
-  const handleTakePhoto = async () => {
-    try {
-      const res = await ImagePicker.launchCameraAsync({ mediaTypes: ["images"], quality: 0.8 });
-      if (!res.canceled && res.assets[0]?.uri) {
-        setAttachedMediaUri(res.assets[0].uri);
-        setMediaKind("photo");
-      }
-    } catch {
-      setAttachedMediaUri(
-        "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=800&q=80",
-      );
-      setMediaKind("photo");
-    }
-  };
-
-  const handleRecordVideo = async () => {
-    try {
-      const res = await ImagePicker.launchCameraAsync({ mediaTypes: ["videos"] });
-      if (!res.canceled && res.assets[0]?.uri) {
-        setAttachedMediaUri(res.assets[0].uri);
-        setMediaKind("video");
-      }
-    } catch {
-      setAttachedMediaUri("https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4");
-      setMediaKind("video");
-    }
-  };
-
-  const handlePickLibrary = async () => {
-    try {
-      const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images", "videos"], quality: 0.8 });
-      if (!res.canceled && res.assets[0]?.uri) {
-        setAttachedMediaUri(res.assets[0].uri);
-        setMediaKind(res.assets[0].type === "video" ? "video" : "photo");
-      }
-    } catch {
-      setAttachedMediaUri(
-        "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?auto=format&fit=crop&w=800&q=80",
-      );
-      setMediaKind("photo");
-    }
-  };
-
-  const handlePublish = () => {
-    if (!caption.trim() && !attachedMediaUri) return;
-    if (activeTab === "status") {
-      addPost(caption.trim(), selectedFacilityId ?? undefined, undefined, null);
-    } else {
-      addPost(
-        caption.trim() || "Crushing the training block! 🔥",
-        selectedFacilityId ?? undefined,
-        hasStampAttached
-          ? {
-              id: `stamp_${Date.now()}`,
-              type: "lift",
-              title: "Deadlift 1RM",
-              primaryMetric: "225 kg",
-              isVerified: true,
-              isPR: true,
-            }
-          : undefined,
-        attachedMediaUri,
-      );
-    }
+  const reset = () => {
     setCaption("");
+    setSelectedFacilityId(null);
+    setSelectedBgColor(BG_GRADIENTS[0]!.color);
+    setActiveTab(defaultMode);
+    clearMedia();
+  };
+
+  const handleClose = () => {
+    reset();
     onClose();
   };
 
+  const handlePublish = () => {
+    if (!canPublish) return;
+    const text = caption.trim();
+    if (activeTab === "status") {
+      addPost(text, undefined, { type: "status", bgColor: selectedBgColor }, null);
+    } else if (media?.kind === "video") {
+      addPost(
+        text,
+        selectedFacilityId ?? undefined,
+        {
+          type: "reel",
+          videoUrl: media.uri,
+          duration: formatClipDuration(media.durationSeconds),
+          audioTrack: `Original Audio • ${profile.username}`,
+          viewsCount: "0",
+        },
+        media.uri,
+      );
+    } else {
+      addPost(text, selectedFacilityId ?? undefined, undefined, media?.uri ?? null);
+    }
+    handleClose();
+  };
+
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={handleClose}>
       <KeyboardAvoidingView style={styles.overlay} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <View style={[styles.container, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
           <View style={[styles.header, { borderBottomColor: colors.borderColor }]}>
-            <TouchableOpacity onPress={onClose} style={styles.cancelBtn}>
+            <TouchableOpacity onPress={handleClose} style={styles.cancelBtn} accessibilityRole="button">
               <Text style={[styles.cancelText, { color: colors.textMuted }]}>Cancel</Text>
             </TouchableOpacity>
             <View style={[styles.modeTabs, { backgroundColor: colors.bgInput }]}>
@@ -150,7 +121,7 @@ export function CreatePostModal({ visible, onClose, onOpenStoryCamera, defaultMo
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => {
-                  onClose();
+                  handleClose();
                   onOpenStoryCamera?.();
                 }}
                 style={styles.modeTab}
@@ -160,8 +131,10 @@ export function CreatePostModal({ visible, onClose, onOpenStoryCamera, defaultMo
             </View>
             <TouchableOpacity
               onPress={handlePublish}
-              disabled={(!caption.trim() && !attachedMediaUri) || remainingChars < 0}
-              style={[styles.publishBtn, !caption.trim() && !attachedMediaUri && styles.publishBtnDisabled]}
+              disabled={!canPublish}
+              style={[styles.publishBtn, !canPublish && styles.publishBtnDisabled]}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: !canPublish }}
             >
               <Text style={styles.publishText}>Post</Text>
             </TouchableOpacity>
@@ -193,48 +166,69 @@ export function CreatePostModal({ visible, onClose, onOpenStoryCamera, defaultMo
                   onChangeText={setCaption}
                   maxLength={SODIA_FIELD_LIMITS.POST_CAPTION_MAX_CHARS}
                 />
-                {attachedMediaUri && (
+                <Text style={[styles.charCount, { color: remainingChars < 20 ? "#E11D48" : colors.textMuted }]}>
+                  {remainingChars}
+                </Text>
+                {media && (
                   <View style={styles.mediaPreviewCard}>
-                    <Image source={{ uri: attachedMediaUri }} style={styles.previewImage} />
-                    <View style={styles.mediaKindBadge}>
-                      <Text style={styles.mediaKindText}>{mediaKind.toUpperCase()}</Text>
-                    </View>
-                    <TouchableOpacity onPress={() => setAttachedMediaUri(null)} style={styles.removeMediaBtn}>
+                    {media.kind === "photo" ? (
+                      <Image source={{ uri: media.uri }} style={styles.previewImage} />
+                    ) : (
+                      <View style={[styles.previewImage, styles.videoPlaceholder]}>
+                        <Video size={28} color="#FFFFFF" />
+                        <Text style={styles.videoPlaceholderText}>
+                          Video attached {formatClipDuration(media.durationSeconds)}
+                        </Text>
+                      </View>
+                    )}
+                    <TouchableOpacity
+                      onPress={clearMedia}
+                      style={styles.removeMediaBtn}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                      accessibilityRole="button"
+                      accessibilityLabel="Remove attachment"
+                    >
                       <X size={14} color="#FFF" />
                     </TouchableOpacity>
                   </View>
                 )}
                 <PostMediaAttachmentBar
-                  onTakePhoto={handleTakePhoto}
-                  onRecordVideo={handleRecordVideo}
-                  onPickLibrary={handlePickLibrary}
+                  onTakePhoto={() => void takePhoto()}
+                  onRecordVideo={() => void recordVideo()}
+                  onPickLibrary={() => void pickFromLibrary()}
                 />
-                {hasStampAttached && (
-                  <View style={styles.stampCard}>
-                    <Award size={16} color="#10B981" />
-                    <View style={{ flex: 1, marginLeft: 8 }}>
-                      <Text style={styles.stampTitle}>VERIFIED LIFT STAMP</Text>
-                      <Text style={[styles.stampVal, { color: colors.textPrimary }]}>
-                        Conventional Deadlift: 225 kg x 1 rep
-                      </Text>
-                    </View>
-                    <TouchableOpacity onPress={() => setHasStampAttached(false)}>
-                      <X size={15} color={colors.textMuted} />
-                    </TouchableOpacity>
-                  </View>
-                )}
-                {selectedFac && (
+                {selectedFac ? (
                   <View style={styles.venueCard}>
                     <MapPin size={16} color="#E11D48" />
                     <View style={{ flex: 1, marginLeft: 8 }}>
                       <Text style={[styles.venueName, { color: colors.textPrimary }]}>{selectedFac.name}</Text>
-                      <Text style={styles.venueSub}>
-                        Auto-attaches Drop-in POS Pill (₱{selectedFac.day_pass_price_php})
-                      </Text>
+                      <Text style={styles.venueSub}>Tagged venue</Text>
                     </View>
-                    <TouchableOpacity onPress={() => setSelectedFacilityId(null)}>
+                    <TouchableOpacity
+                      onPress={() => setSelectedFacilityId(null)}
+                      hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                      accessibilityRole="button"
+                      accessibilityLabel="Remove venue tag"
+                    >
                       <X size={15} color={colors.textMuted} />
                     </TouchableOpacity>
+                  </View>
+                ) : (
+                  <View style={styles.venueChoices}>
+                    <Text style={[styles.venueChoicesLabel, { color: colors.textMuted }]}>TAG A VENUE (OPTIONAL)</Text>
+                    <View style={styles.venueChipRow}>
+                      {facilities.map((fac) => (
+                        <TouchableOpacity
+                          key={fac.id}
+                          onPress={() => setSelectedFacilityId(fac.id)}
+                          style={[styles.venueChip, { borderColor: colors.borderColor }]}
+                          accessibilityRole="button"
+                        >
+                          <MapPin size={12} color="#E11D48" />
+                          <Text style={[styles.venueChipText, { color: colors.textPrimary }]}>{fac.name}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
                   </View>
                 )}
               </>
@@ -250,7 +244,7 @@ export function CreatePostModal({ visible, onClose, onOpenStoryCamera, defaultMo
                     multiline
                     value={caption}
                     onChangeText={setCaption}
-                    maxLength={200}
+                    maxLength={STATUS_MAX_CHARS}
                   />
                 </View>
                 <View style={styles.paletteRow}>
@@ -311,16 +305,22 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   previewImage: { width: "100%", height: "100%" },
-  mediaKindBadge: {
-    position: "absolute",
-    top: 8,
-    left: 8,
-    backgroundColor: "rgba(0,0,0,0.7)",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
+  videoPlaceholder: { backgroundColor: "#18181B", alignItems: "center", justifyContent: "center", gap: 8 },
+  videoPlaceholderText: { color: "#FFFFFF", fontSize: 12, fontWeight: "700" },
+  charCount: { fontSize: 11, fontWeight: "700", textAlign: "right" },
+  venueChoices: { marginVertical: 6 },
+  venueChoicesLabel: { fontSize: 10, fontWeight: "800", letterSpacing: 0.6, marginBottom: 8 },
+  venueChipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  venueChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    minHeight: 44,
   },
-  mediaKindText: { color: "#FFF", fontSize: 9, fontWeight: "800" },
+  venueChipText: { fontSize: 12, fontWeight: "700" },
   removeMediaBtn: {
     position: "absolute",
     top: 8,
@@ -332,18 +332,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  stampCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(16, 185, 129, 0.12)",
-    borderWidth: 1,
-    borderColor: "rgba(16, 185, 129, 0.3)",
-    borderRadius: 12,
-    padding: 12,
-    marginVertical: 6,
-  },
-  stampTitle: { color: "#10B981", fontSize: 10, fontWeight: "800" },
-  stampVal: { fontSize: 12, fontWeight: "700", marginTop: 2 },
   venueCard: {
     flexDirection: "row",
     alignItems: "center",

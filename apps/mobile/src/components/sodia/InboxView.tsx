@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Search, Edit3, ArrowLeft, Camera, Plus } from "lucide-react-native";
+import { Search, ArrowLeft } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import { useCrmMessagingStore } from "../../store/crmMessagingStore";
 
@@ -13,7 +13,7 @@ export interface DMThread {
   timeAgo: string;
   unreadCount: number;
   isOnline?: boolean;
-  type: "direct" | "coach" | "group" | "handshake";
+  type: "direct" | "coach" | "group" | "facility";
   badgeText?: string;
 }
 
@@ -25,36 +25,7 @@ interface InboxViewProps {
 export function InboxView({ onBack, onSelectThread }: InboxViewProps) {
   const insets = useSafeAreaInsets();
   const { colors } = useThemeStore();
-  const [activeTab, setActiveTab] = useState<"primary" | "requests">("primary");
   const [searchQuery, setSearchQuery] = useState("");
-
-  const athleteNotes = [
-    {
-      id: "note_me",
-      name: "Your note",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
-      note: "Heading to BGC 🏋️",
-      isMe: true,
-    },
-    {
-      id: "note_1",
-      name: "Miguel",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80",
-      note: "At Metro Core till 8pm 🔥",
-    },
-    {
-      id: "note_2",
-      name: "Bea",
-      avatar: "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?auto=format&fit=crop&w=200&q=80",
-      note: "Clay prep 🎾",
-    },
-    {
-      id: "note_3",
-      name: "Sarah",
-      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80",
-      note: "Leg day crushed 💪",
-    },
-  ];
 
   const { threads, markThreadAsRead } = useCrmMessagingStore();
 
@@ -79,13 +50,17 @@ export function InboxView({ onBack, onSelectThread }: InboxViewProps) {
           },
         ]}
       >
-        <TouchableOpacity onPress={onBack} style={styles.backBtn}>
+        <TouchableOpacity
+          onPress={onBack}
+          style={styles.backBtn}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          accessibilityRole="button"
+          accessibilityLabel="Close messages"
+        >
           <ArrowLeft size={22} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Messages</Text>
-        <TouchableOpacity onPress={() => threads[0] && onSelectThread(threads[0])} style={styles.newMsgBtn}>
-          <Edit3 size={18} color={colors.textPrimary} />
-        </TouchableOpacity>
+        <View style={styles.newMsgBtn} />
       </View>
 
       {/* SEARCH BOX */}
@@ -97,74 +72,20 @@ export function InboxView({ onBack, onSelectThread }: InboxViewProps) {
           placeholderTextColor={colors.textMuted}
           value={searchQuery}
           onChangeText={setSearchQuery}
+          returnKeyType="search"
+          accessibilityLabel="Search messages"
         />
-      </View>
-
-      {/* INSTAGRAM DIRECT NOTES / ACTIVE TRAY */}
-      <View style={[styles.notesTray, { borderBottomColor: colors.borderColor }]}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.notesScroll}>
-          {athleteNotes.map((n) => (
-            <View key={n.id} style={styles.noteItem}>
-              <View
-                style={[
-                  styles.bubbleCloud,
-                  { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor, borderWidth: 1 },
-                ]}
-              >
-                <Text numberOfLines={1} style={[styles.bubbleCloudText, { color: colors.textPrimary }]}>
-                  {n.note}
-                </Text>
-              </View>
-              <View style={styles.noteAvatarWrap}>
-                <Image source={{ uri: n.avatar }} style={styles.noteAvatar} />
-                {n.isMe && (
-                  <View style={[styles.noteAddPill, { borderColor: colors.bgScreen }]}>
-                    <Plus size={10} color="#FFFFFF" strokeWidth={3} />
-                  </View>
-                )}
-              </View>
-              <Text numberOfLines={1} style={[styles.noteName, { color: colors.textMuted }]}>
-                {n.name}
-              </Text>
-            </View>
-          ))}
-        </ScrollView>
-      </View>
-
-      {/* TABS */}
-      <View style={[styles.tabRow, { borderBottomColor: colors.borderColor }]}>
-        <TouchableOpacity
-          onPress={() => setActiveTab("primary")}
-          style={[styles.tabPill, activeTab === "primary" && styles.tabPillActive]}
-        >
-          <Text
-            style={[
-              styles.tabText,
-              { color: activeTab === "primary" ? colors.textPrimary : colors.textMuted },
-              activeTab === "primary" && styles.tabTextActive,
-            ]}
-          >
-            Primary
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setActiveTab("requests")}
-          style={[styles.tabPill, activeTab === "requests" && styles.tabPillActive]}
-        >
-          <Text
-            style={[
-              styles.tabText,
-              { color: activeTab === "requests" ? colors.textPrimary : colors.textMuted },
-              activeTab === "requests" && styles.tabTextActive,
-            ]}
-          >
-            Requests (2)
-          </Text>
-        </TouchableOpacity>
       </View>
 
       {/* THREADS LIST */}
       <ScrollView style={styles.threadList} showsVerticalScrollIndicator={false}>
+        {filteredThreads.length === 0 && (
+          <Text style={[styles.emptyText, { color: colors.textMuted }]}>
+            {searchQuery.trim()
+              ? `No conversations match "${searchQuery.trim()}".`
+              : "No messages yet. Message someone from their profile to start a conversation."}
+          </Text>
+        )}
         {filteredThreads.map((t) => (
           <TouchableOpacity
             key={t.id}
@@ -200,7 +121,7 @@ export function InboxView({ onBack, onSelectThread }: InboxViewProps) {
                 >
                   {t.lastMessage}
                 </Text>
-                {t.unreadCount > 0 ? <View style={styles.unreadDot} /> : <Camera size={16} color={colors.textMuted} />}
+                {t.unreadCount > 0 ? <View style={styles.unreadDot} /> : null}
               </View>
             </View>
           </TouchableOpacity>
@@ -211,6 +132,7 @@ export function InboxView({ onBack, onSelectThread }: InboxViewProps) {
 }
 
 const styles = StyleSheet.create({
+  emptyText: { textAlign: "center", fontSize: 13, lineHeight: 19, paddingVertical: 40, paddingHorizontal: 32 },
   container: { flex: 1 },
   header: {
     flexDirection: "row",

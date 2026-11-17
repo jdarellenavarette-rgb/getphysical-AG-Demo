@@ -1,8 +1,10 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView, Alert } from "react-native";
+import React from "react";
+import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView } from "react-native";
 import { Plus } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { useThemeStore } from "../../theme/theme";
+import { useFeedStore } from "../../store/feedStore";
+import { OWN_STORY_ID, SEED_STORIES } from "../../data/seedStories";
 import { TenStateView } from "../common/TenStateView";
 import { createSuccessState, createEmptyState } from "sodia-core";
 import { SodiaPostCard } from "./SodiaPostCard";
@@ -11,8 +13,8 @@ interface SodiaFeedProps {
   onPressFacilityCTA?: (facilityId: string) => void;
   onOpenCreatePost?: () => void;
   onOpenStoryCamera?: () => void;
-  onOpenStory?: (index: number) => void;
-  onOpenComments?: () => void;
+  onOpenStory?: (storyId: string) => void;
+  onOpenComments?: (postId: string) => void;
   onPressAuthor?: (userId: string, name: string, avatar?: string | null) => void;
 }
 
@@ -24,45 +26,24 @@ export function SodiaFeed({
   onOpenComments,
   onPressAuthor,
 }: SodiaFeedProps) {
-  const { posts, profile, userStory } = useEcosystemStore();
+  const { posts, profile, userStory, deletePost } = useEcosystemStore();
   const { colors } = useThemeStore();
-  const [likedPosts, setLikedPosts] = useState<Record<string, boolean>>({});
-  const [savedPosts, setSavedPosts] = useState<Record<string, boolean>>({});
-  const [sharedPosts, setSharedPosts] = useState<Record<string, boolean>>({});
+  const { likedPostIds, joinedChallengeIds, commentsByPost, toggleLike, toggleChallenge, forgetPost } = useFeedStore();
 
-  const toggleLike = (id: string) => setLikedPosts((prev) => ({ ...prev, [id]: !prev[id] }));
-  const toggleSave = (id: string) => setSavedPosts((prev) => ({ ...prev, [id]: !prev[id] }));
-  const handleShare = (id: string) => {
-    setSharedPosts((p) => ({ ...p, [id]: true }));
-    Alert.alert("Sent", "Shared to athlete direct message.");
+  const handleDelete = (id: string) => {
+    deletePost(id);
+    forgetPost(id);
   };
 
   const stories = [
-    { id: "s0", name: "Your Story", isMe: true, hasStory: !!userStory, image: profile.avatar_url },
-    {
-      id: "s1",
-      name: "Metro Core",
+    { id: OWN_STORY_ID, name: "Your Story", isMe: true, hasStory: !!userStory, image: profile.avatar_url },
+    ...SEED_STORIES.map((story) => ({
+      id: story.id,
+      name: story.shortName,
+      isMe: false,
       hasStory: true,
-      image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=200&q=80",
-    },
-    {
-      id: "s2",
-      name: "Nexus Club",
-      hasStory: true,
-      image: "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?auto=format&fit=crop&w=200&q=80",
-    },
-    {
-      id: "s3",
-      name: "Coach Miguel",
-      hasStory: true,
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80",
-    },
-    {
-      id: "s4",
-      name: "Coach Sofia",
-      hasStory: true,
-      image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80",
-    },
+      image: story.avatar,
+    })),
   ];
 
   const feedState =
@@ -82,14 +63,14 @@ export function SodiaFeed({
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={[styles.storiesContainer, { borderBottomColor: colors.borderColor }]}
       >
-        {stories.map((st, idx) => (
+        {stories.map((st) => (
           <TouchableOpacity
             key={st.id}
             onPress={() => {
               if (st.isMe && !st.hasStory) {
                 onOpenStoryCamera?.();
               } else {
-                onOpenStory?.(st.isMe ? 0 : idx - 1);
+                onOpenStory?.(st.id);
               }
             }}
             style={styles.storyItem}
@@ -131,12 +112,16 @@ export function SodiaFeed({
                 key={post.id}
                 post={post}
                 profileAvatar={profile.avatar_url}
-                isLiked={likedPosts[post.id] ?? false}
-                isSaved={savedPosts[post.id] ?? false}
-                isShared={sharedPosts[post.id] ?? false}
+                isLiked={likedPostIds[post.id] ?? false}
+                isOwn={post.user_id === profile.id}
+                isChallengeJoined={
+                  joinedChallengeIds[String((post.stamp as { challengeId?: string } | null)?.challengeId ?? post.id)] ??
+                  false
+                }
+                commentCount={commentsByPost[post.id]?.length ?? 0}
                 onToggleLike={toggleLike}
-                onToggleSave={toggleSave}
-                onShare={handleShare}
+                onToggleChallenge={toggleChallenge}
+                onDelete={handleDelete}
                 onOpenComments={onOpenComments}
                 onPressFacilityCTA={onPressFacilityCTA}
                 onPressAuthor={onPressAuthor}

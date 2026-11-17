@@ -50,8 +50,9 @@ export interface MoveActivity {
   avgSpeedKmH?: number;
   caloriesBurned: number;
   routeCoords: [number, number][];
-  elevationM: number;
-  avgBpm: number;
+  /** Only set when a sensor actually reported it. */
+  elevationM?: number;
+  avgBpm?: number;
 }
 
 export interface FoodItemBreakdown {
@@ -214,8 +215,6 @@ export const useTrackingStore = create<TrackingState>((set) => ({
         [14.553, 121.052],
         [14.5512, 121.0482],
       ],
-      elevationM: 24,
-      avgBpm: 154,
     },
   ],
   foodMeals: [],

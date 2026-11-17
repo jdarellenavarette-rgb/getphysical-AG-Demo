@@ -1,19 +1,7 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView, Switch } from "react-native";
+import React from "react";
+import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import {
-  ArrowLeft,
-  Watch,
-  Shield,
-  Briefcase,
-  UserCheck,
-  Calendar,
-  ChevronRight,
-  Moon,
-  Sun,
-  LogIn,
-  LogOut,
-} from "lucide-react-native";
+import { ArrowLeft, Briefcase, UserCheck, Calendar, ChevronRight, Moon, Sun, LogIn, LogOut } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { useThemeStore } from "../../theme/theme";
 import { signOut } from "../../services/authService";
@@ -36,9 +24,11 @@ export function SettingsModal({
   const insets = useSafeAreaInsets();
   const { profile, isGuest, setIsGuest } = useEcosystemStore();
   const { colors, themeMode, setThemeMode } = useThemeStore();
-  const [appleHealthSync, setAppleHealthSync] = useState(true);
-  const [garminSync, setGarminSync] = useState(false);
-  const [biometricsEnabled, setBiometricsEnabled] = useState(true);
+  // Workspaces are offered only for roles this account actually holds.
+  const roles: readonly string[] = profile.user_roles ?? [];
+  const canStaff = roles.includes("staff");
+  const canCoach = roles.includes("coach");
+  const canOrganize = roles.includes("organizer");
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
@@ -96,7 +86,9 @@ export function SettingsModal({
             <Text style={styles.cardHeader}>ATHLETE PROFILE</Text>
             <View style={[styles.row, { borderBottomColor: colors.borderLight }]}>
               <Text style={[styles.label, { color: colors.textSecondary }]}>Display Name</Text>
-              <Text style={[styles.value, { color: colors.textPrimary }]}>{profile.name ?? "Darelle Navarette"}</Text>
+              <Text style={[styles.value, { color: colors.textPrimary }]}>
+                {profile.name ?? `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim()}
+              </Text>
             </View>
             <View style={[styles.row, { borderBottomColor: colors.borderLight }]}>
               <Text style={[styles.label, { color: colors.textSecondary }]}>Handle</Text>
@@ -110,7 +102,7 @@ export function SettingsModal({
             <View style={[styles.row, { borderBottomColor: colors.borderLight }]}>
               <Text style={[styles.label, { color: colors.textSecondary }]}>Session Mode</Text>
               <Text style={[styles.value, { color: isGuest ? "#F59E0B" : "#10B981" }]}>
-                {isGuest ? "Guest Preview Demo" : "Signed In"}
+                {isGuest ? "Guest preview" : "Signed in"}
               </Text>
             </View>
             <TouchableOpacity
@@ -127,109 +119,65 @@ export function SettingsModal({
             >
               {isGuest ? <LogIn size={15} color="#FFFFFF" /> : <LogOut size={15} color="#F87171" />}
               <Text style={[styles.authActionBtnText, { color: isGuest ? "#FFFFFF" : "#F87171" }]}>
-                {isGuest ? "Sign In / Sign Up with Google" : "Sign Out"}
+                {isGuest ? "Sign In or Create Account" : "Sign Out"}
               </Text>
             </TouchableOpacity>
           </View>
 
-          {/* WEARABLE SENSORS */}
-          <View style={[styles.card, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
-            <View style={styles.cardTitleRow}>
-              <Watch size={15} color="#EC4899" />
-              <Text style={styles.cardHeader}>WEARABLE SENSORS</Text>
-            </View>
-            <View style={[styles.switchRow, { borderBottomColor: colors.borderLight }]}>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.switchTitle, { color: colors.textPrimary }]}>Apple Health / Health Connect</Text>
-                <Text style={styles.switchSub}>Sync resting HR, active kcal & GPS runs</Text>
+          {/* BUSINESS WORKSPACES */}
+          {(canStaff || canCoach || canOrganize) && (
+            <View style={[styles.card, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
+              <View style={styles.cardTitleRow}>
+                <Briefcase size={15} color="#71717A" />
+                <Text style={styles.cardHeader}>BUSINESS WORKSPACES</Text>
               </View>
-              <Switch
-                value={appleHealthSync}
-                onValueChange={setAppleHealthSync}
-                thumbColor={appleHealthSync ? "#EC4899" : "#71717A"}
-                trackColor={{ false: "#27272A", true: "rgba(236,72,153,0.4)" }}
-              />
+              {canStaff && (
+                <TouchableOpacity
+                  onPress={() => {
+                    onClose();
+                    onOpenStaffDash?.();
+                  }}
+                  style={[styles.roleSubRow, { borderBottomColor: colors.borderLight }]}
+                >
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                    <Briefcase size={14} color="#10B981" />
+                    <Text style={[styles.roleSubTitle, { color: colors.textPrimary }]}>Staff Check-in Scanner</Text>
+                  </View>
+                  <ChevronRight size={14} color="#71717A" />
+                </TouchableOpacity>
+              )}
+              {canCoach && (
+                <TouchableOpacity
+                  onPress={() => {
+                    onClose();
+                    onOpenCoachDash?.();
+                  }}
+                  style={[styles.roleSubRow, { borderBottomColor: colors.borderLight }]}
+                >
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                    <UserCheck size={14} color="#3B82F6" />
+                    <Text style={[styles.roleSubTitle, { color: colors.textPrimary }]}>Coach Workspace</Text>
+                  </View>
+                  <ChevronRight size={14} color="#71717A" />
+                </TouchableOpacity>
+              )}
+              {canOrganize && (
+                <TouchableOpacity
+                  onPress={() => {
+                    onClose();
+                    onOpenOrganizer?.();
+                  }}
+                  style={[styles.roleSubRow, { borderBottomColor: colors.borderLight }]}
+                >
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                    <Calendar size={14} color="#F59E0B" />
+                    <Text style={[styles.roleSubTitle, { color: colors.textPrimary }]}>Organizer Workspace</Text>
+                  </View>
+                  <ChevronRight size={14} color="#71717A" />
+                </TouchableOpacity>
+              )}
             </View>
-            <View style={[styles.switchRow, { borderBottomColor: colors.borderLight }]}>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.switchTitle, { color: colors.textPrimary }]}>Garmin Connect / Whoop 4.0</Text>
-                <Text style={styles.switchSub}>BLE strain & recovery telemetry</Text>
-              </View>
-              <Switch
-                value={garminSync}
-                onValueChange={setGarminSync}
-                thumbColor={garminSync ? "#EC4899" : "#71717A"}
-                trackColor={{ false: "#27272A", true: "rgba(236,72,153,0.4)" }}
-              />
-            </View>
-          </View>
-
-          {/* SECURITY & ACCESS */}
-          <View style={[styles.card, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
-            <View style={styles.cardTitleRow}>
-              <Shield size={15} color="#10B981" />
-              <Text style={styles.cardHeader}>SECURITY & ACCESS</Text>
-            </View>
-            <View style={[styles.switchRow, { borderBottomColor: colors.borderLight }]}>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.switchTitle, { color: colors.textPrimary }]}>Biometric Pass Authorization</Text>
-                <Text style={styles.switchSub}>Require FaceID to display turnstile TOTP</Text>
-              </View>
-              <Switch
-                value={biometricsEnabled}
-                onValueChange={setBiometricsEnabled}
-                thumbColor={biometricsEnabled ? "#10B981" : "#71717A"}
-                trackColor={{ false: "#27272A", true: "rgba(16,185,129,0.4)" }}
-              />
-            </View>
-          </View>
-
-          {/* CONCEALED BUSINESS WORKSPACES */}
-          <View style={[styles.card, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
-            <View style={styles.cardTitleRow}>
-              <Briefcase size={15} color="#71717A" />
-              <Text style={styles.cardHeader}>BUSINESS WORKSPACES (OPERATOR ACCESS)</Text>
-            </View>
-            <TouchableOpacity
-              onPress={() => {
-                onClose();
-                onOpenStaffDash?.();
-              }}
-              style={[styles.roleSubRow, { borderBottomColor: colors.borderLight }]}
-            >
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                <Briefcase size={14} color="#10B981" />
-                <Text style={[styles.roleSubTitle, { color: colors.textPrimary }]}>Staff Turnstile Scanner</Text>
-              </View>
-              <ChevronRight size={14} color="#71717A" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => {
-                onClose();
-                onOpenCoachDash?.();
-              }}
-              style={[styles.roleSubRow, { borderBottomColor: colors.borderLight }]}
-            >
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                <UserCheck size={14} color="#3B82F6" />
-                <Text style={[styles.roleSubTitle, { color: colors.textPrimary }]}>Coach Floor Roster & Split</Text>
-              </View>
-              <ChevronRight size={14} color="#71717A" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => {
-                onClose();
-                onOpenOrganizer?.();
-              }}
-              style={[styles.roleSubRow, { borderBottomColor: colors.borderLight }]}
-            >
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                <Calendar size={14} color="#F59E0B" />
-                <Text style={[styles.roleSubTitle, { color: colors.textPrimary }]}>Tournament Organizer Portal</Text>
-              </View>
-              <ChevronRight size={14} color="#71717A" />
-            </TouchableOpacity>
-          </View>
+          )}
         </ScrollView>
       </View>
     </Modal>

@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView } from "rea
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft, ShieldCheck, Users, Plus, CheckCircle, Sparkles } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
+import { useEcosystemStore } from "../../store/ecosystemStore";
 
 interface CoachQuickdashModalProps {
   visible: boolean;
@@ -20,6 +21,8 @@ interface FloorClient {
 export function CoachQuickdashModal({ visible, onClose }: CoachQuickdashModalProps) {
   const insets = useSafeAreaInsets();
   const { colors } = useThemeStore();
+  const { isGuest } = useEcosystemStore();
+  const showSamples = isGuest || __DEV__;
   const [clients, setClients] = useState<FloorClient[]>([]);
 
   const handleSimulateCheckIn = () => {
@@ -72,11 +75,13 @@ export function CoachQuickdashModal({ visible, onClose }: CoachQuickdashModalPro
             </Text>
           </View>
 
-          {/* SIMULATE CLIENT CHECK-IN BUTTON */}
-          <TouchableOpacity onPress={handleSimulateCheckIn} style={styles.checkInActionBtn}>
-            <Plus size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
-            <Text style={styles.checkInActionText}>Simulate Client Check-in</Text>
-          </TouchableOpacity>
+          {/* Sample check-in: guest preview and development builds only */}
+          {showSamples && (
+            <TouchableOpacity onPress={handleSimulateCheckIn} style={styles.checkInActionBtn}>
+              <Plus size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+              <Text style={styles.checkInActionText}>Add Sample Check-in (Preview)</Text>
+            </TouchableOpacity>
+          )}
 
           {/* CLIENT LIST OR CLEAN EMPTY STATE */}
           <Text style={[styles.sectionHeader, { color: colors.textMuted }]}>CLIENTS ON FLOOR ({clients.length})</Text>

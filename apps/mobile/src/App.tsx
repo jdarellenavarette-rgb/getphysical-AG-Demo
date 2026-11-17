@@ -37,12 +37,13 @@ export default function App() {
   const [activeCheckoutItem, setActiveCheckoutItem] = useState<CheckoutRequest | null>(null);
   const [selectedFacilityForModal, setSelectedFacilityForModal] = useState<FacilityRow | null>(null);
   const [selectedAthlete, setSelectedAthlete] = useState<AthleteProfileData | null>(null);
-  const [isStoryViewerOpen, setIsStoryViewerOpen] = useState(false);
+  const [storyOpenId, setStoryOpenId] = useState<string | null>(null);
   const [isStoryCameraOpen, setIsStoryCameraOpen] = useState(false);
-  const [isCommentsOpen, setIsCommentsOpen] = useState(false);
+  const [commentsPostId, setCommentsPostId] = useState<string | null>(null);
   const [isInboxOpen, setIsInboxOpen] = useState(false);
   const [activeChatThread, setActiveChatThread] = useState<DMThread | null>(null);
   const [isActivityOpen, setIsActivityOpen] = useState(false);
+  const [activitySeen, setActivitySeen] = useState(false);
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -50,16 +51,18 @@ export default function App() {
   const [isCoachDashOpen, setIsCoachDashOpen] = useState(false);
   const [isOrganizerOpen, setIsOrganizerOpen] = useState(false);
 
-  const { provisionPass, facilities } = useEcosystemStore();
+  const { provisionPass, facilities, isGuest } = useEcosystemStore();
   const { colors } = useThemeStore();
-  const { initRealtimeSubscription, threads } = useCrmMessagingStore();
+  const { initRealtimeSubscription, threads, ensureThread } = useCrmMessagingStore();
 
   // Subscribes to the user's inbox; the returned teardown removes the Realtime channel.
   useEffect(() => initRealtimeSubscription(), [initRealtimeSubscription]);
 
   // Signed-out preview keeps the local demo pass; signed-in users pay via Xendit/Stripe.
   const { confirm: confirmCheckout } = useCheckout((item) => {
-    provisionPass(item.facilityName, item.billingKind, item.baseAmountPhp, item.title, item.facilityId);
+    // The card already shows the venue, so the pass name does not repeat it.
+    const passName = item.title.replace(` • ${item.facilityName}`, "");
+    provisionPass(item.facilityName, item.billingKind, item.baseAmountPhp, passName, item.facilityId);
   });
   const handleCheckoutConfirm = async (item: CheckoutRequest) => {
     if (await confirmCheckout(item)) {
@@ -83,7 +86,11 @@ export default function App() {
       <HeaderBar
         onOpenMenu={() => setIsMenuOpen(true)}
         onOpenSettings={() => setIsSettingsOpen(true)}
-        onOpenActivity={() => setIsActivityOpen(true)}
+        onOpenActivity={() => {
+          setActivitySeen(true);
+          setIsActivityOpen(true);
+        }}
+        hasUnseenActivity={isGuest && !activitySeen}
         onOpenInbox={() => setIsInboxOpen(true)}
         onPressLogo={() => setCurrentTab("sodia")}
       />
@@ -97,8 +104,8 @@ export default function App() {
             }}
             onOpenCreatePost={() => setIsCreatePostOpen(true)}
             onOpenStoryCamera={() => setIsStoryCameraOpen(true)}
-            onOpenStory={() => setIsStoryViewerOpen(true)}
-            onOpenComments={() => setIsCommentsOpen(true)}
+            onOpenStory={setStoryOpenId}
+            onOpenComments={setCommentsPostId}
             onPressAuthor={(userId, name, avatar) => setSelectedAthlete(getAthleteProfile(name, avatar))}
           />
         )}
@@ -118,18 +125,21 @@ export default function App() {
       <BottomBar currentTab={currentTab} onSelectTab={setCurrentTab} onPressCreate={() => setIsCreatePostOpen(true)} />
 
       <StoryViewerModal
-        visible={isStoryViewerOpen}
-        onClose={() => setIsStoryViewerOpen(false)}
-        onOpenCreatePost={() => setIsCreatePostOpen(true)}
-        onOpenComments={() => setIsCommentsOpen(true)}
+        visible={storyOpenId !== null}
+        initialStoryId={storyOpenId}
+        onClose={() => setStoryOpenId(null)}
         onTapLocationTag={(facId) => {
-          setIsStoryViewerOpen(false);
+          setStoryOpenId(null);
           const fac = facilities.find((f) => f.id === facId);
           if (fac) setSelectedFacilityForModal(fac);
         }}
       />
 
-      <CommentsBottomSheet visible={isCommentsOpen} onClose={() => setIsCommentsOpen(false)} />
+      <CommentsBottomSheet
+        visible={commentsPostId !== null}
+        postId={commentsPostId}
+        onClose={() => setCommentsPostId(null)}
+      />
       <CreatePostModal
         visible={isCreatePostOpen}
         onClose={() => setIsCreatePostOpen(false)}
@@ -137,7 +147,15 @@ export default function App() {
       />
       <InstagramStoryCameraModal visible={isStoryCameraOpen} onClose={() => setIsStoryCameraOpen(false)} />
 
-      <Modal visible={isInboxOpen} animationType="slide" onRequestClose={() => setIsInboxOpen(false)}>
+      <Modal
+        visible={isInboxOpen}
+        animationType="slide"
+        onRequestClose={() => {
+          // Back inside a chat returns to the list; back on the list closes the inbox.
+          if (activeChatThread) setActiveChatThread(null);
+          else setIsInboxOpen(false);
+        }}
+      >
         {activeChatThread ? (
           <DMChatView thread={activeChatThread} onBack={() => setActiveChatThread(null)} />
         ) : (
@@ -202,15 +220,17 @@ export default function App() {
         athlete={selectedAthlete}
         onClose={() => setSelectedAthlete(null)}
         onMessageAthlete={(ath) => {
-          setActiveChatThread({
-            id: `thread_${ath.userId}`,
-            name: ath.name,
-            avatar: ath.avatar,
-            lastMessage: "Direct message started",
-            timeAgo: "Just now",
-            unreadCount: 0,
-            type: "direct",
-          });
+          setActiveChatThread(
+            ensureThread({
+              id: `thread_${ath.userId}`,
+              name: ath.name,
+              avatar: ath.avatar,
+              lastMessage: "",
+              timeAgo: "",
+              unreadCount: 0,
+              type: "direct",
+            }),
+          );
           setIsInboxOpen(true);
         }}
       />

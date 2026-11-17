@@ -1,5 +1,8 @@
 import type { FacilityRow, PRChallengeRow, SodiaPostRow, PassRow } from "./db";
 
+/** Seed timestamps are relative to launch so the feed never looks stale. */
+const hoursAgo = (hours: number): string => new Date(Date.now() - hours * 3_600_000).toISOString();
+
 export const SEED_FACILITIES: readonly FacilityRow[] = [
   {
     id: "fac_metro_core",
@@ -143,7 +146,7 @@ export const SEED_POSTS: readonly SodiaPostRow[] = [
       audioTrack: "Original Audio • sofia.pilates",
       viewsCount: "14.8k",
     },
-    created_at: "2026-11-04T05:00:00.000Z",
+    created_at: hoursAgo(5),
   },
   // 2. A STATUS UPDATE
   {
@@ -161,7 +164,7 @@ export const SEED_POSTS: readonly SodiaPostRow[] = [
     stamp: {
       type: "status",
     },
-    created_at: "2026-11-04T04:20:00.000Z",
+    created_at: hoursAgo(9),
   },
   // 3. A PR CHALLENGE
   {
@@ -192,7 +195,7 @@ export const SEED_POSTS: readonly SodiaPostRow[] = [
       participantsCount: 47,
       daysLeft: 6,
     },
-    created_at: "2026-11-04T03:15:00.000Z",
+    created_at: hoursAgo(20),
   },
   // 4. A PHOTO POST
   {
@@ -216,7 +219,7 @@ export const SEED_POSTS: readonly SodiaPostRow[] = [
     stamp: {
       type: "photo",
     },
-    created_at: "2026-11-04T02:30:00.000Z",
+    created_at: hoursAgo(30),
   },
   // 5. A GYM AD
   {
@@ -243,7 +246,7 @@ export const SEED_POSTS: readonly SodiaPostRow[] = [
       promoCode: "SODIA2026",
       badge: "SPONSORED",
     },
-    created_at: "2026-11-04T01:00:00.000Z",
+    created_at: hoursAgo(44),
   },
 ];
 

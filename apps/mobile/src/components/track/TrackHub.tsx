@@ -32,7 +32,7 @@ export function TrackHub() {
           <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>Workouts</Text>
         </View>
         <View style={styles.summaryItem}>
-          <Text style={[styles.summaryVal, { color: colors.textPrimary }]}>{totalBurned || 873} kcal</Text>
+          <Text style={[styles.summaryVal, { color: colors.textPrimary }]}>{totalBurned} kcal</Text>
           <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>Burned</Text>
         </View>
         <View style={styles.summaryItem}>

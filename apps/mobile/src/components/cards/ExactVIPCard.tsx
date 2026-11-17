@@ -26,7 +26,7 @@ export function ExactVIPCard({ pass, facilityName }: ExactVIPCardProps) {
           ? "Loading secure code…"
           : totpState.offline
             ? "Offline code • Touch to flip back"
-            : "Turnstile Gate A Scan • Touch to flip back";
+            : "Scan at the gate • Touch to flip back";
 
   return (
     <TouchableOpacity activeOpacity={0.92} onPress={() => setIsFlipped((prev) => !prev)} style={styles.cardContainer}>
@@ -56,12 +56,14 @@ export function ExactVIPCard({ pass, facilityName }: ExactVIPCardProps) {
           {/* BOTTOM ROW: MEMBER CREDENTIALS & FLIP ACTION */}
           <View style={styles.bottomRow}>
             <View>
-              <Text style={styles.labelMuted}>VIP ATHLETE</Text>
-              <Text style={styles.memberName}>{profile.name ?? "Darelle Navarette"}</Text>
+              <Text style={styles.labelMuted}>MEMBER</Text>
+              <Text style={styles.memberName}>
+                {profile.name ?? `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim()}
+              </Text>
             </View>
             <View style={styles.flipPill}>
               <RotateCw size={11} color="#FFFFFF" style={{ marginRight: 4 }} />
-              <Text style={styles.flipPillText}>TOTP Turnstile</Text>
+              <Text style={styles.flipPillText}>Show QR</Text>
             </View>
           </View>
         </View>
@@ -73,7 +75,7 @@ export function ExactVIPCard({ pass, facilityName }: ExactVIPCardProps) {
               <Zap size={13} color="#10B981" />
               <Text style={styles.qrTickingText}>ROLLING KEY • {totp ? `${totp.remainingSeconds}s REFRESH` : "—"}</Text>
             </View>
-            <Text style={styles.totpFallbackHeader}>60-SEC HARDWARE TOTP</Text>
+            <Text style={styles.totpFallbackHeader}>ENTRY CODE</Text>
           </View>
 
           <View style={styles.qrBox}>

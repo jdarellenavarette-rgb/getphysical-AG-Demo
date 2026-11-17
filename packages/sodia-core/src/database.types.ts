@@ -7,13 +7,7 @@
  * Row aliases and explicit column selectors live in ./db.ts.
  */
 
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[];
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
   // Allows supabase-js to select the PostgREST feature set.
@@ -1856,7 +1850,21 @@ export type Database = {
           p_registry?: Database["public"]["Enums"]["registry_type"];
           p_limit?: number;
         };
-        Returns: { id: string | null; slug: string | null; name: string | null; registry_type: Database["public"]["Enums"]["registry_type"] | null; category: string | null; lat: number | null; lng: number | null; logo_url: string | null; is_open: boolean | null; inside_now_count: number | null; max_capacity: number | null; rating: number | null; distance_km: number | null }[];
+        Returns: {
+          id: string | null;
+          slug: string | null;
+          name: string | null;
+          registry_type: Database["public"]["Enums"]["registry_type"] | null;
+          category: string | null;
+          lat: number | null;
+          lng: number | null;
+          logo_url: string | null;
+          is_open: boolean | null;
+          inside_now_count: number | null;
+          max_capacity: number | null;
+          rating: number | null;
+          distance_km: number | null;
+        }[];
       };
       get_my_profile: {
         Args: Record<PropertyKey, never>;
@@ -1999,13 +2007,8 @@ export type Database = {
   };
 };
 
-export type Tables<T extends keyof Database["public"]["Tables"]> =
-  Database["public"]["Tables"][T]["Row"];
-export type TablesInsert<T extends keyof Database["public"]["Tables"]> =
-  Database["public"]["Tables"][T]["Insert"];
-export type TablesUpdate<T extends keyof Database["public"]["Tables"]> =
-  Database["public"]["Tables"][T]["Update"];
-export type Enums<T extends keyof Database["public"]["Enums"]> =
-  Database["public"]["Enums"][T];
-export type Functions<T extends keyof Database["public"]["Functions"]> =
-  Database["public"]["Functions"][T];
+export type Tables<T extends keyof Database["public"]["Tables"]> = Database["public"]["Tables"][T]["Row"];
+export type TablesInsert<T extends keyof Database["public"]["Tables"]> = Database["public"]["Tables"][T]["Insert"];
+export type TablesUpdate<T extends keyof Database["public"]["Tables"]> = Database["public"]["Tables"][T]["Update"];
+export type Enums<T extends keyof Database["public"]["Enums"]> = Database["public"]["Enums"][T];
+export type Functions<T extends keyof Database["public"]["Functions"]> = Database["public"]["Functions"][T];

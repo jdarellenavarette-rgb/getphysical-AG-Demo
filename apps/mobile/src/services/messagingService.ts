@@ -109,7 +109,7 @@ export async function loadInbox(supabase: GetPhysicalClient, userId: string): Pr
       lastMessage: last ? (last.broadcast_id ? `📢 ${last.body.split("\n")[0]}` : last.body) : "",
       timeAgo: formatTimeAgo(conversation.last_message_at),
       unreadCount,
-      type: isFacility ? "handshake" : conversation.kind === "GROUP" ? "group" : "direct",
+      type: isFacility ? "facility" : conversation.kind === "GROUP" ? "group" : "direct",
       badgeText: isFacility ? "FACILITY" : undefined,
     });
   }

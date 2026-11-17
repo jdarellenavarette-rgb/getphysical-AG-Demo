@@ -9,16 +9,13 @@ import { QrCodeView } from "../common/QrCodeView";
 interface TurnstileQRModalProps {
   visible: boolean;
   onClose: () => void;
-  facilityName?: string;
+  facilityName: string;
   passId: string | null;
+  /** Shown when the viewer is signed out; takes them to sign-in. */
+  onSignIn?: () => void;
 }
 
-export function TurnstileQRModal({
-  visible,
-  onClose,
-  facilityName = "Metro Core Arena",
-  passId,
-}: TurnstileQRModalProps) {
+export function TurnstileQRModal({ visible, onClose, facilityName, passId, onSignIn }: TurnstileQRModalProps) {
   const insets = useSafeAreaInsets();
   const { colors } = useThemeStore();
   const totpState = usePassTotp(passId, visible);
@@ -27,7 +24,7 @@ export function TurnstileQRModal({
     totpState.status === "signed_out"
       ? "Sign in to activate your pass"
       : totpState.status === "unavailable"
-        ? "No active pass for this facility"
+        ? "No active pass to show"
         : totpState.status === "loading"
           ? "Loading secure code…"
           : `Refreshes in ${totpState.totp.remainingSeconds}s${totpState.offline ? " • offline" : ""}`;
@@ -54,16 +51,14 @@ export function TurnstileQRModal({
             <ArrowLeft size={20} color={colors.textPrimary} />
             <Text style={[styles.backBtnText, { color: colors.textPrimary }]}>Back</Text>
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>TURNSTILE ACCESS</Text>
+          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>ENTRY PASS</Text>
           <View style={{ width: 44 }} />
         </View>
 
         <View style={styles.content}>
           <View style={styles.venueBadge}>
             <Text style={[styles.venueName, { color: colors.textPrimary }]}>{facilityName}</Text>
-            <Text style={[styles.venueSub, { color: colors.textMuted }]}>
-              Dynamic TOTP Hardware Pass • Gate Turnstile #1
-            </Text>
+            <Text style={[styles.venueSub, { color: colors.textMuted }]}>Show this code at the front desk or gate</Text>
           </View>
 
           {/* QR CODE DISPLAY BOX */}
@@ -84,12 +79,18 @@ export function TurnstileQRModal({
           <View style={styles.securityBox}>
             <ShieldCheck size={16} color="#10B981" />
             <Text style={styles.securityText}>
-              Screenshots are disabled. Dynamic 60-second rolling token protects against pass-sharing.
+              This code changes every 60 seconds, so a screenshot will not work at the gate.
             </Text>
           </View>
 
-          <TouchableOpacity onPress={onClose} style={styles.doneBtn}>
-            <Text style={styles.doneBtnText}>Close & Return to Wallet</Text>
+          {totpState.status === "signed_out" && onSignIn ? (
+            <TouchableOpacity onPress={onSignIn} style={styles.doneBtn} accessibilityRole="button">
+              <Text style={styles.doneBtnText}>Sign In to Activate</Text>
+            </TouchableOpacity>
+          ) : null}
+
+          <TouchableOpacity onPress={onClose} style={styles.doneBtn} accessibilityRole="button">
+            <Text style={styles.doneBtnText}>Close</Text>
           </TouchableOpacity>
         </View>
       </View>

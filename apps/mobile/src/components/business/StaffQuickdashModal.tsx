@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView } from "rea
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft, QrCode, CheckCircle2, XCircle, Clock, Shield } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
+import { useEcosystemStore } from "../../store/ecosystemStore";
 import { QrScannerModal } from "../cards/QrScannerModal";
 
 interface StaffQuickdashModalProps {
@@ -21,6 +22,8 @@ interface ScanLog {
 export function StaffQuickdashModal({ visible, onClose }: StaffQuickdashModalProps) {
   const insets = useSafeAreaInsets();
   const { colors } = useThemeStore();
+  const { isGuest } = useEcosystemStore();
+  const showSamples = isGuest || __DEV__;
   const [lastScanResult, setLastScanResult] = useState<"GREEN" | "BLUE" | "RED" | null>(null);
   const [scanLogs, setScanLogs] = useState<ScanLog[]>([]);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
@@ -134,33 +137,46 @@ export function StaffQuickdashModal({ visible, onClose }: StaffQuickdashModalPro
             </Text>
           </View>
 
-          {/* SIMULATOR QUICK ACTIONS */}
-          <Text style={[styles.sectionHeader, { color: colors.textMuted }]}>TEST TURNSTILE TRIGGERS</Text>
-          <View style={styles.actionRow}>
-            <TouchableOpacity
-              onPress={() => handleSimulateScan("GREEN")}
-              style={[styles.scanTriggerBtn, { backgroundColor: "rgba(16, 185, 129, 0.15)", borderColor: "#10B981" }]}
-            >
-              <CheckCircle2 size={16} color="#10B981" />
-              <Text style={[styles.scanTriggerText, { color: "#10B981" }]}>Member Access (Gate Unlock)</Text>
-            </TouchableOpacity>
+          {/* Sample scans: guest preview and development builds only */}
+          {showSamples && (
+            <>
+              <Text style={[styles.sectionHeader, { color: colors.textMuted }]}>SAMPLE SCANS (PREVIEW)</Text>
+              <View style={styles.actionRow}>
+                <TouchableOpacity
+                  onPress={() => handleSimulateScan("GREEN")}
+                  style={[
+                    styles.scanTriggerBtn,
+                    { backgroundColor: "rgba(16, 185, 129, 0.15)", borderColor: "#10B981" },
+                  ]}
+                >
+                  <CheckCircle2 size={16} color="#10B981" />
+                  <Text style={[styles.scanTriggerText, { color: "#10B981" }]}>Member Access (Gate Unlock)</Text>
+                </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={() => handleSimulateScan("BLUE")}
-              style={[styles.scanTriggerBtn, { backgroundColor: "rgba(59, 130, 246, 0.15)", borderColor: "#3B82F6" }]}
-            >
-              <Clock size={16} color="#3B82F6" />
-              <Text style={[styles.scanTriggerText, { color: "#3B82F6" }]}>Staff DTR Clock-In</Text>
-            </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => handleSimulateScan("BLUE")}
+                  style={[
+                    styles.scanTriggerBtn,
+                    { backgroundColor: "rgba(59, 130, 246, 0.15)", borderColor: "#3B82F6" },
+                  ]}
+                >
+                  <Clock size={16} color="#3B82F6" />
+                  <Text style={[styles.scanTriggerText, { color: "#3B82F6" }]}>Staff DTR Clock-In</Text>
+                </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={() => handleSimulateScan("RED")}
-              style={[styles.scanTriggerBtn, { backgroundColor: "rgba(225, 29, 72, 0.15)", borderColor: "#E11D48" }]}
-            >
-              <XCircle size={16} color="#E11D48" />
-              <Text style={[styles.scanTriggerText, { color: "#E11D48" }]}>Invalid Pass (Red)</Text>
-            </TouchableOpacity>
-          </View>
+                <TouchableOpacity
+                  onPress={() => handleSimulateScan("RED")}
+                  style={[
+                    styles.scanTriggerBtn,
+                    { backgroundColor: "rgba(225, 29, 72, 0.15)", borderColor: "#E11D48" },
+                  ]}
+                >
+                  <XCircle size={16} color="#E11D48" />
+                  <Text style={[styles.scanTriggerText, { color: "#E11D48" }]}>Invalid Pass (Red)</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
 
           {/* SCAN LOGS */}
           <Text style={[styles.sectionHeader, { color: colors.textMuted }]}>
@@ -171,7 +187,7 @@ export function StaffQuickdashModal({ visible, onClose }: StaffQuickdashModalPro
               <Shield size={28} color={colors.textMuted} />
               <Text style={[styles.emptyLogTitle, { color: colors.textPrimary }]}>No scan events yet</Text>
               <Text style={[styles.emptyLogSub, { color: colors.textMuted }]}>
-                Tap one of the simulate buttons above to test gate unlocking.
+                Scans you make at the front desk will be listed here.
               </Text>
             </View>
           ) : (

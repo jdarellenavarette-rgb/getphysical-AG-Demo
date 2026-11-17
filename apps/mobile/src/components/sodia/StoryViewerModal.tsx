@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -7,90 +7,113 @@ import {
   StyleSheet,
   Modal,
   TextInput,
-  Alert,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowLeft, CheckCircle2, Sparkles } from "lucide-react-native";
+import { X, MapPin } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
+import { useCrmMessagingStore } from "../../store/crmMessagingStore";
+import { OWN_STORY_ID, SEED_STORIES, type StoryItem } from "../../data/seedStories";
+import { formatTimeAgo } from "../../services/messagingService";
 
 interface StoryViewerModalProps {
   visible: boolean;
+  /** Story to open on; defaults to the first one. */
+  initialStoryId: string | null;
   onClose: () => void;
   onTapLocationTag?: (facilityId: string) => void;
-  onOpenComments?: () => void;
-  onOpenCreatePost?: () => void;
 }
 
-export function StoryViewerModal({ visible, onClose, onTapLocationTag }: StoryViewerModalProps) {
+const STORY_SECONDS = 5;
+const TICK_MS = 100;
+
+export function StoryViewerModal({ visible, initialStoryId, onClose, onTapLocationTag }: StoryViewerModalProps) {
   const insets = useSafeAreaInsets();
   const { userStory, profile } = useEcosystemStore();
+  const { ensureThread, sendMessage } = useCrmMessagingStore();
   const [activeStoryIdx, setActiveStoryIdx] = useState(0);
   const [progress, setProgress] = useState(0);
   const [replyText, setReplyText] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const [sentNote, setSentNote] = useState<string | null>(null);
 
-  const defaultStories = [
-    {
-      id: "story_1",
-      handle: "@miguel_cpt",
-      name: "Miguel Ramos",
-      mediaUrl: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=900&q=80",
-      caption: "Heavy deadlift triples at Metro Core. Peak week prep underway! 🏋️‍♂️💪",
-      locationTag: { id: "fac_metro_core", name: "Metro Core Arena" },
-    },
-    {
-      id: "story_2",
-      handle: "@bea.santiago",
-      name: "Bea Santiago",
-      mediaUrl: "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?auto=format&fit=crop&w=900&q=80",
-      caption: "Grinding on the clay today! 🔥 Always striving for that next shot.",
-      locationTag: { id: "fac_nexus_club", name: "Nexus Racket & Court Club" },
-    },
-  ];
-
-  const stories = userStory
-    ? [
-        {
-          id: "user_story",
-          handle: `@${profile.username}`,
-          name: `${profile.first_name} ${profile.last_name}`,
-          mediaUrl: userStory.image,
-          caption: userStory.text ?? "Live session in BGC ⚡",
-          locationTag: { id: "fac_metro_core", name: "Metro Core Arena" },
-        },
-        ...defaultStories,
-      ]
-    : defaultStories;
+  const stories = useMemo<StoryItem[]>(() => {
+    if (!userStory) return [...SEED_STORIES];
+    const own: StoryItem = {
+      id: OWN_STORY_ID,
+      shortName: "Your Story",
+      name: `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim(),
+      avatar: profile.avatar_url ?? "",
+      mediaUrl: userStory.image,
+      caption: userStory.text ?? "",
+      createdAt: userStory.createdAt,
+    };
+    return [own, ...SEED_STORIES];
+  }, [userStory, profile.first_name, profile.last_name, profile.avatar_url]);
 
   const current = stories[activeStoryIdx] ?? stories[0]!;
+  const isOwn = current.id === OWN_STORY_ID;
+
+  // Each open starts on the story that was tapped.
+  useEffect(() => {
+    if (!visible) return;
+    const start = stories.findIndex((s) => s.id === initialStoryId);
+    setActiveStoryIdx(start >= 0 ? start : 0);
+    setProgress(0);
+    setReplyText("");
+    setSentNote(null);
+    // Only when the viewer opens; later edits to the list must not jump the story.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible, initialStoryId]);
+
+  // Advance the bar; paused while the viewer is typing a reply.
+  useEffect(() => {
+    if (!visible || isTyping) return;
+    const timer = setInterval(
+      () => setProgress((prev) => Math.min(100, prev + (100 * TICK_MS) / (STORY_SECONDS * 1000))),
+      TICK_MS,
+    );
+    return () => clearInterval(timer);
+  }, [visible, isTyping, activeStoryIdx]);
 
   useEffect(() => {
-    if (!visible) {
+    if (!visible || progress < 100) return;
+    if (activeStoryIdx < stories.length - 1) {
+      setActiveStoryIdx(activeStoryIdx + 1);
       setProgress(0);
-      return;
+    } else {
+      onClose();
     }
-    const timer = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          if (activeStoryIdx < stories.length - 1) {
-            setActiveStoryIdx((i) => i + 1);
-            return 0;
-          } else {
-            onClose();
-            return 0;
-          }
-        }
-        return prev + 4;
-      });
-    }, 200);
-    return () => clearInterval(timer);
-  }, [visible, activeStoryIdx, stories.length, onClose]);
+  }, [visible, progress, activeStoryIdx, stories.length, onClose]);
+
+  /** Replies and reactions are real direct messages to the story's author. */
+  const sendToAuthor = (text: string) => {
+    const thread = ensureThread({
+      id: `thread_${current.id}`,
+      name: current.name,
+      avatar: current.avatar,
+      lastMessage: "",
+      timeAgo: "",
+      unreadCount: 0,
+      type: "direct",
+    });
+    void sendMessage(thread.id, text);
+    setSentNote(`Sent to ${current.name}`);
+  };
+
+  const handleReply = () => {
+    const text = replyText.trim();
+    if (!text) return;
+    sendToAuthor(`Replied to your story: ${text}`);
+    setReplyText("");
+  };
 
   const handleNext = () => {
     if (activeStoryIdx < stories.length - 1) {
       setActiveStoryIdx((i) => i + 1);
       setProgress(0);
+      setSentNote(null);
     } else {
       onClose();
     }
@@ -101,10 +124,6 @@ export function StoryViewerModal({ visible, onClose, onTapLocationTag }: StoryVi
       setActiveStoryIdx((i) => i - 1);
       setProgress(0);
     }
-  };
-
-  const handleSendReaction = (emoji: string) => {
-    Alert.alert("Reaction Sent", `Sent ${emoji} to ${current.name}`);
   };
 
   return (
@@ -134,57 +153,75 @@ export function StoryViewerModal({ visible, onClose, onTapLocationTag }: StoryVi
         {/* STORY HEADER (USER INFO & CLOSE) */}
         <View style={styles.topBar}>
           <View style={styles.authorRow}>
-            <Text style={styles.handleText}>{current.name}</Text>
-            <CheckCircle2 size={13} color="#38BDF8" fill="#38BDF8" />
-            <Text style={styles.timeAgo}>3h ago</Text>
+            <Text style={styles.handleText}>{isOwn ? "Your story" : current.name}</Text>
+            <Text style={styles.timeAgo}>{formatTimeAgo(current.createdAt)}</Text>
           </View>
-          <TouchableOpacity onPress={onClose} style={styles.topIconBtn}>
-            <ArrowLeft size={20} color="#FFFFFF" />
+          <TouchableOpacity
+            onPress={onClose}
+            style={styles.topIconBtn}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            accessibilityRole="button"
+            accessibilityLabel="Close story"
+          >
+            <X size={20} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
 
         {/* CAPTION & LOCATION PILL */}
         <View style={styles.storyContentZone}>
-          {current.locationTag && (
-            <TouchableOpacity onPress={() => onTapLocationTag?.(current.locationTag.id)} style={styles.locationPill}>
-              <Sparkles size={11} color="#10B981" />
-              <Text style={styles.locationText}>@{current.locationTag.name}</Text>
+          {current.locationTag ? (
+            <TouchableOpacity
+              onPress={() => current.locationTag && onTapLocationTag?.(current.locationTag.id)}
+              style={styles.locationPill}
+              accessibilityRole="button"
+            >
+              <MapPin size={11} color="#10B981" />
+              <Text style={styles.locationText}>{current.locationTag.name}</Text>
             </TouchableOpacity>
-          )}
-          <Text style={styles.captionText}>{current.caption}</Text>
+          ) : null}
+          {current.caption ? <Text style={styles.captionText}>{current.caption}</Text> : null}
         </View>
 
-        {/* INSTAGRAM-STYLE STORY REPLY BAR */}
-        <View style={[styles.bottomReplyBar, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]}>
-          <View style={styles.replyInputWrap}>
-            <TextInput
-              style={styles.replyInput}
-              placeholder={`Send message to ${current.name}...`}
-              placeholderTextColor="#A1A1AA"
-              value={replyText}
-              onChangeText={setReplyText}
-              onSubmitEditing={() => {
-                if (replyText.trim()) {
-                  Alert.alert("Message Sent", `Delivered to ${current.name}'s inbox.`);
-                  setReplyText("");
-                }
-              }}
-            />
+        {/* REPLY BAR (not shown on your own story) */}
+        {!isOwn && (
+          <View style={[styles.bottomReplyBar, { paddingBottom: Math.max(insets.bottom, 16) + 8 }]}>
+            {sentNote ? <Text style={styles.sentNote}>{sentNote}</Text> : null}
+            <View style={styles.replyInputWrap}>
+              <TextInput
+                style={styles.replyInput}
+                placeholder={`Reply to ${current.name}...`}
+                placeholderTextColor="#A1A1AA"
+                value={replyText}
+                onChangeText={setReplyText}
+                onFocus={() => setIsTyping(true)}
+                onBlur={() => setIsTyping(false)}
+                onSubmitEditing={handleReply}
+                returnKeyType="send"
+                accessibilityLabel="Reply to story"
+              />
+            </View>
+            <View style={styles.quickEmojisRow}>
+              {["🔥", "💪", "👏", "❤️"].map((emo) => (
+                <TouchableOpacity
+                  key={emo}
+                  onPress={() => sendToAuthor(emo)}
+                  style={styles.emojiBtn}
+                  accessibilityRole="button"
+                  accessibilityLabel={`React with ${emo}`}
+                >
+                  <Text style={styles.emojiText}>{emo}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
-          <View style={styles.quickEmojisRow}>
-            {["🔥", "💪", "👏", "❤️"].map((emo) => (
-              <TouchableOpacity key={emo} onPress={() => handleSendReaction(emo)} style={styles.emojiBtn}>
-                <Text style={styles.emojiText}>{emo}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
+        )}
       </KeyboardAvoidingView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  sentNote: { color: "#10B981", fontSize: 12, fontWeight: "700", textAlign: "center", marginBottom: 8 },
   overlay: { flex: 1, backgroundColor: "#000000", position: "relative" },
   bgMedia: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%" },
   darkGradientOverlay: {

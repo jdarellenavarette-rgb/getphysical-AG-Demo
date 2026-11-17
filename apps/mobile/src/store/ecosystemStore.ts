@@ -12,6 +12,7 @@ import {
 } from "sodia-core";
 import { DARELLE_AVATAR, DARELLE_PHYSIQUE, DARELLE_TENNIS_JUMP } from "../constants/darelleAssets";
 import { INITIAL_DARELLE_POSTS } from "../data/darelleSeedPosts";
+import { passExpiry, type PassPurchase } from "../lib/passDisplay";
 
 export interface MobileEcosystemState {
   currentRole: UserRole;
@@ -20,6 +21,8 @@ export interface MobileEcosystemState {
   setProfile: (profile: ProfileRow) => void;
   facilities: readonly FacilityRow[];
   passes: readonly PassRow[];
+  /** Purchase details per pass id, so receipts and statements show real amounts. */
+  purchases: Readonly<Record<string, PassPurchase>>;
   posts: readonly SodiaPostRow[];
   challenges: readonly PRChallengeRow[];
   userStory: { image: string; text?: string; createdAt: string } | null;
@@ -39,6 +42,7 @@ export interface MobileEcosystemState {
   adjustRestTimer: (deltaSeconds: number) => void;
   stopRestTimer: () => void;
   addPost: (content: string, facilityId?: string, stamp?: SodiaPostRow["stamp"], mediaUrl?: string | null) => void;
+  deletePost: (postId: string) => void;
   addUserStory: (image: string, text?: string) => void;
   provisionPass: (
     facilityName: string,
@@ -83,12 +87,24 @@ const INITIAL_PROFILE: ProfileRow = {
   coach_plan: "FREE",
 };
 
+/** Purchase details for the seeded demo passes. */
+const SEED_PURCHASES: Record<string, PassPurchase> = {
+  pass_vip_001: { baseAmountPhp: 250, billingKind: "one_time_pass", facilityName: "Metro Core Arena", isPreview: true },
+  pass_vip_002: {
+    baseAmountPhp: 200,
+    billingKind: "one_time_pass",
+    facilityName: "Nexus Racket & Court Club",
+    isPreview: true,
+  },
+};
+
 export const useEcosystemStore = create<MobileEcosystemState>((set) => ({
   currentRole: "individual",
   profile: INITIAL_PROFILE,
   setProfile: (profile) => set({ profile }),
   facilities: SEED_FACILITIES,
   passes: [],
+  purchases: {},
   posts: INITIAL_DARELLE_POSTS,
   challenges: [],
   userStory: {
@@ -156,19 +172,26 @@ export const useEcosystemStore = create<MobileEcosystemState>((set) => ({
 
   provisionPass: (facilityName, kind, price, customTitle, facilityId) =>
     set((state) => {
+      const passId = `pass_${Date.now()}`;
       const newPass: PassRow = {
-        id: `pass_${Date.now()}`,
+        id: passId,
         owner_id: state.profile.id,
         facility_id: facilityId ?? "fac_metro_core",
         sku_id: kind === "recurring_subscription" ? "sku_vip_monthly" : "sku_day_pass",
         pass_type: customTitle ?? (kind === "recurring_subscription" ? "VIP Monthly All-Access" : "Day Pass"),
         status: "ACTIVE",
-        valid_until: new Date(Date.now() + 30 * 86400000).toISOString(),
+        valid_until: passExpiry(kind),
         gifted_by_user_id: null,
         payment_order_id: null,
         created_at: new Date().toISOString(),
       };
-      return { passes: [newPass, ...state.passes] };
+      return {
+        passes: [newPass, ...state.passes],
+        purchases: {
+          ...state.purchases,
+          [passId]: { baseAmountPhp: price, billingKind: kind, facilityName, isPreview: true },
+        },
+      };
     }),
 
   addPost: (content, facilityId, stamp, mediaUrl) =>
@@ -181,7 +204,7 @@ export const useEcosystemStore = create<MobileEcosystemState>((set) => ({
         author_avatar: state.profile.avatar_url,
         author_role: state.currentRole,
         content,
-        media_url: mediaUrl === undefined ? DARELLE_PHYSIQUE : mediaUrl,
+        media_url: mediaUrl ?? null,
         likes_count: 0,
         comments_count: 0,
         facility_tag: facility
@@ -199,6 +222,8 @@ export const useEcosystemStore = create<MobileEcosystemState>((set) => ({
       return { posts: [newPost, ...state.posts] };
     }),
 
+  deletePost: (postId) => set((state) => ({ posts: state.posts.filter((p) => p.id !== postId) })),
+
   addUserStory: (image, text) =>
     set({
       userStory: {
@@ -211,6 +236,7 @@ export const useEcosystemStore = create<MobileEcosystemState>((set) => ({
   loadDemoData: () =>
     set({
       passes: SEED_PASSES,
+      purchases: SEED_PURCHASES,
       posts: INITIAL_DARELLE_POSTS,
       challenges: SEED_CHALLENGES,
     }),
@@ -218,6 +244,7 @@ export const useEcosystemStore = create<MobileEcosystemState>((set) => ({
   resetToEmpty: () =>
     set({
       passes: [],
+      purchases: {},
       posts: [],
       challenges: [],
       activeWorkout: {

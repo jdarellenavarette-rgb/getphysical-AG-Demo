@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, Alert } from "react-native";
 import { Play, Pause, Square, CheckCircle2, RotateCcw, Send } from "lucide-react-native";
 import * as Location from "expo-location";
 import { useEcosystemStore } from "../../store/ecosystemStore";
@@ -9,6 +9,9 @@ import { requestAndFetchUserLocation, DEFAULT_BGC_COORDS, calculateHaversineKm }
 import { StravaRouteMap } from "./StravaRouteMap";
 import { SPORTS_LIST } from "./trackConstants";
 import { styles } from "./MoveTrackerView.styles";
+
+/** Activities shorter than this are not saved. */
+const MIN_SAVE_SECONDS = 10;
 
 export function MoveTrackerView() {
   const { addPost } = useEcosystemStore();
@@ -112,6 +115,14 @@ export function MoveTrackerView() {
   );
 
   const handleFinish = () => {
+    // Nothing worth keeping yet: offer to discard instead of saving an empty activity.
+    if (seconds < MIN_SAVE_SECONDS) {
+      Alert.alert("Too short to save", "Keep going, or discard this activity.", [
+        { text: "Keep going", style: "cancel" },
+        { text: "Discard", style: "destructive", onPress: handleReset },
+      ]);
+      return;
+    }
     setIsActive(false);
     setIsFinished(true);
     saveMoveActivity({
@@ -123,8 +134,6 @@ export function MoveTrackerView() {
       avgSpeedKmH: +(distanceKm / (seconds / 3600 || 1)).toFixed(1),
       caloriesBurned: calBurned,
       routeCoords: route,
-      elevationM: 18,
-      avgBpm: 152,
     });
   };
 
@@ -253,14 +262,14 @@ export function MoveTrackerView() {
             <TouchableOpacity
               onPress={() => {
                 addPost(
-                  `GPS ${activeSportObj.label} completed: ${distanceKm.toFixed(2)} km in ${formatTime(seconds)}! ⚡`,
+                  `${activeSportObj.label} completed: ${distanceKm.toFixed(2)} km in ${formatTime(seconds)}.`,
                   undefined,
                   {
                     id: `stamp_move_${Date.now()}`,
-                    type: "run",
-                    title: `${activeSportObj.label} Route Trail`,
+                    type: "move",
+                    title: `${activeSportObj.label} session`,
                     primaryMetric: `${distanceKm.toFixed(2)} km`,
-                    isVerified: true,
+                    isVerified: false,
                   },
                 );
                 setSharedToFeed(true);
@@ -268,7 +277,7 @@ export function MoveTrackerView() {
               style={styles.shareFeedBtn}
             >
               <Send size={14} color="#FFF" style={{ marginRight: 6 }} />
-              <Text style={styles.shareFeedText}>Share Activity Stamp to Feed</Text>
+              <Text style={styles.shareFeedText}>Share to Feed</Text>
             </TouchableOpacity>
           ) : (
             <Text style={{ color: "#059669", fontSize: 12, fontWeight: "700", marginTop: 12 }}>✓ Shared to Feed</Text>

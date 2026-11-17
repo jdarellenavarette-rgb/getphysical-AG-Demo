@@ -11,12 +11,11 @@ import {
   Keyboard,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowLeft, Send, Paperclip, Radio, Tag } from "lucide-react-native";
+import { ArrowLeft, Send, Radio, Tag } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
-import { useCrmMessagingStore } from "../../store/crmMessagingStore";
+import { isOwnMessage, useCrmMessagingStore } from "../../store/crmMessagingStore";
 import type { DMThread } from "./InboxView";
 import { chatStyles as styles } from "./DMChatView.styles";
-import { PRStampBubble, CoachTelemetryBubble, B2BHandshakeCard } from "./DMChatBubbleDecorators";
 
 interface DMChatViewProps {
   thread: DMThread;
@@ -25,14 +24,24 @@ interface DMChatViewProps {
 
 export function DMChatView({ thread, onBack }: DMChatViewProps) {
   const insets = useSafeAreaInsets();
-  const { colors, themeMode } = useThemeStore();
-  const { threadMessages, sendMessage } = useCrmMessagingStore();
+  const { colors } = useThemeStore();
+  const { threadMessages, sendMessage, setActiveThread, lastError } = useCrmMessagingStore();
 
   const scrollViewRef = useRef<React.ComponentRef<typeof ScrollView>>(null);
   const [inputText, setInputText] = useState("");
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
 
   const messages = threadMessages[thread.id] || [];
+
+  // Opening a chat marks it read and keeps it read while it is on screen.
+  useEffect(() => {
+    setActiveThread(thread.id);
+    const timer = setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: false }), 50);
+    return () => {
+      clearTimeout(timer);
+      setActiveThread(null);
+    };
+  }, [thread.id, setActiveThread]);
 
   useEffect(() => {
     const showEv = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
@@ -79,13 +88,15 @@ export function DMChatView({ thread, onBack }: DMChatViewProps) {
           onPress={onBack}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           style={styles.backBtn}
+          accessibilityRole="button"
+          accessibilityLabel="Back to messages"
         >
           <ArrowLeft size={22} color={colors.textPrimary} />
         </TouchableOpacity>
         <Image source={{ uri: thread.avatar }} style={styles.headerAvatar} />
         <View style={styles.headerMeta}>
           <Text style={[styles.headerName, { color: colors.textPrimary }]}>{thread.name}</Text>
-          <Text style={styles.headerStatus}>{thread.isOnline ? "Active now" : "Offline"}</Text>
+          {thread.isOnline ? <Text style={styles.headerStatus}>Active now</Text> : null}
         </View>
       </View>
 
@@ -98,24 +109,11 @@ export function DMChatView({ thread, onBack }: DMChatViewProps) {
         keyboardDismissMode="interactive"
         contentContainerStyle={{ paddingBottom: 16 }}
       >
-        {/* DEFAULT GREETING */}
-        <View
-          style={[
-            styles.incomingBubble,
-            { backgroundColor: colors.bgCard, borderColor: colors.borderColor, borderWidth: 1 },
-          ]}
-        >
-          <Text style={[styles.bubbleText, { color: colors.textPrimary }]}>
-            Hey Darelle! Great training session this morning.
+        {messages.length === 0 && (
+          <Text style={[styles.emptyThread, { color: colors.textMuted }]}>
+            No messages yet. Say hello to {thread.name}.
           </Text>
-          <Text style={[styles.bubbleTime, { color: colors.textMuted }]}>08:30 AM</Text>
-        </View>
-
-        {/* INTERACTIVE TRACKER STAMP BUBBLE */}
-        <PRStampBubble themeMode={themeMode} />
-
-        {/* COACH RAW DATA DEEP LINK BUBBLE */}
-        {thread.type === "coach" && <CoachTelemetryBubble colors={colors} />}
+        )}
 
         {/* DYNAMIC MESSAGES FROM CRM STORE */}
         {messages.map((msg) => {
@@ -147,13 +145,13 @@ export function DMChatView({ thread, onBack }: DMChatViewProps) {
             );
           }
 
-          const isOutgoing = msg.senderId === "usr_athlete_01";
+          const isOutgoing = isOwnMessage(msg.senderId);
           return (
             <View
               key={msg.id}
               style={[
                 isOutgoing ? styles.outgoingBubble : styles.incomingBubble,
-                { backgroundColor: isOutgoing ? (themeMode === "light" ? "#E11D48" : "#27272A") : colors.bgCard },
+                { backgroundColor: isOutgoing ? colors.accent : colors.bgCard },
                 !isOutgoing && { borderColor: colors.borderColor, borderWidth: 1 },
               ]}
             >
@@ -166,10 +164,9 @@ export function DMChatView({ thread, onBack }: DMChatViewProps) {
             </View>
           );
         })}
-
-        {/* B2B STAFF HANDSHAKE CARD */}
-        {thread.type === "handshake" && <B2BHandshakeCard colors={colors} />}
       </ScrollView>
+
+      {lastError ? <Text style={styles.sendError}>{lastError}</Text> : null}
 
       {/* INPUT BAR */}
       <View
@@ -182,21 +179,23 @@ export function DMChatView({ thread, onBack }: DMChatViewProps) {
           },
         ]}
       >
-        <TouchableOpacity
-          onPress={() => setInputText((p) => (p ? `${p} ` : "") + "📎 [225kg PR Verified]")}
-          style={styles.attachBtn}
-        >
-          <Paperclip size={18} color={colors.textMuted} />
-        </TouchableOpacity>
         <TextInput
           style={[styles.chatInput, { backgroundColor: colors.bgInput, color: colors.textPrimary }]}
-          placeholder="Type message to Business Suite..."
+          placeholder={`Message ${thread.name}`}
           placeholderTextColor={colors.textMuted}
           value={inputText}
           onChangeText={setInputText}
           onSubmitEditing={handleSendMessage}
+          returnKeyType="send"
+          accessibilityLabel="Message"
         />
-        <TouchableOpacity onPress={handleSendMessage} style={styles.sendBtn}>
+        <TouchableOpacity
+          onPress={handleSendMessage}
+          style={styles.sendBtn}
+          hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+          accessibilityRole="button"
+          accessibilityLabel="Send message"
+        >
           <Send size={18} color="#FAFAFA" />
         </TouchableOpacity>
       </View>

@@ -33,14 +33,14 @@ export function MemoryDetailModal({ visible, item, onClose }: MemoryDetailModalP
   if (!visible || !item) return null;
 
   const handleShareToFeed = () => {
-    addPost(`Shared from my Training Memories: ${item.title} (${item.duration})! ⚡`, undefined, {
+    addPost(`${item.title} (${item.duration})`, undefined, {
       id: `stamp_mem_${Date.now()}`,
-      type: item.badge.includes("STRENGTH") ? "lift" : "run",
+      type: item.badge.includes("STRENGTH") ? "lift" : "move",
       title: item.title,
       primaryMetric: item.cals,
-      isVerified: true,
+      isVerified: false,
     });
-    Alert.alert("Shared to Feed!", "Your verified training memory has been posted to Sodia Feed.");
+    Alert.alert("Shared to feed", "Your session has been posted.");
     onClose();
   };
 
@@ -77,28 +77,6 @@ export function MemoryDetailModal({ visible, item, onClose }: MemoryDetailModalP
                 <Text style={[styles.metricVal, { color: colors.textPrimary }]}>{item.duration}</Text>
                 <Text style={[styles.metricLabel, { color: colors.textMuted }]}>DURATION</Text>
               </View>
-            </View>
-
-            {/* TELEMETRY & BREAKDOWN */}
-            <Text style={[styles.sectionHeading, { color: colors.textPrimary }]}>Workout Telemetry & Notes</Text>
-            <View
-              style={[
-                styles.telemetryCard,
-                { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor },
-              ]}
-            >
-              <Text style={[styles.telemetryLine, { color: colors.textSecondary }]}>
-                • Heart Rate Zone: 148 - 162 BPM (Aerobic Threshold)
-              </Text>
-              <Text style={[styles.telemetryLine, { color: colors.textSecondary }]}>
-                • Verified GPS Location: Bonifacio Global City Loop
-              </Text>
-              <Text style={[styles.telemetryLine, { color: colors.textSecondary }]}>
-                • Elevation Gain: +24m • Weather: 28°C Clear
-              </Text>
-              <Text style={[styles.telemetryLine, { color: colors.textSecondary }]}>
-                • Recovery Score: 92% (High Readiness)
-              </Text>
             </View>
 
             {/* ACTIONS */}

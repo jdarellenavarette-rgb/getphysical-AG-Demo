@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
-import { Flame, Sparkles } from "lucide-react-native";
+import { Sparkles } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import { useTrackingStore } from "../../store/trackingStore";
 import { MemoryDetailModal, type JourneyMemoryItem } from "./MemoryDetailModal";
@@ -8,7 +8,6 @@ import { MemoryDetailModal, type JourneyMemoryItem } from "./MemoryDetailModal";
 export function JourneyView() {
   const { colors } = useThemeStore();
   const { liftSessions, moveActivities, foodMeals } = useTrackingStore();
-  const [activeTab, setActiveTab] = useState<"active" | "recovery">("active");
   const [showAllActivities, setShowAllActivities] = useState(false);
   const [selectedMemory, setSelectedMemory] = useState<JourneyMemoryItem | null>(null);
 
@@ -76,16 +75,12 @@ export function JourneyView() {
               <Text style={styles.progressSubtitle}>Personal Progress & Memories</Text>
             </View>
           </View>
-          <View style={styles.streakBadge}>
-            <Flame size={13} color="#F59E0B" fill="#F59E0B" />
-            <Text style={styles.streakBadgeText}>5d Streak</Text>
-          </View>
         </View>
 
         {/* KCAL TOTAL BURNED */}
         <View style={styles.calHeroBlock}>
           <Text style={styles.calUnit}>Kcal </Text>
-          <Text style={[styles.calValue, { color: colors.textPrimary }]}>{totalBurned || 873}</Text>
+          <Text style={[styles.calValue, { color: colors.textPrimary }]}>{totalBurned}</Text>
         </View>
         <Text style={[styles.calSublabel, { color: colors.textSecondary }]}>Total Calories Burned Recorded</Text>
 
@@ -109,44 +104,6 @@ export function JourneyView() {
               </View>
             ))}
           </View>
-        </View>
-
-        {/* ACTIVE / RECOVERY PILLS */}
-        <View style={[styles.pillsRow, { backgroundColor: colors.bgCardSecondary }]}>
-          <TouchableOpacity
-            onPress={() => setActiveTab("active")}
-            style={[
-              styles.modePill,
-              activeTab === "active" && [styles.modePillActive, { backgroundColor: colors.bgCard }],
-            ]}
-          >
-            <Text
-              style={[
-                styles.modePillText,
-                { color: colors.textSecondary },
-                activeTab === "active" && [styles.modePillTextActive, { color: colors.textPrimary }],
-              ]}
-            >
-              Active
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setActiveTab("recovery")}
-            style={[
-              styles.modePill,
-              activeTab === "recovery" && [styles.modePillActive, { backgroundColor: colors.bgCard }],
-            ]}
-          >
-            <Text
-              style={[
-                styles.modePillText,
-                { color: colors.textSecondary },
-                activeTab === "recovery" && [styles.modePillTextActive, { color: colors.textPrimary }],
-              ]}
-            >
-              Recovery
-            </Text>
-          </TouchableOpacity>
         </View>
       </View>
 

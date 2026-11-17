@@ -1,5 +1,5 @@
 /**
- * Launch smoke test (Supabase configured, nobody signed in → sign-in screen).
+ * Launch smoke test (Supabase configured, nobody signed in): splash → sign-in screen.
  * Env must be set before the app modules load, hence require() inside the test.
  */
 import React from "react";
@@ -11,7 +11,7 @@ const METRICS = { frame: { x: 0, y: 0, width: 390, height: 844 }, insets: { top:
 
 jest.setTimeout(30000);
 
-it("launches into the sign-in screen without crashing", async () => {
+it("launches through the splash into the sign-in screen without crashing", async () => {
   process.env.EXPO_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
   process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY = "sb_publishable_test";
   const Page: React.ComponentType = require("../app/index").default;
@@ -20,7 +20,8 @@ it("launches into the sign-in screen without crashing", async () => {
       <Page />
     </SafeAreaProvider>
   );
-  expect(await screen.findByText("Sign in or create an account", {}, { timeout: 10000 })).toBeTruthy();
-  expect(screen.getByText("Continue with Google")).toBeTruthy();
-  expect(screen.getByText("Email me a code")).toBeTruthy();
+  expect(await screen.findByText("Welcome back", {}, { timeout: 10000 })).toBeTruthy();
+  expect(screen.getByText("Sign in with Google")).toBeTruthy();
+  expect(screen.getByText("Sign In with Email")).toBeTruthy();
+  expect(screen.getByText("Explore as Guest")).toBeTruthy();
 });

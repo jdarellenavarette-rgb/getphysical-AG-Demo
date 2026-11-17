@@ -30,8 +30,11 @@ which hides Expo's QR code and interactive keys.
 
 `apps/mobile/.env` (copy from `apps/mobile/.env.example`):
 
-- **No Supabase values** → the app opens in **offline preview** with demo content.
-- **With** `EXPO_PUBLIC_SUPABASE_URL` + `EXPO_PUBLIC_SUPABASE_ANON_KEY` → the app opens on the **sign-in screen**.
+The app always opens with the splash screen, then the **sign-in screen** (Sign In / Sign Up, Google, Apple, email).
+**Explore as Guest** on that screen opens the demo without an account.
+
+- **No Supabase values** → only the guest demo works (sign-in buttons can't reach a backend).
+- **With** `EXPO_PUBLIC_SUPABASE_URL` + `EXPO_PUBLIC_SUPABASE_ANON_KEY` → real sign-in works.
   Email codes need the Supabase email template to contain `{{ .Token }}` (see `docs/EMAIL_AND_AUTH_LIMITS.md`).
 
 Restart `pnpm mobile` after editing `.env`.
@@ -40,7 +43,7 @@ Restart `pnpm mobile` after editing `.env`.
 
 | Works in Expo Go | Needs a development build (EAS) |
 |---|---|
-| Offline preview, sign-in with email code, profile setup, QR codes and scanner, cards, inbox | Continue with Google, Continue with Apple (they return to the app via `sodia://`, which Expo Go can't receive) |
+| Guest demo, sign-in with email code, profile setup, QR codes and scanner, cards, inbox | Continue with Google, Continue with Apple (they return to the app via `sodia://`, which Expo Go can't receive) |
 
 ## Troubleshooting
 
@@ -54,5 +57,5 @@ Restart `pnpm mobile` after editing `.env`.
 
 ## Automated launch check
 
-`pnpm --filter @getphysical/mobile test` renders the app the way Expo Go starts it (offline preview and sign-in
-screen) and fails if launch crashes. It runs in CI on every pull request.
+`pnpm --filter @getphysical/mobile test` renders the app the way Expo Go starts it (splash → sign-in → guest demo, and
+splash → sign-in with Supabase configured) and fails if launch crashes. It runs in CI on every pull request.

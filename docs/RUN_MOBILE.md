@@ -20,7 +20,11 @@ From the repo root:
 pnpm mobile
 ```
 
-Scan the QR code with the iPhone Camera app (iOS) or from inside Expo Go (Android). `--clear` is built into the
+Scan the QR code with the iPhone Camera app (iOS) or from inside Expo Go (Android).
+
+**Windows (new PC, first run):** `corepack` is not included with Node 25+, so install pnpm with
+`npm install -g pnpm@12.16.1`. If PowerShell says "running scripts is disabled", run
+`Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once first. `--clear` is built into the
 script, so stale Metro caches are wiped on every start.
 
 Don't use `pnpm dev` from the root for the phone: it starts web and mobile together in Turbo's split view,
@@ -47,13 +51,15 @@ Restart `pnpm mobile` after editing `.env`.
 
 ## Troubleshooting
 
-| What you see                                           | Fix                                                                                  |
-| ------------------------------------------------------ | ------------------------------------------------------------------------------------ |
-| "Unable to resolve module …"                           | `pnpm install` at the repo root, then `pnpm mobile`                                  |
-| "Project is incompatible with this version of Expo Go" | Update Expo Go from the App Store / Play Store (needs SDK 58)                        |
-| Phone stuck on "Opening project…" / can't connect      | Phone and computer on the same Wi-Fi, or run `pnpm mobile:tunnel`                    |
-| App opens on the sign-in screen but no code arrives    | Check the Supabase email template and Resend setup (`docs/EMAIL_AND_AUTH_LIMITS.md`) |
-| Red error screen                                       | Send the first lines of the error (the message and the file name)                    |
+| What you see                                                                         | Fix                                                                                                                                                                                                                                                                  |
+| ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "Unable to resolve module …"                                                         | `pnpm install` at the repo root, then `pnpm mobile`                                                                                                                                                                                                                  |
+| "Project is incompatible with this version of Expo Go"                               | Update Expo Go from the App Store / Play Store (needs SDK 58)                                                                                                                                                                                                        |
+| Phone stuck on "Opening project…" / can't connect                                    | Phone and computer on the same Wi-Fi, or run `pnpm mobile:tunnel`                                                                                                                                                                                                    |
+| iPhone shows "request timed out", and no `iOS Bundling` line appears in the terminal | The phone can't reach the PC. On Windows: allow **Node.js JavaScript Runtime** through Windows Firewall (Private + Public) and set the Wi-Fi to **Private**; on the iPhone: Settings → Privacy & Security → Local Network → **Expo Go** on. Or use a tunnel (below). |
+| `pnpm mobile:tunnel` says "You're not logged in to your Expo account"                | Run `pnpm --filter @getphysical/mobile exec expo login` once (free account at expo.dev), then `pnpm mobile:tunnel`. Without an account: `pnpm --filter @getphysical/mobile exec expo start --clear --tunnel ngrok`.                                                  |
+| App opens on the sign-in screen but no code arrives                                  | Check the Supabase email template and Resend setup (`docs/EMAIL_AND_AUTH_LIMITS.md`)                                                                                                                                                                                 |
+| Red error screen                                                                     | Send the first lines of the error (the message and the file name)                                                                                                                                                                                                    |
 
 ## Automated launch check
 

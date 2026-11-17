@@ -2,7 +2,7 @@
 
 import React, { useState, useTransition } from "react";
 import { MessageSquare, CheckCircle, Send, Megaphone } from "lucide-react";
-import { type SuiteMode } from "./HeroPromoCard";
+import { type SuiteMode } from "../../lib/suite-modes";
 import { useSuiteTheme } from "./theme";
 import { CreateMessageModal } from "./CreateMessageModal";
 import { sendCrmReply } from "../../app/actions/crm";

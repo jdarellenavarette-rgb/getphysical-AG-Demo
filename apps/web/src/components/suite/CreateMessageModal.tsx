@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState, useTransition } from "react";
 import { X, Send, CheckCircle } from "lucide-react";
-import { type SuiteMode } from "./HeroPromoCard";
+import { type SuiteMode } from "../../lib/suite-modes";
 import {
   loadBroadcastAudiences,
   sendCrmBroadcast,

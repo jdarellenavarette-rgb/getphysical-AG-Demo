@@ -1,5 +1,7 @@
 import "server-only";
+import { cache } from "react";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import type { FacilityRole, RegistryType } from "sodia-core";
 import { createServerSupabase } from "./supabase/server";
 
@@ -25,7 +27,7 @@ export interface SuiteSession {
 }
 
 /** Resolve the signed-in operator and the facility they are acting for. RLS scopes every row. */
-export async function getSuiteSession(): Promise<SuiteSession | null> {
+export const getSuiteSession = cache(async (): Promise<SuiteSession | null> => {
   const supabase = await createServerSupabase();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) return null;
@@ -68,4 +70,19 @@ export async function getSuiteSession(): Promise<SuiteSession | null> {
     facilities,
     active,
   };
+});
+
+export type ActiveSuiteSession = SuiteSession & { active: ActiveFacility };
+
+/** For pages inside the suite: the operator must be signed in and acting for a facility. */
+export async function requireSuiteSession(): Promise<ActiveSuiteSession> {
+  const session = await getSuiteSession();
+  if (!session) redirect("/login");
+  if (!session.active) redirect("/welcome");
+  return { ...session, active: session.active };
+}
+
+/** Owners and admins manage the venue; staff and coaches operate it. */
+export function canManageFacility(role: FacilityRole): boolean {
+  return role === "OWNER" || role === "ADMIN";
 }

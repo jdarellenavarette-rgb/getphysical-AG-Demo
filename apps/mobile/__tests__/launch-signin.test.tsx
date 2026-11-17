@@ -21,11 +21,11 @@ it("launches through the splash into the sign-in screen without crashing", async
     </SafeAreaProvider>,
   );
   expect(await screen.findByText("Sign in or sign up", {}, { timeout: 10000 })).toBeTruthy();
-  expect(screen.getByLabelText("Mobile number")).toBeTruthy();
-  expect(screen.getByText("Text me a code")).toBeTruthy();
+  expect(screen.getByLabelText("Email")).toBeTruthy();
+  expect(screen.getByText("Email me a code")).toBeTruthy();
   expect(screen.getByText("Continue with Google")).toBeTruthy();
   expect(screen.getByText("Continue as guest")).toBeTruthy();
-  // Email and Apple sign-in are no longer offered.
-  expect(screen.queryByText(/email/i)).toBeNull();
+  // Text-message codes and Apple sign-in are not offered.
+  expect(screen.queryByText(/mobile number/i)).toBeNull();
   expect(screen.queryByText(/Apple/)).toBeNull();
 });

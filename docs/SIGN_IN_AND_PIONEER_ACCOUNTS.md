@@ -4,13 +4,13 @@ How people get into the mobile app, what has to be switched on for it to work, a
 
 ## Ways in
 
-| Option                 | What happens                                                                                   |
-| ---------------------- | ---------------------------------------------------------------------------------------------- |
-| Mobile number and code | A 6-digit code is texted to a Philippine mobile number. The first sign-in creates the account. |
-| Continue with Google   | Google sign-in. The first sign-in creates the account.                                         |
-| Continue as guest      | Opens the same empty app a new account sees. Nothing is saved and there is no sample data.     |
+| Option               | What happens                                                                               |
+| -------------------- | ------------------------------------------------------------------------------------------ |
+| Email and a code     | A code is emailed to the address. The first sign-in creates the account.                   |
+| Continue with Google | Google sign-in. The first sign-in creates the account.                                     |
+| Continue as guest    | Opens the same empty app a new account sees. Nothing is saved and there is no sample data. |
 
-Email codes and Apple sign-in are no longer offered on the sign-in screen.
+Text-message codes and Apple sign-in are not offered.
 
 A guest can look around. Posting, commenting, liking, following, messaging and buying a pass each ask them to sign in first.
 
@@ -18,22 +18,19 @@ After a first sign-in the app asks once for name, username and date of birth (13
 
 ## What must be switched on
 
-### Text-message codes (required for mobile-number sign-in)
+### Email codes
 
-Supabase does not send text messages itself. It needs an SMS provider with its own paid account. Until one is connected, "Text me a code" answers "Text-message sign-in isn't switched on yet. Use Google for now."
+Working on the live project:
 
-1. Open an account with a provider Supabase supports: Twilio, Twilio Verify, MessageBird, Vonage or Textlocal. Check its price and sender rules for the Philippines before choosing.
-2. In the Supabase dashboard: **Authentication → Sign In / Providers → Phone**. Turn it on, choose the provider, and paste the provider's credentials there. Never put them in the repository or in chat.
-3. Set the message to: `Your GetPhysical code is {{ .Code }}. It expires in 10 minutes.`
-4. Keep the code length at 6 digits. The app expects exactly 6.
+- Email sign-in is on, and mail is sent through Resend from `info@contact.getphysical.fitness`.
+- Both sign-in emails ("Confirm signup" for a first sign-in, "Magic Link" for later ones) carry the code, `{{ .Token }}`, instead of a link. The app has no screen for a link, so the templates must keep the code.
+- Codes are 8 digits and last one hour. The app accepts 6 to 8 digits.
 
-`supabase/config.toml` carries the same settings for local development, reading the credentials from environment variables.
-
-**Testing without paying per message.** The same Phone settings page has a "Test phone numbers and OTPs" field. A number listed there always accepts its fixed code and no text is sent. This is the practical way to sign in the pioneer accounts below while the provider is being set up. Remove the test numbers before launch.
+Sending limits and the reasoning behind them are in `EMAIL_AND_AUTH_LIMITS.md`.
 
 ### Google
 
-Already wired. Setup steps are in `SOCIAL_SIGN_IN.md` (the Google section).
+Not switched on yet. It needs a Google Cloud OAuth client, which only the account owner can create. Steps are in `SOCIAL_SIGN_IN.md` (the Google section). The project's redirect list is also empty, so add `sodia://auth/callback` under Authentication → URL Configuration when you set Google up.
 
 ### Apple, before an App Store release
 
@@ -53,19 +50,19 @@ A pioneer account is an ordinary account that a real person signs in to. Nothing
 
 ### Steps
 
-1. **Sign up for real.** On a phone, sign in once with the mobile number or Google account that will own the pioneer account, and finish the profile screen. Do this once per account type, with a different number or Google account each time.
+1. **Sign up for real.** On a phone, sign in once with the email address that will own the pioneer account, and finish the profile screen. Do this once per account type, with a different address each time. One Gmail inbox can serve all five: `you+member@gmail.com`, `you+owner@gmail.com` and so on are separate accounts whose mail all arrives in `you@gmail.com`.
 2. **The venue owner creates the venue.** Sign in to the web Business Suite with the owner account and create the venue there. Creating it makes that account the owner; nothing else is needed.
-3. **Grant the other roles.** In the Supabase dashboard open **SQL Editor** and run the matching line below, once per account. Identify the person by their Google email, their mobile number (`+639…`, `639…` or `09…` all work), their username, or their user id.
+3. **Grant the other roles.** In the Supabase dashboard open **SQL Editor** and run the matching line below, once per account. Identify the person by their email, their username, or their user id.
 4. **Sign out and back in** on the phone so the app picks up the new role. The matching workspace then appears under Settings.
 
 ```sql
 -- Coach or organizer
 select * from public.admin_grant_role('person@example.com', 'coach');
-select * from public.admin_grant_role('+63 917 123 4567', 'organizer');
+select * from public.admin_grant_role('you+organizer@gmail.com', 'organizer');
 
 -- Staff of a venue (use the venue's id from the facilities table).
 -- The third value can be 'STAFF', 'COACH' or 'ADMIN'.
-select * from public.admin_assign_staff('09171234567', 'the_venue_id', 'STAFF');
+select * from public.admin_assign_staff('you+staff@gmail.com', 'the_venue_id', 'STAFF');
 
 -- See every account that holds a role, and at which venues
 select * from public.admin_list_role_holders();
@@ -74,7 +71,7 @@ select * from public.admin_list_role_holders();
 select * from public.admin_revoke_role('person@example.com', 'coach');
 ```
 
-Each call returns the account it changed. If it answers `USER_NOT_FOUND`, the email, number or username did not match an account: check the spelling and that the person has signed in at least once.
+Each call returns the account it changed. If it answers `USER_NOT_FOUND`, the email or username did not match an account: check the spelling and that the person has signed in at least once.
 
 These functions exist only for operators. The mobile and web apps cannot call them, and no one can grant themselves a role; both are covered by the database tests (`supabase/tests/95_account_role_admin.test.sql`).
 

@@ -1,7 +1,7 @@
 import type { ProfileSetupInput } from "sodia-core";
 import { getSupabase } from "../lib/supabase";
 
-export type AuthResult = { ok: true } | { ok: false; message: string; field?: "phone" | "code" | "username" };
+export type AuthResult = { ok: true } | { ok: false; message: string; field?: "email" | "code" | "username" };
 
 function client() {
   const supabase = getSupabase();
@@ -9,25 +9,16 @@ function client() {
   return supabase;
 }
 
-/** Philippine mobile number in the E.164 form the SMS gateway expects (+639XXXXXXXXX). */
-export function toE164(phone: string): string {
-  const digits = phone.replace(/\D/g, "");
-  return `+63${digits.slice(-10)}`;
-}
-
-/** Texts a one-time code to the number (creates the account on first use). */
-export async function sendPhoneCode(phone: string): Promise<AuthResult> {
-  const { error } = await client().auth.signInWithOtp({ phone: toE164(phone), options: { shouldCreateUser: true } });
+/** Emails a one-time code to the address (creates the account on first use). */
+export async function sendEmailCode(email: string): Promise<AuthResult> {
+  const { error } = await client().auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
   if (!error) return { ok: true };
   if (error.status === 429) return { ok: false, message: "Too many codes requested. Wait a minute and try again." };
-  if (/provider|sms|phone.*(disabled|not enabled)/i.test(error.message)) {
-    return { ok: false, message: "Text-message sign-in isn't switched on yet. Use Google for now." };
-  }
-  return { ok: false, field: "phone", message: "We couldn't text a code to that number." };
+  return { ok: false, field: "email", message: "We couldn't send a code to that address." };
 }
 
-export async function verifyPhoneCode(phone: string, code: string): Promise<AuthResult> {
-  const { error } = await client().auth.verifyOtp({ phone: toE164(phone), token: code, type: "sms" });
+export async function verifyEmailCode(email: string, code: string): Promise<AuthResult> {
+  const { error } = await client().auth.verifyOtp({ email, token: code, type: "email" });
   if (!error) return { ok: true };
   return {
     ok: false,

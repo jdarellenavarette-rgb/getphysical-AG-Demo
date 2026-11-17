@@ -29,7 +29,7 @@
 
 | Area          | What changed                                                                                                                                      |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Sign-in       | Three ways in: mobile number with a texted code, Google, or guest. Email codes and Apple are no longer offered. Resend has a 60-second cooldown.  |
+| Sign-in       | Three ways in: email with a code, Google, or guest. Text-message codes and Apple are not offered. Resend has a 60-second cooldown.                |
 | Guest         | Opens the same empty app as a new account. Posting, commenting, liking, following, messaging and buying each ask the guest to sign in.            |
 | Sample person | The built-in profile, its photos, posts, stories, chats, comments, notifications, workouts, run, personal bests and training program are removed. |
 | Profile       | Shows the signed-in person's own name, photo or initials, real counts, their own photos, personal bests and passes, each with an empty state.     |

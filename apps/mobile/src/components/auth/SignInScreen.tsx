@@ -12,19 +12,16 @@ import {
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { otpSchema, phoneSchema, SODIA_FIELD_LIMITS } from "sodia-core";
-import { sendPhoneCode, toE164, verifyPhoneCode } from "../../services/authService";
+import { emailOtpSchema, emailSchema } from "sodia-core";
+import { sendEmailCode, verifyEmailCode } from "../../services/authService";
 import { authStyles as s } from "./auth.styles";
 import { GoogleSignInButton } from "./SocialSignInButtons";
 
-// People type numbers with spaces or dashes ("917 123 4567"); validate the digits only.
-const phoneForm = z.object({
-  phone: z
-    .string()
-    .transform((v) => v.replace(/[\s-]/g, ""))
-    .pipe(phoneSchema),
-});
-const codeForm = z.object({ code: otpSchema });
+const emailForm = z.object({ email: emailSchema });
+const codeForm = z.object({ code: emailOtpSchema });
+
+/** Longest code the server may send (set per project, 6 to 8 digits). */
+const MAX_CODE_LENGTH = 8;
 
 /** Seconds before another code can be requested. */
 const RESEND_SECONDS = 60;
@@ -33,16 +30,16 @@ interface SignInScreenProps {
   onContinueAsGuest?: () => void;
 }
 
-/** Sign in or create an account with a mobile number + code, or Google. Guests can look around first. */
+/** Sign in or create an account with an emailed code, or Google. Guests can look around first. */
 export function SignInScreen({ onContinueAsGuest }: SignInScreenProps) {
-  const [phone, setPhone] = useState<string | null>(null);
+  const [email, setEmail] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [resendIn, setResendIn] = useState(0);
 
-  const phoneStep = useForm<z.input<typeof phoneForm>, unknown, z.output<typeof phoneForm>>({
-    resolver: zodResolver(phoneForm),
+  const emailStep = useForm<z.infer<typeof emailForm>>({
+    resolver: zodResolver(emailForm),
     mode: "onChange",
-    defaultValues: { phone: "" },
+    defaultValues: { email: "" },
   });
   const codeStep = useForm<z.infer<typeof codeForm>>({
     resolver: zodResolver(codeForm),
@@ -58,9 +55,9 @@ export function SignInScreen({ onContinueAsGuest }: SignInScreenProps) {
 
   const requestCode = async (value: string): Promise<boolean> => {
     setFormError(null);
-    let result: Awaited<ReturnType<typeof sendPhoneCode>>;
+    let result: Awaited<ReturnType<typeof sendEmailCode>>;
     try {
-      result = await sendPhoneCode(value);
+      result = await sendEmailCode(value);
     } catch {
       // No backend in this build, or the request never left the phone.
       result = { ok: false, message: "We couldn't reach the server. Check your connection and try again." };
@@ -69,62 +66,59 @@ export function SignInScreen({ onContinueAsGuest }: SignInScreenProps) {
       setResendIn(RESEND_SECONDS);
       return true;
     }
-    if (result.field === "phone") phoneStep.setError("phone", { message: result.message });
+    if (result.field === "email") emailStep.setError("email", { message: result.message });
     else setFormError(result.message);
     return false;
   };
 
-  const submitPhone = phoneStep.handleSubmit(async ({ phone: value }) => {
-    if (await requestCode(value)) setPhone(value);
+  const submitEmail = emailStep.handleSubmit(async ({ email: value }) => {
+    if (await requestCode(value)) setEmail(value);
   });
 
   const submitCode = codeStep.handleSubmit(async ({ code }) => {
-    if (!phone) return;
+    if (!email) return;
     setFormError(null);
-    const result = await verifyPhoneCode(phone, code);
+    const result = await verifyEmailCode(email, code);
     // On success the AuthGate picks up the session and replaces this screen.
     if (!result.ok) codeStep.setError("code", { message: result.message });
   });
 
-  const busy = phoneStep.formState.isSubmitting || codeStep.formState.isSubmitting;
+  const busy = emailStep.formState.isSubmitting || codeStep.formState.isSubmitting;
 
   return (
     <KeyboardAvoidingView style={s.screen} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
         <Text style={s.brand}>GETPHYSICAL</Text>
-        <Text style={s.title}>{phone ? "Enter your code" : "Sign in or sign up"}</Text>
+        <Text style={s.title}>{email ? "Check your email" : "Sign in or sign up"}</Text>
         <Text style={s.subtitle}>
-          {phone
-            ? `We texted a ${SODIA_FIELD_LIMITS.OTP_CODE_LENGTH}-digit code to ${toE164(phone)}.`
-            : "Use your mobile number or Google. New here? We'll create your account."}
+          {email
+            ? `We sent a code to ${email}. It expires in a few minutes.`
+            : "Use your email or Google. New here? We'll create your account."}
         </Text>
 
-        {!phone ? (
+        {!email ? (
           <Controller
-            control={phoneStep.control}
-            name="phone"
+            control={emailStep.control}
+            name="email"
             render={({ field, fieldState }) => (
               <View style={s.field}>
-                <Text style={s.label}>Mobile number</Text>
-                <View style={s.phoneRow}>
-                  <View style={s.phonePrefix}>
-                    <Text style={s.phonePrefixText}>+63</Text>
-                  </View>
-                  <TextInput
-                    value={field.value}
-                    onChangeText={(v) => field.onChange(v.replace(/[^\d+ -]/g, ""))}
-                    onBlur={field.onBlur}
-                    onSubmitEditing={() => void submitPhone()}
-                    keyboardType="phone-pad"
-                    autoComplete="tel"
-                    textContentType="telephoneNumber"
-                    placeholder="917 123 4567"
-                    placeholderTextColor="#52525B"
-                    maxLength={16}
-                    style={[s.input, s.phoneInput, fieldState.error && s.inputError]}
-                    accessibilityLabel="Mobile number"
-                  />
-                </View>
+                <Text style={s.label}>Email</Text>
+                <TextInput
+                  value={field.value}
+                  onChangeText={field.onChange}
+                  onBlur={field.onBlur}
+                  onSubmitEditing={() => void submitEmail()}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  autoComplete="email"
+                  keyboardType="email-address"
+                  textContentType="emailAddress"
+                  returnKeyType="send"
+                  placeholder="you@example.com"
+                  placeholderTextColor="#52525B"
+                  style={[s.input, fieldState.error && s.inputError]}
+                  accessibilityLabel="Email"
+                />
                 {fieldState.error && <Text style={s.error}>{fieldState.error.message}</Text>}
               </View>
             )}
@@ -138,14 +132,12 @@ export function SignInScreen({ onContinueAsGuest }: SignInScreenProps) {
                 <Text style={s.label}>Verification code</Text>
                 <TextInput
                   value={field.value}
-                  onChangeText={(v) =>
-                    field.onChange(v.replace(/\D/g, "").slice(0, SODIA_FIELD_LIMITS.OTP_CODE_LENGTH))
-                  }
+                  onChangeText={(v) => field.onChange(v.replace(/\D/g, "").slice(0, MAX_CODE_LENGTH))}
                   onSubmitEditing={() => void submitCode()}
                   keyboardType="number-pad"
                   autoComplete="one-time-code"
                   textContentType="oneTimeCode"
-                  maxLength={SODIA_FIELD_LIMITS.OTP_CODE_LENGTH}
+                  maxLength={MAX_CODE_LENGTH}
                   autoFocus
                   style={[s.input, s.codeInput, fieldState.error && s.inputError]}
                   accessibilityLabel="Verification code"
@@ -159,7 +151,7 @@ export function SignInScreen({ onContinueAsGuest }: SignInScreenProps) {
         {formError && <Text style={s.formError}>{formError}</Text>}
 
         <TouchableOpacity
-          onPress={() => void (phone ? submitCode() : submitPhone())}
+          onPress={() => void (email ? submitCode() : submitEmail())}
           disabled={busy}
           style={[s.button, busy && s.buttonDisabled]}
           accessibilityRole="button"
@@ -168,14 +160,14 @@ export function SignInScreen({ onContinueAsGuest }: SignInScreenProps) {
           {busy ? (
             <ActivityIndicator color="#FFFFFF" />
           ) : (
-            <Text style={s.buttonText}>{phone ? "Verify" : "Text me a code"}</Text>
+            <Text style={s.buttonText}>{email ? "Verify" : "Email me a code"}</Text>
           )}
         </TouchableOpacity>
 
-        {phone ? (
+        {email ? (
           <>
             <TouchableOpacity
-              onPress={() => void requestCode(phone)}
+              onPress={() => void requestCode(email)}
               disabled={busy || resendIn > 0}
               accessibilityRole="button"
               accessibilityState={{ disabled: busy || resendIn > 0 }}
@@ -186,13 +178,13 @@ export function SignInScreen({ onContinueAsGuest }: SignInScreenProps) {
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => {
-                setPhone(null);
+                setEmail(null);
                 setFormError(null);
                 codeStep.reset();
               }}
               accessibilityRole="button"
             >
-              <Text style={s.link}>Use a different number</Text>
+              <Text style={s.link}>Use a different email</Text>
             </TouchableOpacity>
           </>
         ) : (

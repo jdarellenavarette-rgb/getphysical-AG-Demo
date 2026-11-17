@@ -4,13 +4,13 @@ Five real accounts, one per kind of user, walked through everything the product 
 
 Set the accounts up first: see `SIGN_IN_AND_PIONEER_ACCOUNTS.md`.
 
-| Account     | Signs in with           | Role comes from                            |
-| ----------- | ----------------------- | ------------------------------------------ |
-| Member      | Mobile number or Google | Nothing; every new account is a member     |
-| Venue owner | Mobile number or Google | Creating a venue in the web Business Suite |
-| Staff       | Mobile number or Google | `admin_assign_staff(…, venue, 'STAFF')`    |
-| Coach       | Mobile number or Google | `admin_grant_role(…, 'coach')`             |
-| Organizer   | Mobile number or Google | `admin_grant_role(…, 'organizer')`         |
+| Account     | Signs in with        | Role comes from                            |
+| ----------- | -------------------- | ------------------------------------------ |
+| Member      | Email code or Google | Nothing; every new account is a member     |
+| Venue owner | Email code or Google | Creating a venue in the web Business Suite |
+| Staff       | Email code or Google | `admin_assign_staff(…, venue, 'STAFF')`    |
+| Coach       | Email code or Google | `admin_grant_role(…, 'coach')`             |
+| Organizer   | Email code or Google | `admin_grant_role(…, 'organizer')`         |
 
 **Status key.** _Works_: built and verified. _Server only_: the database and server do it, the app screen does not show it yet. _Not yet_: not built.
 
@@ -18,16 +18,16 @@ Record the result of each step when you run it. A step that fails where "Works" 
 
 ## 1. Getting in (every account)
 
-| #   | Step                                                           | Should happen                                                        | Expected today                                                 |
-| --- | -------------------------------------------------------------- | -------------------------------------------------------------------- | -------------------------------------------------------------- |
-| 1.1 | Open the app and tap "Continue as guest"                       | An empty app: no posts, passes, workouts or sample people            | Works                                                          |
-| 1.2 | As a guest, tap +, a like, Messages, and "Proceed to Checkout" | Each asks you to sign in                                             | Works                                                          |
-| 1.3 | Sign in with a mobile number                                   | A 6-digit code arrives; entering it signs you in                     | Works once an SMS provider or test numbers are set in Supabase |
-| 1.4 | Sign in with Google                                            | Google's sheet opens and returns you signed in                       | Works once Google is configured in Supabase                    |
-| 1.5 | First sign-in                                                  | Asked once for name, username and date of birth; under 13 is refused | Works                                                          |
-| 1.6 | Sign out, then sign in as a different account                  | Nothing from the first account is visible                            | Works                                                          |
-| 1.7 | Settings as the member                                         | No workspaces listed                                                 | Works                                                          |
-| 1.8 | Settings as staff, coach and organizer                         | Only that account's own workspace is listed                          | Works                                                          |
+| #   | Step                                                           | Should happen                                                        | Expected today                                                   |
+| --- | -------------------------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| 1.1 | Open the app and tap "Continue as guest"                       | An empty app: no posts, passes, workouts or sample people            | Works                                                            |
+| 1.2 | As a guest, tap +, a like, Messages, and "Proceed to Checkout" | Each asks you to sign in                                             | Works                                                            |
+| 1.3 | Sign in with an email address                                  | A code arrives by email; entering it signs you in                    | Works (email sending is set up; not yet tried with a real inbox) |
+| 1.4 | Sign in with Google                                            | Google's sheet opens and returns you signed in                       | Not yet: Google is not switched on in Supabase                   |
+| 1.5 | First sign-in                                                  | Asked once for name, username and date of birth; under 13 is refused | Works                                                            |
+| 1.6 | Sign out, then sign in as a different account                  | Nothing from the first account is visible                            | Works                                                            |
+| 1.7 | Settings as the member                                         | No workspaces listed                                                 | Works                                                            |
+| 1.8 | Settings as staff, coach and organizer                         | Only that account's own workspace is listed                          | Works                                                            |
 
 ## 2. Venue owner
 

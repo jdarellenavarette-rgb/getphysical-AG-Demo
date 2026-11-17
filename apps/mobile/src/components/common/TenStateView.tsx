@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet } from "react-native";
-import { AlertCircle, WifiOff, Clock, Search, ShieldAlert, CheckCircle, RefreshCw } from "lucide-react-native";
+import { AlertCircle, WifiOff, Clock, Search, ShieldAlert, RefreshCw } from "lucide-react-native";
 import type { TenStateEnvelope } from "sodia-core";
 import { useThemeStore } from "../../theme/theme";
 
@@ -43,7 +43,13 @@ export function TenStateView<T>({ state, onRetry, children }: TenStateViewProps<
           <Text style={[styles.stateTitle, { color: colors.textPrimary }]}>Unable to Load Data</Text>
           <Text style={[styles.stateSubtitle, { color: colors.textSecondary }]}>{state.userMessage}</Text>
           {state.retryable && onRetry && (
-            <TouchableOpacity style={[styles.retryButton, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor, borderWidth: 1 }]} onPress={onRetry}>
+            <TouchableOpacity
+              style={[
+                styles.retryButton,
+                { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor, borderWidth: 1 },
+              ]}
+              onPress={onRetry}
+            >
               <RefreshCw size={16} color={colors.textPrimary} style={{ marginRight: 6 }} />
               <Text style={[styles.primaryButtonText, { color: colors.textPrimary }]}>Retry</Text>
             </TouchableOpacity>
@@ -58,9 +64,13 @@ export function TenStateView<T>({ state, onRetry, children }: TenStateViewProps<
             <WifiOff size={16} color="#F59E0B" />
             <Text style={styles.offlineText}>Offline Mode • Viewing Cached Content</Text>
           </View>
-          {state.data ? children(state.data) : (
+          {state.data ? (
+            children(state.data)
+          ) : (
             <View style={[styles.centerContainer, { backgroundColor: colors.bgScreen }]}>
-              <Text style={[styles.stateSubtitle, { color: colors.textSecondary }]}>Connect to the internet to fetch fresh records.</Text>
+              <Text style={[styles.stateSubtitle, { color: colors.textSecondary }]}>
+                Connect to the internet to fetch fresh records.
+              </Text>
             </View>
           )}
         </View>
@@ -71,7 +81,9 @@ export function TenStateView<T>({ state, onRetry, children }: TenStateViewProps<
         <View style={{ flex: 1, backgroundColor: colors.bgScreen }}>
           <View style={[styles.slowBanner, { backgroundColor: colors.bgCard, borderColor: "#EAB308" }]}>
             <Clock size={16} color="#EAB308" />
-            <Text style={styles.slowText}>Slow network detected ({state.network.latencyMs}ms). Optimistic mode active.</Text>
+            <Text style={styles.slowText}>
+              Slow network detected ({state.network.latencyMs}ms). Optimistic mode active.
+            </Text>
           </View>
           {state.data && children(state.data)}
         </View>
@@ -82,7 +94,9 @@ export function TenStateView<T>({ state, onRetry, children }: TenStateViewProps<
         <View style={[styles.centerContainer, { backgroundColor: colors.bgScreen }]}>
           <Search size={44} color={colors.textMuted} />
           <Text style={[styles.stateTitle, { color: colors.textPrimary }]}>No Results Found</Text>
-          <Text style={[styles.stateSubtitle, { color: colors.textSecondary }]}>No matches found for "{state.search.query}".</Text>
+          <Text style={[styles.stateSubtitle, { color: colors.textSecondary }]}>
+            No matches found for "{state.search.query}".
+          </Text>
           {onRetry && (
             <TouchableOpacity style={styles.primaryButton} onPress={onRetry}>
               <Text style={styles.primaryButtonText}>Clear Search & Filters</Text>
@@ -112,7 +126,9 @@ export function TenStateView<T>({ state, onRetry, children }: TenStateViewProps<
         <View style={[styles.centerContainer, { backgroundColor: colors.bgScreen }]}>
           <ShieldAlert size={44} color="#E11D48" />
           <Text style={[styles.stateTitle, { color: colors.textPrimary }]}>Session Stale</Text>
-          <Text style={[styles.stateSubtitle, { color: colors.textSecondary }]}>Authenticate with biometrics or PIN to resume.</Text>
+          <Text style={[styles.stateSubtitle, { color: colors.textSecondary }]}>
+            Authenticate with biometrics or PIN to resume.
+          </Text>
           {onRetry && (
             <TouchableOpacity style={styles.primaryButton} onPress={onRetry}>
               <Text style={styles.primaryButtonText}>Unlock with FaceID / Biometrics</Text>
@@ -127,7 +143,9 @@ export function TenStateView<T>({ state, onRetry, children }: TenStateViewProps<
           <AlertCircle size={44} color="#EF4444" />
           <Text style={[styles.stateTitle, { color: colors.textPrimary }]}>Validation Required</Text>
           {state.issues.map((iss, idx) => (
-            <Text key={idx} style={styles.issueText}>• {iss.field}: {iss.message}</Text>
+            <Text key={idx} style={styles.issueText}>
+              • {iss.field}: {iss.message}
+            </Text>
           ))}
         </View>
       );

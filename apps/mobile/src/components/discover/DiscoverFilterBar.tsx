@@ -32,11 +32,7 @@ export function DiscoverFilterBar({
   return (
     <View style={styles.container}>
       {/* SINGLE CLEAN HORIZONTAL PILL ROW */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.categoryScroll}
-      >
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryScroll}>
         {/* Active Sport Badge if set from Filter Modal */}
         {hasSportFilter && (
           <TouchableOpacity
@@ -68,14 +64,7 @@ export function DiscoverFilterBar({
                 },
               ]}
             >
-              <Text
-                style={[
-                  styles.categoryText,
-                  { color: isActive ? "#FFFFFF" : colors.textPrimary },
-                ]}
-              >
-                {cat}
-              </Text>
+              <Text style={[styles.categoryText, { color: isActive ? "#FFFFFF" : colors.textPrimary }]}>{cat}</Text>
             </TouchableOpacity>
           );
         })}

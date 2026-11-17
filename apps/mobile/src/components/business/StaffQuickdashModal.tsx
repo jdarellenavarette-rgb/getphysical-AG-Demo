@@ -65,7 +65,16 @@ export function StaffQuickdashModal({ visible, onClose }: StaffQuickdashModalPro
       <QrScannerModal visible={isScannerOpen} onClose={() => setIsScannerOpen(false)} title="Member check-in" />
       <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         {/* HEADER BAR */}
-        <View style={[styles.topBar, { paddingTop: Math.max(insets.top, 50) + 10, backgroundColor: colors.bgHeader, borderBottomColor: colors.borderColor }]}>
+        <View
+          style={[
+            styles.topBar,
+            {
+              paddingTop: Math.max(insets.top, 50) + 10,
+              backgroundColor: colors.bgHeader,
+              borderBottomColor: colors.borderColor,
+            },
+          ]}
+        >
           <TouchableOpacity onPress={onClose} style={styles.backBtn}>
             <ArrowLeft size={20} color={colors.textPrimary} />
             <Text style={[styles.backBtnText, { color: colors.textPrimary }]}>Settings</Text>
@@ -79,12 +88,23 @@ export function StaffQuickdashModal({ visible, onClose }: StaffQuickdashModalPro
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
           {/* VENUE CARD */}
           <View style={[styles.venueCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
-            <Text style={[styles.venueTitle, { color: colors.textPrimary }]}>Metro Core Arena • Turnstile Station #1</Text>
+            <Text style={[styles.venueTitle, { color: colors.textPrimary }]}>
+              Metro Core Arena • Turnstile Station #1
+            </Text>
             <Text style={[styles.venueSub, { color: colors.textMuted }]}>Hardware TOTP & DTR Attendance Validator</Text>
             <TouchableOpacity
               onPress={() => setIsScannerOpen(true)}
               accessibilityRole="button"
-              style={{ marginTop: 12, backgroundColor: "#10B981", borderRadius: 12, paddingVertical: 12, flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 8 }}
+              style={{
+                marginTop: 12,
+                backgroundColor: "#10B981",
+                borderRadius: 12,
+                paddingVertical: 12,
+                flexDirection: "row",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: 8,
+              }}
             >
               <QrCode size={16} color="#FFFFFF" />
               <Text style={{ color: "#FFFFFF", fontWeight: "800" }}>Scan member card</Text>
@@ -117,33 +137,49 @@ export function StaffQuickdashModal({ visible, onClose }: StaffQuickdashModalPro
           {/* SIMULATOR QUICK ACTIONS */}
           <Text style={[styles.sectionHeader, { color: colors.textMuted }]}>TEST TURNSTILE TRIGGERS</Text>
           <View style={styles.actionRow}>
-            <TouchableOpacity onPress={() => handleSimulateScan("GREEN")} style={[styles.scanTriggerBtn, { backgroundColor: "rgba(16, 185, 129, 0.15)", borderColor: "#10B981" }]}>
+            <TouchableOpacity
+              onPress={() => handleSimulateScan("GREEN")}
+              style={[styles.scanTriggerBtn, { backgroundColor: "rgba(16, 185, 129, 0.15)", borderColor: "#10B981" }]}
+            >
               <CheckCircle2 size={16} color="#10B981" />
               <Text style={[styles.scanTriggerText, { color: "#10B981" }]}>Member Access (Gate Unlock)</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => handleSimulateScan("BLUE")} style={[styles.scanTriggerBtn, { backgroundColor: "rgba(59, 130, 246, 0.15)", borderColor: "#3B82F6" }]}>
+            <TouchableOpacity
+              onPress={() => handleSimulateScan("BLUE")}
+              style={[styles.scanTriggerBtn, { backgroundColor: "rgba(59, 130, 246, 0.15)", borderColor: "#3B82F6" }]}
+            >
               <Clock size={16} color="#3B82F6" />
               <Text style={[styles.scanTriggerText, { color: "#3B82F6" }]}>Staff DTR Clock-In</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => handleSimulateScan("RED")} style={[styles.scanTriggerBtn, { backgroundColor: "rgba(225, 29, 72, 0.15)", borderColor: "#E11D48" }]}>
+            <TouchableOpacity
+              onPress={() => handleSimulateScan("RED")}
+              style={[styles.scanTriggerBtn, { backgroundColor: "rgba(225, 29, 72, 0.15)", borderColor: "#E11D48" }]}
+            >
               <XCircle size={16} color="#E11D48" />
               <Text style={[styles.scanTriggerText, { color: "#E11D48" }]}>Invalid Pass (Red)</Text>
             </TouchableOpacity>
           </View>
 
           {/* SCAN LOGS */}
-          <Text style={[styles.sectionHeader, { color: colors.textMuted }]}>RECENT TURNSTILE EVENTS ({scanLogs.length})</Text>
+          <Text style={[styles.sectionHeader, { color: colors.textMuted }]}>
+            RECENT TURNSTILE EVENTS ({scanLogs.length})
+          </Text>
           {scanLogs.length === 0 ? (
             <View style={[styles.emptyLogBox, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
               <Shield size={28} color={colors.textMuted} />
               <Text style={[styles.emptyLogTitle, { color: colors.textPrimary }]}>No scan events yet</Text>
-              <Text style={[styles.emptyLogSub, { color: colors.textMuted }]}>Tap one of the simulate buttons above to test gate unlocking.</Text>
+              <Text style={[styles.emptyLogSub, { color: colors.textMuted }]}>
+                Tap one of the simulate buttons above to test gate unlocking.
+              </Text>
             </View>
           ) : (
             scanLogs.map((log) => (
-              <View key={log.id} style={[styles.logRow, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
+              <View
+                key={log.id}
+                style={[styles.logRow, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}
+              >
                 <View style={styles.logLeft}>
                   <Text style={[styles.logName, { color: colors.textPrimary }]}>{log.name}</Text>
                   <Text style={[styles.logDetail, { color: colors.textMuted }]}>{log.detail}</Text>
@@ -160,16 +196,40 @@ export function StaffQuickdashModal({ visible, onClose }: StaffQuickdashModalPro
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingBottom: 14, borderBottomWidth: 1 },
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+  },
   backBtn: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 44, paddingVertical: 4 },
   backBtnText: { fontSize: 13, fontWeight: "700" },
-  badge: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(16, 185, 129, 0.15)", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  badge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "rgba(16, 185, 129, 0.15)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
   badgeText: { color: "#10B981", fontSize: 10, fontWeight: "800" },
   content: { padding: 16 },
   venueCard: { borderRadius: 12, padding: 14, marginBottom: 16, borderWidth: 1 },
   venueTitle: { fontSize: 14, fontWeight: "800" },
   venueSub: { fontSize: 11, marginTop: 4 },
-  viewportBox: { height: 180, borderRadius: 16, alignItems: "center", justifyContent: "center", borderWidth: 2, borderStyle: "dashed", overflow: "hidden", marginBottom: 16 },
+  viewportBox: {
+    height: 180,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderStyle: "dashed",
+    overflow: "hidden",
+    marginBottom: 16,
+  },
   viewportGreen: { borderColor: "#10B981", backgroundColor: "rgba(16, 185, 129, 0.08)" },
   viewportBlue: { borderColor: "#3B82F6", backgroundColor: "rgba(59, 130, 246, 0.08)" },
   viewportRed: { borderColor: "#E11D48", backgroundColor: "rgba(225, 29, 72, 0.08)" },
@@ -181,7 +241,15 @@ const styles = StyleSheet.create({
   emptyLogBox: { borderRadius: 12, padding: 24, alignItems: "center", borderWidth: 1 },
   emptyLogTitle: { fontSize: 13, fontWeight: "700", marginTop: 8 },
   emptyLogSub: { fontSize: 11, textAlign: "center", marginTop: 4 },
-  logRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderRadius: 10, padding: 12, marginBottom: 8, borderWidth: 1 },
+  logRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+  },
   logLeft: { flex: 1, marginRight: 8 },
   logName: { fontSize: 13, fontWeight: "700" },
   logDetail: { fontSize: 11, marginTop: 2 },

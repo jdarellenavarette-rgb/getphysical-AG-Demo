@@ -1,5 +1,14 @@
 import React, { useState } from "react";
-import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -21,8 +30,16 @@ export function SignInScreen({ onContinueAsGuest }: SignInScreenProps) {
   const [email, setEmail] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const emailStep = useForm<z.infer<typeof emailForm>>({ resolver: zodResolver(emailForm), mode: "onChange", defaultValues: { email: "" } });
-  const codeStep = useForm<z.infer<typeof codeForm>>({ resolver: zodResolver(codeForm), mode: "onChange", defaultValues: { code: "" } });
+  const emailStep = useForm<z.infer<typeof emailForm>>({
+    resolver: zodResolver(emailForm),
+    mode: "onChange",
+    defaultValues: { email: "" },
+  });
+  const codeStep = useForm<z.infer<typeof codeForm>>({
+    resolver: zodResolver(codeForm),
+    mode: "onChange",
+    defaultValues: { code: "" },
+  });
 
   const submitEmail = emailStep.handleSubmit(async ({ email: value }) => {
     setFormError(null);
@@ -45,7 +62,9 @@ export function SignInScreen({ onContinueAsGuest }: SignInScreenProps) {
     <KeyboardAvoidingView style={s.screen} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
         <Text style={s.brand}>GETPHYSICAL · SODIA</Text>
-        <Text style={s.title}>{email ? "Check your email" : mode === "signup" ? "Create your account" : "Welcome back"}</Text>
+        <Text style={s.title}>
+          {email ? "Check your email" : mode === "signup" ? "Create your account" : "Welcome back"}
+        </Text>
         <Text style={s.subtitle}>
           {email
             ? `We sent a code to ${email}. It expires in a few minutes.`
@@ -54,10 +73,16 @@ export function SignInScreen({ onContinueAsGuest }: SignInScreenProps) {
 
         {!email && (
           <View style={s.modeContainer}>
-            <TouchableOpacity onPress={() => setMode("signin")} style={[s.modeTab, mode === "signin" && s.modeTabActive]}>
+            <TouchableOpacity
+              onPress={() => setMode("signin")}
+              style={[s.modeTab, mode === "signin" && s.modeTabActive]}
+            >
               <Text style={[s.modeTabText, mode === "signin" && s.modeTabTextActive]}>Sign In</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => setMode("signup")} style={[s.modeTab, mode === "signup" && s.modeTabActive]}>
+            <TouchableOpacity
+              onPress={() => setMode("signup")}
+              style={[s.modeTab, mode === "signup" && s.modeTabActive]}
+            >
               <Text style={[s.modeTabText, mode === "signup" && s.modeTabTextActive]}>Sign Up</Text>
             </TouchableOpacity>
           </View>
@@ -126,7 +151,9 @@ export function SignInScreen({ onContinueAsGuest }: SignInScreenProps) {
           {busy ? (
             <ActivityIndicator color="#FFFFFF" />
           ) : (
-            <Text style={s.buttonText}>{email ? "Verify Code" : mode === "signup" ? "Sign Up with Email" : "Sign In with Email"}</Text>
+            <Text style={s.buttonText}>
+              {email ? "Verify Code" : mode === "signup" ? "Sign Up with Email" : "Sign In with Email"}
+            </Text>
           )}
         </TouchableOpacity>
 
@@ -135,7 +162,12 @@ export function SignInScreen({ onContinueAsGuest }: SignInScreenProps) {
             <TouchableOpacity onPress={() => void sendEmailCode(email)} disabled={busy}>
               <Text style={s.link}>Resend code</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => { setEmail(null); codeStep.reset(); }}>
+            <TouchableOpacity
+              onPress={() => {
+                setEmail(null);
+                codeStep.reset();
+              }}
+            >
               <Text style={s.link}>Use a different email</Text>
             </TouchableOpacity>
           </>

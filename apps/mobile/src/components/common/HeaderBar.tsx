@@ -12,13 +12,7 @@ interface HeaderBarProps {
   onPressLogo?: () => void;
 }
 
-export function HeaderBar({
-  onOpenMenu,
-  onOpenSettings,
-  onOpenActivity,
-  onOpenInbox,
-  onPressLogo,
-}: HeaderBarProps) {
+export function HeaderBar({ onOpenMenu, onOpenSettings, onOpenActivity, onOpenInbox, onPressLogo }: HeaderBarProps) {
   const { colors } = useThemeStore();
   const { threads } = useCrmMessagingStore();
   const unreadCount = threads.reduce((acc, t) => acc + (t.unreadCount || 0), 0);
@@ -90,6 +84,22 @@ const styles = StyleSheet.create({
   brandTitle: { fontSize: 21, fontWeight: "900", letterSpacing: -0.6 },
   brandDot: { color: "#E11D48" },
   rightGroup: { flexDirection: "row", alignItems: "center", gap: 4 },
-  iconCircle: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center", position: "relative" },
-  notificationDot: { position: "absolute", top: 8, right: 8, width: 7, height: 7, borderRadius: 3.5, backgroundColor: "#E11D48", borderWidth: 1.5 },
+  iconCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+  },
+  notificationDot: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: "#E11D48",
+    borderWidth: 1.5,
+  },
 });

@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView, Alert } from "react-native";
-import { X, Send, Award, Flame, Heart, MapPin, CheckCircle2, Footprints, Dumbbell, Apple } from "lucide-react-native";
+import { X, Send } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 
@@ -60,10 +60,14 @@ export function MemoryDetailModal({ visible, item, onClose }: MemoryDetailModalP
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
             <Text style={[styles.memoryTitle, { color: colors.textPrimary }]}>{item.title}</Text>
-            <Text style={[styles.memorySub, { color: colors.textMuted }]}>{item.venue} • {item.time}</Text>
+            <Text style={[styles.memorySub, { color: colors.textMuted }]}>
+              {item.venue} • {item.time}
+            </Text>
 
             {/* KEY METRICS GRID */}
-            <View style={[styles.metricsGrid, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}>
+            <View
+              style={[styles.metricsGrid, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}
+            >
               <View style={styles.metricCol}>
                 <Text style={styles.metricValHighlight}>{item.cals}</Text>
                 <Text style={[styles.metricLabel, { color: colors.textMuted }]}>ENERGY</Text>
@@ -77,11 +81,24 @@ export function MemoryDetailModal({ visible, item, onClose }: MemoryDetailModalP
 
             {/* TELEMETRY & BREAKDOWN */}
             <Text style={[styles.sectionHeading, { color: colors.textPrimary }]}>Workout Telemetry & Notes</Text>
-            <View style={[styles.telemetryCard, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}>
-              <Text style={[styles.telemetryLine, { color: colors.textSecondary }]}>• Heart Rate Zone: 148 - 162 BPM (Aerobic Threshold)</Text>
-              <Text style={[styles.telemetryLine, { color: colors.textSecondary }]}>• Verified GPS Location: Bonifacio Global City Loop</Text>
-              <Text style={[styles.telemetryLine, { color: colors.textSecondary }]}>• Elevation Gain: +24m • Weather: 28°C Clear</Text>
-              <Text style={[styles.telemetryLine, { color: colors.textSecondary }]}>• Recovery Score: 92% (High Readiness)</Text>
+            <View
+              style={[
+                styles.telemetryCard,
+                { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor },
+              ]}
+            >
+              <Text style={[styles.telemetryLine, { color: colors.textSecondary }]}>
+                • Heart Rate Zone: 148 - 162 BPM (Aerobic Threshold)
+              </Text>
+              <Text style={[styles.telemetryLine, { color: colors.textSecondary }]}>
+                • Verified GPS Location: Bonifacio Global City Loop
+              </Text>
+              <Text style={[styles.telemetryLine, { color: colors.textSecondary }]}>
+                • Elevation Gain: +24m • Weather: 28°C Clear
+              </Text>
+              <Text style={[styles.telemetryLine, { color: colors.textSecondary }]}>
+                • Recovery Score: 92% (High Readiness)
+              </Text>
             </View>
 
             {/* ACTIONS */}
@@ -106,7 +123,14 @@ const styles = StyleSheet.create({
   content: { paddingBottom: 24 },
   memoryTitle: { fontSize: 20, fontWeight: "900", marginBottom: 4 },
   memorySub: { fontSize: 12, marginBottom: 16 },
-  metricsGrid: { flexDirection: "row", borderRadius: 14, padding: 16, borderWidth: 1, marginBottom: 20, justifyContent: "space-around" },
+  metricsGrid: {
+    flexDirection: "row",
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+    marginBottom: 20,
+    justifyContent: "space-around",
+  },
   metricCol: { alignItems: "center" },
   metricValHighlight: { fontSize: 24, fontWeight: "900", color: "#E11D48" },
   metricVal: { fontSize: 24, fontWeight: "900" },
@@ -115,6 +139,13 @@ const styles = StyleSheet.create({
   sectionHeading: { fontSize: 14, fontWeight: "800", marginBottom: 8 },
   telemetryCard: { borderRadius: 12, padding: 14, borderWidth: 1, gap: 8, marginBottom: 20 },
   telemetryLine: { fontSize: 12, lineHeight: 18 },
-  shareBtn: { backgroundColor: "#E11D48", flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 14, borderRadius: 14 },
+  shareBtn: {
+    backgroundColor: "#E11D48",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 14,
+    borderRadius: 14,
+  },
   shareBtnText: { color: "#FFF", fontSize: 14, fontWeight: "800" },
 });

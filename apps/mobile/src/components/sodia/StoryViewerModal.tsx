@@ -12,7 +12,7 @@ import {
   Platform,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowLeft, Camera, Heart, MessageCircle, Send, CheckCircle2, Sparkles } from "lucide-react-native";
+import { ArrowLeft, CheckCircle2, Sparkles } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 
 interface StoryViewerModalProps {
@@ -23,11 +23,10 @@ interface StoryViewerModalProps {
   onOpenCreatePost?: () => void;
 }
 
-export function StoryViewerModal({ visible, onClose, onTapLocationTag, onOpenComments, onOpenCreatePost }: StoryViewerModalProps) {
+export function StoryViewerModal({ visible, onClose, onTapLocationTag }: StoryViewerModalProps) {
   const insets = useSafeAreaInsets();
   const { userStory, profile } = useEcosystemStore();
   const [activeStoryIdx, setActiveStoryIdx] = useState(0);
-  const [isLiked, setIsLiked] = useState(false);
   const [progress, setProgress] = useState(0);
   const [replyText, setReplyText] = useState("");
 
@@ -51,7 +50,17 @@ export function StoryViewerModal({ visible, onClose, onTapLocationTag, onOpenCom
   ];
 
   const stories = userStory
-    ? [{ id: "user_story", handle: `@${profile.username}`, name: `${profile.first_name} ${profile.last_name}`, mediaUrl: userStory.image, caption: userStory.text ?? "Live session in BGC ⚡", locationTag: { id: "fac_metro_core", name: "Metro Core Arena" } }, ...defaultStories]
+    ? [
+        {
+          id: "user_story",
+          handle: `@${profile.username}`,
+          name: `${profile.first_name} ${profile.last_name}`,
+          mediaUrl: userStory.image,
+          caption: userStory.text ?? "Live session in BGC ⚡",
+          locationTag: { id: "fac_metro_core", name: "Metro Core Arena" },
+        },
+        ...defaultStories,
+      ]
     : defaultStories;
 
   const current = stories[activeStoryIdx] ?? stories[0]!;
@@ -100,10 +109,7 @@ export function StoryViewerModal({ visible, onClose, onTapLocationTag, onOpenCom
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <KeyboardAvoidingView
-        style={styles.overlay}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
+      <KeyboardAvoidingView style={styles.overlay} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <Image source={{ uri: current.mediaUrl }} style={styles.bgMedia} resizeMode="cover" />
         <View style={styles.darkGradientOverlay} />
 
@@ -115,7 +121,12 @@ export function StoryViewerModal({ visible, onClose, onTapLocationTag, onOpenCom
         <View style={[styles.progressRow, { paddingTop: Math.max(insets.top, 48) + 6 }]}>
           {stories.map((s, i) => (
             <View key={s.id} style={styles.segmentTrack}>
-              <View style={[styles.segmentFill, { width: i < activeStoryIdx ? "100%" : i === activeStoryIdx ? `${progress}%` : "0%" }]} />
+              <View
+                style={[
+                  styles.segmentFill,
+                  { width: i < activeStoryIdx ? "100%" : i === activeStoryIdx ? `${progress}%` : "0%" },
+                ]}
+              />
             </View>
           ))}
         </View>
@@ -176,25 +187,91 @@ export function StoryViewerModal({ visible, onClose, onTapLocationTag, onOpenCom
 const styles = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: "#000000", position: "relative" },
   bgMedia: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%" },
-  darkGradientOverlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.35)" },
+  darkGradientOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.35)",
+  },
   leftTapZone: { position: "absolute", left: 0, top: 100, bottom: 120, width: "35%", zIndex: 10 },
   rightTapZone: { position: "absolute", right: 0, top: 100, bottom: 120, width: "65%", zIndex: 10 },
   progressRow: { flexDirection: "row", paddingHorizontal: 12, gap: 5, zIndex: 20 },
   segmentTrack: { flex: 1, height: 2.5, backgroundColor: "rgba(255,255,255,0.3)", borderRadius: 2, overflow: "hidden" },
   segmentFill: { height: "100%", backgroundColor: "#FFFFFF" },
-  topBar: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, paddingTop: 10, zIndex: 20 },
+  topBar: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    zIndex: 20,
+  },
   authorRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   handleText: { color: "#FFFFFF", fontSize: 14, fontWeight: "800" },
   timeAgo: { color: "rgba(255,255,255,0.6)", fontSize: 11, marginLeft: 4 },
-  topIconBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(0,0,0,0.45)", alignItems: "center", justifyContent: "center" },
+  topIconBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   storyContentZone: { position: "absolute", bottom: 95, left: 16, right: 16, zIndex: 20 },
-  locationPill: { alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "rgba(9,9,11,0.75)", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, marginBottom: 8, borderWidth: 1, borderColor: "rgba(255,255,255,0.15)" },
+  locationPill: {
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: "rgba(9,9,11,0.75)",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.15)",
+  },
   locationText: { color: "#FAFAFA", fontSize: 11, fontWeight: "800" },
-  captionText: { color: "#FFFFFF", fontSize: 14, fontWeight: "700", lineHeight: 20, textShadowColor: "#000", textShadowRadius: 4 },
-  bottomReplyBar: { position: "absolute", bottom: 0, left: 0, right: 0, flexDirection: "row", alignItems: "center", paddingHorizontal: 14, gap: 10, zIndex: 25 },
-  replyInputWrap: { flex: 1, height: 44, borderRadius: 22, borderWidth: 1, borderColor: "rgba(255,255,255,0.3)", backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", paddingHorizontal: 14 },
+  captionText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "700",
+    lineHeight: 20,
+    textShadowColor: "#000",
+    textShadowRadius: 4,
+  },
+  bottomReplyBar: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 14,
+    gap: 10,
+    zIndex: 25,
+  },
+  replyInputWrap: {
+    flex: 1,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.3)",
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    paddingHorizontal: 14,
+  },
   replyInput: { color: "#FAFAFA", fontSize: 13 },
   quickEmojisRow: { flexDirection: "row", gap: 8 },
-  emojiBtn: { width: 38, height: 38, borderRadius: 19, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" },
+  emojiBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   emojiText: { fontSize: 16 },
 });

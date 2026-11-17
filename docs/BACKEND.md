@@ -18,29 +18,29 @@ supabase/
 
 ## Security model
 
-| Concern | How it is enforced |
-|---|---|
-| Authentication | Supabase Auth. Web: cookie session via `@supabase/ssr` + middleware guard. Mobile: session in Keychain/Keystore (`expo-secure-store`, chunked). |
-| Tenant isolation | `facility_staff` (OWNER/ADMIN/STAFF/COACH) + `facility_memberships`. Every table has RLS; helper functions `is_facility_staff/admin/member()` are `SECURITY DEFINER`, `search_path=''`. |
-| Column-level safety | Explicit `GRANT`s: e.g. users cannot set their own `roles`, `coach_plan`, facility `plan`/`registry_type`, post `author_name` or counters. `profiles.dob` is unreadable by others and write-once. |
-| Registry caps | `COMMUNITY`+`FREE` ≤ 19 active members, `FREE` coach ≤ 3 clients — DB triggers with row locks (race-safe). |
-| Append-only ledger | `ledger_transactions` and `access_scans`: triggers block UPDATE/DELETE/TRUNCATE for every role; privileges revoked even from `service_role`. Refunds append a reversing row. |
-| Money | Prices computed in `create_payment_order()` from the facility row; age gate (18+); payouts must be onboarded; settlement only via `service_role` webhooks; idempotent per order and per event. |
-| Gate access | RFC 6238 TOTP (HMAC-SHA256, 60 s) with a random 256-bit secret per pass, owner-only read, rotated on transfer. `verify_pass_code()` checks staff-of-facility, ±1 step drift, replay (unique grant per window) and throttles after 5 failures / 5 min. |
-| Messaging | Rows in `messages` with sender bound to `auth.uid()`; facility-voice messages only by staff; broadcasts fan out server-side to members/segments. Realtime uses `postgres_changes`, which honours RLS. |
-| Secrets | No keys in source. Apps get only the anon/publishable key; `assertClientSupabaseConfig` refuses `service_role` keys and non-HTTPS URLs. AI/payment keys live in edge-function secrets. |
+| Concern             | How it is enforced                                                                                                                                                                                                                                    |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Authentication      | Supabase Auth. Web: cookie session via `@supabase/ssr` + middleware guard. Mobile: session in Keychain/Keystore (`expo-secure-store`, chunked).                                                                                                       |
+| Tenant isolation    | `facility_staff` (OWNER/ADMIN/STAFF/COACH) + `facility_memberships`. Every table has RLS; helper functions `is_facility_staff/admin/member()` are `SECURITY DEFINER`, `search_path=''`.                                                               |
+| Column-level safety | Explicit `GRANT`s: e.g. users cannot set their own `roles`, `coach_plan`, facility `plan`/`registry_type`, post `author_name` or counters. `profiles.dob` is unreadable by others and write-once.                                                     |
+| Registry caps       | `COMMUNITY`+`FREE` ≤ 19 active members, `FREE` coach ≤ 3 clients — DB triggers with row locks (race-safe).                                                                                                                                            |
+| Append-only ledger  | `ledger_transactions` and `access_scans`: triggers block UPDATE/DELETE/TRUNCATE for every role; privileges revoked even from `service_role`. Refunds append a reversing row.                                                                          |
+| Money               | Prices computed in `create_payment_order()` from the facility row; age gate (18+); payouts must be onboarded; settlement only via `service_role` webhooks; idempotent per order and per event.                                                        |
+| Gate access         | RFC 6238 TOTP (HMAC-SHA256, 60 s) with a random 256-bit secret per pass, owner-only read, rotated on transfer. `verify_pass_code()` checks staff-of-facility, ±1 step drift, replay (unique grant per window) and throttles after 5 failures / 5 min. |
+| Messaging           | Rows in `messages` with sender bound to `auth.uid()`; facility-voice messages only by staff; broadcasts fan out server-side to members/segments. Realtime uses `postgres_changes`, which honours RLS.                                                 |
+| Secrets             | No keys in source. Apps get only the anon/publishable key; `assertClientSupabaseConfig` refuses `service_role` keys and non-HTTPS URLs. AI/payment keys live in edge-function secrets.                                                                |
 
 ## QR codes
 
 Two families, deliberately different:
 
-| | Identity QR (static) | Membership-card QR (dynamic) |
-|---|---|---|
-| Used for | Add friend (USER), enrol with coach (COACH), follow organizer (ORGANIZER), join club / open gym page (FACILITY), register (EVENT) | Entering a facility |
-| Payload | `https://<app-domain>/q/<token>` or `sodia://q/<token>` | `GP2:<pass_id>:<6 digits>` |
-| Uniqueness | 128-bit random token, primary key (cannot repeat), one ACTIVE per subject | Per-pass 256-bit secret, code changes every 60 s |
-| If leaked | `rotate_qr_code()` revokes it instantly | Expires in ≤ 2 min; replay blocked |
-| Server API | `get_qr_code`, `rotate_qr_code`, `resolve_qr_code` (public preview), `redeem_qr_code` (performs the action) | `verify_pass_code` (staff only) |
+|            | Identity QR (static)                                                                                                              | Membership-card QR (dynamic)                     |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| Used for   | Add friend (USER), enrol with coach (COACH), follow organizer (ORGANIZER), join club / open gym page (FACILITY), register (EVENT) | Entering a facility                              |
+| Payload    | `https://<app-domain>/q/<token>` or `sodia://q/<token>`                                                                           | `GP2:<pass_id>:<6 digits>`                       |
+| Uniqueness | 128-bit random token, primary key (cannot repeat), one ACTIVE per subject                                                         | Per-pass 256-bit secret, code changes every 60 s |
+| If leaked  | `rotate_qr_code()` revokes it instantly                                                                                           | Expires in ≤ 2 min; replay blocked               |
+| Server API | `get_qr_code`, `rotate_qr_code`, `resolve_qr_code` (public preview), `redeem_qr_code` (performs the action)                       | `verify_pass_code` (staff only)                  |
 
 Codes are issued automatically for every profile, facility and event; COACH/ORGANIZER codes on first request
 (role required). The apps render the payload as a QR image locally — nothing to store or generate client-side.
@@ -144,6 +144,7 @@ username with suggestions, private write-once DOB with the 13+ hard gate; 18+ is
 `AuthGate` wraps the app; builds without Supabase env run the offline preview.
 
 Required Auth settings (Dashboard → Authentication):
+
 - Email templates "Magic Link" and "Confirm signup" must contain `{{ .Token }}` (the code).
 - Email OTP length 6, expiry 600 s; minimum password length 8 (web).
 - Redirect URLs: `http://localhost:3000/auth/confirm`, `sodia://auth/callback` (+ production web domain).
@@ -152,7 +153,25 @@ Required Auth settings (Dashboard → Authentication):
 - Custom SMTP before inviting real users: the built-in sender only delivers to project team members
   and is heavily rate-limited.
 
+## Code quality & security baseline
+
+- `pnpm lint` (ESLint: TypeScript + React Hooks rules, no `any`, no `console.log`) and `pnpm format:check`
+  (Prettier, 120 cols) run in CI. `pnpm format` fixes formatting.
+- Web responses carry HSTS, `X-Frame-Options: DENY`, `nosniff`, a strict referrer policy, a restrictive
+  `Permissions-Policy` and a minimal CSP (`frame-ancestors 'none'; base-uri 'self'; object-src 'none'`).
+  Server Actions accept at most 100 KB.
+- Edge functions refuse request bodies over 64 KB before parsing/validating them.
+- Transitive security patches are pinned in `pnpm-workspace.yaml` (`overrides`).
+
 ## Known gaps (next steps)
+
+- **Oversized mobile screens:** 18 components exceed AGENTS.md's 250-line limit (reported as `max-lines`
+  warnings by `pnpm lint`). Split them into hooks/sub-components, one screen at a time with tests.
+- **zod v4:** `pnpm audit` flags zod < 4.6.6 (memory exhaustion on oversized input). Mitigated by the 64 KB
+  body cap; migrate to zod v4 (and `@hookform/resolvers` v5) to clear it.
+- **Expo CLI dev tooling:** `glob` / `minimatch` advisories sit inside `@expo/cli` (not shipped in the app);
+  they clear with a future Expo SDK patch.
+- **Full Content-Security-Policy** for the web suite (must allow Supabase / Google / Apple OAuth).
 
 - **Maps:** move Discover / run tracking from the WebView + Geoapify map to `@rnmapbox/maps` and call
   `facilities_nearby()`; upload GPS tracks to `workouts_move.route_geojson`.

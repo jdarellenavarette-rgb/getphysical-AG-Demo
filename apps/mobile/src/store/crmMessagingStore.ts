@@ -102,14 +102,19 @@ export const useCrmMessagingStore = create<CrmMessagingState>((set, get) => ({
             threadMessages: { ...state.threadMessages, [thread.id]: [...existing, chat] },
             threads: state.threads.map((t) =>
               t.id === thread.id
-                ? { ...t, lastMessage: message.body, timeAgo: "Just now", unreadCount: fromMe ? t.unreadCount : t.unreadCount + 1 }
-                : t
+                ? {
+                    ...t,
+                    lastMessage: message.body,
+                    timeAgo: "Just now",
+                    unreadCount: fromMe ? t.unreadCount : t.unreadCount + 1,
+                  }
+                : t,
             ),
             activeToast: fromMe
               ? state.activeToast
               : {
                   id: message.id,
-                  title: message.broadcast_id ? message.body.split("\n")[0] ?? thread.name : thread.name,
+                  title: message.broadcast_id ? (message.body.split("\n")[0] ?? thread.name) : thread.name,
                   body: message.body,
                   senderName: thread.name,
                   senderAvatar: thread.avatar,

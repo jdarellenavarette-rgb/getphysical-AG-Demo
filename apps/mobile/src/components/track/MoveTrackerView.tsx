@@ -19,7 +19,10 @@ export function MoveTrackerView() {
   const [isActive, setIsActive] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const [distanceKm, setDistanceKm] = useState(0.0);
-  const [currentCoords, setCurrentCoords] = useState<[number, number]>([DEFAULT_BGC_COORDS.latitude, DEFAULT_BGC_COORDS.longitude]);
+  const [currentCoords, setCurrentCoords] = useState<[number, number]>([
+    DEFAULT_BGC_COORDS.latitude,
+    DEFAULT_BGC_COORDS.longitude,
+  ]);
   const [route, setRoute] = useState<[number, number][]>([[DEFAULT_BGC_COORDS.latitude, DEFAULT_BGC_COORDS.longitude]]);
   const [isFinished, setIsFinished] = useState(false);
   const [sharedToFeed, setSharedToFeed] = useState(false);
@@ -40,7 +43,7 @@ export function MoveTrackerView() {
 
   // 1. Elapsed Time Stopwatch: Smooth 1-second increment while active
   useEffect(() => {
-    let t: any = null;
+    let t: ReturnType<typeof setInterval> | null = null;
     if (isActive) {
       t = setInterval(() => {
         setSeconds((s) => s + 1);
@@ -76,8 +79,12 @@ export function MoveTrackerView() {
             setRoute((prev) => [...prev, nextPt]);
             setDistanceKm((d) => +(d + movedKm).toFixed(2));
           }
-        }
-      ).then((sub) => { locSub = sub; }).catch(() => {});
+        },
+      )
+        .then((sub) => {
+          locSub = sub;
+        })
+        .catch(() => {});
     }
 
     return () => {
@@ -86,7 +93,9 @@ export function MoveTrackerView() {
   }, [isActive]);
 
   const formatTime = (sec: number) =>
-    `${Math.floor(sec / 60).toString().padStart(2, "0")}:${(sec % 60).toString().padStart(2, "0")}`;
+    `${Math.floor(sec / 60)
+      .toString()
+      .padStart(2, "0")}:${(sec % 60).toString().padStart(2, "0")}`;
 
   const formatPace = () => {
     if (distanceKm < 0.01 || seconds === 0) return "-:--";
@@ -99,9 +108,7 @@ export function MoveTrackerView() {
 
   const activeSportObj = SPORTS_LIST.find((s) => s.id === selectedSport) || SPORTS_LIST[0]!;
   const calBurned = Math.round(
-    distanceKm > 0
-      ? distanceKm * activeSportObj.rateKcal
-      : (seconds / 60) * (activeSportObj.rateKcal * 0.05)
+    distanceKm > 0 ? distanceKm * activeSportObj.rateKcal : (seconds / 60) * (activeSportObj.rateKcal * 0.05),
   );
 
   const handleFinish = () => {
@@ -131,17 +138,38 @@ export function MoveTrackerView() {
   };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.bgScreen }]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+    >
       {/* 1. SPORT SELECTOR PILLS */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.sportSelectorRow} contentContainerStyle={{ gap: 8 }}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.sportSelectorRow}
+        contentContainerStyle={{ gap: 8 }}
+      >
         {SPORTS_LIST.map((sp) => (
           <TouchableOpacity
             key={sp.id}
             onPress={() => !isActive && setSelectedSport(sp.id)}
-            style={[styles.sportPill, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }, selectedSport === sp.id && styles.sportPillActive]}
+            style={[
+              styles.sportPill,
+              { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor },
+              selectedSport === sp.id && styles.sportPillActive,
+            ]}
           >
             <Text style={styles.sportEmoji}>{sp.icon}</Text>
-            <Text style={[styles.sportLabel, { color: colors.textMuted }, selectedSport === sp.id && styles.sportLabelActive]}>{sp.label}</Text>
+            <Text
+              style={[
+                styles.sportLabel,
+                { color: colors.textMuted },
+                selectedSport === sp.id && styles.sportLabelActive,
+              ]}
+            >
+              {sp.label}
+            </Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -152,7 +180,9 @@ export function MoveTrackerView() {
           <View style={styles.livePulse} />
           <Text style={styles.liveText}>{isActive ? "GPS LIVE • TRACKING" : "GPS READY • SATELLITE LOCK"}</Text>
         </View>
-        <Text style={[styles.activityTag, { color: colors.textMuted }]}>{activeSportObj.icon} {activeSportObj.label.toUpperCase()}</Text>
+        <Text style={[styles.activityTag, { color: colors.textMuted }]}>
+          {activeSportObj.icon} {activeSportObj.label.toUpperCase()}
+        </Text>
       </View>
 
       {/* 3. HUD DIGITAL READOUT */}
@@ -200,7 +230,10 @@ export function MoveTrackerView() {
                   <Text style={styles.circleBtnLabel}>RESUME</Text>
                 </TouchableOpacity>
               )}
-              <TouchableOpacity onPress={handleFinish} style={[styles.stopCircleBtn, { backgroundColor: colors.textPrimary }]}>
+              <TouchableOpacity
+                onPress={handleFinish}
+                style={[styles.stopCircleBtn, { backgroundColor: colors.textPrimary }]}
+              >
                 <Square size={24} color={colors.bgScreen} fill={colors.bgScreen} />
                 <Text style={[styles.circleBtnLabelDark, { color: colors.bgScreen }]}>FINISH</Text>
               </TouchableOpacity>
@@ -210,18 +243,26 @@ export function MoveTrackerView() {
       ) : (
         <View style={[styles.finishedCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
           <CheckCircle2 size={36} color="#059669" />
-          <Text style={[styles.finishedTitle, { color: colors.textPrimary }]}>{activeSportObj.label} Saved to Memories!</Text>
-          <Text style={[styles.finishedDesc, { color: colors.textMuted }]}>{distanceKm.toFixed(2)} km in {formatTime(seconds)} • {calBurned} active kcal burned</Text>
+          <Text style={[styles.finishedTitle, { color: colors.textPrimary }]}>
+            {activeSportObj.label} Saved to Memories!
+          </Text>
+          <Text style={[styles.finishedDesc, { color: colors.textMuted }]}>
+            {distanceKm.toFixed(2)} km in {formatTime(seconds)} • {calBurned} active kcal burned
+          </Text>
           {!sharedToFeed ? (
             <TouchableOpacity
               onPress={() => {
-                addPost(`GPS ${activeSportObj.label} completed: ${distanceKm.toFixed(2)} km in ${formatTime(seconds)}! ⚡`, undefined, {
-                  id: `stamp_move_${Date.now()}`,
-                  type: "run",
-                  title: `${activeSportObj.label} Route Trail`,
-                  primaryMetric: `${distanceKm.toFixed(2)} km`,
-                  isVerified: true,
-                });
+                addPost(
+                  `GPS ${activeSportObj.label} completed: ${distanceKm.toFixed(2)} km in ${formatTime(seconds)}! ⚡`,
+                  undefined,
+                  {
+                    id: `stamp_move_${Date.now()}`,
+                    type: "run",
+                    title: `${activeSportObj.label} Route Trail`,
+                    primaryMetric: `${distanceKm.toFixed(2)} km`,
+                    isVerified: true,
+                  },
+                );
                 setSharedToFeed(true);
               }}
               style={styles.shareFeedBtn}

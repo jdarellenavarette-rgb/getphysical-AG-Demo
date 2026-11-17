@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 import * as AppleAuthentication from "expo-apple-authentication";
-import { isNativeAppleSignInAvailable, signInWithApple, signInWithGoogle, type SocialResult } from "../../services/socialAuth";
+import {
+  isNativeAppleSignInAvailable,
+  signInWithApple,
+  signInWithGoogle,
+  type SocialResult,
+} from "../../services/socialAuth";
 import { authStyles as s } from "./auth.styles";
 
 interface SocialSignInButtonsProps {
@@ -77,7 +82,11 @@ export function SocialSignInButtons({ onError, mode = "signin" }: SocialSignInBu
           accessibilityRole="button"
           accessibilityLabel={appleLabel}
         >
-          {busy === "apple" ? <ActivityIndicator color="#000000" /> : <Text style={s.socialAppleText}>{appleLabel}</Text>}
+          {busy === "apple" ? (
+            <ActivityIndicator color="#000000" />
+          ) : (
+            <Text style={s.socialAppleText}>{appleLabel}</Text>
+          )}
         </TouchableOpacity>
       )}
 

@@ -11,9 +11,9 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { X, Sparkles, Calculator, Check, ArrowRight, HeartPulse, Scale, Flame } from "lucide-react-native";
+import { X, Calculator, Check } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
-import { useTrackingStore, type UserBiometrics } from "../../store/trackingStore";
+import { useTrackingStore } from "../../store/trackingStore";
 
 interface NasmBiometricsModalProps {
   visible: boolean;
@@ -65,38 +65,65 @@ export function NasmBiometricsModal({ visible, onClose }: NasmBiometricsModalPro
   const handleSave = () => {
     updateBiometrics(
       { age: numAge, gender, heightCm: numHeight, weightKg: numWeight, activityLevel: activity, goal, bmr, tdee, bmi },
-      { calories: targetCalories, protein: targetProtein, carbs: targetCarbs, fat: targetFat, hydration: +(numWeight * 0.038).toFixed(1) }
+      {
+        calories: targetCalories,
+        protein: targetProtein,
+        carbs: targetCarbs,
+        fat: targetFat,
+        hydration: +(numWeight * 0.038).toFixed(1),
+      },
     );
-    Alert.alert("NASM Targets Synced!", `Daily Targets: ${targetCalories} kcal (P: ${targetProtein}g • C: ${targetCarbs}g • F: ${targetFat}g)`);
+    Alert.alert(
+      "NASM Targets Synced!",
+      `Daily Targets: ${targetCalories} kcal (P: ${targetProtein}g • C: ${targetCarbs}g • F: ${targetFat}g)`,
+    );
     onClose();
   };
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <KeyboardAvoidingView
-        style={styles.overlay}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
+      <KeyboardAvoidingView style={styles.overlay} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <View style={[styles.sheetCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
           <View style={styles.header}>
             <View style={styles.badgeRow}>
               <Calculator size={16} color="#E11D48" />
               <Text style={styles.badgeText}>NASM BODY COMP & TARGETS</Text>
             </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}><X size={20} color={colors.textMuted} /></TouchableOpacity>
+            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+              <X size={20} color={colors.textMuted} />
+            </TouchableOpacity>
           </View>
 
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.content}
+            keyboardShouldPersistTaps="handled"
+          >
             {/* COMPUTED MACRO TARGET HUD */}
-            <View style={[styles.targetHud, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}>
+            <View
+              style={[styles.targetHud, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}
+            >
               <Text style={[styles.hudTitle, { color: colors.textMuted }]}>RECOMMENDED ATHLETIC TARGET</Text>
-              <Text style={styles.hudCalories}>{targetCalories} <Text style={styles.hudKcal}>KCAL/DAY</Text></Text>
+              <Text style={styles.hudCalories}>
+                {targetCalories} <Text style={styles.hudKcal}>KCAL/DAY</Text>
+              </Text>
               <View style={styles.macrosSplitRow}>
-                <View style={styles.macroPill}><Text style={[styles.macroPillVal, { color: "#3B82F6" }]}>{targetProtein}g</Text><Text style={styles.macroPillLabel}>Protein</Text></View>
-                <View style={styles.macroPill}><Text style={[styles.macroPillVal, { color: "#10B981" }]}>{targetCarbs}g</Text><Text style={styles.macroPillLabel}>Carbs</Text></View>
-                <View style={styles.macroPill}><Text style={[styles.macroPillVal, { color: "#F59E0B" }]}>{targetFat}g</Text><Text style={styles.macroPillLabel}>Fats</Text></View>
+                <View style={styles.macroPill}>
+                  <Text style={[styles.macroPillVal, { color: "#3B82F6" }]}>{targetProtein}g</Text>
+                  <Text style={styles.macroPillLabel}>Protein</Text>
+                </View>
+                <View style={styles.macroPill}>
+                  <Text style={[styles.macroPillVal, { color: "#10B981" }]}>{targetCarbs}g</Text>
+                  <Text style={styles.macroPillLabel}>Carbs</Text>
+                </View>
+                <View style={styles.macroPill}>
+                  <Text style={[styles.macroPillVal, { color: "#F59E0B" }]}>{targetFat}g</Text>
+                  <Text style={styles.macroPillLabel}>Fats</Text>
+                </View>
               </View>
-              <Text style={[styles.hudMeta, { color: colors.textMuted }]}>BMR: {bmr} kcal • TDEE: {tdee} kcal • BMI: {bmi}</Text>
+              <Text style={[styles.hudMeta, { color: colors.textMuted }]}>
+                BMR: {bmr} kcal • TDEE: {tdee} kcal • BMI: {bmi}
+              </Text>
             </View>
 
             {/* BIOMETRIC INPUTS */}
@@ -104,23 +131,75 @@ export function NasmBiometricsModal({ visible, onClose }: NasmBiometricsModalPro
             <View style={styles.inputsGrid}>
               <View style={styles.inputCol}>
                 <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>Age (yrs)</Text>
-                <TextInput style={[styles.inputBox, { backgroundColor: colors.bgCardSecondary, color: colors.textPrimary, borderColor: colors.borderColor }]} value={age} onChangeText={setAge} keyboardType="numeric" />
+                <TextInput
+                  style={[
+                    styles.inputBox,
+                    {
+                      backgroundColor: colors.bgCardSecondary,
+                      color: colors.textPrimary,
+                      borderColor: colors.borderColor,
+                    },
+                  ]}
+                  value={age}
+                  onChangeText={setAge}
+                  keyboardType="numeric"
+                />
               </View>
               <View style={styles.inputCol}>
                 <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>Height (cm)</Text>
-                <TextInput style={[styles.inputBox, { backgroundColor: colors.bgCardSecondary, color: colors.textPrimary, borderColor: colors.borderColor }]} value={heightCm} onChangeText={setHeightCm} keyboardType="numeric" />
+                <TextInput
+                  style={[
+                    styles.inputBox,
+                    {
+                      backgroundColor: colors.bgCardSecondary,
+                      color: colors.textPrimary,
+                      borderColor: colors.borderColor,
+                    },
+                  ]}
+                  value={heightCm}
+                  onChangeText={setHeightCm}
+                  keyboardType="numeric"
+                />
               </View>
               <View style={styles.inputCol}>
                 <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>Weight (kg)</Text>
-                <TextInput style={[styles.inputBox, { backgroundColor: colors.bgCardSecondary, color: colors.textPrimary, borderColor: colors.borderColor }]} value={weightKg} onChangeText={setWeightKg} keyboardType="numeric" />
+                <TextInput
+                  style={[
+                    styles.inputBox,
+                    {
+                      backgroundColor: colors.bgCardSecondary,
+                      color: colors.textPrimary,
+                      borderColor: colors.borderColor,
+                    },
+                  ]}
+                  value={weightKg}
+                  onChangeText={setWeightKg}
+                  keyboardType="numeric"
+                />
               </View>
             </View>
 
             {/* GENDER ROW */}
             <View style={styles.genderRow}>
               {(["male", "female"] as const).map((g) => (
-                <TouchableOpacity key={g} onPress={() => setGender(g)} style={[styles.genderBtn, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }, gender === g && styles.genderBtnActive]}>
-                  <Text style={[styles.genderBtnText, { color: colors.textMuted }, gender === g && styles.genderBtnTextActive]}>{g.toUpperCase()}</Text>
+                <TouchableOpacity
+                  key={g}
+                  onPress={() => setGender(g)}
+                  style={[
+                    styles.genderBtn,
+                    { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor },
+                    gender === g && styles.genderBtnActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.genderBtnText,
+                      { color: colors.textMuted },
+                      gender === g && styles.genderBtnTextActive,
+                    ]}
+                  >
+                    {g.toUpperCase()}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -129,18 +208,40 @@ export function NasmBiometricsModal({ visible, onClose }: NasmBiometricsModalPro
             <Text style={[styles.labelTitle, { color: colors.textPrimary, marginTop: 14 }]}>Primary Athletic Goal</Text>
             <View style={styles.optionsWrap}>
               {(Object.keys(GOAL_ADJUSTMENTS) as (keyof typeof GOAL_ADJUSTMENTS)[]).map((k) => (
-                <TouchableOpacity key={k} onPress={() => setGoal(k)} style={[styles.optionPill, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }, goal === k && styles.optionPillActive]}>
-                  <Text style={[styles.optionText, { color: colors.textPrimary }, goal === k && { color: "#FFF" }]}>{GOAL_ADJUSTMENTS[k].label}</Text>
+                <TouchableOpacity
+                  key={k}
+                  onPress={() => setGoal(k)}
+                  style={[
+                    styles.optionPill,
+                    { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor },
+                    goal === k && styles.optionPillActive,
+                  ]}
+                >
+                  <Text style={[styles.optionText, { color: colors.textPrimary }, goal === k && { color: "#FFF" }]}>
+                    {GOAL_ADJUSTMENTS[k].label}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
 
             {/* ACTIVITY LEVEL */}
-            <Text style={[styles.labelTitle, { color: colors.textPrimary, marginTop: 14 }]}>Activity & Training Frequency</Text>
+            <Text style={[styles.labelTitle, { color: colors.textPrimary, marginTop: 14 }]}>
+              Activity & Training Frequency
+            </Text>
             <View style={styles.optionsWrap}>
               {(Object.keys(ACTIVITY_MULTIPLIERS) as (keyof typeof ACTIVITY_MULTIPLIERS)[]).map((k) => (
-                <TouchableOpacity key={k} onPress={() => setActivity(k)} style={[styles.optionPill, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }, activity === k && styles.optionPillActive]}>
-                  <Text style={[styles.optionText, { color: colors.textPrimary }, activity === k && { color: "#FFF" }]}>{ACTIVITY_MULTIPLIERS[k].label}</Text>
+                <TouchableOpacity
+                  key={k}
+                  onPress={() => setActivity(k)}
+                  style={[
+                    styles.optionPill,
+                    { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor },
+                    activity === k && styles.optionPillActive,
+                  ]}
+                >
+                  <Text style={[styles.optionText, { color: colors.textPrimary }, activity === k && { color: "#FFF" }]}>
+                    {ACTIVITY_MULTIPLIERS[k].label}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -187,6 +288,14 @@ const styles = StyleSheet.create({
   optionPill: { paddingVertical: 9, paddingHorizontal: 12, borderRadius: 10, borderWidth: 1 },
   optionPillActive: { backgroundColor: "#E11D48", borderColor: "#E11D48" },
   optionText: { fontSize: 12, fontWeight: "700" },
-  saveCtaBtn: { backgroundColor: "#10B981", flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 14, borderRadius: 14, marginTop: 18 },
+  saveCtaBtn: {
+    backgroundColor: "#10B981",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 14,
+    borderRadius: 14,
+    marginTop: 18,
+  },
   saveCtaText: { color: "#FFF", fontSize: 14, fontWeight: "800" },
 });

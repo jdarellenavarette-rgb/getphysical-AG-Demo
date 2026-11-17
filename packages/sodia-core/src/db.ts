@@ -53,18 +53,14 @@ export const EXPLICIT_COLUMNS = {
   PASS_CREDENTIALS: "pass_id, secret, rotated_at",
   LEDGER_TRANSACTIONS:
     "id, reference_no, idempotency_key, user_id, member_name, buyer_display_name, facility_id, facility_name, type, entry_type, amount, gross_amount_php, platform_fee_php, net_facility_amount_php, description, method, payment_method, status, reversing_transaction_id, payment_order_id, timestamp",
-  ACCESS_SCANS:
-    "id, facility_id, user_id, pass_id, scanned_by, member_name, avatar, status, reason, created_at",
+  ACCESS_SCANS: "id, facility_id, user_id, pass_id, scanned_by, member_name, avatar, status, reason, created_at",
   SODIA_POSTS:
     "id, user_id, author_name, author_avatar, author_role, content, media_url, likes_count, comments_count, facility_tag, stamp, created_at",
-  PR_CHALLENGES:
-    "id, title, category, benchmark, facility_id, expires_in_days, participants_count, created_at",
+  PR_CHALLENGES: "id, title, category, benchmark, facility_id, expires_in_days, participants_count, created_at",
   TOURNAMENT_MATCHES:
     "id, facility_id, sport, round, player_a, player_b, score_a, score_b, status, court_slot, updated_at",
-  CONVERSATIONS:
-    "id, kind, facility_id, athlete_id, title, created_at, last_message_at",
-  MESSAGES:
-    "id, conversation_id, sender_id, sender_kind, body, broadcast_id, created_at",
+  CONVERSATIONS: "id, kind, facility_id, athlete_id, title, created_at, last_message_at",
+  MESSAGES: "id, conversation_id, sender_id, sender_kind, body, broadcast_id, created_at",
   CRM_BROADCASTS:
     "id, facility_id, created_by, suite_mode, audience, segment_id, target_user_id, title, body, promo_code, badge_text, recipient_count, created_at",
   PAYMENT_ORDERS:

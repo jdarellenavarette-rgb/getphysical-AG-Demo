@@ -1,9 +1,4 @@
-export type UserRole =
-  | "individual"
-  | "staff"
-  | "coach"
-  | "organizer"
-  | "facility_owner";
+export type UserRole = "individual" | "staff" | "coach" | "organizer" | "facility_owner";
 
 export * from "./states";
 export * from "./constants";

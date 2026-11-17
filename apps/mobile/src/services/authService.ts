@@ -20,7 +20,11 @@ export async function sendEmailCode(email: string): Promise<AuthResult> {
 export async function verifyEmailCode(email: string, code: string): Promise<AuthResult> {
   const { error } = await client().auth.verifyOtp({ email, token: code, type: "email" });
   if (!error) return { ok: true };
-  return { ok: false, field: "code", message: error.status === 429 ? "Too many attempts. Request a new code." : "That code is wrong or has expired." };
+  return {
+    ok: false,
+    field: "code",
+    message: error.status === 429 ? "Too many attempts. Request a new code." : "That code is wrong or has expired.",
+  };
 }
 
 /** True when the signed-in user still needs to finish profile setup. */
@@ -33,7 +37,10 @@ export async function needsProfileSetup(): Promise<boolean> {
 /** Names already known from the auth provider (Google / Apple) or the profile row. */
 export async function getProfileDraft(): Promise<{ firstName: string; lastName: string }> {
   const supabase = client();
-  const [{ data: profile }, { data: auth }] = await Promise.all([supabase.rpc("get_my_profile"), supabase.auth.getUser()]);
+  const [{ data: profile }, { data: auth }] = await Promise.all([
+    supabase.rpc("get_my_profile"),
+    supabase.auth.getUser(),
+  ]);
   const meta = (auth.user?.user_metadata ?? {}) as Record<string, unknown>;
   const text = (v: unknown) => (typeof v === "string" ? v.trim() : "");
   const fullName = text(meta.full_name) || text(meta.name);
@@ -65,7 +72,8 @@ export async function completeProfile(input: ProfileSetupInput): Promise<AuthRes
     .eq("id", auth.user.id);
   if (!error) return { ok: true };
   if (error.code === "23505") return { ok: false, field: "username", message: "That username was just taken." };
-  if (error.message.includes("DOB_LOCKED")) return { ok: false, message: "Your date of birth is already set. Contact support to change it." };
+  if (error.message.includes("DOB_LOCKED"))
+    return { ok: false, message: "Your date of birth is already set. Contact support to change it." };
   return { ok: false, message: "We couldn't save your profile. Please retry." };
 }
 

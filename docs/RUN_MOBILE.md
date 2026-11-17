@@ -41,19 +41,19 @@ Restart `pnpm mobile` after editing `.env`.
 
 ## In Expo Go vs. a development build
 
-| Works in Expo Go | Needs a development build (EAS) |
-|---|---|
+| Works in Expo Go                                                                       | Needs a development build (EAS)                                                                                |
+| -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | Guest demo, sign-in with email code, profile setup, QR codes and scanner, cards, inbox | Continue with Google, Continue with Apple (they return to the app via `sodia://`, which Expo Go can't receive) |
 
 ## Troubleshooting
 
-| What you see | Fix |
-|---|---|
-| "Unable to resolve module …" | `pnpm install` at the repo root, then `pnpm mobile` |
-| "Project is incompatible with this version of Expo Go" | Update Expo Go from the App Store / Play Store (needs SDK 58) |
-| Phone stuck on "Opening project…" / can't connect | Phone and computer on the same Wi-Fi, or run `pnpm mobile:tunnel` |
-| App opens on the sign-in screen but no code arrives | Check the Supabase email template and Resend setup (`docs/EMAIL_AND_AUTH_LIMITS.md`) |
-| Red error screen | Send the first lines of the error (the message and the file name) |
+| What you see                                           | Fix                                                                                  |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| "Unable to resolve module …"                           | `pnpm install` at the repo root, then `pnpm mobile`                                  |
+| "Project is incompatible with this version of Expo Go" | Update Expo Go from the App Store / Play Store (needs SDK 58)                        |
+| Phone stuck on "Opening project…" / can't connect      | Phone and computer on the same Wi-Fi, or run `pnpm mobile:tunnel`                    |
+| App opens on the sign-in screen but no code arrives    | Check the Supabase email template and Resend setup (`docs/EMAIL_AND_AUTH_LIMITS.md`) |
+| Red error screen                                       | Send the first lines of the error (the message and the file name)                    |
 
 ## Automated launch check
 

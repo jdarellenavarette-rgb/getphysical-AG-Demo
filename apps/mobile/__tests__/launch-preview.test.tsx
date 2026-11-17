@@ -16,7 +16,7 @@ it("launches through the splash and sign-in into the guest demo without crashing
   render(
     <SafeAreaProvider initialMetrics={METRICS}>
       <Page />
-    </SafeAreaProvider>
+    </SafeAreaProvider>,
   );
   // Splash runs ~2.5 s, then the sign-in screen offers the guest demo.
   fireEvent.press(await screen.findByText("Explore as Guest", {}, { timeout: 10000 }));

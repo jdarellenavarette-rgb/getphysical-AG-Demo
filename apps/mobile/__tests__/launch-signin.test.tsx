@@ -18,7 +18,7 @@ it("launches through the splash into the sign-in screen without crashing", async
   render(
     <SafeAreaProvider initialMetrics={METRICS}>
       <Page />
-    </SafeAreaProvider>
+    </SafeAreaProvider>,
   );
   expect(await screen.findByText("Welcome back", {}, { timeout: 10000 })).toBeTruthy();
   expect(screen.getByText("Sign in with Google")).toBeTruthy();

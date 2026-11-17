@@ -32,7 +32,8 @@ export function usePassTotp(passId: string | null, enabled = true): PassTotpStat
 
   useEffect(() => {
     if (!passId || !secret || !enabled) return;
-    const tick = () => setState({ status: "ready", totp: generatePassTotp(passId, secret.value), offline: secret.offline });
+    const tick = () =>
+      setState({ status: "ready", totp: generatePassTotp(passId, secret.value), offline: secret.offline });
     tick();
     const timer = setInterval(tick, 1000);
     return () => clearInterval(timer);

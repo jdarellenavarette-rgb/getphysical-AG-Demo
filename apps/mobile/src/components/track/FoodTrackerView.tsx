@@ -8,15 +8,8 @@ import { styles } from "./FoodTrackerView.styles";
 
 export function FoodTrackerView() {
   const { colors } = useThemeStore();
-  const {
-    foodMeals,
-    hydrationLiters,
-    dailyTargets,
-    saveFoodMeal,
-    deleteFoodMeal,
-    clearFoodMeals,
-    addHydration,
-  } = useTrackingStore();
+  const { foodMeals, hydrationLiters, dailyTargets, saveFoodMeal, deleteFoodMeal, clearFoodMeals, addHydration } =
+    useTrackingStore();
 
   const [nlpInput, setNlpInput] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -74,28 +67,54 @@ export function FoodTrackerView() {
           <View style={styles.macroCol}>
             <Text style={[styles.ringVal, { color: colors.textPrimary }]}>{totalCalories}</Text>
             <View style={[styles.progBarTrack, { backgroundColor: colors.borderColor }]}>
-              <View style={[styles.progBarFill, { width: `${Math.min(100, (totalCalories / dailyTargets.calories) * 100)}%`, backgroundColor: "#E11D48" }]} />
+              <View
+                style={[
+                  styles.progBarFill,
+                  {
+                    width: `${Math.min(100, (totalCalories / dailyTargets.calories) * 100)}%`,
+                    backgroundColor: "#E11D48",
+                  },
+                ]}
+              />
             </View>
             <Text style={[styles.ringLabel, { color: colors.textMuted }]}>Calories ({dailyTargets.calories})</Text>
           </View>
           <View style={styles.macroCol}>
             <Text style={[styles.ringVal, { color: colors.textPrimary }]}>{totalProtein}g</Text>
             <View style={[styles.progBarTrack, { backgroundColor: colors.borderColor }]}>
-              <View style={[styles.progBarFill, { width: `${Math.min(100, (totalProtein / dailyTargets.protein) * 100)}%`, backgroundColor: "#3B82F6" }]} />
+              <View
+                style={[
+                  styles.progBarFill,
+                  {
+                    width: `${Math.min(100, (totalProtein / dailyTargets.protein) * 100)}%`,
+                    backgroundColor: "#3B82F6",
+                  },
+                ]}
+              />
             </View>
             <Text style={[styles.ringLabel, { color: colors.textMuted }]}>Protein ({dailyTargets.protein}g)</Text>
           </View>
           <View style={styles.macroCol}>
             <Text style={[styles.ringVal, { color: colors.textPrimary }]}>{totalCarbs}g</Text>
             <View style={[styles.progBarTrack, { backgroundColor: colors.borderColor }]}>
-              <View style={[styles.progBarFill, { width: `${Math.min(100, (totalCarbs / dailyTargets.carbs) * 100)}%`, backgroundColor: "#10B981" }]} />
+              <View
+                style={[
+                  styles.progBarFill,
+                  { width: `${Math.min(100, (totalCarbs / dailyTargets.carbs) * 100)}%`, backgroundColor: "#10B981" },
+                ]}
+              />
             </View>
             <Text style={[styles.ringLabel, { color: colors.textMuted }]}>Carbs ({dailyTargets.carbs}g)</Text>
           </View>
           <View style={styles.macroCol}>
             <Text style={[styles.ringVal, { color: colors.textPrimary }]}>{totalFat}g</Text>
             <View style={[styles.progBarTrack, { backgroundColor: colors.borderColor }]}>
-              <View style={[styles.progBarFill, { width: `${Math.min(100, (totalFat / dailyTargets.fat) * 100)}%`, backgroundColor: "#F59E0B" }]} />
+              <View
+                style={[
+                  styles.progBarFill,
+                  { width: `${Math.min(100, (totalFat / dailyTargets.fat) * 100)}%`, backgroundColor: "#F59E0B" },
+                ]}
+              />
             </View>
             <Text style={[styles.ringLabel, { color: colors.textMuted }]}>Fat ({dailyTargets.fat}g)</Text>
           </View>
@@ -117,7 +136,10 @@ export function FoodTrackerView() {
 
         <View style={styles.oracleInputRow}>
           <TextInput
-            style={[styles.oracleInput, { backgroundColor: colors.bgCardSecondary, color: colors.textPrimary, borderColor: colors.borderColor }]}
+            style={[
+              styles.oracleInput,
+              { backgroundColor: colors.bgCardSecondary, color: colors.textPrimary, borderColor: colors.borderColor },
+            ]}
             placeholder="e.g. 3 eggs, 2 toast with butter, latte"
             placeholderTextColor={colors.textMuted}
             value={nlpInput}
@@ -130,7 +152,12 @@ export function FoodTrackerView() {
         </View>
 
         {oracleDraft && (
-          <View style={[styles.draftResultCard, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}>
+          <View
+            style={[
+              styles.draftResultCard,
+              { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor },
+            ]}
+          >
             <View style={styles.draftHeaderRow}>
               <Text style={[styles.draftTitle, { color: colors.textPrimary }]}>{oracleDraft.headline}</Text>
               <Text style={styles.draftCals}>{oracleDraft.totalCalories} kcal</Text>
@@ -160,19 +187,32 @@ export function FoodTrackerView() {
       <View style={[styles.hydrationCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
         <View style={styles.hydrationHeader}>
           <Text style={[styles.hydrationTitle, { color: colors.textPrimary }]}>Hydration Target</Text>
-          <Text style={styles.hydrationVal}>{hydrationLiters}L / {dailyTargets.hydration}L</Text>
+          <Text style={styles.hydrationVal}>
+            {hydrationLiters}L / {dailyTargets.hydration}L
+          </Text>
         </View>
         <View style={[styles.waterTrack, { backgroundColor: colors.borderColor }]}>
-          <View style={[styles.waterFill, { width: `${Math.min(100, (hydrationLiters / dailyTargets.hydration) * 100)}%` }]} />
+          <View
+            style={[styles.waterFill, { width: `${Math.min(100, (hydrationLiters / dailyTargets.hydration) * 100)}%` }]}
+          />
         </View>
         <View style={styles.hydrationActions}>
-          <TouchableOpacity onPress={() => addHydration(0.25)} style={[styles.hydroPill, { backgroundColor: colors.bgCardSecondary }]}>
+          <TouchableOpacity
+            onPress={() => addHydration(0.25)}
+            style={[styles.hydroPill, { backgroundColor: colors.bgCardSecondary }]}
+          >
             <Text style={styles.hydroPillText}>+250ml Cup</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => addHydration(0.5)} style={[styles.hydroPill, { backgroundColor: colors.bgCardSecondary }]}>
+          <TouchableOpacity
+            onPress={() => addHydration(0.5)}
+            style={[styles.hydroPill, { backgroundColor: colors.bgCardSecondary }]}
+          >
             <Text style={styles.hydroPillText}>+500ml Bottle</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => addHydration(1.0)} style={[styles.hydroPill, { backgroundColor: colors.bgCardSecondary }]}>
+          <TouchableOpacity
+            onPress={() => addHydration(1.0)}
+            style={[styles.hydroPill, { backgroundColor: colors.bgCardSecondary }]}
+          >
             <Text style={styles.hydroPillText}>+1.0L Shaker</Text>
           </TouchableOpacity>
         </View>
@@ -181,7 +221,9 @@ export function FoodTrackerView() {
       {/* 4. TODAY'S MEAL DIARY */}
       <View style={[styles.foodHistoryList, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
         <View style={styles.historyHeader}>
-          <Text style={[styles.historyTitle, { color: colors.textPrimary }]}>Today's Logged Meals ({foodMeals.length})</Text>
+          <Text style={[styles.historyTitle, { color: colors.textPrimary }]}>
+            Today's Logged Meals ({foodMeals.length})
+          </Text>
           {foodMeals.length > 0 && (
             <TouchableOpacity onPress={clearFoodMeals} style={styles.clearLogsBtn}>
               <Trash2 size={12} color="#EF4444" />
@@ -194,8 +236,12 @@ export function FoodTrackerView() {
           <View key={item.id} style={[styles.foodItemCard, { borderBottomColor: colors.borderLight }]}>
             <View style={{ flex: 1, paddingRight: 8 }}>
               <Text style={[styles.foodName, { color: colors.textPrimary }]}>{item.name}</Text>
-              <Text style={[styles.foodMacros, { color: colors.textSecondary }]}>P: {item.totalP}g • C: {item.totalC}g • F: {item.totalF}g</Text>
-              {item.oracleNotes && <Text style={[styles.foodNotes, { color: colors.textMuted }]}>{item.oracleNotes}</Text>}
+              <Text style={[styles.foodMacros, { color: colors.textSecondary }]}>
+                P: {item.totalP}g • C: {item.totalC}g • F: {item.totalF}g
+              </Text>
+              {item.oracleNotes && (
+                <Text style={[styles.foodNotes, { color: colors.textMuted }]}>{item.oracleNotes}</Text>
+              )}
             </View>
             <View style={{ alignItems: "flex-end", gap: 6 }}>
               <Text style={styles.foodCals}>{item.totalCal} kcal</Text>

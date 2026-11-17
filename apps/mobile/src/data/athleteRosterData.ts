@@ -19,13 +19,7 @@ export const ATHLETE_ROSTER: Record<string, AthleteProfileData> = {
     followersCount: "3.8k",
     workoutsCount: "540",
     prStamp: { title: "Deadlift 1RM", metric: "225 KG", venue: "Metro Core Arena" },
-    photos: [
-      DARELLE_PHYSIQUE,
-      DARELLE_TENNIS_JUMP,
-      DARELLE_BOXING,
-      DARELLE_TENNIS_RACKET,
-      DARELLE_AVATAR,
-    ],
+    photos: [DARELLE_PHYSIQUE, DARELLE_TENNIS_JUMP, DARELLE_BOXING, DARELLE_TENNIS_RACKET, DARELLE_AVATAR],
   },
   "Coach Miguel Ramos": {
     userId: "u_miguel",
@@ -93,9 +87,6 @@ export function getAthleteProfile(name: string, avatar?: string | null): Athlete
     isVerified: false,
     followersCount: "1.2k",
     workoutsCount: "180",
-    photos: [
-      DARELLE_PHYSIQUE,
-      DARELLE_TENNIS_JUMP,
-    ],
+    photos: [DARELLE_PHYSIQUE, DARELLE_TENNIS_JUMP],
   };
 }

@@ -23,7 +23,13 @@ describe("calculateHybridServiceFee", () => {
 });
 
 describe("crmBroadcastInputSchema", () => {
-  const base = { facilityId: "fac_a", suiteMode: "GYMDASH", audience: "ALL", title: "Open house", body: "Saturday" } as const;
+  const base = {
+    facilityId: "fac_a",
+    suiteMode: "GYMDASH",
+    audience: "ALL",
+    title: "Open house",
+    body: "Saturday",
+  } as const;
   it("normalises promo codes", () => {
     expect(crmBroadcastInputSchema.parse({ ...base, promoCode: " metro2026 " }).promoCode).toBe("METRO2026");
   });
@@ -42,8 +48,12 @@ describe("crmBroadcastInputSchema", () => {
 
 describe("checkoutRequestSchema", () => {
   it("only allows sellable SKUs", () => {
-    expect(checkoutRequestSchema.safeParse({ facilityId: "fac_a", sku: "COURT_HOUR", idempotencyKey: "12345678" }).success).toBe(false);
-    expect(checkoutRequestSchema.safeParse({ facilityId: "fac_a", sku: "DAY_PASS", idempotencyKey: "12345678" }).success).toBe(true);
+    expect(
+      checkoutRequestSchema.safeParse({ facilityId: "fac_a", sku: "COURT_HOUR", idempotencyKey: "12345678" }).success,
+    ).toBe(false);
+    expect(
+      checkoutRequestSchema.safeParse({ facilityId: "fac_a", sku: "DAY_PASS", idempotencyKey: "12345678" }).success,
+    ).toBe(true);
   });
 });
 
@@ -55,11 +65,20 @@ describe("assertClientSupabaseConfig", () => {
     expect(() => assertClientSupabaseConfig({ supabaseUrl: url })).toThrow(SupabaseConfigError);
   });
   it("refuses service_role keys in client apps", () => {
-    expect(() => assertClientSupabaseConfig({ supabaseUrl: url, supabaseAnonKey: fakeJwt("service_role") })).toThrow(/service_role/);
-    expect(() => assertClientSupabaseConfig({ supabaseUrl: url, supabaseAnonKey: "sb_secret_abc" })).toThrow(/service_role/);
+    expect(() => assertClientSupabaseConfig({ supabaseUrl: url, supabaseAnonKey: fakeJwt("service_role") })).toThrow(
+      /service_role/,
+    );
+    expect(() => assertClientSupabaseConfig({ supabaseUrl: url, supabaseAnonKey: "sb_secret_abc" })).toThrow(
+      /service_role/,
+    );
   });
   it("refuses plain http outside localhost", () => {
-    expect(() => assertClientSupabaseConfig({ supabaseUrl: "http://192.168.1.3:54321", supabaseAnonKey: fakeJwt("anon") })).toThrow(/https/);
-    expect(assertClientSupabaseConfig({ supabaseUrl: "http://127.0.0.1:54321", supabaseAnonKey: fakeJwt("anon") }).supabaseUrl).toBe("http://127.0.0.1:54321");
+    expect(() =>
+      assertClientSupabaseConfig({ supabaseUrl: "http://192.168.1.3:54321", supabaseAnonKey: fakeJwt("anon") }),
+    ).toThrow(/https/);
+    expect(
+      assertClientSupabaseConfig({ supabaseUrl: "http://127.0.0.1:54321", supabaseAnonKey: fakeJwt("anon") })
+        .supabaseUrl,
+    ).toBe("http://127.0.0.1:54321");
   });
 });

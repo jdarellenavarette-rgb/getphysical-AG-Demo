@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Image, Linking, Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { CheckCircle2, Info, QrCode, ShieldCheck, X, XCircle, Zap, ZapOff } from "lucide-react-native";
@@ -11,8 +11,20 @@ interface QrScannerModalProps {
   title?: string;
 }
 
-const KIND_LABEL = { USER: "Athlete", COACH: "Coach", ORGANIZER: "Organizer", FACILITY: "Facility", EVENT: "Event" } as const;
-const KIND_ACTION = { USER: "Follow", COACH: "Request to enrol", ORGANIZER: "Follow", FACILITY: "Join / view", EVENT: "Register" } as const;
+const KIND_LABEL = {
+  USER: "Athlete",
+  COACH: "Coach",
+  ORGANIZER: "Organizer",
+  FACILITY: "Facility",
+  EVENT: "Event",
+} as const;
+const KIND_ACTION = {
+  USER: "Follow",
+  COACH: "Request to enrol",
+  ORGANIZER: "Follow",
+  FACILITY: "Join / view",
+  EVENT: "Register",
+} as const;
 
 /**
  * Universal GetPhysical scanner: friend / coach / organizer / facility / event
@@ -23,12 +35,18 @@ export function QrScannerModal({ visible, onClose, title = "Scan QR" }: QrScanne
   const [flash, setFlash] = useState<"off" | "on">("off");
   const { state, onScan, confirm, reset } = useQrScanner();
 
+  const askedThisOpen = useRef(false);
+
   useEffect(() => {
-    if (visible) {
-      reset();
-      if (permission && !permission.granted && permission.canAskAgain) void requestPermission();
-    }
-  }, [visible, permission?.granted]);
+    if (visible) reset();
+    else askedThisOpen.current = false;
+  }, [visible, reset]);
+
+  useEffect(() => {
+    if (!visible || askedThisOpen.current || !permission || permission.granted || !permission.canAskAgain) return;
+    askedThisOpen.current = true;
+    void requestPermission();
+  }, [visible, permission, requestPermission]);
 
   const scanning = state.phase === "scanning";
 
@@ -48,11 +66,15 @@ export function QrScannerModal({ visible, onClose, title = "Scan QR" }: QrScanne
             <Text style={styles.fallbackTitle}>Camera access needed</Text>
             <Text style={styles.fallbackSubtitle}>Allow camera access to scan GetPhysical QR codes.</Text>
             <TouchableOpacity
-              onPress={() => (permission?.canAskAgain === false ? void Linking.openSettings() : void requestPermission())}
+              onPress={() =>
+                permission?.canAskAgain === false ? void Linking.openSettings() : void requestPermission()
+              }
               style={styles.reqBtn}
               accessibilityRole="button"
             >
-              <Text style={styles.reqBtnText}>{permission?.canAskAgain === false ? "Open Settings" : "Allow camera"}</Text>
+              <Text style={styles.reqBtnText}>
+                {permission?.canAskAgain === false ? "Open Settings" : "Allow camera"}
+              </Text>
             </TouchableOpacity>
           </View>
         )}
@@ -65,7 +87,11 @@ export function QrScannerModal({ visible, onClose, title = "Scan QR" }: QrScanne
             <QrCode size={16} color="#10B981" />
             <Text style={styles.headerTitle}>{title}</Text>
           </View>
-          <TouchableOpacity onPress={() => setFlash((f) => (f === "on" ? "off" : "on"))} style={styles.iconCircle} accessibilityLabel="Toggle flashlight">
+          <TouchableOpacity
+            onPress={() => setFlash((f) => (f === "on" ? "off" : "on"))}
+            style={styles.iconCircle}
+            accessibilityLabel="Toggle flashlight"
+          >
             {flash === "on" ? <Zap size={20} color="#FBBF24" /> : <ZapOff size={20} color="#FFFFFF" />}
           </TouchableOpacity>
         </View>
@@ -93,7 +119,17 @@ export function QrScannerModal({ visible, onClose, title = "Scan QR" }: QrScanne
   );
 }
 
-function ScanPanel({ state, onConfirm, onReset, onClose }: { state: ScanState; onConfirm: () => void; onReset: () => void; onClose: () => void }) {
+function ScanPanel({
+  state,
+  onConfirm,
+  onReset,
+  onClose,
+}: {
+  state: ScanState;
+  onConfirm: () => void;
+  onReset: () => void;
+  onClose: () => void;
+}) {
   if (state.phase === "scanning") {
     return <Text style={styles.panelText}>Friends, coaches, clubs, gyms and events all have a GetPhysical code.</Text>;
   }
@@ -113,7 +149,9 @@ function ScanPanel({ state, onConfirm, onReset, onClose }: { state: ScanState; o
         <View style={styles.panelRow}>
           {image ? <Image source={{ uri: image }} style={styles.avatar} /> : <View style={styles.avatar} />}
           <View style={{ flex: 1 }}>
-            <Text style={styles.panelTitle} numberOfLines={1}>{subject.name ?? subject.title ?? "GetPhysical"}</Text>
+            <Text style={styles.panelTitle} numberOfLines={1}>
+              {subject.name ?? subject.title ?? "GetPhysical"}
+            </Text>
             <Text style={styles.panelText} numberOfLines={2}>
               {KIND_LABEL[kind]}
               {subject.username ? ` · @${subject.username}` : ""}
@@ -123,8 +161,12 @@ function ScanPanel({ state, onConfirm, onReset, onClose }: { state: ScanState; o
           </View>
         </View>
         <View style={styles.actions}>
-          <TouchableOpacity onPress={onReset} style={styles.secondaryBtn}><Text style={styles.btnText}>Cancel</Text></TouchableOpacity>
-          <TouchableOpacity onPress={onConfirm} style={styles.primaryBtn}><Text style={styles.btnText}>{KIND_ACTION[kind]}</Text></TouchableOpacity>
+          <TouchableOpacity onPress={onReset} style={styles.secondaryBtn}>
+            <Text style={styles.btnText}>Cancel</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={onConfirm} style={styles.primaryBtn}>
+            <Text style={styles.btnText}>{KIND_ACTION[kind]}</Text>
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -141,13 +183,20 @@ function ScanPanel({ state, onConfirm, onReset, onClose }: { state: ScanState; o
         </View>
       </View>
       <View style={styles.actions}>
-        <TouchableOpacity onPress={onReset} style={styles.secondaryBtn}><Text style={styles.btnText}>Scan another</Text></TouchableOpacity>
+        <TouchableOpacity onPress={onReset} style={styles.secondaryBtn}>
+          <Text style={styles.btnText}>Scan another</Text>
+        </TouchableOpacity>
         {state.facilitySlug ? (
-          <TouchableOpacity onPress={() => void Linking.openURL(facilityLink(state.facilitySlug!))} style={styles.primaryBtn}>
+          <TouchableOpacity
+            onPress={() => void Linking.openURL(facilityLink(state.facilitySlug!))}
+            style={styles.primaryBtn}
+          >
             <Text style={styles.btnText}>View passes</Text>
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity onPress={onClose} style={styles.primaryBtn}><Text style={styles.btnText}>Done</Text></TouchableOpacity>
+          <TouchableOpacity onPress={onClose} style={styles.primaryBtn}>
+            <Text style={styles.btnText}>Done</Text>
+          </TouchableOpacity>
         )}
       </View>
     </View>
@@ -158,12 +207,41 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#000000" },
   permissionFallback: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24 },
   fallbackTitle: { color: "#FFFFFF", fontSize: 18, fontWeight: "800", marginTop: 14 },
-  fallbackSubtitle: { color: "#8E8E93", fontSize: 13, textAlign: "center", marginTop: 6, lineHeight: 18, maxWidth: 300 },
+  fallbackSubtitle: {
+    color: "#8E8E93",
+    fontSize: 13,
+    textAlign: "center",
+    marginTop: 6,
+    lineHeight: 18,
+    maxWidth: 300,
+  },
   reqBtn: { backgroundColor: "#E11D48", paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12, marginTop: 18 },
   reqBtnText: { color: "#FFFFFF", fontWeight: "800", fontSize: 13 },
-  topBar: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingTop: 52, paddingHorizontal: 20, zIndex: 10 },
-  iconCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" },
-  headerTitleWrap: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "rgba(0,0,0,0.6)", paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999 },
+  topBar: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingTop: 52,
+    paddingHorizontal: 20,
+    zIndex: 10,
+  },
+  iconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  headerTitleWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
+  },
   headerTitle: { color: "#FFFFFF", fontSize: 13, fontWeight: "800" },
   reticleContainer: { flex: 1, alignItems: "center", justifyContent: "center" },
   reticleFrame: { width: 250, height: 250, position: "relative", justifyContent: "center", alignItems: "center" },
@@ -172,9 +250,32 @@ const styles = StyleSheet.create({
   topRight: { top: 0, right: 0, borderTopWidth: 4, borderRightWidth: 4, borderTopRightRadius: 10 },
   bottomLeft: { bottom: 0, left: 0, borderBottomWidth: 4, borderLeftWidth: 4, borderBottomLeftRadius: 10 },
   bottomRight: { bottom: 0, right: 0, borderBottomWidth: 4, borderRightWidth: 4, borderBottomRightRadius: 10 },
-  scanLaser: { width: "90%", height: 2, backgroundColor: "#E11D48", shadowColor: "#E11D48", shadowOpacity: 0.8, shadowRadius: 6 },
-  reticleHint: { color: "#FFFFFF", fontSize: 13, fontWeight: "600", marginTop: 20, backgroundColor: "rgba(0,0,0,0.5)", paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999 },
-  bottomSheet: { backgroundColor: "rgba(18,18,18,0.92)", borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 18, paddingBottom: 36, zIndex: 10 },
+  scanLaser: {
+    width: "90%",
+    height: 2,
+    backgroundColor: "#E11D48",
+    shadowColor: "#E11D48",
+    shadowOpacity: 0.8,
+    shadowRadius: 6,
+  },
+  reticleHint: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "600",
+    marginTop: 20,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
+  bottomSheet: {
+    backgroundColor: "rgba(18,18,18,0.92)",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 18,
+    paddingBottom: 36,
+    zIndex: 10,
+  },
   footerRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 14 },
   footerText: { color: "#8E8E93", fontSize: 10, fontWeight: "600" },
   panelRow: { flexDirection: "row", alignItems: "center", gap: 12 },
@@ -183,6 +284,12 @@ const styles = StyleSheet.create({
   panelText: { color: "#A1A1AA", fontSize: 13, marginTop: 4, lineHeight: 18 },
   actions: { flexDirection: "row", gap: 10, marginTop: 16 },
   primaryBtn: { flex: 1, backgroundColor: "#E11D48", paddingVertical: 12, borderRadius: 12, alignItems: "center" },
-  secondaryBtn: { flex: 1, backgroundColor: "rgba(255,255,255,0.08)", paddingVertical: 12, borderRadius: 12, alignItems: "center" },
+  secondaryBtn: {
+    flex: 1,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: "center",
+  },
   btnText: { color: "#FFFFFF", fontWeight: "800", fontSize: 13 },
 });

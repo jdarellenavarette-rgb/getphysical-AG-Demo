@@ -12,12 +12,7 @@ interface StatementOfAccountModalProps {
   onSelectPass: (pass: PassRow) => void;
 }
 
-export function StatementOfAccountModal({
-  visible,
-  passes,
-  onClose,
-  onSelectPass,
-}: StatementOfAccountModalProps) {
+export function StatementOfAccountModal({ visible, passes, onClose, onSelectPass }: StatementOfAccountModalProps) {
   const insets = useSafeAreaInsets();
   const { colors } = useThemeStore();
   const [filter, setFilter] = useState<"all" | "passes" | "courts">("all");
@@ -28,7 +23,16 @@ export function StatementOfAccountModal({
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         {/* HEADER BAR WITH SAFE NOTCH INSET */}
-        <View style={[styles.topBar, { paddingTop: Math.max(insets.top, 50) + 10, backgroundColor: colors.bgHeader, borderBottomColor: colors.borderColor }]}>
+        <View
+          style={[
+            styles.topBar,
+            {
+              paddingTop: Math.max(insets.top, 50) + 10,
+              backgroundColor: colors.bgHeader,
+              borderBottomColor: colors.borderColor,
+            },
+          ]}
+        >
           <TouchableOpacity
             onPress={onClose}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
@@ -58,9 +62,15 @@ export function StatementOfAccountModal({
               <TouchableOpacity
                 key={fil}
                 onPress={() => setFilter(fil)}
-                style={[styles.filterPill, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }, filter === fil && styles.filterPillActive]}
+                style={[
+                  styles.filterPill,
+                  { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor },
+                  filter === fil && styles.filterPillActive,
+                ]}
               >
-                <Text style={[styles.filterText, { color: colors.textMuted }, filter === fil && styles.filterTextActive]}>
+                <Text
+                  style={[styles.filterText, { color: colors.textMuted }, filter === fil && styles.filterTextActive]}
+                >
                   {fil === "all" ? `All (${passes.length})` : fil === "passes" ? "Day Passes" : "Courts & Meets"}
                 </Text>
               </TouchableOpacity>
@@ -89,7 +99,9 @@ export function StatementOfAccountModal({
                   </View>
                   <View style={styles.txDetails}>
                     <Text style={[styles.txTitle, { color: colors.textPrimary }]}>{p.pass_type}</Text>
-                    <Text style={[styles.txDate, { color: colors.textMuted }]}>{p.created_at ? new Date(p.created_at).toLocaleDateString() : "Active"} • Metro Core</Text>
+                    <Text style={[styles.txDate, { color: colors.textMuted }]}>
+                      {p.created_at ? new Date(p.created_at).toLocaleDateString() : "Active"} • Metro Core
+                    </Text>
                   </View>
                   <View style={styles.txRight}>
                     <Text style={[styles.txPrice, { color: colors.textPrimary }]}>₱265.00</Text>
@@ -112,7 +124,14 @@ export function StatementOfAccountModal({
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingBottom: 14, borderBottomWidth: 1 },
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+  },
   backBtn: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 44, paddingVertical: 4 },
   backBtnText: { fontSize: 13, fontWeight: "700" },
   headerTitle: { fontSize: 12, fontWeight: "900", letterSpacing: 0.8 },
@@ -132,7 +151,14 @@ const styles = StyleSheet.create({
   emptySub: { fontSize: 11, textAlign: "center", marginTop: 4, maxWidth: 260 },
   txList: { gap: 8, marginBottom: 16 },
   txRow: { flexDirection: "row", alignItems: "center", borderRadius: 12, padding: 12, borderWidth: 1 },
-  txIconWrap: { width: 34, height: 34, borderRadius: 8, backgroundColor: "rgba(236, 72, 153, 0.15)", alignItems: "center", justifyContent: "center" },
+  txIconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    backgroundColor: "rgba(236, 72, 153, 0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   txDetails: { flex: 1, marginLeft: 12 },
   txTitle: { fontSize: 13, fontWeight: "700" },
   txDate: { fontSize: 11, marginTop: 2 },

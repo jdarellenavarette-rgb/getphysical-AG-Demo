@@ -17,7 +17,7 @@ interface FilterResult {
 export function filterDiscoverItems(
   allFacilities: FacilityRow[],
   searchQuery: string,
-  filters: DiscoverFilterState
+  filters: DiscoverFilterState,
 ): FilterResult {
   const q = searchQuery.trim().toLowerCase();
   const { category, sport, priceRange, openNowOnly } = filters;

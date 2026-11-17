@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Award, Flame, Briefcase, CheckCircle2 } from "lucide-react-native";
+import type { ColorPalette } from "../../theme/theme";
 import { chatStyles as styles } from "./DMChatView.styles";
 
 interface PRStampBubbleProps {
@@ -37,14 +38,19 @@ export function PRStampBubble({ themeMode }: PRStampBubbleProps) {
 }
 
 interface CoachTelemetryBubbleProps {
-  colors: any;
+  colors: ColorPalette;
 }
 
 export function CoachTelemetryBubble({ colors }: CoachTelemetryBubbleProps) {
   const [showRawData, setShowRawData] = useState(false);
 
   return (
-    <View style={[styles.incomingBubble, { backgroundColor: colors.bgCard, borderColor: colors.borderColor, borderWidth: 1 }]}>
+    <View
+      style={[
+        styles.incomingBubble,
+        { backgroundColor: colors.bgCard, borderColor: colors.borderColor, borderWidth: 1 },
+      ]}
+    >
       <Text style={[styles.bubbleText, { color: colors.textPrimary }]}>I reviewed your last set bar-speed curve.</Text>
       <TouchableOpacity
         onPress={() => setShowRawData((p) => !p)}
@@ -58,7 +64,9 @@ export function CoachTelemetryBubble({ colors }: CoachTelemetryBubbleProps) {
         <View style={{ marginTop: 8, padding: 8, backgroundColor: colors.bgCardSecondary, borderRadius: 8 }}>
           <Text style={{ color: "#10B981", fontSize: 11, fontWeight: "700" }}>Set 1: 140kg @ 0.62 m/s (RPE 7.0)</Text>
           <Text style={{ color: "#F59E0B", fontSize: 11, fontWeight: "700" }}>Set 2: 180kg @ 0.44 m/s (RPE 8.5)</Text>
-          <Text style={{ color: "#E11D48", fontSize: 11, fontWeight: "700" }}>Set 3: 225kg @ 0.19 m/s (RPE 9.5 PR)</Text>
+          <Text style={{ color: "#E11D48", fontSize: 11, fontWeight: "700" }}>
+            Set 3: 225kg @ 0.19 m/s (RPE 9.5 PR)
+          </Text>
         </View>
       )}
       <Text style={[styles.bubbleTime, { color: colors.textMuted }]}>08:35 AM</Text>
@@ -67,7 +75,7 @@ export function CoachTelemetryBubble({ colors }: CoachTelemetryBubbleProps) {
 }
 
 interface B2BHandshakeCardProps {
-  colors: any;
+  colors: ColorPalette;
 }
 
 export function B2BHandshakeCard({ colors }: B2BHandshakeCardProps) {

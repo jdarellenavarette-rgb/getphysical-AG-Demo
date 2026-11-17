@@ -28,7 +28,7 @@ export function DMChatView({ thread, onBack }: DMChatViewProps) {
   const { colors, themeMode } = useThemeStore();
   const { threadMessages, sendMessage } = useCrmMessagingStore();
 
-  const scrollViewRef = useRef<any>(null);
+  const scrollViewRef = useRef<React.ComponentRef<typeof ScrollView>>(null);
   const [inputText, setInputText] = useState("");
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
 
@@ -99,8 +99,15 @@ export function DMChatView({ thread, onBack }: DMChatViewProps) {
         contentContainerStyle={{ paddingBottom: 16 }}
       >
         {/* DEFAULT GREETING */}
-        <View style={[styles.incomingBubble, { backgroundColor: colors.bgCard, borderColor: colors.borderColor, borderWidth: 1 }]}>
-          <Text style={[styles.bubbleText, { color: colors.textPrimary }]}>Hey Darelle! Great training session this morning.</Text>
+        <View
+          style={[
+            styles.incomingBubble,
+            { backgroundColor: colors.bgCard, borderColor: colors.borderColor, borderWidth: 1 },
+          ]}
+        >
+          <Text style={[styles.bubbleText, { color: colors.textPrimary }]}>
+            Hey Darelle! Great training session this morning.
+          </Text>
           <Text style={[styles.bubbleTime, { color: colors.textMuted }]}>08:30 AM</Text>
         </View>
 
@@ -114,7 +121,10 @@ export function DMChatView({ thread, onBack }: DMChatViewProps) {
         {messages.map((msg) => {
           if (msg.isCrmBroadcast && msg.broadcastData) {
             return (
-              <View key={msg.id} style={[styles.broadcastCard, { backgroundColor: colors.bgCard, borderColor: "#E11D48" }]}>
+              <View
+                key={msg.id}
+                style={[styles.broadcastCard, { backgroundColor: colors.bgCard, borderColor: "#E11D48" }]}
+              >
                 <View style={styles.broadcastHeader}>
                   <View style={styles.broadcastTag}>
                     <Radio size={10} color="#FFFFFF" />
@@ -147,7 +157,9 @@ export function DMChatView({ thread, onBack }: DMChatViewProps) {
                 !isOutgoing && { borderColor: colors.borderColor, borderWidth: 1 },
               ]}
             >
-              <Text style={[styles.bubbleText, { color: isOutgoing ? "#FFFFFF" : colors.textPrimary }]}>{msg.text}</Text>
+              <Text style={[styles.bubbleText, { color: isOutgoing ? "#FFFFFF" : colors.textPrimary }]}>
+                {msg.text}
+              </Text>
               <Text style={[styles.bubbleTime, { color: isOutgoing ? "rgba(255,255,255,0.7)" : colors.textMuted }]}>
                 {msg.time}
               </Text>

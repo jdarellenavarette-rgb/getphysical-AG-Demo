@@ -55,7 +55,13 @@ export function TrackHub() {
           style={[styles.togglePill, activeSegment === "lift" && styles.togglePillActive]}
         >
           <Dumbbell size={13} color={activeSegment === "lift" ? "#FFFFFF" : colors.textMuted} />
-          <Text style={[styles.toggleText, { color: colors.textMuted }, activeSegment === "lift" && styles.toggleTextActive]}>
+          <Text
+            style={[
+              styles.toggleText,
+              { color: colors.textMuted },
+              activeSegment === "lift" && styles.toggleTextActive,
+            ]}
+          >
             Lift
           </Text>
         </TouchableOpacity>
@@ -65,7 +71,13 @@ export function TrackHub() {
           style={[styles.togglePill, activeSegment === "move" && styles.togglePillActive]}
         >
           <Footprints size={13} color={activeSegment === "move" ? "#FFFFFF" : colors.textMuted} />
-          <Text style={[styles.toggleText, { color: colors.textMuted }, activeSegment === "move" && styles.toggleTextActive]}>
+          <Text
+            style={[
+              styles.toggleText,
+              { color: colors.textMuted },
+              activeSegment === "move" && styles.toggleTextActive,
+            ]}
+          >
             Move
           </Text>
         </TouchableOpacity>
@@ -75,7 +87,13 @@ export function TrackHub() {
           style={[styles.togglePill, activeSegment === "food" && styles.togglePillActive]}
         >
           <Apple size={13} color={activeSegment === "food" ? "#FFFFFF" : colors.textMuted} />
-          <Text style={[styles.toggleText, { color: colors.textMuted }, activeSegment === "food" && styles.toggleTextActive]}>
+          <Text
+            style={[
+              styles.toggleText,
+              { color: colors.textMuted },
+              activeSegment === "food" && styles.toggleTextActive,
+            ]}
+          >
             Food
           </Text>
         </TouchableOpacity>
@@ -85,7 +103,13 @@ export function TrackHub() {
           style={[styles.togglePill, activeSegment === "journey" && styles.togglePillActive]}
         >
           <TrendingUp size={13} color={activeSegment === "journey" ? "#FFFFFF" : colors.textMuted} />
-          <Text style={[styles.toggleText, { color: colors.textMuted }, activeSegment === "journey" && styles.toggleTextActive]}>
+          <Text
+            style={[
+              styles.toggleText,
+              { color: colors.textMuted },
+              activeSegment === "journey" && styles.toggleTextActive,
+            ]}
+          >
             Journey
           </Text>
         </TouchableOpacity>
@@ -109,8 +133,23 @@ const styles = StyleSheet.create({
   summaryItem: { alignItems: "center" },
   summaryVal: { fontSize: 13, fontWeight: "800" },
   summaryLabel: { fontSize: 10, marginTop: 2 },
-  toggleBar: { flexDirection: "row", marginHorizontal: 12, marginVertical: 8, borderRadius: 12, padding: 3, borderWidth: 1 },
-  togglePill: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, paddingVertical: 8, borderRadius: 10 },
+  toggleBar: {
+    flexDirection: "row",
+    marginHorizontal: 12,
+    marginVertical: 8,
+    borderRadius: 12,
+    padding: 3,
+    borderWidth: 1,
+  },
+  togglePill: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 5,
+    paddingVertical: 8,
+    borderRadius: 10,
+  },
   togglePillActive: { backgroundColor: "#E11D48" },
   toggleText: { fontSize: 11, fontWeight: "700" },
   toggleTextActive: { color: "#FFFFFF" },

@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity, Image, ScrollView, StyleSheet } from "react-native";
-import { Star, MapPin, Users, Award, Calendar } from "lucide-react-native";
+import { Star } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import type { FacilityRow } from "sodia-core";
 import type { DiscoverCoach, DiscoverCommunityClub } from "../../data/discoverData";
@@ -48,7 +48,12 @@ export function DiscoverListSection({
     <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
       {/* 1. FACILITIES (GYMS, PILATES, MULTI-SPORT) */}
       {facilities.map((fac) => {
-        const distKm = calculateHaversineKm(userCoords.latitude, userCoords.longitude, fac.lat ?? 14.549, fac.lng ?? 121.05);
+        const distKm = calculateHaversineKm(
+          userCoords.latitude,
+          userCoords.longitude,
+          fac.lat ?? 14.549,
+          fac.lng ?? 121.05,
+        );
         const price = fac.day_pass_price_php ?? fac.court_hourly_price_php ?? 250;
         return (
           <TouchableOpacity
@@ -58,14 +63,22 @@ export function DiscoverListSection({
           >
             <Image source={{ uri: fac.cover_image ?? "" }} style={styles.image} />
             <View style={styles.body}>
-              <Text style={[styles.title, { color: colors.textPrimary }]} numberOfLines={1}>{fac.name}</Text>
-              <Text style={[styles.category, { color: colors.textMuted }]} numberOfLines={1}>{fac.category}</Text>
+              <Text style={[styles.title, { color: colors.textPrimary }]} numberOfLines={1}>
+                {fac.name}
+              </Text>
+              <Text style={[styles.category, { color: colors.textMuted }]} numberOfLines={1}>
+                {fac.category}
+              </Text>
               <Text style={[styles.meta, { color: colors.textSecondary }]}>
                 {distKm} km • {formatWalkingEta(distKm)}
               </Text>
               <View style={styles.bottomRow}>
-                <Text style={styles.price}>₱{price} {fac.registry === "A" ? "Day Pass" : "Court/Hr"}</Text>
-                <View style={styles.badge}><Text style={styles.badgeText}>{fac.inside_now_count ?? 20} Inside</Text></View>
+                <Text style={styles.price}>
+                  ₱{price} {fac.registry === "A" ? "Day Pass" : "Court/Hr"}
+                </Text>
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{fac.inside_now_count ?? 20} Inside</Text>
+                </View>
               </View>
             </View>
           </TouchableOpacity>
@@ -82,13 +95,21 @@ export function DiscoverListSection({
           <Image source={{ uri: c.avatar }} style={styles.avatarImage} />
           <View style={styles.body}>
             <View style={styles.topRow}>
-              <Text style={[styles.title, { color: colors.textPrimary }]} numberOfLines={1}>{c.name}</Text>
-              <View style={styles.coachTag}><Text style={styles.coachTagText}>COACH</Text></View>
+              <Text style={[styles.title, { color: colors.textPrimary }]} numberOfLines={1}>
+                {c.name}
+              </Text>
+              <View style={styles.coachTag}>
+                <Text style={styles.coachTagText}>COACH</Text>
+              </View>
             </View>
-            <Text style={[styles.category, { color: colors.textMuted }]} numberOfLines={1}>{c.title}</Text>
+            <Text style={[styles.category, { color: colors.textMuted }]} numberOfLines={1}>
+              {c.title}
+            </Text>
             <View style={styles.ratingRow}>
               <Star size={11} color="#F59E0B" fill="#F59E0B" />
-              <Text style={[styles.meta, { color: colors.textSecondary }]}>{c.rating} ({c.reviewCount} reviews)</Text>
+              <Text style={[styles.meta, { color: colors.textSecondary }]}>
+                {c.rating} ({c.reviewCount} reviews)
+              </Text>
             </View>
             <View style={styles.bottomRow}>
               <Text style={styles.price}>₱{c.hourlyRatePhp}/hr</Text>
@@ -108,10 +129,16 @@ export function DiscoverListSection({
           <Image source={{ uri: cl.coverImage }} style={styles.image} />
           <View style={styles.body}>
             <View style={styles.topRow}>
-              <Text style={[styles.title, { color: colors.textPrimary }]} numberOfLines={1}>{cl.name}</Text>
-              <View style={styles.clubTag}><Text style={styles.clubTagText}>{cl.category.toUpperCase()}</Text></View>
+              <Text style={[styles.title, { color: colors.textPrimary }]} numberOfLines={1}>
+                {cl.name}
+              </Text>
+              <View style={styles.clubTag}>
+                <Text style={styles.clubTagText}>{cl.category.toUpperCase()}</Text>
+              </View>
             </View>
-            <Text style={[styles.category, { color: colors.textMuted }]} numberOfLines={1}>{cl.meetingPoint}</Text>
+            <Text style={[styles.category, { color: colors.textMuted }]} numberOfLines={1}>
+              {cl.meetingPoint}
+            </Text>
             <Text style={[styles.meta, { color: colors.textSecondary }]}>{cl.schedule}</Text>
             <View style={styles.bottomRow}>
               <Text style={[styles.price, cl.dropInFeePhp === 0 && { color: "#10B981" }]}>

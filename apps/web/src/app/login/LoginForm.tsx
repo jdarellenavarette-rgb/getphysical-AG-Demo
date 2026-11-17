@@ -14,66 +14,73 @@ export function LoginForm({ next }: { next: string }) {
 
   return (
     <div style={{ display: "grid", gap: 14 }}>
-    <div style={{ display: "grid", gap: 10 }}>
-      {(["apple", "google"] as const).map((provider) => (
-        <form key={provider} action={signInWithProvider.bind(null, provider)}>
-          <input type="hidden" name="next" value={next} />
-          <button type="submit" style={provider === "apple" ? appleButtonStyle : googleButtonStyle}>
-            Continue with {provider === "apple" ? "Apple" : "Google"}
-          </button>
-        </form>
-      ))}
-      <p style={{ textAlign: "center", color: "#6B7280", fontSize: 12, margin: "4px 0 0" }}>or sign in with email</p>
-    </div>
-    <form action={mode === "password" ? passwordAction : magicAction} noValidate style={{ display: "grid", gap: 14 }}>
-      <input type="hidden" name="next" value={next} />
-      <label style={labelStyle}>
-        Work email
-        <input
-          name="email"
-          type="email"
-          autoComplete="email"
-          required
-          aria-invalid={Boolean(state.fieldErrors?.email)}
-          aria-describedby="email-error"
-          style={{ ...inputStyle, borderColor: state.fieldErrors?.email ? "#F87171" : "#2C3242" }}
-        />
-        <span id="email-error" style={errorStyle}>{state.fieldErrors?.email}</span>
-      </label>
-
-      {mode === "password" && (
+      <div style={{ display: "grid", gap: 10 }}>
+        {(["apple", "google"] as const).map((provider) => (
+          <form key={provider} action={signInWithProvider.bind(null, provider)}>
+            <input type="hidden" name="next" value={next} />
+            <button type="submit" style={provider === "apple" ? appleButtonStyle : googleButtonStyle}>
+              Continue with {provider === "apple" ? "Apple" : "Google"}
+            </button>
+          </form>
+        ))}
+        <p style={{ textAlign: "center", color: "#6B7280", fontSize: 12, margin: "4px 0 0" }}>or sign in with email</p>
+      </div>
+      <form action={mode === "password" ? passwordAction : magicAction} noValidate style={{ display: "grid", gap: 14 }}>
+        <input type="hidden" name="next" value={next} />
         <label style={labelStyle}>
-          Password
+          Work email
           <input
-            name="password"
-            type="password"
-            autoComplete="current-password"
+            name="email"
+            type="email"
+            autoComplete="email"
             required
-            aria-invalid={Boolean(state.fieldErrors?.password)}
-            aria-describedby="password-error"
-            style={{ ...inputStyle, borderColor: state.fieldErrors?.password ? "#F87171" : "#2C3242" }}
+            aria-invalid={Boolean(state.fieldErrors?.email)}
+            aria-describedby="email-error"
+            style={{ ...inputStyle, borderColor: state.fieldErrors?.email ? "#F87171" : "#2C3242" }}
           />
-          <span id="password-error" style={errorStyle}>{state.fieldErrors?.password}</span>
+          <span id="email-error" style={errorStyle}>
+            {state.fieldErrors?.email}
+          </span>
         </label>
-      )}
 
-      {state.message && (
-        <p role={state.status === "error" ? "alert" : "status"} style={{ margin: 0, fontSize: 14, color: state.status === "error" ? "#FCA5A5" : "#6EE7B7" }}>
-          {state.message}
-        </p>
-      )}
+        {mode === "password" && (
+          <label style={labelStyle}>
+            Password
+            <input
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              required
+              aria-invalid={Boolean(state.fieldErrors?.password)}
+              aria-describedby="password-error"
+              style={{ ...inputStyle, borderColor: state.fieldErrors?.password ? "#F87171" : "#2C3242" }}
+            />
+            <span id="password-error" style={errorStyle}>
+              {state.fieldErrors?.password}
+            </span>
+          </label>
+        )}
 
-      <button type="submit" disabled={pending} style={{ ...buttonStyle, opacity: pending ? 0.6 : 1 }}>
-        {pending ? "Please wait…" : mode === "password" ? "Sign in" : "Email me a sign-in link"}
-      </button>
-      <button
-        type="button"
-        onClick={() => setMode(mode === "password" ? "magic" : "password")}
-        style={linkButtonStyle}
-      >
-        {mode === "password" ? "Use a one-time email link instead" : "Use my password instead"}
-      </button>
-    </form>
+        {state.message && (
+          <p
+            role={state.status === "error" ? "alert" : "status"}
+            style={{ margin: 0, fontSize: 14, color: state.status === "error" ? "#FCA5A5" : "#6EE7B7" }}
+          >
+            {state.message}
+          </p>
+        )}
+
+        <button type="submit" disabled={pending} style={{ ...buttonStyle, opacity: pending ? 0.6 : 1 }}>
+          {pending ? "Please wait…" : mode === "password" ? "Sign in" : "Email me a sign-in link"}
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode(mode === "password" ? "magic" : "password")}
+          style={linkButtonStyle}
+        >
+          {mode === "password" ? "Use a one-time email link instead" : "Use my password instead"}
+        </button>
+      </form>
     </div>
   );
 }

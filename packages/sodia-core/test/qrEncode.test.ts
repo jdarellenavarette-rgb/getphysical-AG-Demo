@@ -18,7 +18,11 @@ describe("encodeQr", () => {
   });
   it("always draws the three finder patterns", () => {
     const { modules, size } = encodeQr("GP2:9a000000-0000-0000-0000-000000000001:123456");
-    for (const [r, c] of [[0, 0], [0, size - 7], [size - 7, 0]] as const) {
+    for (const [r, c] of [
+      [0, 0],
+      [0, size - 7],
+      [size - 7, 0],
+    ] as const) {
       expect(modules[r]!.slice(c, c + 7).every(Boolean)).toBe(true);
       expect(modules[r + 2]![c + 1]).toBe(false);
       expect(modules[r + 3]![c + 3]).toBe(true);

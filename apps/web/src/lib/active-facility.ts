@@ -38,15 +38,17 @@ export async function getSuiteSession(): Promise<SuiteSession | null> {
 
   const facilities: ActiveFacility[] = (staffRows ?? []).flatMap((row) =>
     row.facilities
-      ? [{
-          id: row.facilities.id,
-          name: row.facilities.name,
-          registryType: row.facilities.registry_type,
-          plan: row.facilities.plan,
-          logoUrl: row.facilities.logo_url,
-          role: row.role,
-        }]
-      : []
+      ? [
+          {
+            id: row.facilities.id,
+            name: row.facilities.name,
+            registryType: row.facilities.registry_type,
+            plan: row.facilities.plan,
+            logoUrl: row.facilities.logo_url,
+            role: row.role,
+          },
+        ]
+      : [],
   );
 
   const preferred = (await cookies()).get(ACTIVE_FACILITY_COOKIE)?.value;

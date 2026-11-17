@@ -6,7 +6,7 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
-    "lint": "turbo run lint",
+    "lint": "eslint .",
     "typecheck": "turbo run typecheck",
     "typecheck:functions": "pnpm --filter sodia-core exec tsc -p ../../supabase/functions/tsconfig.json",
     "test": "turbo run test",
@@ -14,11 +14,19 @@
     "db:types:check": "cmp packages/sodia-core/src/database.types.ts supabase/functions/_shared/database.types.ts",
     "clean": "turbo run clean",
     "mobile": "pnpm --filter @getphysical/mobile exec expo start --clear",
-    "mobile:tunnel": "pnpm --filter @getphysical/mobile exec expo start --clear --tunnel"
+    "mobile:tunnel": "pnpm --filter @getphysical/mobile exec expo start --clear --tunnel",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "globals": "^16.5.0",
+    "prettier": "^3.10.1",
     "turbo": "^2.4.4",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.72.2"
   },
   "engines": {
     "node": ">=20.0.0"

@@ -88,7 +88,10 @@ export function DiscoverFilterModal({
                     onPress={() => setDraft((d) => ({ ...d, category: cat }))}
                     style={[
                       styles.chip,
-                      { backgroundColor: active ? "#E11D48" : colors.bgCardSecondary, borderColor: active ? "#E11D48" : colors.borderColor },
+                      {
+                        backgroundColor: active ? "#E11D48" : colors.bgCardSecondary,
+                        borderColor: active ? "#E11D48" : colors.borderColor,
+                      },
                     ]}
                   >
                     <Text style={[styles.chipText, { color: active ? "#FFF" : colors.textPrimary }]}>{cat}</Text>
@@ -108,7 +111,10 @@ export function DiscoverFilterModal({
                     onPress={() => setDraft((d) => ({ ...d, sport: sp }))}
                     style={[
                       styles.chip,
-                      { backgroundColor: active ? colors.accent : colors.bgCardSecondary, borderColor: active ? colors.accent : colors.borderColor },
+                      {
+                        backgroundColor: active ? colors.accent : colors.bgCardSecondary,
+                        borderColor: active ? colors.accent : colors.borderColor,
+                      },
                     ]}
                   >
                     <Text style={[styles.chipText, { color: active ? "#FFF" : colors.textPrimary }]}>{sp}</Text>
@@ -128,7 +134,10 @@ export function DiscoverFilterModal({
                     onPress={() => setDraft((d) => ({ ...d, priceRange: tier.id }))}
                     style={[
                       styles.chip,
-                      { backgroundColor: active ? colors.accent : colors.bgCardSecondary, borderColor: active ? colors.accent : colors.borderColor },
+                      {
+                        backgroundColor: active ? colors.accent : colors.bgCardSecondary,
+                        borderColor: active ? colors.accent : colors.borderColor,
+                      },
                     ]}
                   >
                     <Text style={[styles.chipText, { color: active ? "#FFF" : colors.textPrimary }]}>{tier.label}</Text>
@@ -143,7 +152,9 @@ export function DiscoverFilterModal({
               style={[styles.toggleRow, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}
             >
               <Text style={[styles.toggleText, { color: colors.textPrimary }]}>Open Now Only</Text>
-              <View style={[styles.checkbox, draft.openNowOnly && { backgroundColor: "#10B981", borderColor: "#10B981" }]}>
+              <View
+                style={[styles.checkbox, draft.openNowOnly && { backgroundColor: "#10B981", borderColor: "#10B981" }]}
+              >
                 {draft.openNowOnly && <Check size={14} color="#FFF" />}
               </View>
             </TouchableOpacity>
@@ -156,7 +167,10 @@ export function DiscoverFilterModal({
               <Text style={[styles.resetText, { color: colors.textSecondary }]}>Reset</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => { onApplyFilters(draft); onClose(); }}
+              onPress={() => {
+                onApplyFilters(draft);
+                onClose();
+              }}
               style={styles.applyBtn}
             >
               <Text style={styles.applyText}>Show {totalResultsCount} Results</Text>
@@ -171,20 +185,65 @@ export function DiscoverFilterModal({
 const styles = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" },
   sheet: { borderTopLeftRadius: 24, borderTopRightRadius: 24, borderWidth: 1, maxHeight: "85%" },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 16, borderBottomWidth: 1 },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 16,
+    borderBottomWidth: 1,
+  },
   headerLeft: { flexDirection: "row", alignItems: "center", gap: 8 },
   title: { fontSize: 17, fontWeight: "800" },
   content: { padding: 16, paddingBottom: 24 },
   sectionTitle: { fontSize: 11, fontWeight: "800", letterSpacing: 0.8, marginBottom: 8 },
   chipGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  chip: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 18, borderWidth: 1, minHeight: 38, justifyContent: "center" },
+  chip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 18,
+    borderWidth: 1,
+    minHeight: 38,
+    justifyContent: "center",
+  },
   chipText: { fontSize: 12, fontWeight: "600" },
-  toggleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 14, borderRadius: 14, borderWidth: 1, marginTop: 16 },
+  toggleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    marginTop: 16,
+  },
   toggleText: { fontSize: 14, fontWeight: "700" },
-  checkbox: { width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: "#94A3B8", justifyContent: "center", alignItems: "center" },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: "#94A3B8",
+    justifyContent: "center",
+    alignItems: "center",
+  },
   footer: { flexDirection: "row", padding: 16, gap: 12, borderTopWidth: 1 },
-  resetBtn: { flex: 1, flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 6, minHeight: 48, borderRadius: 14, borderWidth: 1 },
+  resetBtn: {
+    flex: 1,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 6,
+    minHeight: 48,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
   resetText: { fontSize: 14, fontWeight: "700" },
-  applyBtn: { flex: 2, justifyContent: "center", alignItems: "center", minHeight: 48, borderRadius: 14, backgroundColor: "#E11D48" },
+  applyBtn: {
+    flex: 2,
+    justifyContent: "center",
+    alignItems: "center",
+    minHeight: 48,
+    borderRadius: 14,
+    backgroundColor: "#E11D48",
+  },
   applyText: { fontSize: 14, fontWeight: "800", color: "#FFF" },
 });

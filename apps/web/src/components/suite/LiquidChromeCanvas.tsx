@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React, { useEffect, useRef } from 'react';
-import * as THREE from 'three';
+import React, { useEffect, useRef } from "react";
+import * as THREE from "three";
 
 interface LiquidChromeCanvasProps {
   width?: number;
@@ -9,7 +9,7 @@ interface LiquidChromeCanvasProps {
   isDark?: boolean;
 }
 
-export function LiquidChromeCanvas({ width = 160, height = 150, isDark = false }: LiquidChromeCanvasProps) {
+export function LiquidChromeCanvas({ width = 160, height = 150 }: LiquidChromeCanvasProps) {
   const mountRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -36,8 +36,8 @@ export function LiquidChromeCanvas({ width = 160, height = 150, isDark = false }
 
     // Liquid Metallic Chrome Material with Rose-Gold / Crimson iridescence
     const material = new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color('#FF4D6D'),
-      emissive: new THREE.Color('#881337'),
+      color: new THREE.Color("#FF4D6D"),
+      emissive: new THREE.Color("#881337"),
       emissiveIntensity: 0.18,
       roughness: 0.12,
       metalness: 0.92,
@@ -79,11 +79,11 @@ export function LiquidChromeCanvas({ width = 160, height = 150, isDark = false }
       targetRotationX = mouseY * 1.2;
     };
 
-    container.addEventListener('mousemove', onMouseMove);
+    container.addEventListener("mousemove", onMouseMove);
 
     // Animation Loop
     let animationFrameId: number;
-    let clock = new THREE.Clock();
+    const clock = new THREE.Clock();
 
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
@@ -105,7 +105,7 @@ export function LiquidChromeCanvas({ width = 160, height = 150, isDark = false }
 
     return () => {
       cancelAnimationFrame(animationFrameId);
-      container.removeEventListener('mousemove', onMouseMove);
+      container.removeEventListener("mousemove", onMouseMove);
       if (renderer.domElement && container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
       }
@@ -121,11 +121,11 @@ export function LiquidChromeCanvas({ width = 160, height = 150, isDark = false }
       style={{
         width: `${width}px`,
         height: `${height}px`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        cursor: 'grab',
-        filter: 'drop-shadow(0 14px 28px rgba(225, 29, 72, 0.28))',
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        cursor: "grab",
+        filter: "drop-shadow(0 14px 28px rgba(225, 29, 72, 0.28))",
       }}
     />
   );

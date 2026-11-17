@@ -59,9 +59,15 @@ export function JourneyView() {
   const displayedMemories = showAllActivities ? memories : memories.slice(0, 4);
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.bgScreen }]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+    >
       {/* 1. MY JOURNEY HERO HEADER */}
-      <View style={[styles.heroCard, { backgroundColor: colors.bgCard, borderColor: colors.borderLight, borderWidth: 1 }]}>
+      <View
+        style={[styles.heroCard, { backgroundColor: colors.bgCard, borderColor: colors.borderLight, borderWidth: 1 }]}
+      >
         <View style={styles.heroTopRow}>
           <View>
             <Text style={[styles.heroTitle, { color: colors.textPrimary }]}>My Journey</Text>
@@ -89,9 +95,17 @@ export function JourneyView() {
             {weeklyBars.map((bar) => (
               <View key={bar.day} style={styles.barColumn}>
                 <View style={[styles.barTrack, { backgroundColor: colors.bgCardSecondary }]}>
-                  <View style={[styles.barFill, { height: `${bar.height}%`, backgroundColor: colors.borderLight }, bar.isPeak && styles.barFillPeak]} />
+                  <View
+                    style={[
+                      styles.barFill,
+                      { height: `${bar.height}%`, backgroundColor: colors.borderLight },
+                      bar.isPeak && styles.barFillPeak,
+                    ]}
+                  />
                 </View>
-                <Text style={[styles.barDayText, { color: colors.textMuted }, bar.isPeak && styles.barDayTextPeak]}>{bar.day}</Text>
+                <Text style={[styles.barDayText, { color: colors.textMuted }, bar.isPeak && styles.barDayTextPeak]}>
+                  {bar.day}
+                </Text>
               </View>
             ))}
           </View>
@@ -99,18 +113,48 @@ export function JourneyView() {
 
         {/* ACTIVE / RECOVERY PILLS */}
         <View style={[styles.pillsRow, { backgroundColor: colors.bgCardSecondary }]}>
-          <TouchableOpacity onPress={() => setActiveTab("active")} style={[styles.modePill, activeTab === "active" && [styles.modePillActive, { backgroundColor: colors.bgCard }]]}>
-            <Text style={[styles.modePillText, { color: colors.textSecondary }, activeTab === "active" && [styles.modePillTextActive, { color: colors.textPrimary }]]}>Active</Text>
+          <TouchableOpacity
+            onPress={() => setActiveTab("active")}
+            style={[
+              styles.modePill,
+              activeTab === "active" && [styles.modePillActive, { backgroundColor: colors.bgCard }],
+            ]}
+          >
+            <Text
+              style={[
+                styles.modePillText,
+                { color: colors.textSecondary },
+                activeTab === "active" && [styles.modePillTextActive, { color: colors.textPrimary }],
+              ]}
+            >
+              Active
+            </Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => setActiveTab("recovery")} style={[styles.modePill, activeTab === "recovery" && [styles.modePillActive, { backgroundColor: colors.bgCard }]]}>
-            <Text style={[styles.modePillText, { color: colors.textSecondary }, activeTab === "recovery" && [styles.modePillTextActive, { color: colors.textPrimary }]]}>Recovery</Text>
+          <TouchableOpacity
+            onPress={() => setActiveTab("recovery")}
+            style={[
+              styles.modePill,
+              activeTab === "recovery" && [styles.modePillActive, { backgroundColor: colors.bgCard }],
+            ]}
+          >
+            <Text
+              style={[
+                styles.modePillText,
+                { color: colors.textSecondary },
+                activeTab === "recovery" && [styles.modePillTextActive, { color: colors.textPrimary }],
+              ]}
+            >
+              Recovery
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
 
       {/* 2. ACTIVITY HISTORY & MEMORIES LIST */}
       <View style={styles.sectionHeaderRow}>
-        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>TRACK MEMORIES & HISTORY ({memories.length})</Text>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
+          TRACK MEMORIES & HISTORY ({memories.length})
+        </Text>
         <TouchableOpacity onPress={() => setShowAllActivities(!showAllActivities)}>
           <Text style={styles.viewAllText}>{showAllActivities ? "Show Less" : "View All"}</Text>
         </TouchableOpacity>
@@ -148,19 +192,42 @@ export function JourneyView() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 16, paddingBottom: 110 },
-  heroCard: { borderRadius: 24, padding: 20, shadowColor: "#000", shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 4, marginBottom: 20 },
+  heroCard: {
+    borderRadius: 24,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 4,
+    marginBottom: 20,
+  },
   heroTopRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
   heroTitle: { fontSize: 20, fontWeight: "900" },
   progressSubtitleRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
   progressSubtitle: { color: "#E11D48", fontSize: 12, fontWeight: "700" },
-  streakBadge: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(245,158,11,0.12)", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 },
+  streakBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "rgba(245,158,11,0.12)",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
   streakBadgeText: { color: "#D97706", fontSize: 11, fontWeight: "800" },
   calHeroBlock: { flexDirection: "row", alignItems: "baseline", justifyContent: "center", marginTop: 18 },
   calUnit: { color: "#E11D48", fontSize: 20, fontWeight: "800" },
   calValue: { fontSize: 40, fontWeight: "900", letterSpacing: -1 },
   calSublabel: { textAlign: "center", fontSize: 12, fontWeight: "600", marginTop: 2 },
   chartWrapper: { marginTop: 22, marginBottom: 18 },
-  barsContainer: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", height: 120, paddingHorizontal: 6 },
+  barsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    height: 120,
+    paddingHorizontal: 6,
+  },
   barColumn: { alignItems: "center", width: 34 },
   barTrack: { width: 28, height: 96, borderRadius: 14, overflow: "hidden", justifyContent: "flex-end" },
   barFill: { width: "100%", borderRadius: 14 },
@@ -176,7 +243,13 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 12, fontWeight: "800", letterSpacing: 0.6 },
   viewAllText: { color: "#E11D48", fontSize: 12, fontWeight: "700" },
   activitiesList: { gap: 10 },
-  activityCard: { flexDirection: "row", justifyContent: "space-between", padding: 14, borderRadius: 16, borderWidth: 1 },
+  activityCard: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    padding: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
   actLeft: { flex: 1 },
   actBadge: { alignSelf: "flex-start", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, marginBottom: 6 },
   actBadgeText: { fontSize: 10, fontWeight: "700" },

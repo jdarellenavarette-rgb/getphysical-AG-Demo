@@ -43,7 +43,13 @@ export function BottomBar({ currentTab, onSelectTab, onPressCreate }: BottomBarP
             color={currentTab === "sodia" ? "#E11D48" : colors.textMuted}
             strokeWidth={currentTab === "sodia" ? 2.4 : 1.8}
           />
-          <Text style={[styles.label, { color: currentTab === "sodia" ? "#E11D48" : colors.textMuted }, currentTab === "sodia" && styles.labelActive]}>
+          <Text
+            style={[
+              styles.label,
+              { color: currentTab === "sodia" ? "#E11D48" : colors.textMuted },
+              currentTab === "sodia" && styles.labelActive,
+            ]}
+          >
             Feed
           </Text>
         </TouchableOpacity>
@@ -59,7 +65,13 @@ export function BottomBar({ currentTab, onSelectTab, onPressCreate }: BottomBarP
             color={currentTab === "discover" ? "#E11D48" : colors.textMuted}
             strokeWidth={currentTab === "discover" ? 2.4 : 1.8}
           />
-          <Text style={[styles.label, { color: currentTab === "discover" ? "#E11D48" : colors.textMuted }, currentTab === "discover" && styles.labelActive]}>
+          <Text
+            style={[
+              styles.label,
+              { color: currentTab === "discover" ? "#E11D48" : colors.textMuted },
+              currentTab === "discover" && styles.labelActive,
+            ]}
+          >
             Venues
           </Text>
         </TouchableOpacity>
@@ -87,7 +99,13 @@ export function BottomBar({ currentTab, onSelectTab, onPressCreate }: BottomBarP
             color={currentTab === "track" ? "#E11D48" : colors.textMuted}
             strokeWidth={currentTab === "track" ? 2.4 : 1.8}
           />
-          <Text style={[styles.label, { color: currentTab === "track" ? "#E11D48" : colors.textMuted }, currentTab === "track" && styles.labelActive]}>
+          <Text
+            style={[
+              styles.label,
+              { color: currentTab === "track" ? "#E11D48" : colors.textMuted },
+              currentTab === "track" && styles.labelActive,
+            ]}
+          >
             Track
           </Text>
         </TouchableOpacity>
@@ -103,7 +121,13 @@ export function BottomBar({ currentTab, onSelectTab, onPressCreate }: BottomBarP
             color={currentTab === "cards" ? "#E11D48" : colors.textMuted}
             strokeWidth={currentTab === "cards" ? 2.4 : 1.8}
           />
-          <Text style={[styles.label, { color: currentTab === "cards" ? "#E11D48" : colors.textMuted }, currentTab === "cards" && styles.labelActive]}>
+          <Text
+            style={[
+              styles.label,
+              { color: currentTab === "cards" ? "#E11D48" : colors.textMuted },
+              currentTab === "cards" && styles.labelActive,
+            ]}
+          >
             Wallet
           </Text>
         </TouchableOpacity>

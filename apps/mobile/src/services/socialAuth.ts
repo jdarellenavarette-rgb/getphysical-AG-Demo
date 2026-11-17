@@ -43,7 +43,8 @@ export async function signInWithApple(): Promise<SocialResult> {
     if ((error as { code?: string }).code === "ERR_REQUEST_CANCELED") return CANCELLED;
     return { ok: false, cancelled: false, message: "Apple sign-in failed. Please retry." };
   }
-  if (!credential.identityToken) return { ok: false, cancelled: false, message: "Apple didn't return a sign-in token." };
+  if (!credential.identityToken)
+    return { ok: false, cancelled: false, message: "Apple didn't return a sign-in token." };
 
   const { error } = await supabase.auth.signInWithIdToken({
     provider: "apple",

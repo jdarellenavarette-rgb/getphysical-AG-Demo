@@ -9,11 +9,11 @@ Supabase callback URL (used by both providers):
 
 ## How it works
 
-| Where | Apple | Google |
-|---|---|---|
-| iPhone app | Native Apple sheet (Face ID) → ID token → Supabase | Secure browser sheet → Supabase OAuth (PKCE) |
-| Android app | Secure browser sheet → Supabase OAuth | Secure browser sheet → Supabase OAuth |
-| Web Business Suite | Redirect → `/auth/callback` | Redirect → `/auth/callback` |
+| Where              | Apple                                              | Google                                       |
+| ------------------ | -------------------------------------------------- | -------------------------------------------- |
+| iPhone app         | Native Apple sheet (Face ID) → ID token → Supabase | Secure browser sheet → Supabase OAuth (PKCE) |
+| Android app        | Secure browser sheet → Supabase OAuth              | Secure browser sheet → Supabase OAuth        |
+| Web Business Suite | Redirect → `/auth/callback`                        | Redirect → `/auth/callback`                  |
 
 Every route ends in a normal Supabase session, then the same profile setup (username + date of birth with the
 13+ gate). Email one-time codes stay available as a fallback.

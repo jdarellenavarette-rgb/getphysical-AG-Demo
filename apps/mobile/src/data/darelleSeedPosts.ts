@@ -15,7 +15,8 @@ export const INITIAL_DARELLE_POSTS: SodiaPostRow[] = [
     author_name: "Darelle Navarette",
     author_avatar: DARELLE_AVATAR,
     author_role: "coach",
-    content: "Post-hypertrophy push session locked in. Progressive overload and locked-in biomechanics are non-negotiable. IFBB CPFT standard every rep.",
+    content:
+      "Post-hypertrophy push session locked in. Progressive overload and locked-in biomechanics are non-negotiable. IFBB CPFT standard every rep.",
     media_url: DARELLE_PHYSIQUE,
     likes_count: 142,
     comments_count: 18,
@@ -40,7 +41,8 @@ export const INITIAL_DARELLE_POSTS: SodiaPostRow[] = [
     author_name: "Darelle Navarette",
     author_avatar: DARELLE_AVATAR,
     author_role: "coach",
-    content: "Vertical kinetic chain on the overhead smash. Racket sports require explosive triple extension and rotational power.",
+    content:
+      "Vertical kinetic chain on the overhead smash. Racket sports require explosive triple extension and rotational power.",
     media_url: DARELLE_TENNIS_JUMP,
     likes_count: 198,
     comments_count: 24,
@@ -65,7 +67,8 @@ export const INITIAL_DARELLE_POSTS: SodiaPostRow[] = [
     author_name: "Darelle Navarette",
     author_avatar: DARELLE_AVATAR,
     author_role: "coach",
-    content: "Conditioning round: 8 rounds shadowboxing + heavy bag intervals. Fast hands, grounded feet, unbroken focus.",
+    content:
+      "Conditioning round: 8 rounds shadowboxing + heavy bag intervals. Fast hands, grounded feet, unbroken focus.",
     media_url: DARELLE_BOXING,
     likes_count: 115,
     comments_count: 12,

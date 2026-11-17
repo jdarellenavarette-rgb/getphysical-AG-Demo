@@ -70,18 +70,13 @@ export function CommentsBottomSheet({ visible, onClose }: CommentsBottomSheetPro
 
   const toggleLike = (id: string) => {
     setComments((prev) =>
-      prev.map((c) =>
-        c.id === id ? { ...c, isLiked: !c.isLiked, likes: c.isLiked ? c.likes - 1 : c.likes + 1 } : c
-      )
+      prev.map((c) => (c.id === id ? { ...c, isLiked: !c.isLiked, likes: c.isLiked ? c.likes - 1 : c.likes + 1 } : c)),
     );
   };
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <KeyboardAvoidingView
-        style={styles.overlay}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
+      <KeyboardAvoidingView style={styles.overlay} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <View
           style={[
             styles.sheetContainer,
@@ -177,7 +172,13 @@ const styles = StyleSheet.create({
   sheetContainer: { borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: "75%", paddingBottom: 20 },
   header: { alignItems: "center", paddingVertical: 12, borderBottomWidth: 1 },
   dragPill: { width: 36, height: 4, borderRadius: 2, marginBottom: 10 },
-  titleRow: { width: "100%", flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 20 },
+  titleRow: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
   title: { fontSize: 14, fontWeight: "800" },
   closeBtn: { padding: 4 },
   commentsList: { padding: 16 },

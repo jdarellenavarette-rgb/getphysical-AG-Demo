@@ -12,12 +12,7 @@ interface UniversalCheckoutModalProps {
   onConfirm: (item: CheckoutRequest) => void;
 }
 
-export function UniversalCheckoutModal({
-  item,
-  visible,
-  onClose,
-  onConfirm,
-}: UniversalCheckoutModalProps) {
+export function UniversalCheckoutModal({ item, visible, onClose, onConfirm }: UniversalCheckoutModalProps) {
   const { colors } = useThemeStore();
   if (!visible || !item) return null;
 
@@ -34,7 +29,12 @@ export function UniversalCheckoutModal({
             </TouchableOpacity>
           </View>
 
-          <View style={[styles.inventoryItem, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor, borderWidth: 1 }]}>
+          <View
+            style={[
+              styles.inventoryItem,
+              { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor, borderWidth: 1 },
+            ]}
+          >
             <Text style={[styles.invTitle, { color: colors.textPrimary }]}>{item.title}</Text>
             <Text style={[styles.invSubtitle, { color: colors.textSecondary }]}>{item.subtitle}</Text>
             <Text style={styles.invPrice}>₱{item.baseAmountPhp.toFixed(2)}</Text>
@@ -83,7 +83,16 @@ const styles = StyleSheet.create({
   invTitle: { fontSize: 15, fontWeight: "700" },
   invSubtitle: { fontSize: 12, marginTop: 2 },
   invPrice: { color: "#10B981", fontSize: 16, fontWeight: "800", marginTop: 4 },
-  splitRow: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 8, backgroundColor: "rgba(16, 185, 129, 0.12)", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  splitRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    marginTop: 8,
+    backgroundColor: "rgba(16, 185, 129, 0.12)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
   splitText: { color: "#10B981", fontSize: 11, fontWeight: "700" },
   feeBreakdown: { borderTopWidth: 1, paddingTop: 12, marginBottom: 16 },
   feeRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 6 },
@@ -92,6 +101,13 @@ const styles = StyleSheet.create({
   totalRow: { borderTopWidth: 1, paddingTop: 8, marginTop: 4 },
   totalLabel: { fontSize: 14, fontWeight: "800" },
   totalVal: { fontSize: 18, fontWeight: "900" },
-  payButton: { backgroundColor: "#E11D48", borderRadius: 12, paddingVertical: 14, flexDirection: "row", alignItems: "center", justifyContent: "center" },
+  payButton: {
+    backgroundColor: "#E11D48",
+    borderRadius: 12,
+    paddingVertical: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   payButtonText: { color: "#FFFFFF", fontSize: 14, fontWeight: "700" },
 });

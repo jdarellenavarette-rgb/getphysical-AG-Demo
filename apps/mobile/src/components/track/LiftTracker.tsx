@@ -24,7 +24,7 @@ export function LiftTracker() {
   const [isFinishModalOpen, setIsFinishModalOpen] = useState(false);
 
   useEffect(() => {
-    let t: any = null;
+    let t: ReturnType<typeof setInterval> | null = null;
     if (isTraining) {
       t = setInterval(() => {
         setElapsedSeconds((s) => s + 1);
@@ -42,7 +42,7 @@ export function LiftTracker() {
           return { ...s, isCompleted: !s.isCompleted };
         }
         return s;
-      })
+      }),
     );
   };
 
@@ -54,7 +54,10 @@ export function LiftTracker() {
   };
   const addSet = () => {
     const last = sets[sets.length - 1];
-    setSets((prev) => [...prev, { setNumber: prev.length + 1, weight: last?.weight ?? 100, reps: last?.reps ?? 5, isCompleted: false }]);
+    setSets((prev) => [
+      ...prev,
+      { setNumber: prev.length + 1, weight: last?.weight ?? 100, reps: last?.reps ?? 5, isCompleted: false },
+    ]);
   };
 
   const handleFinishSession = (shareToFeed = false) => {
@@ -73,14 +76,18 @@ export function LiftTracker() {
     });
 
     if (shareToFeed) {
-      addPost(`${workoutTitle} completed! Verified PR stamp attached. Total volume: ${totalVol.toLocaleString()} kg.`, "fac_metro_core", {
-        id: `stamp_pr_${Date.now()}`,
-        type: "lift",
-        title: `${activeExerciseName} 1RM`,
-        primaryMetric: `${maxWeight} kg`,
-        isVerified: true,
-        isPR,
-      });
+      addPost(
+        `${workoutTitle} completed! Verified PR stamp attached. Total volume: ${totalVol.toLocaleString()} kg.`,
+        "fac_metro_core",
+        {
+          id: `stamp_pr_${Date.now()}`,
+          type: "lift",
+          title: `${activeExerciseName} 1RM`,
+          primaryMetric: `${maxWeight} kg`,
+          isVerified: true,
+          isPR,
+        },
+      );
     }
 
     setIsFinishModalOpen(false);
@@ -95,12 +102,14 @@ export function LiftTracker() {
     if (exercises && exercises.length > 0 && exercises[0]) {
       const first = exercises[0];
       setActiveExerciseName(first.name);
-      setSets(Array.from({ length: first.sets }, (_, i) => ({
-        setNumber: i + 1,
-        weight: first.weightKg,
-        reps: first.reps,
-        isCompleted: false,
-      })));
+      setSets(
+        Array.from({ length: first.sets }, (_, i) => ({
+          setNumber: i + 1,
+          weight: first.weightKg,
+          reps: first.reps,
+          isCompleted: false,
+        })),
+      );
     }
     setIsTraining(true);
   };
@@ -117,11 +126,21 @@ export function LiftTracker() {
   }
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.bgScreen }]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+    <ScrollView
+      style={[styles.container, { backgroundColor: colors.bgScreen }]}
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+    >
       <View style={styles.header}>
         <View style={{ flex: 1 }}>
-          <TextInput style={[styles.titleInput, { color: colors.textPrimary }]} value={workoutTitle} onChangeText={setWorkoutTitle} />
-          <Text style={styles.timerText}>Active Time: {Math.floor(elapsedSeconds / 60)}m {elapsedSeconds % 60}s</Text>
+          <TextInput
+            style={[styles.titleInput, { color: colors.textPrimary }]}
+            value={workoutTitle}
+            onChangeText={setWorkoutTitle}
+          />
+          <Text style={styles.timerText}>
+            Active Time: {Math.floor(elapsedSeconds / 60)}m {elapsedSeconds % 60}s
+          </Text>
         </View>
         <TouchableOpacity onPress={() => setIsFinishModalOpen(true)} style={styles.finishButton}>
           <Text style={styles.finishText}>FINISH</Text>
@@ -132,14 +151,20 @@ export function LiftTracker() {
         <View style={[styles.circularTimerCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
           <Text style={[styles.restTitle, { color: colors.textMuted }]}>REST INTERVAL TIMER</Text>
           <View style={styles.timerRingRow}>
-            <TouchableOpacity onPress={() => setRestSeconds((s) => Math.max(0, s - 15))} style={[styles.timerAdjustBtn, { backgroundColor: colors.bgInput }]}>
+            <TouchableOpacity
+              onPress={() => setRestSeconds((s) => Math.max(0, s - 15))}
+              style={[styles.timerAdjustBtn, { backgroundColor: colors.bgInput }]}
+            >
               <Text style={[styles.timerAdjustText, { color: colors.textPrimary }]}>-15s</Text>
             </TouchableOpacity>
             <View style={styles.circularClock}>
               <Text style={[styles.secondsBig, { color: colors.textPrimary }]}>{restSeconds}</Text>
               <Text style={styles.secondsLabel}>SEC REST</Text>
             </View>
-            <TouchableOpacity onPress={() => setRestSeconds((s) => s + 15)} style={[styles.timerAdjustBtn, { backgroundColor: colors.bgInput }]}>
+            <TouchableOpacity
+              onPress={() => setRestSeconds((s) => s + 15)}
+              style={[styles.timerAdjustBtn, { backgroundColor: colors.bgInput }]}
+            >
               <Text style={[styles.timerAdjustText, { color: colors.textPrimary }]}>+15s</Text>
             </TouchableOpacity>
           </View>
@@ -151,24 +176,52 @@ export function LiftTracker() {
 
       <View style={[styles.exerciseCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
         <View style={styles.exerciseHeader}>
-          <TextInput style={[styles.exerciseNameInput, { color: colors.textPrimary }]} value={activeExerciseName} onChangeText={setActiveExerciseName} />
-          <View style={styles.targetBadge}><Text style={styles.targetBadgeText}>CUSTOM LIFTS</Text></View>
+          <TextInput
+            style={[styles.exerciseNameInput, { color: colors.textPrimary }]}
+            value={activeExerciseName}
+            onChangeText={setActiveExerciseName}
+          />
+          <View style={styles.targetBadge}>
+            <Text style={styles.targetBadgeText}>CUSTOM LIFTS</Text>
+          </View>
         </View>
 
         <View style={styles.setGrid}>
           {sets.map((set, idx) => (
-            <View key={set.setNumber} style={[styles.setRow, { backgroundColor: colors.bgCardSecondary }, set.isCompleted && styles.setRowCompleted]}>
+            <View
+              key={set.setNumber}
+              style={[
+                styles.setRow,
+                { backgroundColor: colors.bgCardSecondary },
+                set.isCompleted && styles.setRowCompleted,
+              ]}
+            >
               <Text style={[styles.setNumberText, { color: colors.textMuted }]}>SET {set.setNumber}</Text>
               <View style={styles.weightRepControls}>
-                <TouchableOpacity onPress={() => adjustWeight(idx, -5)} style={styles.stepBtn}><Text style={[styles.stepBtnText, { color: colors.textPrimary }]}>-</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => adjustWeight(idx, -5)} style={styles.stepBtn}>
+                  <Text style={[styles.stepBtnText, { color: colors.textPrimary }]}>-</Text>
+                </TouchableOpacity>
                 <Text style={[styles.setWeightText, { color: colors.textPrimary }]}>{set.weight}kg</Text>
-                <TouchableOpacity onPress={() => adjustWeight(idx, 5)} style={styles.stepBtn}><Text style={[styles.stepBtnText, { color: colors.textPrimary }]}>+</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => adjustWeight(idx, 5)} style={styles.stepBtn}>
+                  <Text style={[styles.stepBtnText, { color: colors.textPrimary }]}>+</Text>
+                </TouchableOpacity>
                 <Text style={{ color: colors.textMuted, marginHorizontal: 4 }}>×</Text>
-                <TouchableOpacity onPress={() => adjustReps(idx, -1)} style={styles.stepBtn}><Text style={[styles.stepBtnText, { color: colors.textPrimary }]}>-</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => adjustReps(idx, -1)} style={styles.stepBtn}>
+                  <Text style={[styles.stepBtnText, { color: colors.textPrimary }]}>-</Text>
+                </TouchableOpacity>
                 <Text style={[styles.setWeightText, { color: colors.textPrimary }]}>{set.reps}r</Text>
-                <TouchableOpacity onPress={() => adjustReps(idx, 1)} style={styles.stepBtn}><Text style={[styles.stepBtnText, { color: colors.textPrimary }]}>+</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => adjustReps(idx, 1)} style={styles.stepBtn}>
+                  <Text style={[styles.stepBtnText, { color: colors.textPrimary }]}>+</Text>
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity onPress={() => toggleSet(idx)} style={[styles.checkCircle, { borderColor: colors.borderColor }, set.isCompleted && styles.checkCircleCompleted]}>
+              <TouchableOpacity
+                onPress={() => toggleSet(idx)}
+                style={[
+                  styles.checkCircle,
+                  { borderColor: colors.borderColor },
+                  set.isCompleted && styles.checkCircleCompleted,
+                ]}
+              >
                 {set.isCompleted && <Check size={14} color="#FFFFFF" strokeWidth={3} />}
               </TouchableOpacity>
             </View>
@@ -180,13 +233,19 @@ export function LiftTracker() {
         </View>
       </View>
 
-      <Modal visible={isFinishModalOpen} transparent animationType="fade" onRequestClose={() => setIsFinishModalOpen(false)}>
+      <Modal
+        visible={isFinishModalOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsFinishModalOpen(false)}
+      >
         <View style={styles.modalOverlay}>
           <View style={[styles.finishSummaryCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
             <Award size={44} color="#10B981" />
             <Text style={[styles.finishModalTitle, { color: colors.textPrimary }]}>Save Strength Session</Text>
             <Text style={[styles.finishModalSubtitle, { color: colors.textMuted }]}>
-              {sets.filter((s) => s.isCompleted).length} sets completed • {sets.reduce((s, c) => s + (c.isCompleted ? c.weight * c.reps : 0), 0)} kg total volume
+              {sets.filter((s) => s.isCompleted).length} sets completed •{" "}
+              {sets.reduce((s, c) => s + (c.isCompleted ? c.weight * c.reps : 0), 0)} kg total volume
             </Text>
             <TouchableOpacity onPress={() => handleFinishSession(true)} style={styles.shareFeedBtn}>
               <Flame size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
@@ -214,7 +273,16 @@ const styles = StyleSheet.create({
   timerRingRow: { flexDirection: "row", alignItems: "center", gap: 16, marginVertical: 8 },
   timerAdjustBtn: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
   timerAdjustText: { fontSize: 12, fontWeight: "800" },
-  circularClock: { width: 84, height: 84, borderRadius: 42, borderWidth: 3, borderColor: "#10B981", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(16,185,129,0.08)" },
+  circularClock: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    borderWidth: 3,
+    borderColor: "#10B981",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(16,185,129,0.08)",
+  },
   secondsBig: { fontSize: 28, fontWeight: "900" },
   secondsLabel: { color: "#10B981", fontSize: 9, fontWeight: "800", marginTop: -2 },
   skipBtn: { padding: 4 },
@@ -225,22 +293,63 @@ const styles = StyleSheet.create({
   targetBadge: { backgroundColor: "rgba(225,29,72,0.15)", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
   targetBadgeText: { color: "#E11D48", fontSize: 9, fontWeight: "800" },
   setGrid: { gap: 8 },
-  setRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderRadius: 10, padding: 10 },
+  setRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderRadius: 10,
+    padding: 10,
+  },
   setRowCompleted: { backgroundColor: "rgba(16,185,129,0.12)" },
   setNumberText: { fontSize: 11, fontWeight: "800" },
   weightRepControls: { flexDirection: "row", alignItems: "center" },
-  stepBtn: { width: 24, height: 24, borderRadius: 6, backgroundColor: "rgba(255,255,255,0.1)", alignItems: "center", justifyContent: "center" },
+  stepBtn: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    backgroundColor: "rgba(255,255,255,0.1)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   stepBtnText: { fontSize: 13, fontWeight: "800" },
   setWeightText: { fontSize: 13, fontWeight: "800", marginHorizontal: 4 },
-  checkCircle: { width: 24, height: 24, borderRadius: 12, borderWidth: 2, alignItems: "center", justifyContent: "center" },
+  checkCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   checkCircleCompleted: { borderColor: "#10B981", backgroundColor: "#10B981" },
-  addSetBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 10, marginTop: 8 },
+  addSetBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 10,
+    marginTop: 8,
+  },
   addSetText: { fontSize: 13, fontWeight: "700" },
-  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.65)", justifyContent: "center", alignItems: "center", padding: 24 },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.65)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
   finishSummaryCard: { borderRadius: 20, padding: 22, alignItems: "center", width: "100%", borderWidth: 1 },
   finishModalTitle: { fontSize: 18, fontWeight: "900", marginTop: 10 },
   finishModalSubtitle: { fontSize: 13, textAlign: "center", marginTop: 6, marginBottom: 18 },
-  shareFeedBtn: { backgroundColor: "#E11D48", borderRadius: 12, paddingVertical: 12, paddingHorizontal: 18, flexDirection: "row", alignItems: "center", width: "100%", justifyContent: "center" },
+  shareFeedBtn: {
+    backgroundColor: "#E11D48",
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
+    justifyContent: "center",
+  },
   shareFeedText: { color: "#FFFFFF", fontSize: 13, fontWeight: "800" },
   saveQuietlyBtn: { marginTop: 12, paddingVertical: 8 },
   saveQuietlyText: { fontSize: 12, fontWeight: "700" },

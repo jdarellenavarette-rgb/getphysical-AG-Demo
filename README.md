@@ -43,10 +43,5 @@ getphysical-AG-Demo/
 Both `apps/mobile` and `apps/web` link directly to `sodia-core` via `"sodia-core": "workspace:*"` in their respective `package.json` files:
 
 ```ts
-import {
-   UIStateKind,
-   createAsyncState,
-   SODIA_FIELD_LIMITS,
-   calculateHybridServiceFee,
-} from "sodia-core";
+import { UIStateKind, createAsyncState, SODIA_FIELD_LIMITS, calculateHybridServiceFee } from "sodia-core";
 ```

@@ -33,14 +33,17 @@ export function useCheckout(onSignedOutPreview: (item: CheckoutRequest) => void)
       });
       setPending(false);
       if (!result.ok) {
-        Alert.alert("Checkout unavailable", result.correlationId ? `${result.message}\n\nRef: ${result.correlationId}` : result.message);
+        Alert.alert(
+          "Checkout unavailable",
+          result.correlationId ? `${result.message}\n\nRef: ${result.correlationId}` : result.message,
+        );
         return false;
       }
       keys.current.delete(item.id);
       await Linking.openURL(result.data.checkoutUrl);
       return true;
     },
-    [pending, onSignedOutPreview]
+    [pending, onSignedOutPreview],
   );
 
   return { confirm, pending };

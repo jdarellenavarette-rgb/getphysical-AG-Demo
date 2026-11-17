@@ -19,13 +19,9 @@ export function timingSafeEqualStrings(a: string, b: string): boolean {
 }
 
 export async function hmacSha256Hex(secret: string, payload: string): Promise<string> {
-  const key = await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"],
-  );
+  const key = await crypto.subtle.importKey("raw", encoder.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, [
+    "sign",
+  ]);
   return toHex(await crypto.subtle.sign("HMAC", key, encoder.encode(payload)));
 }
 

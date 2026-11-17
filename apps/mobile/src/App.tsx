@@ -130,7 +130,11 @@ export default function App() {
       />
 
       <CommentsBottomSheet visible={isCommentsOpen} onClose={() => setIsCommentsOpen(false)} />
-      <CreatePostModal visible={isCreatePostOpen} onClose={() => setIsCreatePostOpen(false)} onOpenStoryCamera={() => setIsStoryCameraOpen(true)} />
+      <CreatePostModal
+        visible={isCreatePostOpen}
+        onClose={() => setIsCreatePostOpen(false)}
+        onOpenStoryCamera={() => setIsStoryCameraOpen(true)}
+      />
       <InstagramStoryCameraModal visible={isStoryCameraOpen} onClose={() => setIsStoryCameraOpen(false)} />
 
       <Modal visible={isInboxOpen} animationType="slide" onRequestClose={() => setIsInboxOpen(false)}>
@@ -142,7 +146,13 @@ export default function App() {
       </Modal>
 
       <Modal visible={isActivityOpen} animationType="slide" onRequestClose={() => setIsActivityOpen(false)}>
-        <ActivityView onBack={() => setIsActivityOpen(false)} onNavigateToLift={() => { setIsActivityOpen(false); setCurrentTab("track"); }} />
+        <ActivityView
+          onBack={() => setIsActivityOpen(false)}
+          onNavigateToLift={() => {
+            setIsActivityOpen(false);
+            setCurrentTab("track");
+          }}
+        />
       </Modal>
 
       <MenuDrawerModal
@@ -205,7 +215,12 @@ export default function App() {
         }}
       />
 
-      <UniversalCheckoutModal item={activeCheckoutItem} visible={!!activeCheckoutItem} onClose={() => setActiveCheckoutItem(null)} onConfirm={handleCheckoutConfirm} />
+      <UniversalCheckoutModal
+        item={activeCheckoutItem}
+        visible={!!activeCheckoutItem}
+        onClose={() => setActiveCheckoutItem(null)}
+        onConfirm={handleCheckoutConfirm}
+      />
     </View>
   );
 }

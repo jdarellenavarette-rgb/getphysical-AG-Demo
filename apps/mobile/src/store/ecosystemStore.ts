@@ -10,11 +10,7 @@ import {
   type ProfileRow,
   type UserRole,
 } from "sodia-core";
-import {
-  DARELLE_AVATAR,
-  DARELLE_PHYSIQUE,
-  DARELLE_TENNIS_JUMP,
-} from "../constants/darelleAssets";
+import { DARELLE_AVATAR, DARELLE_PHYSIQUE, DARELLE_TENNIS_JUMP } from "../constants/darelleAssets";
 import { INITIAL_DARELLE_POSTS } from "../data/darelleSeedPosts";
 
 export interface MobileEcosystemState {
@@ -49,7 +45,7 @@ export interface MobileEcosystemState {
     kind: "one_time_pass" | "recurring_subscription",
     price: number,
     customTitle?: string,
-    facilityId?: string
+    facilityId?: string,
   ) => void;
   startWorkout: (title?: string) => void;
   finishWorkout: () => void;

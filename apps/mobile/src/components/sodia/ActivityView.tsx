@@ -51,7 +51,17 @@ export function ActivityView({ onBack, onNavigateToLift }: ActivityViewProps) {
   return (
     <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       {/* HEADER WITH SAFE NOTCH INSET */}
-      <View style={[styles.header, { paddingTop: Math.max(insets.top, 50) + 6, height: Math.max(insets.top, 50) + 54, backgroundColor: colors.bgHeader, borderBottomColor: colors.borderColor }]}>
+      <View
+        style={[
+          styles.header,
+          {
+            paddingTop: Math.max(insets.top, 50) + 6,
+            height: Math.max(insets.top, 50) + 54,
+            backgroundColor: colors.bgHeader,
+            borderBottomColor: colors.borderColor,
+          },
+        ]}
+      >
         <TouchableOpacity
           onPress={onBack}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
@@ -69,7 +79,13 @@ export function ActivityView({ onBack, onNavigateToLift }: ActivityViewProps) {
           onPress={() => setActiveTab("all")}
           style={[styles.tabItem, activeTab === "all" && styles.tabItemActive]}
         >
-          <Text style={[styles.tabText, { color: activeTab === "all" ? colors.textPrimary : colors.textMuted }, activeTab === "all" && styles.tabTextActive]}>
+          <Text
+            style={[
+              styles.tabText,
+              { color: activeTab === "all" ? colors.textPrimary : colors.textMuted },
+              activeTab === "all" && styles.tabTextActive,
+            ]}
+          >
             All Activity
           </Text>
         </TouchableOpacity>
@@ -77,7 +93,13 @@ export function ActivityView({ onBack, onNavigateToLift }: ActivityViewProps) {
           onPress={() => setActiveTab("requests")}
           style={[styles.tabItem, activeTab === "requests" && styles.tabItemActive]}
         >
-          <Text style={[styles.tabText, { color: activeTab === "requests" ? colors.textPrimary : colors.textMuted }, activeTab === "requests" && styles.tabTextActive]}>
+          <Text
+            style={[
+              styles.tabText,
+              { color: activeTab === "requests" ? colors.textPrimary : colors.textMuted },
+              activeTab === "requests" && styles.tabTextActive,
+            ]}
+          >
             Follow Requests (1)
           </Text>
         </TouchableOpacity>
@@ -89,10 +111,7 @@ export function ActivityView({ onBack, onNavigateToLift }: ActivityViewProps) {
         {activities
           .filter((a) => a.section === "Today")
           .map((a) => (
-            <View
-              key={a.id}
-              style={[styles.activityRow, a.urgent && styles.urgentCard]}
-            >
+            <View key={a.id} style={[styles.activityRow, a.urgent && styles.urgentCard]}>
               {a.type === "challenge_alert" ? (
                 <View style={styles.alertIcon}>
                   <Flame size={16} color="#F97316" />
@@ -117,15 +136,11 @@ export function ActivityView({ onBack, onNavigateToLift }: ActivityViewProps) {
                   }}
                   style={[styles.viewChallengeBtn, acceptedChallenge && { backgroundColor: "#10B981" }]}
                 >
-                  <Text style={styles.viewChallengeText}>
-                    {acceptedChallenge ? "Accepted ✓" : "Defend PR"}
-                  </Text>
+                  <Text style={styles.viewChallengeText}>{acceptedChallenge ? "Accepted ✓" : "Defend PR"}</Text>
                 </TouchableOpacity>
               )}
 
-              {a.postThumb && (
-                <Image source={{ uri: a.postThumb }} style={styles.postThumb} />
-              )}
+              {a.postThumb && <Image source={{ uri: a.postThumb }} style={styles.postThumb} />}
             </View>
           ))}
 
@@ -145,7 +160,11 @@ export function ActivityView({ onBack, onNavigateToLift }: ActivityViewProps) {
               {a.hasFollowBack && (
                 <TouchableOpacity
                   onPress={() => setFollowedMap((prev) => ({ ...prev, [a.id]: !prev[a.id] }))}
-                  style={[styles.followBackBtn, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }, followedMap[a.id] && { backgroundColor: colors.bgInput }]}
+                  style={[
+                    styles.followBackBtn,
+                    { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor },
+                    followedMap[a.id] && { backgroundColor: colors.bgInput },
+                  ]}
                 >
                   <Text style={[styles.followBackText, { color: colors.textPrimary }]}>
                     {followedMap[a.id] ? "Following" : "Follow Back"}
@@ -161,7 +180,13 @@ export function ActivityView({ onBack, onNavigateToLift }: ActivityViewProps) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, borderBottomWidth: 1 },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+  },
   backBtn: { minWidth: 44, minHeight: 44, justifyContent: "center", alignItems: "center" },
   headerTitle: { fontSize: 16, fontWeight: "800" },
   tabRow: { flexDirection: "row", paddingHorizontal: 16, borderBottomWidth: 1, gap: 16 },
@@ -172,14 +197,33 @@ const styles = StyleSheet.create({
   list: { flex: 1, padding: 16 },
   sectionHeader: { fontSize: 11, fontWeight: "800", letterSpacing: 0.8, marginBottom: 12 },
   activityRow: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
-  urgentCard: { backgroundColor: "rgba(249, 115, 22, 0.12)", borderWidth: 1, borderColor: "rgba(249, 115, 22, 0.3)", borderRadius: 12, padding: 12 },
-  alertIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(249, 115, 22, 0.2)", alignItems: "center", justifyContent: "center" },
+  urgentCard: {
+    backgroundColor: "rgba(249, 115, 22, 0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(249, 115, 22, 0.3)",
+    borderRadius: 12,
+    padding: 12,
+  },
+  alertIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(249, 115, 22, 0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   avatar: { width: 38, height: 38, borderRadius: 19 },
   meta: { flex: 1, marginLeft: 12 },
   titleText: { fontSize: 12, lineHeight: 17 },
   userName: { fontWeight: "700" },
   timeText: { fontSize: 10, marginTop: 2 },
-  viewChallengeBtn: { backgroundColor: "#E11D48", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, marginLeft: 8 },
+  viewChallengeBtn: {
+    backgroundColor: "#E11D48",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    marginLeft: 8,
+  },
   viewChallengeText: { color: "#FFFFFF", fontSize: 11, fontWeight: "700" },
   followBackBtn: { borderWidth: 1, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, marginLeft: 8 },
   followBackText: { fontSize: 11, fontWeight: "700" },

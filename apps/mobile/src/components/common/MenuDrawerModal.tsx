@@ -1,6 +1,16 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView, Image } from "react-native";
-import { X, Home, Compass, Dumbbell, CreditCard, RefreshCw, Database, Settings as SettingsIcon, ChevronRight } from "lucide-react-native";
+import {
+  X,
+  Home,
+  Compass,
+  Dumbbell,
+  CreditCard,
+  RefreshCw,
+  Database,
+  Settings as SettingsIcon,
+  ChevronRight,
+} from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { useThemeStore } from "../../theme/theme";
 import { DARELLE_AVATAR } from "../../constants/darelleAssets";
@@ -32,7 +42,9 @@ export function MenuDrawerModal({
   return (
     <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
       <View style={styles.overlay}>
-        <View style={[styles.drawerContainer, { backgroundColor: colors.bgCard, borderRightColor: colors.borderColor }]}>
+        <View
+          style={[styles.drawerContainer, { backgroundColor: colors.bgCard, borderRightColor: colors.borderColor }]}
+        >
           {/* TOP DRAWER HEADER */}
           <View style={[styles.header, { borderBottomColor: colors.borderColor }]}>
             <Text style={[styles.headerTitle, { color: colors.textMuted }]}>NAVIGATION & MENU</Text>
@@ -51,12 +63,11 @@ export function MenuDrawerModal({
               activeOpacity={0.8}
               style={[styles.userCard, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}
             >
-              <Image
-                source={{ uri: profile.avatar_url ?? DARELLE_AVATAR }}
-                style={styles.avatar}
-              />
+              <Image source={{ uri: profile.avatar_url ?? DARELLE_AVATAR }} style={styles.avatar} />
               <View style={styles.userInfo}>
-                <Text style={[styles.userName, { color: colors.textPrimary }]}>{profile.name ?? "Darelle Navarette"}</Text>
+                <Text style={[styles.userName, { color: colors.textPrimary }]}>
+                  {profile.name ?? "Darelle Navarette"}
+                </Text>
                 <Text style={[styles.userHandle, { color: colors.textMuted }]}>@{profile.username} • View Profile</Text>
                 <View style={styles.activeRoleBadge}>
                   <Text style={styles.activeRoleText}>IFBB CPFT COACH</Text>
@@ -97,7 +108,9 @@ export function MenuDrawerModal({
               </View>
               <View style={styles.navTextWrap}>
                 <Text style={[styles.navTitle, { color: colors.textPrimary }]}>Venues & Coaches</Text>
-                <Text style={[styles.navSubtitle, { color: colors.textMuted }]}>GPS radar, pickleball & gym drop-in</Text>
+                <Text style={[styles.navSubtitle, { color: colors.textMuted }]}>
+                  GPS radar, pickleball & gym drop-in
+                </Text>
               </View>
               <ChevronRight size={16} color={colors.textMuted} />
             </TouchableOpacity>
@@ -131,7 +144,9 @@ export function MenuDrawerModal({
               </View>
               <View style={styles.navTextWrap}>
                 <Text style={[styles.navTitle, { color: colors.textPrimary }]}>Passes & VIP Wallet</Text>
-                <Text style={[styles.navSubtitle, { color: colors.textMuted }]}>Turnstile TOTP, SOA ledger & billing</Text>
+                <Text style={[styles.navSubtitle, { color: colors.textMuted }]}>
+                  Turnstile TOTP, SOA ledger & billing
+                </Text>
               </View>
               <ChevronRight size={16} color={colors.textMuted} />
             </TouchableOpacity>
@@ -166,7 +181,9 @@ export function MenuDrawerModal({
               <RefreshCw size={16} color="#EC4899" />
               <View style={styles.toolTextWrap}>
                 <Text style={[styles.toolTitle, { color: colors.textPrimary }]}>Reset to Empty State</Text>
-                <Text style={[styles.toolDesc, { color: colors.textMuted }]}>Clear active passes, workouts & posts</Text>
+                <Text style={[styles.toolDesc, { color: colors.textMuted }]}>
+                  Clear active passes, workouts & posts
+                </Text>
               </View>
             </TouchableOpacity>
 
@@ -193,24 +210,59 @@ export function MenuDrawerModal({
 const styles = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.65)", flexDirection: "row" },
   drawerContainer: { width: "82%", height: "100%", paddingHorizontal: 16, paddingTop: 48, borderRightWidth: 1 },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderBottomWidth: 1, paddingBottom: 14, marginBottom: 12 },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderBottomWidth: 1,
+    paddingBottom: 14,
+    marginBottom: 12,
+  },
   headerTitle: { fontSize: 11, fontWeight: "800", letterSpacing: 0.8 },
   closeBtn: { minWidth: 40, minHeight: 40, alignItems: "center", justifyContent: "center" },
   scrollContent: { paddingBottom: 40 },
-  userCard: { flexDirection: "row", alignItems: "center", padding: 12, borderRadius: 16, marginBottom: 20, borderWidth: 1 },
+  userCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    borderRadius: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+  },
   avatar: { width: 44, height: 44, borderRadius: 22 },
   userInfo: { flex: 1, marginLeft: 12 },
   userName: { fontSize: 15, fontWeight: "800" },
   userHandle: { fontSize: 11, marginTop: 1 },
-  activeRoleBadge: { backgroundColor: "rgba(225, 29, 72, 0.15)", alignSelf: "flex-start", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginTop: 4 },
+  activeRoleBadge: {
+    backgroundColor: "rgba(225, 29, 72, 0.15)",
+    alignSelf: "flex-start",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginTop: 4,
+  },
   activeRoleText: { color: "#E11D48", fontSize: 9, fontWeight: "800" },
   sectionHeader: { fontSize: 10, fontWeight: "800", letterSpacing: 0.8, marginBottom: 8, marginTop: 10 },
-  navItem: { flexDirection: "row", alignItems: "center", borderRadius: 12, padding: 12, marginBottom: 8, borderWidth: 1 },
+  navItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+  },
   navIconWrap: { width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center" },
   navTextWrap: { flex: 1, marginLeft: 10 },
   navTitle: { fontSize: 13, fontWeight: "700" },
   navSubtitle: { fontSize: 10, marginTop: 1 },
-  toolBtn: { flexDirection: "row", alignItems: "center", borderRadius: 12, padding: 12, marginBottom: 8, borderWidth: 1 },
+  toolBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+  },
   toolTextWrap: { flex: 1, marginLeft: 10 },
   toolTitle: { fontSize: 12, fontWeight: "700" },
   toolDesc: { fontSize: 10, marginTop: 1 },

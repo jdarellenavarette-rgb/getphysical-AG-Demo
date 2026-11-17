@@ -11,7 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { X, Send, Ticket, User, MessageSquare, CheckCircle2 } from "lucide-react-native";
+import { X, Send, Ticket, CheckCircle2 } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import type { PassRow } from "sodia-core";
 
@@ -23,9 +23,21 @@ interface GiftPassModalProps {
 }
 
 const FRIEND_SUGGESTIONS = [
-  { name: "Sarah Jenkins", handle: "@sarah.fit", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80" },
-  { name: "Coach Miguel Ramos", handle: "@coach.miguel", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80" },
-  { name: "Dave Santos", handle: "@dave.lift", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80" },
+  {
+    name: "Sarah Jenkins",
+    handle: "@sarah.fit",
+    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80",
+  },
+  {
+    name: "Coach Miguel Ramos",
+    handle: "@coach.miguel",
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80",
+  },
+  {
+    name: "Dave Santos",
+    handle: "@dave.lift",
+    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80",
+  },
 ];
 
 export function GiftPassModal({ visible, passes, onClose, onSendPass }: GiftPassModalProps) {
@@ -48,10 +60,7 @@ export function GiftPassModal({ visible, passes, onClose, onSendPass }: GiftPass
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <KeyboardAvoidingView
-        style={styles.overlay}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
+      <KeyboardAvoidingView style={styles.overlay} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <View style={[styles.sheetCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
           {/* HEADER */}
           <View style={styles.header}>
@@ -64,7 +73,11 @@ export function GiftPassModal({ visible, passes, onClose, onSendPass }: GiftPass
             </TouchableOpacity>
           </View>
 
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.content}
+            keyboardShouldPersistTaps="handled"
+          >
             {/* SELECT PASS */}
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>1. Select Pass to Gift</Text>
             <View style={styles.passList}>
@@ -75,7 +88,11 @@ export function GiftPassModal({ visible, passes, onClose, onSendPass }: GiftPass
                   <TouchableOpacity
                     key={p.id}
                     onPress={() => setSelectedPassId(p.id)}
-                    style={[styles.passOption, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }, selectedPassId === p.id && styles.passOptionActive]}
+                    style={[
+                      styles.passOption,
+                      { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor },
+                      selectedPassId === p.id && styles.passOptionActive,
+                    ]}
                   >
                     <Ticket size={18} color={selectedPassId === p.id ? "#EC4899" : colors.textMuted} />
                     <View style={{ flex: 1, marginLeft: 10 }}>
@@ -89,20 +106,37 @@ export function GiftPassModal({ visible, passes, onClose, onSendPass }: GiftPass
             </View>
 
             {/* CHOOSE RECIPIENT */}
-            <Text style={[styles.sectionTitle, { color: colors.textPrimary, marginTop: 16 }]}>2. Athlete Recipient</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary, marginTop: 16 }]}>
+              2. Athlete Recipient
+            </Text>
             <View style={styles.friendPillsRow}>
               {FRIEND_SUGGESTIONS.map((f) => (
                 <TouchableOpacity
                   key={f.handle}
                   onPress={() => setRecipient(f.name)}
-                  style={[styles.friendPill, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }, recipient === f.name && styles.friendPillActive]}
+                  style={[
+                    styles.friendPill,
+                    { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor },
+                    recipient === f.name && styles.friendPillActive,
+                  ]}
                 >
-                  <Text style={[styles.friendName, { color: colors.textPrimary }, recipient === f.name && { color: "#FFF" }]}>{f.name.split(" ")[0]}</Text>
+                  <Text
+                    style={[
+                      styles.friendName,
+                      { color: colors.textPrimary },
+                      recipient === f.name && { color: "#FFF" },
+                    ]}
+                  >
+                    {f.name.split(" ")[0]}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
             <TextInput
-              style={[styles.input, { backgroundColor: colors.bgCardSecondary, color: colors.textPrimary, borderColor: colors.borderColor }]}
+              style={[
+                styles.input,
+                { backgroundColor: colors.bgCardSecondary, color: colors.textPrimary, borderColor: colors.borderColor },
+              ]}
               value={recipient}
               onChangeText={setRecipient}
               placeholder="Recipient name or @handle"
@@ -110,9 +144,15 @@ export function GiftPassModal({ visible, passes, onClose, onSendPass }: GiftPass
             />
 
             {/* INVITATION NOTE */}
-            <Text style={[styles.sectionTitle, { color: colors.textPrimary, marginTop: 16 }]}>3. Workout Invitation Message</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary, marginTop: 16 }]}>
+              3. Workout Invitation Message
+            </Text>
             <TextInput
-              style={[styles.input, styles.textArea, { backgroundColor: colors.bgCardSecondary, color: colors.textPrimary, borderColor: colors.borderColor }]}
+              style={[
+                styles.input,
+                styles.textArea,
+                { backgroundColor: colors.bgCardSecondary, color: colors.textPrimary, borderColor: colors.borderColor },
+              ]}
               value={inviteNote}
               onChangeText={setInviteNote}
               placeholder="Add personal note..."
@@ -151,6 +191,14 @@ const styles = StyleSheet.create({
   friendName: { fontSize: 12, fontWeight: "700" },
   input: { height: 44, borderRadius: 12, paddingHorizontal: 12, borderWidth: 1, fontSize: 13 },
   textArea: { height: 72, textAlignVertical: "top", paddingTop: 10 },
-  sendCtaBtn: { backgroundColor: "#EC4899", flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 14, borderRadius: 14, marginTop: 20 },
+  sendCtaBtn: {
+    backgroundColor: "#EC4899",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 14,
+    borderRadius: 14,
+    marginTop: 20,
+  },
   sendCtaText: { color: "#FFF", fontSize: 14, fontWeight: "800" },
 });

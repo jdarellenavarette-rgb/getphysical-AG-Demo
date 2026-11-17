@@ -25,7 +25,19 @@ export interface LiftSession {
   isPR?: boolean;
 }
 
-export type MoveSportType = "run" | "cycling" | "walk" | "hike" | "pickleball" | "tennis" | "boxing" | "basketball" | "swimming" | "hiit" | "rowing" | "yoga";
+export type MoveSportType =
+  | "run"
+  | "cycling"
+  | "walk"
+  | "hike"
+  | "pickleball"
+  | "tennis"
+  | "boxing"
+  | "basketball"
+  | "swimming"
+  | "hiit"
+  | "rowing"
+  | "yoga";
 
 export interface MoveActivity {
   id: string;
@@ -196,7 +208,12 @@ export const useTrackingStore = create<TrackingState>((set) => ({
       paceMinKm: "5:34",
       avgSpeedKmH: 10.7,
       caloriesBurned: 342,
-      routeCoords: [[14.5492, 121.0487], [14.551, 121.0505], [14.553, 121.052], [14.5512, 121.0482]],
+      routeCoords: [
+        [14.5492, 121.0487],
+        [14.551, 121.0505],
+        [14.553, 121.052],
+        [14.5512, 121.0482],
+      ],
       elevationM: 24,
       avgBpm: 154,
     },
@@ -206,7 +223,6 @@ export const useTrackingStore = create<TrackingState>((set) => ({
   userBiometrics: INITIAL_BIOMETRICS,
   hydrationLiters: 1.75,
   dailyTargets: { calories: 2650, protein: 180, carbs: 280, fat: 72, hydration: 3.0 },
-
 
   saveLiftSession: (data) => {
     const s: LiftSession = { ...data, id: `lift_${Date.now()}`, date: new Date().toISOString() };

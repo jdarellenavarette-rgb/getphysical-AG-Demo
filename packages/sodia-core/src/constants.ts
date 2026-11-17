@@ -53,10 +53,7 @@ export interface FeeBreakdown {
  * Fixed ₱15 consumer fee on one-time passes/court bookings/tickets;
  * Flat 5% on recurring memberships.
  */
-export function calculateHybridServiceFee(
-  baseAmountPhp: number,
-  billingKind: TransactionBillingKind
-): FeeBreakdown {
+export function calculateHybridServiceFee(baseAmountPhp: number, billingKind: TransactionBillingKind): FeeBreakdown {
   const sanitizedBase = Math.max(0, Math.round(baseAmountPhp * 100) / 100);
   const serviceFeePhp =
     billingKind === "recurring_subscription"
@@ -80,4 +77,3 @@ export function calculateEpleyOneRepMax(weightKg: number, reps: number): number 
   if (reps === 1) return weightKg;
   return Math.round(weightKg * (1 + reps / 30));
 }
-

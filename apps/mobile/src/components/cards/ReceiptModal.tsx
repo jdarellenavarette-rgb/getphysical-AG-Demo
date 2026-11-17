@@ -37,7 +37,9 @@ export function ReceiptModal({ visible, pass, onClose }: ReceiptModalProps) {
             </View>
 
             {/* RECEIPT TICKET */}
-            <View style={[styles.receiptBox, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}>
+            <View
+              style={[styles.receiptBox, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}
+            >
               <View style={styles.row}>
                 <Text style={[styles.label, { color: colors.textMuted }]}>Item / Pass</Text>
                 <Text style={[styles.valueBold, { color: colors.textPrimary }]}>{pass.pass_type}</Text>
@@ -52,11 +54,15 @@ export function ReceiptModal({ visible, pass, onClose }: ReceiptModalProps) {
               </View>
               <View style={styles.row}>
                 <Text style={[styles.label, { color: colors.textMuted }]}>Issued Date</Text>
-                <Text style={[styles.value, { color: colors.textPrimary }]}>{pass.created_at ? new Date(pass.created_at).toLocaleString() : "Just now"}</Text>
+                <Text style={[styles.value, { color: colors.textPrimary }]}>
+                  {pass.created_at ? new Date(pass.created_at).toLocaleString() : "Just now"}
+                </Text>
               </View>
               <View style={styles.row}>
                 <Text style={[styles.label, { color: colors.textMuted }]}>Valid Until</Text>
-                <Text style={[styles.value, { color: colors.textPrimary }]}>{pass.valid_until ? new Date(pass.valid_until).toLocaleDateString() : "Lifetime"}</Text>
+                <Text style={[styles.value, { color: colors.textPrimary }]}>
+                  {pass.valid_until ? new Date(pass.valid_until).toLocaleDateString() : "Lifetime"}
+                </Text>
               </View>
               <View style={styles.row}>
                 <Text style={[styles.label, { color: colors.textMuted }]}>Payment Rail</Text>
@@ -98,9 +104,30 @@ export function ReceiptModal({ visible, pass, onClose }: ReceiptModalProps) {
 
 const styles = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.65)", justifyContent: "flex-end" },
-  sheetContainer: { borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: "88%", minHeight: "55%", borderWidth: 1 },
-  topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingTop: 18, paddingBottom: 14, borderBottomWidth: 1 },
-  backBtn: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 44, minWidth: 60, justifyContent: "center" },
+  sheetContainer: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: "88%",
+    minHeight: "55%",
+    borderWidth: 1,
+  },
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingTop: 18,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+  },
+  backBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    minHeight: 44,
+    minWidth: 60,
+    justifyContent: "center",
+  },
   backBtnText: { fontSize: 13, fontWeight: "700" },
   headerTitle: { fontSize: 12, fontWeight: "900", letterSpacing: 1 },
   content: { padding: 18 },
@@ -119,6 +146,13 @@ const styles = StyleSheet.create({
   totalValue: { fontSize: 18, fontWeight: "900" },
   securityRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, marginVertical: 14 },
   securityText: { color: "#10B981", fontSize: 11, fontWeight: "600" },
-  closeFullBtn: { backgroundColor: "#E11D48", borderRadius: 12, paddingVertical: 14, alignItems: "center", marginTop: 4, marginBottom: 20 },
+  closeFullBtn: {
+    backgroundColor: "#E11D48",
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: "center",
+    marginTop: 4,
+    marginBottom: 20,
+  },
   closeFullText: { color: "#FFFFFF", fontSize: 14, fontWeight: "700" },
 });

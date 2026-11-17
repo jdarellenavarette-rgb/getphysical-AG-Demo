@@ -54,50 +54,31 @@ A pioneer account is an ordinary account that a real person signs in to. Nothing
 ### Steps
 
 1. **Sign up for real.** On a phone, sign in once with the mobile number or Google account that will own the pioneer account, and finish the profile screen. Do this once per account type, with a different number or Google account each time.
-2. **Grant the role.** In the Supabase dashboard open **SQL Editor**, paste the block below, change the two values at the top, and run it. Run it once per account.
-3. **Sign out and back in** on the phone so the app picks up the new role. The matching workspace then appears under Settings.
+2. **The venue owner creates the venue.** Sign in to the web Business Suite with the owner account and create the venue there. Creating it makes that account the owner; nothing else is needed.
+3. **Grant the other roles.** In the Supabase dashboard open **SQL Editor** and run the matching line below, once per account. Identify the person by their Google email, their mobile number (`+639…`, `639…` or `09…` all work), their username, or their user id.
+4. **Sign out and back in** on the phone so the app picks up the new role. The matching workspace then appears under Settings.
 
 ```sql
--- Change these two values, then run.
--- who: the account's Google email, or its mobile number in +639XXXXXXXXX form.
--- new_role: 'coach', 'organizer' or 'staff'.
-with input as (
-  select 'person@example.com'::text as who, 'coach'::text as new_role
-),
-target as (
-  select u.id
-    from auth.users u, input i
-   where u.email = i.who or u.phone = ltrim(i.who, '+')
-)
-update public.profiles p
-   set roles      = (select array_agg(distinct r) from unnest(coalesce(p.roles, '{individual}') || i.new_role) r),
-       user_roles = (select array_agg(distinct r) from unnest(coalesce(p.user_roles, '{individual}') || i.new_role) r)
-  from target t, input i
- where p.id = t.id
-returning p.id, p.username, p.roles;
+-- Coach or organizer
+select * from public.admin_grant_role('person@example.com', 'coach');
+select * from public.admin_grant_role('+63 917 123 4567', 'organizer');
+
+-- Staff of a venue (use the venue's id from the facilities table).
+-- The third value can be 'STAFF', 'COACH' or 'ADMIN'.
+select * from public.admin_assign_staff('09171234567', 'the_venue_id', 'STAFF');
+
+-- See every account that holds a role, and at which venues
+select * from public.admin_list_role_holders();
+
+-- Take a role away again
+select * from public.admin_revoke_role('person@example.com', 'coach');
 ```
 
-The query returns one row with the account's roles. If it returns nothing, the email or number did not match an account: check the spelling and that the person has signed in at least once.
+Each call returns the account it changed. If it answers `USER_NOT_FOUND`, the email, number or username did not match an account: check the spelling and that the person has signed in at least once.
 
-For a **staff** or **venue owner** account, also link it to its venue. Use `'STAFF'` or `'OWNER'`, and the venue's id from the `facilities` table:
+These functions exist only for operators. The mobile and web apps cannot call them, and no one can grant themselves a role; both are covered by the database tests (`supabase/tests/95_account_role_admin.test.sql`).
 
-```sql
-insert into public.facility_staff (facility_id, user_id, role)
-select 'the_venue_id', u.id, 'STAFF'
-  from auth.users u
- where u.email = 'person@example.com' or u.phone = '639XXXXXXXXX'
-on conflict (facility_id, user_id) do update set role = excluded.role;
-```
-
-### Removing a role
-
-Same block as step 2 with the last part changed to remove instead of add:
-
-```sql
-update public.profiles
-   set roles = array_remove(roles, 'coach'), user_roles = array_remove(user_roles, 'coach')
- where id = (select id from auth.users where email = 'person@example.com');
-```
+The scripted walk-through for the five accounts is in `PIONEER_TEST_PLAN.md`.
 
 ## What a new account sees
 

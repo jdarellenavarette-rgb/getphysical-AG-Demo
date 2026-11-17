@@ -11,15 +11,7 @@ export interface VenueFormState {
   fieldErrors?: Partial<Record<VenueField, string>>;
 }
 
-type VenueField =
-  | "name"
-  | "address"
-  | "hours"
-  | "maxCapacity"
-  | "dayPassPricePhp"
-  | "monthlyPricePhp"
-  | "courtHourlyPricePhp"
-  | "amenities";
+type VenueField = "name" | "address" | "hours" | "maxCapacity" | "courtHourlyPricePhp" | "amenities";
 
 const optionalNumber = (max: number, label: string) =>
   z.preprocess(
@@ -36,8 +28,6 @@ const venueSchema = z.object({
   address: z.string().trim().max(200, "Address is too long"),
   hours: z.string().trim().max(200, "Opening hours are too long"),
   maxCapacity: optionalNumber(100_000, "Capacity").pipe(z.number().int("Capacity must be a whole number").nullable()),
-  dayPassPricePhp: optionalNumber(1_000_000, "Day pass price"),
-  monthlyPricePhp: optionalNumber(1_000_000, "Monthly price"),
   courtHourlyPricePhp: optionalNumber(1_000_000, "Court price"),
   amenities: z
     .string()
@@ -73,8 +63,6 @@ export async function updateVenueProfile(_prev: VenueFormState, formData: FormDa
       address: parsed.data.address,
       hours: parsed.data.hours,
       max_capacity: parsed.data.maxCapacity,
-      day_pass_price_php: parsed.data.dayPassPricePhp,
-      monthly_sub_price_php: parsed.data.monthlyPricePhp,
       court_hourly_price_php: parsed.data.courtHourlyPricePhp,
       amenities: parsed.data.amenities,
     })
@@ -86,5 +74,5 @@ export async function updateVenueProfile(_prev: VenueFormState, formData: FormDa
     return { status: "permission_denied", message: "Only the owner or an admin can change venue details." };
   }
   revalidatePath("/", "layout");
-  return { status: "success", message: "Venue details saved. New purchases in the Sodia app use these prices." };
+  return { status: "success", message: "Venue details saved." };
 }

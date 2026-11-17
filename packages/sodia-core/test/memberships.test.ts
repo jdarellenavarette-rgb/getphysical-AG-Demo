@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   MEMBER_STANDINGS,
+  checkoutRequestSchema,
+  describeProductLength,
+  productInputSchema,
   crmBroadcastInputSchema,
   describeStanding,
   memberDirectoryRowSchema,
@@ -76,5 +79,29 @@ describe("broadcast audiences by standing", () => {
       body: "We miss you",
     });
     expect(result.success).toBe(true);
+  });
+});
+
+describe("venue catalogue", () => {
+  it("checkout accepts a catalogue product id as well as the original SKUs", () => {
+    const base = { facilityId: "fac_a", idempotencyKey: "12345678" };
+    expect(checkoutRequestSchema.safeParse({ ...base, sku: "d1000000-0000-4000-8000-000000000001" }).success).toBe(
+      true,
+    );
+    expect(checkoutRequestSchema.safeParse({ ...base, sku: "DAY_PASS" }).success).toBe(true);
+    expect(checkoutRequestSchema.safeParse({ ...base, sku: "weekly" }).success).toBe(false);
+  });
+
+  it("validates what a venue types for a product", () => {
+    const ok = productInputSchema.safeParse({ name: "Weekly pass", kind: "PASS", pricePhp: "900", durationDays: "7" });
+    expect(ok.success && ok.data.pricePhp === 900 && ok.data.durationDays === 7).toBe(true);
+    expect(productInputSchema.safeParse({ name: "X", kind: "PASS", pricePhp: 0, durationDays: 0 }).success).toBe(false);
+    expect(productInputSchema.safeParse({ name: "Year", kind: "GIFT", pricePhp: 1, durationDays: 1 }).success).toBe(
+      false,
+    );
+  });
+
+  it("describes lengths the same way everywhere", () => {
+    expect([1, 7, 30, 365, 10].map(describeProductLength)).toEqual(["1 day", "1 week", "1 month", "1 year", "10 days"]);
   });
 });

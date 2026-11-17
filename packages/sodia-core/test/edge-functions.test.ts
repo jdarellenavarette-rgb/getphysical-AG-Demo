@@ -53,6 +53,7 @@ describe("edge ⇄ app schema parity", () => {
     { facilityId: "fac_a", sku: "DAY_PASS", idempotencyKey: "12345678" },
     { facilityId: "fac_a", sku: "MONTHLY", idempotencyKey: "x".repeat(128) },
     { facilityId: "fac_a", sku: "COURT_HOUR", idempotencyKey: "12345678" },
+    { facilityId: "fac_a", sku: "d1000000-0000-4000-8000-000000000001", idempotencyKey: "12345678" },
     { facilityId: "", sku: "DAY_PASS", idempotencyKey: "12345678" },
     { facilityId: "fac_a", sku: "DAY_PASS", idempotencyKey: "short" },
   ];

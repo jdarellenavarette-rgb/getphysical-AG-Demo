@@ -9,7 +9,8 @@ export const PAYMENT_SKUS = ["DAY_PASS", "MONTHLY"] as const;
 
 export const checkoutRequestSchema = z.object({
   facilityId: z.string().trim().min(1).max(64),
-  sku: z.enum(PAYMENT_SKUS),
+  /** One of the original SKUs, or the id of a product from the venue's catalogue (`facility_products`). */
+  sku: z.union([z.enum(PAYMENT_SKUS), z.string().uuid()]),
   idempotencyKey: z.string().trim().min(8).max(128),
 });
 

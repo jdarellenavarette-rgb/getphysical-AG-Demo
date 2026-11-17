@@ -6,11 +6,11 @@ Read this before starting work in either app. Update it when a shared change lan
 
 ## Lanes
 
-| Lane                               | Owner                                                                                            | Rule                                                                                                                                          |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `apps/mobile`                      | Mobile session                                                                                   | Not edited from the web session                                                                                                               |
-| `apps/web`                         | Web session                                                                                      | Not edited from the mobile session                                                                                                            |
-| `supabase/`, `packages/sodia-core` | One session at a time (currently: web session, member relationships, migration `20261118000001`) | Additive only. New migration files; never edit an applied one. Lands as its own small pull request with database tests and regenerated types. |
+| Lane                               | Owner                                                                                                                                   | Rule                                                                                                                                          |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/mobile`                      | Mobile session                                                                                                                          | Not edited from the web session                                                                                                               |
+| `apps/web`                         | Web session                                                                                                                             | Not edited from the mobile session                                                                                                            |
+| `supabase/`, `packages/sodia-core` | One session at a time (currently: web session; migrations `20261118000001` member relationships and `20261118000002` product catalogue) | Additive only. New migration files; never edit an applied one. Lands as its own small pull request with database tests and regenerated types. |
 
 ## Contracts both apps rely on today
 
@@ -55,20 +55,37 @@ One rule, decided in the database and labelled by `sodia-core`, so a member and 
 
 Shared helpers in `sodia-core` (`memberships.ts`): `memberStandingSchema`, `myMembershipRowSchema`, `memberDirectoryRowSchema`, `describeStanding()` (the same badge text and one-line explanation for both apps), `standingAllowsEntry()`.
 
+## Venue catalogue and selling settings (added 2026-11-18)
+
+Venues define what they sell. Nothing is hard-coded to "day pass" and "monthly" any more.
+
+| Piece                                          | What it is                                                                                                                                                                                                                                                                              |
+| ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `facility_products`                            | One row per plan: `name`, `description`, `kind` (`PASS` one-off, ₱15 fee; `MEMBERSHIP`, 5% fee), `price_php`, `duration_days` (1–366), `is_active`. Readable by anyone when active; owners and admins write. Never deleted, only switched off.                                          |
+| `facilities.sells_passes`, `sells_memberships` | Venue-wide switches. A venue that doesn't offer memberships turns the second one off and no membership can be bought, whatever the catalogue holds.                                                                                                                                     |
+| `facilities.membership_grace_days`             | 0–30. How long a member still counts as `ACTIVE` after a pass ends. Door access is unaffected.                                                                                                                                                                                          |
+| Checkout                                       | `payments-checkout` and `create_payment_order` accept **a product id** as `sku`, as well as the original `DAY_PASS` / `MONTHLY`. The order stores the product's name, price and length at the time of sale. The pass lasts `duration_days` and carries the product name in `pass_type`. |
+| Errors                                         | `PRODUCT_NOT_AVAILABLE` (switched off, wrong venue, or the venue doesn't sell that kind); `SKU_NOT_FOR_SALE` unchanged.                                                                                                                                                                 |
+
+**Backwards compatible.** The current mobile build sends `DAY_PASS` / `MONTHLY` and keeps working: each venue's standard day pass and standard monthly membership are catalogue rows (`legacy_sku`), and their price is mirrored into the original price columns. Switching one off stops it being sold through the original SKU too.
+
+Shared helpers in `sodia-core` (`payments.ts`): `facilityProductSchema`, `productInputSchema`, `describeProductLength()`, and `checkoutRequestSchema` now accepting a product id.
+
 ## What mobile needs to adjust so the two meet
 
 All are reads or single calls against things that already exist. None needs a schema change.
 
 1. **"My venues" list** from `my_memberships()`, labelled with `describeStanding(standing).forMember`, with two controls per venue: **Leave** (`leave_facility`) and **Mute broadcasts** (`set_venue_broadcasts_muted`). This is the member's half of the relationship and does not exist yet.
 2. **Wallet reads `passes` from the backend** (mobile finding B2), including passes with `pass_type = 'COMP_PASS'` granted at the desk; show them as "Pass from <venue>". Until then a granted or purchased pass has no card to show, so the web check-in has nothing real to scan.
-3. **Venues tab reads `facilities`** instead of sample venues. Until then a venue's name, hours, amenities and prices edited on web are used at checkout but not displayed.
+3. **Venue sheet lists the venue's plans** from `facility_products` (active rows, ordered by `sort_order`), hidden by kind when `sells_passes` / `sells_memberships` is false, and sends the chosen product's `id` as `sku` to checkout. This replaces the hard-coded day-pass / monthly choice and fixes mobile finding B1 (wrong product sold).
+   3b. **Venues tab reads `facilities`** instead of sample venues. Until then a venue's name, hours, amenities and prices edited on web are used at checkout but not displayed.
 4. **Show the person's username where they can read it out** (profile or settings), because the front desk adds members by username.
 5. **Scanning a venue code** already works (`redeem_qr_code`). The Business Suite now displays that code as `sodia://q/<token>`.
 
 ## What web will not do without agreement
 
 - Change anything further in `supabase/` or `sodia-core` beyond the member-relationship migration above.
-- Add the product catalogue, cash sales and shifts, court or class bookings, staff invitations. Each needs one shared change first; see `BUSINESS_SUITE_FEATURE_GAPS.md`, group B.
+- Add cash sales and shifts, court or class bookings, staff invitations. Each needs one shared change first; see `BUSINESS_SUITE_FEATURE_GAPS.md`, group B.
 
 ## Checks that prove neither side broke the other
 
@@ -85,3 +102,7 @@ pnpm typecheck:functions
 pnpm db:types:check
 pnpm db:test
 ```
+
+## Changes made in the other lane
+
+- 2026-11-18, web session → `apps/mobile/src/data/discoverData.ts`: added `membership_grace_days`, `sells_memberships`, `sells_passes` to the eight sample venues. The venue row type gained these three required columns, and the mobile app would not compile without them. No behaviour change.

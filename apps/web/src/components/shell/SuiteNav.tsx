@@ -9,6 +9,7 @@ import {
   ScanLine,
   Settings,
   ShoppingCart,
+  Tags,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -20,6 +21,7 @@ const ICONS: Record<SuiteNavItem["icon"], LucideIcon> = {
   members: Users,
   checkin: ScanLine,
   inbox: MessageSquare,
+  plans: Tags,
   schedule: CalendarDays,
   sales: ShoppingCart,
   settings: Settings,

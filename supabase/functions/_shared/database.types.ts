@@ -511,6 +511,7 @@ export type Database = {
           logo: string | null;
           logo_url: string | null;
           max_capacity: number | null;
+          membership_grace_days: number;
           monthly_sub_price: number | null;
           monthly_sub_price_php: number | null;
           name: string;
@@ -520,6 +521,8 @@ export type Database = {
           registry: string;
           registry_type: Database["public"]["Enums"]["registry_type"];
           review_count: number | null;
+          sells_memberships: boolean;
+          sells_passes: boolean;
           slug: string | null;
           spatial_assets: Json | null;
           updated_at: string | null;
@@ -551,6 +554,7 @@ export type Database = {
           logo?: string | null;
           logo_url?: string | null;
           max_capacity?: number | null;
+          membership_grace_days?: number;
           monthly_sub_price?: number | null;
           monthly_sub_price_php?: number | null;
           name: string;
@@ -560,6 +564,8 @@ export type Database = {
           registry?: never;
           registry_type: Database["public"]["Enums"]["registry_type"];
           review_count?: number | null;
+          sells_memberships?: boolean;
+          sells_passes?: boolean;
           slug?: string | null;
           spatial_assets?: Json | null;
           updated_at?: string | null;
@@ -591,6 +597,7 @@ export type Database = {
           logo?: string | null;
           logo_url?: string | null;
           max_capacity?: number | null;
+          membership_grace_days?: number;
           monthly_sub_price?: number | null;
           monthly_sub_price_php?: number | null;
           name?: string;
@@ -600,6 +607,8 @@ export type Database = {
           registry?: never;
           registry_type?: Database["public"]["Enums"]["registry_type"];
           review_count?: number | null;
+          sells_memberships?: boolean;
+          sells_passes?: boolean;
           slug?: string | null;
           spatial_assets?: Json | null;
           updated_at?: string | null;
@@ -692,6 +701,59 @@ export type Database = {
             foreignKeyName: "facility_payout_accounts_facility_id_fkey";
             columns: ["facility_id"];
             isOneToOne: true;
+            referencedRelation: "facilities";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      facility_products: {
+        Row: {
+          created_at: string | null;
+          description: string;
+          duration_days: number;
+          facility_id: string;
+          id: string;
+          is_active: boolean;
+          kind: string;
+          legacy_sku: string | null;
+          name: string;
+          price_php: number;
+          sort_order: number;
+          updated_at: string | null;
+        };
+        Insert: {
+          created_at?: string | null;
+          description?: string;
+          duration_days: number;
+          facility_id: string;
+          id?: string;
+          is_active?: boolean;
+          kind: string;
+          legacy_sku?: string | null;
+          name: string;
+          price_php: number;
+          sort_order?: number;
+          updated_at?: string | null;
+        };
+        Update: {
+          created_at?: string | null;
+          description?: string;
+          duration_days?: number;
+          facility_id?: string;
+          id?: string;
+          is_active?: boolean;
+          kind?: string;
+          legacy_sku?: string | null;
+          name?: string;
+          price_php?: number;
+          sort_order?: number;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "facility_products_facility_id_fkey";
+            columns: ["facility_id"];
+            isOneToOne: false;
             referencedRelation: "facilities";
             referencedColumns: ["id"];
           },
@@ -1164,12 +1226,15 @@ export type Database = {
           checkout_url: string | null;
           created_at: string | null;
           currency: string;
+          duration_days: number | null;
           facility_id: string;
           failure_reason: string | null;
           id: string;
           idempotency_key: string;
           paid_at: string | null;
           pass_id: string | null;
+          product_id: string | null;
+          product_name: string | null;
           provider: Database["public"]["Enums"]["payment_provider"];
           provider_ref: string | null;
           service_fee_php: number;
@@ -1185,12 +1250,15 @@ export type Database = {
           checkout_url?: string | null;
           created_at?: string | null;
           currency?: string;
+          duration_days?: number | null;
           facility_id: string;
           failure_reason?: string | null;
           id?: string;
           idempotency_key: string;
           paid_at?: string | null;
           pass_id?: string | null;
+          product_id?: string | null;
+          product_name?: string | null;
           provider: Database["public"]["Enums"]["payment_provider"];
           provider_ref?: string | null;
           service_fee_php: number;
@@ -1206,12 +1274,15 @@ export type Database = {
           checkout_url?: string | null;
           created_at?: string | null;
           currency?: string;
+          duration_days?: number | null;
           facility_id?: string;
           failure_reason?: string | null;
           id?: string;
           idempotency_key?: string;
           paid_at?: string | null;
           pass_id?: string | null;
+          product_id?: string | null;
+          product_name?: string | null;
           provider?: Database["public"]["Enums"]["payment_provider"];
           provider_ref?: string | null;
           service_fee_php?: number;
@@ -1843,6 +1914,14 @@ export type Database = {
           p_idempotency_key: string;
         };
         Returns: Database["public"]["Tables"]["payment_orders"]["Row"];
+      };
+      create_standard_product: {
+        Args: {
+          p_facility_id: string;
+          p_legacy_sku: string;
+          p_price_php: number;
+        };
+        Returns: Database["public"]["Tables"]["facility_products"]["Row"];
       };
       end_membership: {
         Args: {

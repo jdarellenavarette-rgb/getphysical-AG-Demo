@@ -65,28 +65,6 @@ export function VenueProfileForm({
           />
           <FieldError id="venue-hours-error">{errors.hours}</FieldError>
         </Label>
-        <Label>
-          Day pass price (₱)
-          <Input
-            name="dayPassPricePhp"
-            inputMode="decimal"
-            defaultValue={price(venue.dayPassPricePhp)}
-            aria-invalid={Boolean(errors.dayPassPricePhp)}
-            aria-describedby="venue-day-error"
-          />
-          <FieldError id="venue-day-error">{errors.dayPassPricePhp}</FieldError>
-        </Label>
-        <Label>
-          Monthly membership price (₱)
-          <Input
-            name="monthlyPricePhp"
-            inputMode="decimal"
-            defaultValue={price(venue.monthlyPricePhp)}
-            aria-invalid={Boolean(errors.monthlyPricePhp)}
-            aria-describedby="venue-month-error"
-          />
-          <FieldError id="venue-month-error">{errors.monthlyPricePhp}</FieldError>
-        </Label>
         {showCourtPrice ? (
           <Label>
             Court price per hour (₱)

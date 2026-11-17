@@ -14,7 +14,7 @@
     "db:types:check": "cmp packages/sodia-core/src/database.types.ts supabase/functions/_shared/database.types.ts",
     "clean": "turbo run clean",
     "mobile": "pnpm --filter @getphysical/mobile exec expo start --clear",
-    "mobile:tunnel": "pnpm --filter @getphysical/mobile exec expo start --clear --tunnel",
+    "mobile:tunnel": "pnpm --filter @getphysical/mobile exec expo start --clear --tunnel ngrok",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },

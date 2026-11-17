@@ -5,6 +5,7 @@ import * as ImagePicker from "expo-image-picker";
 import { X, Zap, ZapOff, RefreshCw, ChevronLeft, Send, Camera, Image as ImageIcon } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { Avatar } from "../common/Avatar";
+import { useEdgeSwipeBack } from "../../hooks/useDismissGestures";
 
 interface InstagramStoryCameraModalProps {
   visible: boolean;
@@ -13,6 +14,7 @@ interface InstagramStoryCameraModalProps {
 
 export function InstagramStoryCameraModal({ visible, onClose }: InstagramStoryCameraModalProps) {
   const { profile, addUserStory } = useEcosystemStore();
+  const edgeBack = useEdgeSwipeBack(() => handleClose());
   const [permission, requestPermission] = useCameraPermissions();
   const [facing, setFacing] = useState<"back" | "front">("back");
   const [flash, setFlash] = useState<"off" | "on">("off");
@@ -74,7 +76,7 @@ export function InstagramStoryCameraModal({ visible, onClose }: InstagramStoryCa
 
   return (
     <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={handleClose}>
-      <View style={styles.container}>
+      <View {...edgeBack} style={styles.container}>
         {selectedMediaUri ? (
           <View style={styles.previewContainer}>
             <Image source={{ uri: selectedMediaUri }} style={styles.previewMedia} resizeMode="cover" />

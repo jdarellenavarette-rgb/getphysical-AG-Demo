@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft, Bell } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
+import { useEdgeSwipeBack } from "../../hooks/useDismissGestures";
 
 interface ActivityViewProps {
   onBack: () => void;
@@ -14,10 +15,11 @@ interface ActivityViewProps {
  */
 export function ActivityView({ onBack }: ActivityViewProps) {
   const insets = useSafeAreaInsets();
+  const edgeBack = useEdgeSwipeBack(() => onBack());
   const { colors } = useThemeStore();
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
+    <View {...edgeBack} style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       <View
         style={[
           styles.header,

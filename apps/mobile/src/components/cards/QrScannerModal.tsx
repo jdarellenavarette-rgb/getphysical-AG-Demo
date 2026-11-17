@@ -4,6 +4,7 @@ import { CameraView, useCameraPermissions } from "expo-camera";
 import { CheckCircle2, Info, QrCode, ShieldCheck, X, XCircle, Zap, ZapOff } from "lucide-react-native";
 import { useQrScanner, type ScanState } from "../../hooks/useQrScanner";
 import { facilityLink } from "../../lib/appLinks";
+import { useEdgeSwipeBack } from "../../hooks/useDismissGestures";
 
 interface QrScannerModalProps {
   visible: boolean;
@@ -32,6 +33,7 @@ const KIND_ACTION = {
  */
 export function QrScannerModal({ visible, onClose, title = "Scan QR" }: QrScannerModalProps) {
   const [permission, requestPermission] = useCameraPermissions();
+  const edgeBack = useEdgeSwipeBack(() => onClose());
   const [flash, setFlash] = useState<"off" | "on">("off");
   const { state, onScan, confirm, reset } = useQrScanner();
 
@@ -52,7 +54,7 @@ export function QrScannerModal({ visible, onClose, title = "Scan QR" }: QrScanne
 
   return (
     <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
-      <View style={styles.container}>
+      <View {...edgeBack} style={styles.container}>
         {permission?.granted ? (
           <CameraView
             style={StyleSheet.absoluteFill}

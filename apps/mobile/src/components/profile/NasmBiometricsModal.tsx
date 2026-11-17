@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {
+  Animated,
   View,
   Text,
   TouchableOpacity,
@@ -14,6 +15,8 @@ import {
 import { X, Calculator, Check } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import { useTrackingStore } from "../../store/trackingStore";
+import { SheetBackdrop, SheetGrabber } from "../common/SheetParts";
+import { useSwipeDownToClose } from "../../hooks/useDismissGestures";
 
 interface NasmBiometricsModalProps {
   visible: boolean;
@@ -38,6 +41,7 @@ const GOAL_ADJUSTMENTS = {
 
 export function NasmBiometricsModal({ visible, onClose }: NasmBiometricsModalProps) {
   const { colors } = useThemeStore();
+  const swipe = useSwipeDownToClose(() => onClose());
   const { userBiometrics, updateBiometrics } = useTrackingStore();
 
   const [age, setAge] = useState(String(userBiometrics.age));
@@ -83,7 +87,15 @@ export function NasmBiometricsModal({ visible, onClose }: NasmBiometricsModalPro
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView style={styles.overlay} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-        <View style={[styles.sheetCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
+        <SheetBackdrop onPress={onClose} />
+        <Animated.View
+          style={[
+            styles.sheetCard,
+            { backgroundColor: colors.bgCard, borderColor: colors.borderColor },
+            swipe.sheetStyle,
+          ]}
+        >
+          <SheetGrabber panHandlers={swipe.panHandlers} />
           <View style={styles.header}>
             <View style={styles.badgeRow}>
               <Calculator size={16} color="#E11D48" />
@@ -251,7 +263,7 @@ export function NasmBiometricsModal({ visible, onClose }: NasmBiometricsModalPro
               <Text style={styles.saveCtaText}>Save & Apply Macro Targets</Text>
             </TouchableOpacity>
           </ScrollView>
-        </View>
+        </Animated.View>
       </KeyboardAvoidingView>
     </Modal>
   );

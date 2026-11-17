@@ -1,10 +1,12 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView } from "react-native";
+import { Animated, View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView } from "react-native";
 import { ArrowLeft, CheckCircle2 } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import type { PassRow } from "sodia-core";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { formatPhp, passCharge, passVenueName } from "../../lib/passDisplay";
+import { SheetBackdrop, SheetGrabber } from "../common/SheetParts";
+import { useSwipeDownToClose } from "../../hooks/useDismissGestures";
 
 interface ReceiptModalProps {
   visible: boolean;
@@ -14,6 +16,7 @@ interface ReceiptModalProps {
 
 export function ReceiptModal({ visible, pass, onClose }: ReceiptModalProps) {
   const { colors } = useThemeStore();
+  const swipe = useSwipeDownToClose(() => onClose());
   const { facilities, purchases } = useEcosystemStore();
   if (!pass) return null;
 
@@ -24,7 +27,15 @@ export function ReceiptModal({ visible, pass, onClose }: ReceiptModalProps) {
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.overlay}>
-        <View style={[styles.sheetContainer, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
+        <SheetBackdrop onPress={onClose} />
+        <Animated.View
+          style={[
+            styles.sheetContainer,
+            { backgroundColor: colors.bgCard, borderColor: colors.borderColor },
+            swipe.sheetStyle,
+          ]}
+        >
+          <SheetGrabber panHandlers={swipe.panHandlers} />
           {/* HEADER BAR */}
           <View style={[styles.topBar, { borderBottomColor: colors.borderColor }]}>
             <TouchableOpacity onPress={onClose} style={styles.backBtn}>
@@ -105,7 +116,7 @@ export function ReceiptModal({ visible, pass, onClose }: ReceiptModalProps) {
               <Text style={styles.closeFullText}>Done</Text>
             </TouchableOpacity>
           </ScrollView>
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );

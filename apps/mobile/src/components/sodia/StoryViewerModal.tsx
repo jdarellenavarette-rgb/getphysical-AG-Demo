@@ -16,6 +16,7 @@ import { useEcosystemStore } from "../../store/ecosystemStore";
 import { useCrmMessagingStore } from "../../store/crmMessagingStore";
 import { OWN_STORY_ID, type StoryItem } from "../../lib/stories";
 import { formatTimeAgo } from "../../services/messagingService";
+import { useSwipeDownAnywhere } from "../../hooks/useDismissGestures";
 
 interface StoryViewerModalProps {
   visible: boolean;
@@ -37,6 +38,8 @@ export function StoryViewerModal({ visible, initialStoryId, onClose, onTapLocati
   const [replyText, setReplyText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [sentNote, setSentNote] = useState<string | null>(null);
+  // Swipe down anywhere to leave, as in every stories viewer.
+  const swipeDown = useSwipeDownAnywhere(() => onClose());
 
   const stories = useMemo<StoryItem[]>(() => {
     // Other people's stories will come from the server; for now the tray holds only your own.
@@ -132,7 +135,11 @@ export function StoryViewerModal({ visible, initialStoryId, onClose, onTapLocati
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <KeyboardAvoidingView style={styles.overlay} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <KeyboardAvoidingView
+        {...swipeDown}
+        style={styles.overlay}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
         <Image source={{ uri: current.mediaUrl }} style={styles.bgMedia} resizeMode="cover" />
         <View style={styles.darkGradientOverlay} />
 

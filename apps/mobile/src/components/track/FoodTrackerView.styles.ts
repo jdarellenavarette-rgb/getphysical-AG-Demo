@@ -1,6 +1,8 @@
 import { StyleSheet } from "react-native";
 
 export const styles = StyleSheet.create({
+  discardDraftBtn: { minHeight: 44, alignItems: "center", justifyContent: "center" },
+  discardDraftText: { fontSize: 14, fontWeight: "700" },
   container: { flex: 1 },
   content: { padding: 16, paddingBottom: 120 },
   macroCard: { borderRadius: 18, borderWidth: 1, padding: 16, marginBottom: 14 },

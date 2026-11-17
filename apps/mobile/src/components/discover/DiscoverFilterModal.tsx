@@ -1,8 +1,10 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView } from "react-native";
+import { Animated, View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView } from "react-native";
 import { X, Check, SlidersHorizontal, RotateCcw } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import type { DiscoverCategory, DiscoverFilterState } from "../../data/discoverData";
+import { SheetBackdrop, SheetGrabber } from "../common/SheetParts";
+import { useSwipeDownToClose } from "../../hooks/useDismissGestures";
 
 interface DiscoverFilterModalProps {
   visible: boolean;
@@ -51,6 +53,7 @@ export function DiscoverFilterModal({
   totalResultsCount,
 }: DiscoverFilterModalProps) {
   const { colors } = useThemeStore();
+  const swipe = useSwipeDownToClose(() => onClose());
   const [draft, setDraft] = React.useState<DiscoverFilterState>(filters);
 
   React.useEffect(() => {
@@ -64,7 +67,11 @@ export function DiscoverFilterModal({
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
-        <View style={[styles.sheet, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
+        <SheetBackdrop onPress={onClose} />
+        <Animated.View
+          style={[styles.sheet, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }, swipe.sheetStyle]}
+        >
+          <SheetGrabber panHandlers={swipe.panHandlers} />
           {/* HEADER */}
           <View style={[styles.header, { borderBottomColor: colors.borderColor }]}>
             <View style={styles.headerLeft}>
@@ -176,7 +183,7 @@ export function DiscoverFilterModal({
               <Text style={styles.applyText}>Show {totalResultsCount} Results</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );

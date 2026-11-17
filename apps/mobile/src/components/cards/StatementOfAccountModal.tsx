@@ -6,6 +6,7 @@ import { useThemeStore } from "../../theme/theme";
 import type { PassRow } from "sodia-core";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { formatPhp, isCourtPass, passCharge, passStatusLabel, passVenueName } from "../../lib/passDisplay";
+import { useEdgeSwipeBack } from "../../hooks/useDismissGestures";
 
 interface StatementOfAccountModalProps {
   visible: boolean;
@@ -16,6 +17,7 @@ interface StatementOfAccountModalProps {
 
 export function StatementOfAccountModal({ visible, passes, onClose, onSelectPass }: StatementOfAccountModalProps) {
   const insets = useSafeAreaInsets();
+  const edgeBack = useEdgeSwipeBack(() => onClose());
   const { colors } = useThemeStore();
   const [filter, setFilter] = useState<"all" | "passes" | "courts">("all");
 
@@ -28,7 +30,7 @@ export function StatementOfAccountModal({ visible, passes, onClose, onSelectPass
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
+      <View {...edgeBack} style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         {/* HEADER BAR WITH SAFE NOTCH INSET */}
         <View
           style={[

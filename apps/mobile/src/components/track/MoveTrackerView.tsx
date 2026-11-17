@@ -142,6 +142,13 @@ export function MoveTrackerView() {
     });
   };
 
+  const confirmDiscard = () => {
+    Alert.alert("Discard this activity?", "Nothing from it will be saved.", [
+      { text: "Keep it", style: "cancel" },
+      { text: "Discard", style: "destructive", onPress: handleReset },
+    ]);
+  };
+
   const handleReset = () => {
     setIsActive(false);
     setSeconds(0);
@@ -274,6 +281,11 @@ export function MoveTrackerView() {
                 <Text style={[styles.circleBtnLabelDark, { color: colors.bgScreen }]}>FINISH</Text>
               </TouchableOpacity>
             </View>
+          )}
+          {!isActive && seconds > 0 && (
+            <TouchableOpacity onPress={confirmDiscard} style={styles.discardBtn} accessibilityRole="button">
+              <Text style={[styles.discardBtnText, { color: colors.textMuted }]}>Discard activity</Text>
+            </TouchableOpacity>
           )}
         </View>
       ) : (

@@ -5,6 +5,7 @@ import { Search, ArrowLeft } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import { useCrmMessagingStore } from "../../store/crmMessagingStore";
 import { Avatar } from "../common/Avatar";
+import { useEdgeSwipeBack } from "../../hooks/useDismissGestures";
 
 export interface DMThread {
   id: string;
@@ -25,6 +26,7 @@ interface InboxViewProps {
 
 export function InboxView({ onBack, onSelectThread }: InboxViewProps) {
   const insets = useSafeAreaInsets();
+  const edgeBack = useEdgeSwipeBack(() => onBack());
   const { colors } = useThemeStore();
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -38,7 +40,7 @@ export function InboxView({ onBack, onSelectThread }: InboxViewProps) {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
+    <View {...edgeBack} style={[styles.container, { backgroundColor: colors.bgScreen }]}>
       {/* HEADER */}
       <View
         style={[

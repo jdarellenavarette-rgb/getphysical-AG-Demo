@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { X, Plus, Trash2, Dumbbell, Calendar, Check } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
+import { useEdgeSwipeBack } from "../../hooks/useDismissGestures";
 import {
   useTrackingStore,
   type TrainingProgram,
@@ -27,6 +28,7 @@ interface CreateProgramModalProps {
 
 export function CreateProgramModal({ visible, onClose }: CreateProgramModalProps) {
   const { colors } = useThemeStore();
+  const edgeBack = useEdgeSwipeBack(() => onClose());
   const { saveProgram } = useTrackingStore();
 
   const [title, setTitle] = useState("");
@@ -123,6 +125,7 @@ export function CreateProgramModal({ visible, onClose }: CreateProgramModalProps
   return (
     <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
       <KeyboardAvoidingView
+        {...edgeBack}
         style={[styles.container, { backgroundColor: colors.bgScreen }]}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >

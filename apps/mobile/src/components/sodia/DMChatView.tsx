@@ -17,6 +17,7 @@ import type { DMThread } from "./InboxView";
 import { Avatar } from "../common/Avatar";
 import { haptics } from "../../lib/haptics";
 import { chatStyles as styles } from "./DMChatView.styles";
+import { useEdgeSwipeBack } from "../../hooks/useDismissGestures";
 
 interface DMChatViewProps {
   thread: DMThread;
@@ -25,6 +26,7 @@ interface DMChatViewProps {
 
 export function DMChatView({ thread, onBack }: DMChatViewProps) {
   const insets = useSafeAreaInsets();
+  const edgeBack = useEdgeSwipeBack(() => onBack());
   const { colors } = useThemeStore();
   const { threadMessages, sendMessage, setActiveThread, lastError } = useCrmMessagingStore();
 
@@ -70,6 +72,7 @@ export function DMChatView({ thread, onBack }: DMChatViewProps) {
 
   return (
     <KeyboardAvoidingView
+      {...edgeBack}
       style={[styles.container, { backgroundColor: colors.bgScreen }]}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}

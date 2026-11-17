@@ -14,6 +14,7 @@ import {
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { useThemeStore } from "../../theme/theme";
 import { Avatar } from "./Avatar";
+import { SheetBackdrop } from "./SheetParts";
 
 interface MenuDrawerModalProps {
   visible: boolean;
@@ -42,13 +43,20 @@ export function MenuDrawerModal({
   return (
     <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
       <View style={styles.overlay}>
+        <SheetBackdrop onPress={onClose} />
         <View
           style={[styles.drawerContainer, { backgroundColor: colors.bgCard, borderRightColor: colors.borderColor }]}
         >
           {/* TOP DRAWER HEADER */}
           <View style={[styles.header, { borderBottomColor: colors.borderColor }]}>
             <Text style={[styles.headerTitle, { color: colors.textMuted }]}>MENU</Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+            <TouchableOpacity
+              onPress={onClose}
+              style={styles.closeBtn}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              accessibilityRole="button"
+              accessibilityLabel="Close menu"
+            >
               <X size={20} color={colors.textPrimary} />
             </TouchableOpacity>
           </View>

@@ -7,6 +7,8 @@ import { useTrackingStore } from "../../store/trackingStore";
 import { useFeedStore } from "../../store/feedStore";
 import { passStatusLabel } from "../../lib/passDisplay";
 import { Avatar } from "../common/Avatar";
+import { SheetBackdrop } from "../common/SheetParts";
+import { useSwipeDownAnywhere } from "../../hooks/useDismissGestures";
 import { NasmBiometricsModal } from "./NasmBiometricsModal";
 import { MyQrModal } from "./MyQrModal";
 import { styles } from "./ProfileHub.styles";
@@ -32,6 +34,7 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
   const [isMyQrOpen, setIsMyQrOpen] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
   const [isNasmOpen, setIsNasmOpen] = useState(false);
+  const photoSwipe = useSwipeDownAnywhere(() => setSelectedPhoto(null));
 
   const fullName = `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim() || "Guest";
   const myPhotos = posts
@@ -238,7 +241,8 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
       </View>
 
       <Modal visible={!!selectedPhoto} transparent animationType="fade" onRequestClose={() => setSelectedPhoto(null)}>
-        <View style={styles.photoModalOverlay}>
+        <View style={styles.photoModalOverlay} {...photoSwipe}>
+          <SheetBackdrop onPress={() => setSelectedPhoto(null)} />
           <TouchableOpacity
             onPress={() => setSelectedPhoto(null)}
             style={styles.closePhotoBtn}

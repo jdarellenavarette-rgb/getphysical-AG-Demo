@@ -44,6 +44,8 @@ export const styles = StyleSheet.create({
   metricLabel: { fontSize: 10, fontWeight: "700", marginTop: 2 },
   metricDivider: { width: 1, height: 30 },
   actionWrap: { marginTop: 16, marginBottom: 16 },
+  discardBtn: { minHeight: 44, alignItems: "center", justifyContent: "center", marginTop: 8 },
+  discardBtnText: { fontSize: 14, fontWeight: "700" },
   startBtn: {
     backgroundColor: "#E11D48",
     borderRadius: 999,

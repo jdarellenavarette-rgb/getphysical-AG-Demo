@@ -1,10 +1,12 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, Modal, TouchableOpacity, ActivityIndicator } from "react-native";
+import { Animated, View, Text, StyleSheet, Modal, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Shield } from "lucide-react-native";
 import { calculateHybridServiceFee } from "sodia-core";
 import { useThemeStore } from "../../theme/theme";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import type { CheckoutRequest } from "../discover/DiscoverView";
+import { SheetBackdrop, SheetGrabber } from "./SheetParts";
+import { useSwipeDownToClose } from "../../hooks/useDismissGestures";
 
 interface UniversalCheckoutModalProps {
   item: CheckoutRequest | null;
@@ -15,6 +17,7 @@ interface UniversalCheckoutModalProps {
 
 export function UniversalCheckoutModal({ item, visible, onClose, onConfirm }: UniversalCheckoutModalProps) {
   const { colors } = useThemeStore();
+  const swipe = useSwipeDownToClose(() => onClose());
   const { isGuest } = useEcosystemStore();
   const [submitting, setSubmitting] = useState(false);
   if (!visible || !item) return null;
@@ -35,7 +38,15 @@ export function UniversalCheckoutModal({ item, visible, onClose, onConfirm }: Un
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.modalOverlay}>
-        <View style={[styles.checkoutSheet, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
+        <SheetBackdrop onPress={onClose} />
+        <Animated.View
+          style={[
+            styles.checkoutSheet,
+            { backgroundColor: colors.bgCard, borderColor: colors.borderColor },
+            swipe.sheetStyle,
+          ]}
+        >
+          <SheetGrabber panHandlers={swipe.panHandlers} />
           <View style={styles.sheetHeader}>
             <Text style={[styles.sheetTitle, { color: colors.textPrimary }]}>CHECKOUT</Text>
             <TouchableOpacity
@@ -104,7 +115,7 @@ export function UniversalCheckoutModal({ item, visible, onClose, onConfirm }: Un
               </>
             )}
           </TouchableOpacity>
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );

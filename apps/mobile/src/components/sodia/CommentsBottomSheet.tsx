@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {
+  Animated,
   View,
   Text,
   TouchableOpacity,
@@ -19,6 +20,8 @@ import { Avatar } from "../common/Avatar";
 import { useRequireAccount } from "../../hooks/useRequireAccount";
 import { formatTimeAgo } from "../../services/messagingService";
 import { SODIA_FIELD_LIMITS } from "sodia-core";
+import { SheetBackdrop, SheetGrabber } from "../common/SheetParts";
+import { useSwipeDownToClose } from "../../hooks/useDismissGestures";
 
 interface CommentsBottomSheetProps {
   visible: boolean;
@@ -31,6 +34,7 @@ export function CommentsBottomSheet({ visible, onClose, postId }: CommentsBottom
   const insets = useSafeAreaInsets();
   const { profile } = useEcosystemStore();
   const { colors } = useThemeStore();
+  const swipe = useSwipeDownToClose(() => onClose());
   const { commentsByPost, addComment, toggleCommentLike } = useFeedStore();
   const requireAccount = useRequireAccount();
   const [commentText, setCommentText] = useState("");
@@ -50,7 +54,8 @@ export function CommentsBottomSheet({ visible, onClose, postId }: CommentsBottom
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView style={styles.overlay} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-        <View
+        <SheetBackdrop onPress={onClose} />
+        <Animated.View
           style={[
             styles.sheetContainer,
             {
@@ -59,11 +64,12 @@ export function CommentsBottomSheet({ visible, onClose, postId }: CommentsBottom
               borderWidth: 1,
               paddingBottom: Math.max(insets.bottom, 16),
             },
+            swipe.sheetStyle,
           ]}
         >
+          <SheetGrabber panHandlers={swipe.panHandlers} />
           {/* HEADER */}
           <View style={[styles.header, { borderBottomColor: colors.borderColor }]}>
-            <View style={[styles.dragPill, { backgroundColor: colors.borderColor }]} />
             <View style={styles.titleRow}>
               <Text style={[styles.title, { color: colors.textPrimary }]}>Comments ({comments.length})</Text>
               <TouchableOpacity
@@ -151,7 +157,7 @@ export function CommentsBottomSheet({ visible, onClose, postId }: CommentsBottom
               </TouchableOpacity>
             )}
           </View>
-        </View>
+        </Animated.View>
       </KeyboardAvoidingView>
     </Modal>
   );
@@ -161,7 +167,6 @@ const styles = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.65)", justifyContent: "flex-end" },
   sheetContainer: { borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: "75%", paddingBottom: 20 },
   header: { alignItems: "center", paddingVertical: 12, borderBottomWidth: 1 },
-  dragPill: { width: 36, height: 4, borderRadius: 2, marginBottom: 10 },
   titleRow: {
     width: "100%",
     flexDirection: "row",

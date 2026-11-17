@@ -178,7 +178,14 @@ export function FoodTrackerView() {
             </View>
             <TouchableOpacity onPress={handleCommitOracleMeal} style={styles.commitMealBtn}>
               <Check size={16} color="#FFF" style={{ marginRight: 6 }} />
-              <Text style={styles.commitMealBtnText}>Log to Daily Diary</Text>
+              <Text style={styles.commitMealBtnText}>Log this meal</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setOracleDraft(null)}
+              style={styles.discardDraftBtn}
+              accessibilityRole="button"
+            >
+              <Text style={[styles.discardDraftText, { color: colors.textMuted }]}>Discard</Text>
             </TouchableOpacity>
           </View>
         )}

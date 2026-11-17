@@ -1,8 +1,10 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Modal, Image, ScrollView } from "react-native";
+import { Animated, View, Text, TouchableOpacity, StyleSheet, Modal, Image, ScrollView } from "react-native";
 import { X, Star, Clock, MapPin, ShieldCheck, UserCheck, Users, Award, Sparkles } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import type { DiscoverCoach, DiscoverCommunityClub } from "../../data/discoverData";
+import { SheetBackdrop, SheetGrabber } from "../common/SheetParts";
+import { useSwipeDownToClose } from "../../hooks/useDismissGestures";
 
 export type DiscoverSelectedEntity =
   { kind: "coach"; data: DiscoverCoach } | { kind: "club"; data: DiscoverCommunityClub } | null;
@@ -16,6 +18,7 @@ interface DiscoverEntitySheetProps {
 
 export function DiscoverEntitySheet({ entity, visible, onClose, onConfirmBooking }: DiscoverEntitySheetProps) {
   const { colors } = useThemeStore();
+  const swipe = useSwipeDownToClose(() => onClose());
   if (!visible || !entity) return null;
 
   const isCoach = entity.kind === "coach";
@@ -34,7 +37,15 @@ export function DiscoverEntitySheet({ entity, visible, onClose, onConfirmBooking
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
-        <View style={[styles.sheetCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
+        <SheetBackdrop onPress={onClose} />
+        <Animated.View
+          style={[
+            styles.sheetCard,
+            { backgroundColor: colors.bgCard, borderColor: colors.borderColor },
+            swipe.sheetStyle,
+          ]}
+        >
+          <SheetGrabber panHandlers={swipe.panHandlers} />
           {/* HEADER */}
           <View style={styles.header}>
             <View style={styles.badgeRow}>
@@ -134,7 +145,7 @@ export function DiscoverEntitySheet({ entity, visible, onClose, onConfirmBooking
               </TouchableOpacity>
             </View>
           </ScrollView>
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );

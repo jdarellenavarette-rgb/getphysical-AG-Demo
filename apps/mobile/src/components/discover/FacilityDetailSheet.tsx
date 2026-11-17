@@ -1,9 +1,11 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Modal, Image, ScrollView } from "react-native";
+import { Animated, View, Text, TouchableOpacity, StyleSheet, Modal, Image, ScrollView } from "react-native";
 import { X, MapPin, Star, Sparkles, ChevronRight, Check } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import type { FacilityRow } from "sodia-core";
 import { PickleballBookingGrid } from "./PickleballBookingGrid";
+import { SheetBackdrop, SheetGrabber } from "../common/SheetParts";
+import { useSwipeDownToClose } from "../../hooks/useDismissGestures";
 
 export interface FacilityPassOption {
   id: string;
@@ -23,6 +25,7 @@ interface FacilityDetailSheetProps {
 
 export function FacilityDetailSheet({ facility, visible, onClose, onSelectPass }: FacilityDetailSheetProps) {
   const { colors } = useThemeStore();
+  const swipe = useSwipeDownToClose(() => onClose());
   const [selectedPassId, setSelectedPassId] = useState<string>("");
 
   if (!visible || !facility) return null;
@@ -93,7 +96,15 @@ export function FacilityDetailSheet({ facility, visible, onClose, onSelectPass }
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
-        <View style={[styles.sheetCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
+        <SheetBackdrop onPress={onClose} />
+        <Animated.View
+          style={[
+            styles.sheetCard,
+            { backgroundColor: colors.bgCard, borderColor: colors.borderColor },
+            swipe.sheetStyle,
+          ]}
+        >
+          <SheetGrabber panHandlers={swipe.panHandlers} />
           {/* HEADER IMAGE & CLOSE */}
           <View style={styles.heroContainer}>
             <Image source={{ uri: facility.cover_image ?? facility.cover_url ?? "" }} style={styles.heroCover} />
@@ -259,7 +270,7 @@ export function FacilityDetailSheet({ facility, visible, onClose, onSelectPass }
               </TouchableOpacity>
             </View>
           )}
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );

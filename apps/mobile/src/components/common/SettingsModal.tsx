@@ -18,6 +18,7 @@ import { useEcosystemStore } from "../../store/ecosystemStore";
 import { useThemeStore, type ThemePreference } from "../../theme/theme";
 import { haptics } from "../../lib/haptics";
 import { signOut } from "../../services/authService";
+import { useEdgeSwipeBack } from "../../hooks/useDismissGestures";
 
 const THEME_OPTIONS: { value: ThemePreference; label: string; Icon: LucideIcon }[] = [
   { value: "system", label: "System", Icon: Smartphone },
@@ -41,6 +42,7 @@ export function SettingsModal({
   onOpenOrganizer,
 }: SettingsModalProps) {
   const insets = useSafeAreaInsets();
+  const edgeBack = useEdgeSwipeBack(() => onClose());
   const { profile, isGuest, setIsGuest } = useEcosystemStore();
   const { colors, preference, setPreference } = useThemeStore();
   // Workspaces are offered only for roles this account actually holds.
@@ -51,7 +53,7 @@ export function SettingsModal({
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
+      <View {...edgeBack} style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         {/* TOP BAR */}
         <View
           style={[

@@ -4,46 +4,50 @@ import { Plus, Minus, Award, Flame, Timer } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { useTrackingStore, type LoggedSet, type ProgramExercise } from "../../store/trackingStore";
+import { BLANK_SETS, useLiftSessionStore } from "../../store/liftSessionStore";
 import { LiftLaunchpadView } from "./LiftLaunchpadView";
 import { SetRow, SetTableHeader } from "./SetRow";
 import { haptics } from "../../lib/haptics";
+import { SheetBackdrop } from "../common/SheetParts";
 
 const REST_SECONDS = 90;
 
 const formatClock = (seconds: number): string => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
-
-/** A new session starts with untouched sets; nothing counts until it is ticked. */
-const BLANK_SETS: LoggedSet[] = [
-  { setNumber: 1, weight: 60, reps: 5, isCompleted: false },
-  { setNumber: 2, weight: 60, reps: 5, isCompleted: false },
-  { setNumber: 3, weight: 60, reps: 5, isCompleted: false },
-];
 
 export function LiftTracker() {
   const { colors } = useThemeStore();
   const { addPost } = useEcosystemStore();
   const { liftSessions, saveLiftSession } = useTrackingStore();
 
-  const [isTraining, setIsTraining] = useState(false);
-  const [workoutTitle, setWorkoutTitle] = useState("");
-  const [activeExerciseName, setActiveExerciseName] = useState("");
-  const [restSeconds, setRestSeconds] = useState(0);
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [sets, setSets] = useState<LoggedSet[]>(BLANK_SETS);
+  const {
+    isTraining,
+    workoutTitle,
+    exerciseName: activeExerciseName,
+    sets,
+    startedAt,
+    restUntil,
+    sessionId,
+    setWorkoutTitle,
+    setExerciseName: setActiveExerciseName,
+    setSets,
+    setRestUntil,
+    start,
+    end,
+  } = useLiftSessionStore();
   const [isFinishModalOpen, setIsFinishModalOpen] = useState(false);
-  // Bumped for every new session so the set rows start from fresh typed values.
-  const [sessionId, setSessionId] = useState(0);
 
+  // One tick a second redraws the clocks; the times themselves come from timestamps.
+  const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    let t: ReturnType<typeof setInterval> | null = null;
-    if (isTraining) {
-      t = setInterval(() => {
-        setElapsedSeconds((s) => s + 1);
-        setRestSeconds((r) => (r > 0 ? r - 1 : 0));
-      }, 1000);
-    }
-    return () => clearInterval(t);
+    if (!isTraining) return;
+    setNow(Date.now());
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
   }, [isTraining]);
+
+  const elapsedSeconds = startedAt ? Math.max(0, Math.round((now - startedAt) / 1000)) : 0;
+  const restSeconds = restUntil ? Math.max(0, Math.round((restUntil - now) / 1000)) : 0;
+  const setRestSeconds = (seconds: number) => setRestUntil(seconds > 0 ? Date.now() + seconds * 1000 : null);
 
   const toggleSet = (idx: number) => {
     const completing = !sets[idx]?.isCompleted;
@@ -74,11 +78,7 @@ export function LiftTracker() {
 
   const endSession = () => {
     setIsFinishModalOpen(false);
-    setIsTraining(false);
-    setElapsedSeconds(0);
-    setRestSeconds(0);
-    setSets(BLANK_SETS);
-    setSessionId((n) => n + 1);
+    end();
   };
 
   const confirmDiscard = () => {
@@ -138,25 +138,17 @@ export function LiftTracker() {
   };
 
   const handleStartWorkout = (title?: string, exercises?: ProgramExercise[]) => {
-    if (title) setWorkoutTitle(title);
-    setSets(BLANK_SETS);
-    setElapsedSeconds(0);
-    setRestSeconds(0);
-    if (exercises && exercises.length > 0 && exercises[0]) {
-      const first = exercises[0];
-      setActiveExerciseName(first.name);
-      setSets(
-        Array.from({ length: first.sets }, (_, i) => ({
+    const first = exercises?.[0];
+    const plannedSets = first
+      ? Array.from({ length: first.sets }, (_, i) => ({
           setNumber: i + 1,
           weight: first.weightKg,
           reps: first.reps,
           isCompleted: false,
-        })),
-      );
-    }
-    setSessionId((n) => n + 1);
+        }))
+      : BLANK_SETS;
     haptics.impact();
-    setIsTraining(true);
+    start(title, first?.name, plannedSets);
   };
 
   if (!isTraining) {
@@ -205,7 +197,7 @@ export function LiftTracker() {
           <Text style={[styles.restTitle, { color: colors.textMuted }]}>REST</Text>
           <View style={styles.timerRingRow}>
             <TouchableOpacity
-              onPress={() => setRestSeconds((s) => Math.max(0, s - 15))}
+              onPress={() => setRestSeconds(Math.max(0, restSeconds - 15))}
               style={[styles.timerAdjustBtn, { backgroundColor: colors.bgInput }]}
             >
               <Text style={[styles.timerAdjustText, { color: colors.textPrimary }]}>-15s</Text>
@@ -215,7 +207,7 @@ export function LiftTracker() {
               <Text style={styles.secondsLabel}>SEC</Text>
             </View>
             <TouchableOpacity
-              onPress={() => setRestSeconds((s) => s + 15)}
+              onPress={() => setRestSeconds(restSeconds + 15)}
               style={[styles.timerAdjustBtn, { backgroundColor: colors.bgInput }]}
             >
               <Text style={[styles.timerAdjustText, { color: colors.textPrimary }]}>+15s</Text>
@@ -270,6 +262,8 @@ export function LiftTracker() {
         onRequestClose={() => setIsFinishModalOpen(false)}
       >
         <View style={styles.modalOverlay}>
+          {/* Tapping outside is the same as "Keep Training": nothing is lost. */}
+          <SheetBackdrop onPress={() => setIsFinishModalOpen(false)} />
           <View style={[styles.finishSummaryCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
             <Award size={44} color="#10B981" />
             <Text style={[styles.finishModalTitle, { color: colors.textPrimary }]}>Finish Workout</Text>

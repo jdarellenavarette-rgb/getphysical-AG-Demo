@@ -6,6 +6,7 @@ import { useEcosystemStore } from "../../store/ecosystemStore";
 import { useFeedStore } from "../../store/feedStore";
 import { Avatar } from "../common/Avatar";
 import { useRequireAccount } from "../../hooks/useRequireAccount";
+import { useEdgeSwipeBack } from "../../hooks/useDismissGestures";
 
 export interface AthleteProfileData {
   userId: string;
@@ -31,6 +32,7 @@ interface AthleteProfileModalProps {
 
 export function AthleteProfileModal({ visible, athlete, onClose, onMessageAthlete }: AthleteProfileModalProps) {
   const { colors } = useThemeStore();
+  const edgeBack = useEdgeSwipeBack(() => onClose());
   const { profile } = useEcosystemStore();
   const { followedUserIds, toggleFollow } = useFeedStore();
   const requireAccount = useRequireAccount();
@@ -44,6 +46,7 @@ export function AthleteProfileModal({ visible, athlete, onClose, onMessageAthlet
   return (
     <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
       <ScrollView
+        {...edgeBack}
         style={[styles.container, { backgroundColor: colors.bgScreen }]}
         contentContainerStyle={styles.content}
       >

@@ -5,6 +5,7 @@ import { getSupabase } from "../../lib/supabase";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { useFeedStore } from "../../store/feedStore";
 import { useTrackingStore } from "../../store/trackingStore";
+import { useLiftSessionStore } from "../../store/liftSessionStore";
 import { OpeningLoadingScreen } from "../common/OpeningLoadingScreen";
 import { ProfileSetupScreen } from "./ProfileSetupScreen";
 import { SignInScreen } from "./SignInScreen";
@@ -38,6 +39,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
     resetSession();
     resetFeed();
     resetTracking();
+    useLiftSessionStore.getState().end();
   }, [state, resetSession, resetFeed, resetTracking]);
 
   // 1. Landing / Splash screen always runs first on app mount

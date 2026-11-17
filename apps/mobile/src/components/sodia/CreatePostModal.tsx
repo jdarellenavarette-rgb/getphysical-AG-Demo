@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {
+  Animated,
   View,
   Text,
   TextInput,
@@ -19,6 +20,8 @@ import { PostMediaAttachmentBar } from "./PostMediaAttachmentBar";
 import { Avatar } from "../common/Avatar";
 import { formatClipDuration, usePostMedia } from "../../hooks/usePostMedia";
 import { haptics } from "../../lib/haptics";
+import { SheetBackdrop, SheetGrabber } from "../common/SheetParts";
+import { useSwipeDownToClose } from "../../hooks/useDismissGestures";
 
 interface CreatePostModalProps {
   visible: boolean;
@@ -39,6 +42,7 @@ const BG_GRADIENTS = [
 export function CreatePostModal({ visible, onClose, onOpenStoryCamera, defaultMode = "post" }: CreatePostModalProps) {
   const { profile, facilities, addPost } = useEcosystemStore();
   const { colors } = useThemeStore();
+  const swipe = useSwipeDownToClose(() => handleClose());
   const [activeTab, setActiveTab] = useState<"post" | "status">(defaultMode);
   const [caption, setCaption] = useState("");
   const [selectedBgColor, setSelectedBgColor] = useState(BG_GRADIENTS[0]!.color);
@@ -93,7 +97,15 @@ export function CreatePostModal({ visible, onClose, onOpenStoryCamera, defaultMo
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={handleClose}>
       <KeyboardAvoidingView style={styles.overlay} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-        <View style={[styles.container, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
+        <SheetBackdrop onPress={handleClose} />
+        <Animated.View
+          style={[
+            styles.container,
+            { backgroundColor: colors.bgCard, borderColor: colors.borderColor },
+            swipe.sheetStyle,
+          ]}
+        >
+          <SheetGrabber panHandlers={swipe.panHandlers} />
           <View style={[styles.header, { borderBottomColor: colors.borderColor }]}>
             <TouchableOpacity onPress={handleClose} style={styles.cancelBtn} accessibilityRole="button">
               <Text style={[styles.cancelText, { color: colors.textMuted }]}>Cancel</Text>
@@ -268,7 +280,7 @@ export function CreatePostModal({ visible, onClose, onOpenStoryCamera, defaultMo
               </View>
             )}
           </ScrollView>
-        </View>
+        </Animated.View>
       </KeyboardAvoidingView>
     </Modal>
   );

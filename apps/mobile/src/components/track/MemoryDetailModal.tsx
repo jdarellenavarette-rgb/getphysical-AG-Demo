@@ -1,8 +1,10 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView, Alert } from "react-native";
+import { Animated, View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView, Alert } from "react-native";
 import { X, Send } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import { useEcosystemStore } from "../../store/ecosystemStore";
+import { SheetBackdrop, SheetGrabber } from "../common/SheetParts";
+import { useSwipeDownToClose } from "../../hooks/useDismissGestures";
 
 export interface JourneyMemoryItem {
   id: string;
@@ -28,6 +30,7 @@ interface MemoryDetailModalProps {
 
 export function MemoryDetailModal({ visible, item, onClose }: MemoryDetailModalProps) {
   const { colors } = useThemeStore();
+  const swipe = useSwipeDownToClose(() => onClose());
   const { addPost } = useEcosystemStore();
 
   if (!visible || !item) return null;
@@ -47,7 +50,15 @@ export function MemoryDetailModal({ visible, item, onClose }: MemoryDetailModalP
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
-        <View style={[styles.sheetCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
+        <SheetBackdrop onPress={onClose} />
+        <Animated.View
+          style={[
+            styles.sheetCard,
+            { backgroundColor: colors.bgCard, borderColor: colors.borderColor },
+            swipe.sheetStyle,
+          ]}
+        >
+          <SheetGrabber panHandlers={swipe.panHandlers} />
           {/* HEADER */}
           <View style={styles.header}>
             <View style={styles.badgePill}>
@@ -85,7 +96,7 @@ export function MemoryDetailModal({ visible, item, onClose }: MemoryDetailModalP
               <Text style={styles.shareBtnText}>Share to Feed</Text>
             </TouchableOpacity>
           </ScrollView>
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );

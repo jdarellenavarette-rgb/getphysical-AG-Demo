@@ -5,6 +5,7 @@ import { buildIdentityQrUrl } from "sodia-core";
 import { APP_URL } from "../../lib/appLinks";
 import { getMyQrToken } from "../../services/qrService";
 import { QrCodeView } from "../common/QrCodeView";
+import { useEdgeSwipeBack } from "../../hooks/useDismissGestures";
 
 type Kind = "USER" | "COACH" | "ORGANIZER";
 const TABS: { kind: Kind; label: string; hint: string }[] = [
@@ -20,6 +21,7 @@ type LoadState =
 
 export function MyQrModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const [kind, setKind] = useState<Kind>("USER");
+  const edgeBack = useEdgeSwipeBack(() => onClose());
   const [available, setAvailable] = useState<Kind[]>(["USER"]);
   const [state, setState] = useState<LoadState>({ status: "loading" });
 
@@ -55,7 +57,7 @@ export function MyQrModal({ visible, onClose }: { visible: boolean; onClose: () 
   const tab = TABS.find((t) => t.kind === kind)!;
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <View style={styles.container}>
+      <View {...edgeBack} style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>My QR code</Text>
           <TouchableOpacity onPress={onClose} accessibilityLabel="Close" style={styles.close}>

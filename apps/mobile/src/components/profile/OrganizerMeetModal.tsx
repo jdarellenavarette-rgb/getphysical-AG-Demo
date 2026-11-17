@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView } from "rea
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Users, Clock, Trophy, CheckCircle2, Flame, Shield, ArrowLeft, Sparkles } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
+import { useEdgeSwipeBack } from "../../hooks/useDismissGestures";
 
 interface OrganizerMeetModalProps {
   visible: boolean;
@@ -45,6 +46,7 @@ const INITIAL_WAITLIST = [
 
 export function OrganizerMeetModal({ visible, onClose }: OrganizerMeetModalProps) {
   const insets = useSafeAreaInsets();
+  const edgeBack = useEdgeSwipeBack(() => onClose());
   const { colors } = useThemeStore();
   const [subTab, setSubTab] = useState<"roster" | "waitlist" | "courts">("roster");
   const [roster, setRoster] = useState<RosterPlayer[]>(INITIAL_ROSTER);
@@ -58,7 +60,7 @@ export function OrganizerMeetModal({ visible, onClose }: OrganizerMeetModalProps
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
+      <View {...edgeBack} style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         {/* TOP HEADER WITH SAFE NOTCH PADDING */}
         <View
           style={[

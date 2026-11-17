@@ -5,6 +5,7 @@ import { ArrowLeft, QrCode, ShieldCheck, RefreshCw } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import { usePassTotp } from "../../hooks/usePassTotp";
 import { QrCodeView } from "../common/QrCodeView";
+import { useEdgeSwipeBack } from "../../hooks/useDismissGestures";
 
 interface TurnstileQRModalProps {
   visible: boolean;
@@ -17,6 +18,7 @@ interface TurnstileQRModalProps {
 
 export function TurnstileQRModal({ visible, onClose, facilityName, passId, onSignIn }: TurnstileQRModalProps) {
   const insets = useSafeAreaInsets();
+  const edgeBack = useEdgeSwipeBack(() => onClose());
   const { colors } = useThemeStore();
   const totpState = usePassTotp(passId, visible);
   const totp = totpState.status === "ready" ? totpState.totp : null;
@@ -31,7 +33,7 @@ export function TurnstileQRModal({ visible, onClose, facilityName, passId, onSig
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
+      <View {...edgeBack} style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         {/* TOP BAR */}
         <View
           style={[

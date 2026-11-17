@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet, Modal, TouchableOpacity } from "react-native";
 import { Compass, QrCode, X, ChevronRight, ShieldCheck } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
+import { SheetBackdrop } from "../common/SheetParts";
 
 interface AddMembershipChoiceModalProps {
   visible: boolean;
@@ -21,13 +22,20 @@ export function AddMembershipChoiceModal({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.overlay}>
+        <SheetBackdrop onPress={onClose} />
         <View style={[styles.card, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
           <View style={styles.headerRow}>
             <View>
               <Text style={[styles.title, { color: colors.textPrimary }]}>Add Membership</Text>
               <Text style={[styles.subtitle, { color: colors.textMuted }]}>Choose how you want to join a club</Text>
             </View>
-            <TouchableOpacity onPress={onClose} style={[styles.closeBtn, { backgroundColor: colors.bgCardSecondary }]}>
+            <TouchableOpacity
+              onPress={onClose}
+              style={[styles.closeBtn, { backgroundColor: colors.bgCardSecondary }]}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              accessibilityRole="button"
+              accessibilityLabel="Close"
+            >
               <X size={18} color={colors.textPrimary} />
             </TouchableOpacity>
           </View>

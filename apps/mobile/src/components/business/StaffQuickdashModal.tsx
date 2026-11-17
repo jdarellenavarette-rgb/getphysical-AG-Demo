@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft, QrCode, CheckCircle2, XCircle, Clock, Shield } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import { QrScannerModal } from "../cards/QrScannerModal";
+import { useEdgeSwipeBack } from "../../hooks/useDismissGestures";
 
 interface StaffQuickdashModalProps {
   visible: boolean;
@@ -20,6 +21,7 @@ interface ScanLog {
 
 export function StaffQuickdashModal({ visible, onClose }: StaffQuickdashModalProps) {
   const insets = useSafeAreaInsets();
+  const edgeBack = useEdgeSwipeBack(() => onClose());
   const { colors } = useThemeStore();
   // Sample data is a development aid only.
   const showSamples = __DEV__;
@@ -65,7 +67,7 @@ export function StaffQuickdashModal({ visible, onClose }: StaffQuickdashModalPro
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <QrScannerModal visible={isScannerOpen} onClose={() => setIsScannerOpen(false)} title="Member check-in" />
-      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
+      <View {...edgeBack} style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         {/* HEADER BAR */}
         <View
           style={[

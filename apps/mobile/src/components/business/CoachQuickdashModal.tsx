@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView } from "rea
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft, ShieldCheck, Users, Plus, CheckCircle, Sparkles } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
+import { useEdgeSwipeBack } from "../../hooks/useDismissGestures";
 
 interface CoachQuickdashModalProps {
   visible: boolean;
@@ -19,6 +20,7 @@ interface FloorClient {
 
 export function CoachQuickdashModal({ visible, onClose }: CoachQuickdashModalProps) {
   const insets = useSafeAreaInsets();
+  const edgeBack = useEdgeSwipeBack(() => onClose());
   const { colors } = useThemeStore();
   // Sample data is a development aid only.
   const showSamples = __DEV__;
@@ -41,7 +43,7 @@ export function CoachQuickdashModal({ visible, onClose }: CoachQuickdashModalPro
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
+      <View {...edgeBack} style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         {/* TOP BAR WITH SAFE NOTCH INSET */}
         <View
           style={[

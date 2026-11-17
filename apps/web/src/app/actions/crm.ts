@@ -15,7 +15,9 @@ export type ActionResult<T> =
   | { ok: false; state: "form_validation"; fieldErrors: Record<string, string> }
   | { ok: false; state: "session_expired" | "permission_denied" | "error"; message: string; code?: string };
 
-function fieldErrorsFrom(issues: ReadonlyArray<{ path: ReadonlyArray<PropertyKey>; message: string }>): Record<string, string> {
+function fieldErrorsFrom(
+  issues: ReadonlyArray<{ path: ReadonlyArray<PropertyKey>; message: string }>,
+): Record<string, string> {
   const errors: Record<string, string> = {};
   for (const issue of issues) {
     const key = String(issue.path[0] ?? "form");
@@ -26,9 +28,19 @@ function fieldErrorsFrom(issues: ReadonlyArray<{ path: ReadonlyArray<PropertyKey
 
 function fromDbError(error: { message: string; code?: string }): ActionResult<never> {
   if (error.code === "42501" || error.message === "FORBIDDEN") {
-    return { ok: false, state: "permission_denied", message: "You don't have access to this facility.", code: error.message };
+    return {
+      ok: false,
+      state: "permission_denied",
+      message: "You don't have access to this facility.",
+      code: error.message,
+    };
   }
-  return { ok: false, state: "error", message: "Something went wrong. Please retry.", code: error.code ?? error.message };
+  return {
+    ok: false,
+    state: "error",
+    message: "Something went wrong. Please retry.",
+    code: error.code ?? error.message,
+  };
 }
 
 export interface BroadcastSummary {
@@ -41,7 +53,8 @@ export interface BroadcastSummary {
 /** Send a CRM broadcast. Staff authorization + fan-out happen in the database. */
 export async function sendCrmBroadcast(input: CrmBroadcastInput): Promise<ActionResult<BroadcastSummary>> {
   const parsed = crmBroadcastInputSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, state: "form_validation", fieldErrors: fieldErrorsFrom(parsed.error.issues) };
+  if (!parsed.success)
+    return { ok: false, state: "form_validation", fieldErrors: fieldErrorsFrom(parsed.error.issues) };
 
   const supabase = await createServerSupabase();
   const { data: auth } = await supabase.auth.getUser();
@@ -61,7 +74,11 @@ export async function sendCrmBroadcast(input: CrmBroadcastInput): Promise<Action
   });
   if (error) {
     if (error.message === "SEGMENT_NOT_FOUND") {
-      return { ok: false, state: "form_validation", fieldErrors: { audience: "This segment has no members configured yet." } };
+      return {
+        ok: false,
+        state: "form_validation",
+        fieldErrors: { audience: "This segment has no members configured yet." },
+      };
     }
     return fromDbError(error);
   }
@@ -72,9 +89,12 @@ export async function sendCrmBroadcast(input: CrmBroadcastInput): Promise<Action
 }
 
 /** Reply to an athlete in a facility thread, as the facility. */
-export async function sendCrmReply(input: CrmReplyInput): Promise<ActionResult<{ id: string; createdAt: string | null }>> {
+export async function sendCrmReply(
+  input: CrmReplyInput,
+): Promise<ActionResult<{ id: string; createdAt: string | null }>> {
   const parsed = crmReplyInputSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, state: "form_validation", fieldErrors: fieldErrorsFrom(parsed.error.issues) };
+  if (!parsed.success)
+    return { ok: false, state: "form_validation", fieldErrors: fieldErrorsFrom(parsed.error.issues) };
 
   const supabase = await createServerSupabase();
   const { data: auth } = await supabase.auth.getUser();
@@ -122,7 +142,11 @@ export async function loadFacilityInbox(facilityId: string): Promise<ActionResul
 
   const [profiles, memberships, scans, messages] = await Promise.all([
     supabase.from("profiles").select("id, name, username, avatar_url, avatar").in("id", athleteIds),
-    supabase.from("facility_memberships").select("user_id, status").eq("facility_id", facilityId).in("user_id", athleteIds),
+    supabase
+      .from("facility_memberships")
+      .select("user_id, status")
+      .eq("facility_id", facilityId)
+      .in("user_id", athleteIds),
     supabase
       .from("access_scans")
       .select("user_id, created_at")

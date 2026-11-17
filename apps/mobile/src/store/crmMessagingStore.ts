@@ -2,7 +2,6 @@ import { create } from "zustand";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import type { CrmChatMessage, MessageRow } from "sodia-core";
 import type { DMThread } from "../components/sodia/InboxView";
-import { SIGNED_OUT_MESSAGES, SIGNED_OUT_THREADS } from "../data/crmSeedThreads";
 import { getSessionUserId, getSupabase } from "../lib/supabase";
 import { loadInbox, toChatMessage } from "../services/messagingService";
 
@@ -25,6 +24,11 @@ export interface CrmMessagingState {
   activeToast: CrmNotificationToast | null;
   syncState: InboxSyncState;
   lastError: string | null;
+  /** Thread currently on screen: its messages are read as they arrive. */
+  activeThreadId: string | null;
+  setActiveThread: (threadId: string | null) => void;
+  /** Returns the existing thread with this person, or adds a new empty one to the inbox. */
+  ensureThread: (thread: DMThread) => DMThread;
 
   /** Load the inbox and subscribe to new messages. Returns the teardown. */
   initRealtimeSubscription: () => () => void;
@@ -37,6 +41,14 @@ export interface CrmMessagingState {
 let channel: RealtimeChannel | null = null;
 let currentUserId: string | null = null;
 
+/** Sender id used for messages written while signed out (product preview). */
+export const PREVIEW_SENDER_ID = "me";
+
+/** True when a message was written by the person using the app. */
+export function isOwnMessage(senderId: string): boolean {
+  return senderId === PREVIEW_SENDER_ID || (currentUserId !== null && senderId === currentUserId);
+}
+
 function teardown(): void {
   const supabase = getSupabase();
   if (supabase && channel) void supabase.removeChannel(channel);
@@ -44,11 +56,24 @@ function teardown(): void {
 }
 
 export const useCrmMessagingStore = create<CrmMessagingState>((set, get) => ({
-  threads: SIGNED_OUT_THREADS,
-  threadMessages: SIGNED_OUT_MESSAGES,
+  threads: [],
+  threadMessages: {},
   activeToast: null,
   syncState: "signed_out",
   lastError: null,
+  activeThreadId: null,
+
+  setActiveThread: (threadId) => {
+    set({ activeThreadId: threadId });
+    if (threadId) get().markThreadAsRead(threadId);
+  },
+
+  ensureThread: (thread) => {
+    const existing = get().threads.find((t) => t.id === thread.id || t.name === thread.name);
+    if (existing) return existing;
+    set((state) => ({ threads: [thread, ...state.threads] }));
+    return thread;
+  },
 
   dismissToast: () => set({ activeToast: null }),
 
@@ -65,7 +90,7 @@ export const useCrmMessagingStore = create<CrmMessagingState>((set, get) => ({
     const userId = await getSessionUserId();
     currentUserId = userId;
     if (!supabase || !userId) {
-      set({ threads: SIGNED_OUT_THREADS, threadMessages: SIGNED_OUT_MESSAGES, syncState: "signed_out" });
+      set({ threads: [], threadMessages: {}, syncState: "signed_out", activeToast: null });
       return;
     }
     set({ syncState: "loading" });
@@ -97,26 +122,34 @@ export const useCrmMessagingStore = create<CrmMessagingState>((set, get) => ({
           const existing = get().threadMessages[thread.id] ?? [];
           if (existing.some((m) => m.id === message.id)) return;
           const fromMe = message.sender_id === currentUserId && message.sender_kind === "USER";
+          const isOpen = get().activeThreadId === thread.id;
           const chat = toChatMessage(message, fromMe ? "You" : thread.name, thread.avatar || undefined);
           set((state) => ({
             threadMessages: { ...state.threadMessages, [thread.id]: [...existing, chat] },
             threads: state.threads.map((t) =>
               t.id === thread.id
-                ? { ...t, lastMessage: message.body, timeAgo: "Just now", unreadCount: fromMe ? t.unreadCount : t.unreadCount + 1 }
-                : t
+                ? {
+                    ...t,
+                    lastMessage: message.body,
+                    timeAgo: "Just now",
+                    unreadCount: fromMe || isOpen ? t.unreadCount : t.unreadCount + 1,
+                  }
+                : t,
             ),
-            activeToast: fromMe
-              ? state.activeToast
-              : {
-                  id: message.id,
-                  title: message.broadcast_id ? message.body.split("\n")[0] ?? thread.name : thread.name,
-                  body: message.body,
-                  senderName: thread.name,
-                  senderAvatar: thread.avatar,
-                  threadId: thread.id,
-                  timestamp: "Just now",
-                },
+            activeToast:
+              fromMe || isOpen
+                ? state.activeToast
+                : {
+                    id: message.id,
+                    title: message.broadcast_id ? (message.body.split("\n")[0] ?? thread.name) : thread.name,
+                    body: message.body,
+                    senderName: thread.name,
+                    senderAvatar: thread.avatar,
+                    threadId: thread.id,
+                    timestamp: "Just now",
+                  },
           }));
+          if (isOpen && !fromMe) get().markThreadAsRead(thread.id);
         })
         .subscribe();
     };
@@ -142,7 +175,7 @@ export const useCrmMessagingStore = create<CrmMessagingState>((set, get) => ({
     const optimistic: CrmChatMessage = {
       id: optimisticId,
       threadId,
-      senderId: currentUserId ?? "me",
+      senderId: currentUserId ?? PREVIEW_SENDER_ID,
       senderName: "You",
       text: body,
       time: "Just now",
@@ -150,7 +183,14 @@ export const useCrmMessagingStore = create<CrmMessagingState>((set, get) => ({
     };
     set((state) => ({
       threadMessages: { ...state.threadMessages, [threadId]: [...(state.threadMessages[threadId] ?? []), optimistic] },
-      threads: state.threads.map((t) => (t.id === threadId ? { ...t, lastMessage: body, timeAgo: "Just now" } : t)),
+      // The conversation you just wrote in moves to the top of the inbox.
+      threads: [
+        ...state.threads
+          .filter((t) => t.id === threadId)
+          .map((t) => ({ ...t, lastMessage: body, timeAgo: "Just now" })),
+        ...state.threads.filter((t) => t.id !== threadId),
+      ],
+      lastError: null,
     }));
 
     const supabase = getSupabase();

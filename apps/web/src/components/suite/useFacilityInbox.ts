@@ -34,7 +34,14 @@ function formatTime(iso: string | null): string {
 }
 
 function initials(name: string): string {
-  return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase() ?? "").join("") || "GP";
+  return (
+    name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? "")
+      .join("") || "GP"
+  );
 }
 
 function toTicket(thread: InboxThread): InboxTicket {
@@ -77,7 +84,11 @@ export function useFacilityInbox(facilityId: string) {
     const result = await loadFacilityInbox(facilityId);
     if (!result.ok) {
       setStatus(result.state === "form_validation" ? "error" : result.state);
-      setErrorMessage(result.state === "form_validation" ? "Invalid request" : `${result.message}${result.code ? ` (ref ${result.code})` : ""}`);
+      setErrorMessage(
+        result.state === "form_validation"
+          ? "Invalid request"
+          : `${result.message}${result.code ? ` (ref ${result.code})` : ""}`,
+      );
       return;
     }
     setTickets(result.data.map(toTicket));
@@ -104,7 +115,15 @@ export function useFacilityInbox(facilityId: string) {
           const fromFacility = row.sender_kind === "FACILITY";
           const updated: InboxTicket = {
             ...ticket,
-            messages: [...ticket.messages, { id: row.id, sender: fromFacility ? "business" : "athlete", text: row.body, time: formatTime(row.created_at) }],
+            messages: [
+              ...ticket.messages,
+              {
+                id: row.id,
+                sender: fromFacility ? "business" : "athlete",
+                text: row.body,
+                time: formatTime(row.created_at),
+              },
+            ],
             lastMessage: row.body,
             time: formatTime(row.created_at),
             unread: !fromFacility,

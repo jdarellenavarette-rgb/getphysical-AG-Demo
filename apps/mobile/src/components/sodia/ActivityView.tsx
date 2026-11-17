@@ -1,187 +1,72 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView } from "react-native";
+import React from "react";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowLeft, Flame } from "lucide-react-native";
+import { ArrowLeft, Bell } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
+import { useEdgeSwipeBack } from "../../hooks/useDismissGestures";
 
 interface ActivityViewProps {
   onBack: () => void;
-  onNavigateToLift?: () => void;
 }
 
-export function ActivityView({ onBack, onNavigateToLift }: ActivityViewProps) {
+/**
+ * Notifications. Nothing is delivered yet, so this is the empty state; the
+ * list is added when likes, follows and challenge updates come from the server.
+ */
+export function ActivityView({ onBack }: ActivityViewProps) {
   const insets = useSafeAreaInsets();
+  const edgeBack = useEdgeSwipeBack(() => onBack());
   const { colors } = useThemeStore();
-  const [activeTab, setActiveTab] = useState<"all" | "requests">("all");
-  const [followedMap, setFollowedMap] = useState<Record<string, boolean>>({});
-  const [acceptedChallenge, setAcceptedChallenge] = useState(false);
-
-  const activities = [
-    {
-      id: "act_1",
-      type: "challenge_alert",
-      title: "Leaderboard Alert",
-      text: "Dave passed your 225kg Deadlift score with 230kg on the BGC Leaderboard!",
-      time: "25m ago",
-      section: "Today",
-      urgent: true,
-    },
-    {
-      id: "act_2",
-      type: "like",
-      user: "Sarah Jenkins",
-      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80",
-      text: "liked your post with Metro Core Arena tag.",
-      time: "2h ago",
-      section: "Today",
-      postThumb: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=200&q=80",
-    },
-    {
-      id: "act_3",
-      type: "follow",
-      user: "Coach Miguel Ramos",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80",
-      text: "started following you.",
-      time: "1d ago",
-      section: "This Week",
-      hasFollowBack: true,
-    },
-  ];
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
-      {/* HEADER WITH SAFE NOTCH INSET */}
-      <View style={[styles.header, { paddingTop: Math.max(insets.top, 50) + 6, height: Math.max(insets.top, 50) + 54, backgroundColor: colors.bgHeader, borderBottomColor: colors.borderColor }]}>
+    <View {...edgeBack} style={[styles.container, { backgroundColor: colors.bgScreen }]}>
+      <View
+        style={[
+          styles.header,
+          {
+            paddingTop: insets.top + 6,
+            height: insets.top + 54,
+            backgroundColor: colors.bgHeader,
+            borderBottomColor: colors.borderColor,
+          },
+        ]}
+      >
         <TouchableOpacity
           onPress={onBack}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           style={styles.backBtn}
+          accessibilityRole="button"
+          accessibilityLabel="Close activity"
         >
           <ArrowLeft size={22} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Activity</Text>
-        <View style={{ width: 44 }} />
+        <View style={styles.backBtn} />
       </View>
 
-      {/* SEGMENTED TABS */}
-      <View style={[styles.tabRow, { borderBottomColor: colors.borderColor }]}>
-        <TouchableOpacity
-          onPress={() => setActiveTab("all")}
-          style={[styles.tabItem, activeTab === "all" && styles.tabItemActive]}
-        >
-          <Text style={[styles.tabText, { color: activeTab === "all" ? colors.textPrimary : colors.textMuted }, activeTab === "all" && styles.tabTextActive]}>
-            All Activity
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setActiveTab("requests")}
-          style={[styles.tabItem, activeTab === "requests" && styles.tabItemActive]}
-        >
-          <Text style={[styles.tabText, { color: activeTab === "requests" ? colors.textPrimary : colors.textMuted }, activeTab === "requests" && styles.tabTextActive]}>
-            Follow Requests (1)
-          </Text>
-        </TouchableOpacity>
+      <View style={styles.emptyState}>
+        <Bell size={36} color={colors.textMuted} />
+        <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No activity yet</Text>
+        <Text style={[styles.emptyBody, { color: colors.textMuted }]}>
+          Likes, follows and challenge updates will show up here.
+        </Text>
       </View>
-
-      {/* ACTIVITY LIST */}
-      <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
-        <Text style={[styles.sectionHeader, { color: colors.textMuted }]}>TODAY</Text>
-        {activities
-          .filter((a) => a.section === "Today")
-          .map((a) => (
-            <View
-              key={a.id}
-              style={[styles.activityRow, a.urgent && styles.urgentCard]}
-            >
-              {a.type === "challenge_alert" ? (
-                <View style={styles.alertIcon}>
-                  <Flame size={16} color="#F97316" />
-                </View>
-              ) : (
-                <Image source={{ uri: a.avatar }} style={styles.avatar} />
-              )}
-
-              <View style={styles.meta}>
-                <Text style={[styles.titleText, { color: colors.textSecondary }]}>
-                  {a.user ? <Text style={[styles.userName, { color: colors.textPrimary }]}>{a.user} </Text> : null}
-                  {a.text}
-                </Text>
-                <Text style={[styles.timeText, { color: colors.textMuted }]}>{a.time}</Text>
-              </View>
-
-              {a.type === "challenge_alert" && (
-                <TouchableOpacity
-                  onPress={() => {
-                    setAcceptedChallenge(true);
-                    onNavigateToLift?.();
-                  }}
-                  style={[styles.viewChallengeBtn, acceptedChallenge && { backgroundColor: "#10B981" }]}
-                >
-                  <Text style={styles.viewChallengeText}>
-                    {acceptedChallenge ? "Accepted ✓" : "Defend PR"}
-                  </Text>
-                </TouchableOpacity>
-              )}
-
-              {a.postThumb && (
-                <Image source={{ uri: a.postThumb }} style={styles.postThumb} />
-              )}
-            </View>
-          ))}
-
-        <Text style={[styles.sectionHeader, { marginTop: 24, color: colors.textMuted }]}>THIS WEEK</Text>
-        {activities
-          .filter((a) => a.section === "This Week")
-          .map((a) => (
-            <View key={a.id} style={styles.activityRow}>
-              <Image source={{ uri: a.avatar }} style={styles.avatar} />
-              <View style={styles.meta}>
-                <Text style={[styles.titleText, { color: colors.textSecondary }]}>
-                  <Text style={[styles.userName, { color: colors.textPrimary }]}>{a.user} </Text>
-                  {a.text}
-                </Text>
-                <Text style={[styles.timeText, { color: colors.textMuted }]}>{a.time}</Text>
-              </View>
-              {a.hasFollowBack && (
-                <TouchableOpacity
-                  onPress={() => setFollowedMap((prev) => ({ ...prev, [a.id]: !prev[a.id] }))}
-                  style={[styles.followBackBtn, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }, followedMap[a.id] && { backgroundColor: colors.bgInput }]}
-                >
-                  <Text style={[styles.followBackText, { color: colors.textPrimary }]}>
-                    {followedMap[a.id] ? "Following" : "Follow Back"}
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          ))}
-      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, borderBottomWidth: 1 },
-  backBtn: { minWidth: 44, minHeight: 44, justifyContent: "center", alignItems: "center" },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+  },
+  backBtn: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
   headerTitle: { fontSize: 16, fontWeight: "800" },
-  tabRow: { flexDirection: "row", paddingHorizontal: 16, borderBottomWidth: 1, gap: 16 },
-  tabItem: { paddingVertical: 12 },
-  tabItemActive: { borderBottomWidth: 2, borderBottomColor: "#E11D48" },
-  tabText: { fontSize: 13, fontWeight: "600" },
-  tabTextActive: { fontWeight: "700" },
-  list: { flex: 1, padding: 16 },
-  sectionHeader: { fontSize: 11, fontWeight: "800", letterSpacing: 0.8, marginBottom: 12 },
-  activityRow: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
-  urgentCard: { backgroundColor: "rgba(249, 115, 22, 0.12)", borderWidth: 1, borderColor: "rgba(249, 115, 22, 0.3)", borderRadius: 12, padding: 12 },
-  alertIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(249, 115, 22, 0.2)", alignItems: "center", justifyContent: "center" },
-  avatar: { width: 38, height: 38, borderRadius: 19 },
-  meta: { flex: 1, marginLeft: 12 },
-  titleText: { fontSize: 12, lineHeight: 17 },
-  userName: { fontWeight: "700" },
-  timeText: { fontSize: 10, marginTop: 2 },
-  viewChallengeBtn: { backgroundColor: "#E11D48", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, marginLeft: 8 },
-  viewChallengeText: { color: "#FFFFFF", fontSize: 11, fontWeight: "700" },
-  followBackBtn: { borderWidth: 1, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, marginLeft: 8 },
-  followBackText: { fontSize: 11, fontWeight: "700" },
-  postThumb: { width: 44, height: 44, borderRadius: 8, marginLeft: 8 },
+  emptyState: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 40, gap: 10 },
+  emptyTitle: { fontSize: 16, fontWeight: "800" },
+  emptyBody: { fontSize: 13, textAlign: "center", lineHeight: 19 },
 });

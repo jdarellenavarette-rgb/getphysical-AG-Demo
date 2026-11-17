@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowLeft, UserCheck, ShieldCheck, Users, Plus, CheckCircle, Sparkles } from "lucide-react-native";
+import { ArrowLeft, ShieldCheck, Users, Plus, CheckCircle, Sparkles } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
+import { useEdgeSwipeBack } from "../../hooks/useDismissGestures";
 
 interface CoachQuickdashModalProps {
   visible: boolean;
@@ -19,13 +20,16 @@ interface FloorClient {
 
 export function CoachQuickdashModal({ visible, onClose }: CoachQuickdashModalProps) {
   const insets = useSafeAreaInsets();
+  const edgeBack = useEdgeSwipeBack(() => onClose());
   const { colors } = useThemeStore();
+  // Sample data is a development aid only.
+  const showSamples = __DEV__;
   const [clients, setClients] = useState<FloorClient[]>([]);
 
   const handleSimulateCheckIn = () => {
     const newClient: FloorClient = {
       id: `client_${Date.now()}`,
-      name: "Marco Villanueva",
+      name: "Sample Client",
       station: "Squat Rack 3 • Strength Arena",
       status: "IN_BUILDING",
       feeDeductedPhp: 150,
@@ -39,12 +43,21 @@ export function CoachQuickdashModal({ visible, onClose }: CoachQuickdashModalPro
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <View style={[styles.container, { backgroundColor: colors.bgScreen }]}>
+      <View {...edgeBack} style={[styles.container, { backgroundColor: colors.bgScreen }]}>
         {/* TOP BAR WITH SAFE NOTCH INSET */}
-        <View style={[styles.topBar, { paddingTop: Math.max(insets.top, 50) + 10, backgroundColor: colors.bgHeader, borderBottomColor: colors.borderColor }]}>
+        <View
+          style={[
+            styles.topBar,
+            {
+              paddingTop: insets.top + 10,
+              backgroundColor: colors.bgHeader,
+              borderBottomColor: colors.borderColor,
+            },
+          ]}
+        >
           <TouchableOpacity onPress={onClose} style={styles.backBtn}>
             <ArrowLeft size={20} color={colors.textPrimary} />
-            <Text style={[styles.backBtnText, { color: colors.textPrimary }]}>Back to Athlete App</Text>
+            <Text style={[styles.backBtnText, { color: colors.textPrimary }]}>Back</Text>
           </TouchableOpacity>
           <View style={styles.badge}>
             <Sparkles size={12} color="#3B82F6" />
@@ -55,17 +68,21 @@ export function CoachQuickdashModal({ visible, onClose }: CoachQuickdashModalPro
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
           {/* COACH SUMMARY CARD */}
           <View style={[styles.summaryCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
-            <Text style={[styles.summaryTitle, { color: colors.textPrimary }]}>Coach Floor Status • Metro Core Arena</Text>
+            <Text style={[styles.summaryTitle, { color: colors.textPrimary }]}>
+              Coach Floor Status • Metro Core Arena
+            </Text>
             <Text style={[styles.summarySub, { color: colors.textMuted }]}>
               Active Roster: {clients.length} Clients • Auto Floor Split Fee: ₱150/athlete
             </Text>
           </View>
 
-          {/* SIMULATE CLIENT CHECK-IN BUTTON */}
-          <TouchableOpacity onPress={handleSimulateCheckIn} style={styles.checkInActionBtn}>
-            <Plus size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
-            <Text style={styles.checkInActionText}>Simulate Client Check-in</Text>
-          </TouchableOpacity>
+          {/* Sample check-in: guest preview and development builds only */}
+          {showSamples && (
+            <TouchableOpacity onPress={handleSimulateCheckIn} style={styles.checkInActionBtn}>
+              <Plus size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+              <Text style={styles.checkInActionText}>Add Sample Check-in (Preview)</Text>
+            </TouchableOpacity>
+          )}
 
           {/* CLIENT LIST OR CLEAN EMPTY STATE */}
           <Text style={[styles.sectionHeader, { color: colors.textMuted }]}>CLIENTS ON FLOOR ({clients.length})</Text>
@@ -75,12 +92,16 @@ export function CoachQuickdashModal({ visible, onClose }: CoachQuickdashModalPro
               <Users size={32} color={colors.textMuted} />
               <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No clients detected on floor</Text>
               <Text style={[styles.emptyDesc, { color: colors.textMuted }]}>
-                When your PT athletes scan through turnstiles, they will automatically appear here with floor fees split.
+                When your PT athletes scan through turnstiles, they will automatically appear here with floor fees
+                split.
               </Text>
             </View>
           ) : (
             clients.map((c) => (
-              <View key={c.id} style={[styles.clientCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
+              <View
+                key={c.id}
+                style={[styles.clientCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}
+              >
                 <View style={styles.clientTop}>
                   <View>
                     <Text style={[styles.clientName, { color: colors.textPrimary }]}>{c.name}</Text>
@@ -105,7 +126,9 @@ export function CoachQuickdashModal({ visible, onClose }: CoachQuickdashModalPro
                     style={[styles.checkoutBtn, { backgroundColor: colors.bgInput }]}
                   >
                     <CheckCircle size={14} color={colors.textPrimary} style={{ marginRight: 4 }} />
-                    <Text style={[styles.checkoutBtnText, { color: colors.textPrimary }]}>Complete Session & Checkout</Text>
+                    <Text style={[styles.checkoutBtnText, { color: colors.textPrimary }]}>
+                      Complete Session & Checkout
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -119,16 +142,39 @@ export function CoachQuickdashModal({ visible, onClose }: CoachQuickdashModalPro
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingBottom: 14, borderBottomWidth: 1 },
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+  },
   backBtn: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 44, paddingVertical: 4 },
   backBtnText: { fontSize: 13, fontWeight: "700" },
-  badge: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(59, 130, 246, 0.15)", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  badge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "rgba(59, 130, 246, 0.15)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
   badgeText: { color: "#3B82F6", fontSize: 10, fontWeight: "800" },
   content: { padding: 16 },
   summaryCard: { borderRadius: 12, padding: 14, marginBottom: 14, borderWidth: 1 },
   summaryTitle: { fontSize: 14, fontWeight: "800" },
   summarySub: { fontSize: 11, marginTop: 4 },
-  checkInActionBtn: { backgroundColor: "#3B82F6", borderRadius: 10, paddingVertical: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", marginBottom: 16 },
+  checkInActionBtn: {
+    backgroundColor: "#3B82F6",
+    borderRadius: 10,
+    paddingVertical: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
+  },
   checkInActionText: { color: "#FFFFFF", fontSize: 13, fontWeight: "700" },
   sectionHeader: { fontSize: 11, fontWeight: "800", letterSpacing: 0.8, marginBottom: 8 },
   emptyCard: { borderRadius: 14, padding: 24, alignItems: "center", borderWidth: 1 },
@@ -138,11 +184,30 @@ const styles = StyleSheet.create({
   clientTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
   clientName: { fontSize: 15, fontWeight: "800" },
   clientStation: { fontSize: 12, marginTop: 2 },
-  inBuildingPill: { backgroundColor: "rgba(16, 185, 129, 0.2)", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  inBuildingPill: {
+    backgroundColor: "rgba(16, 185, 129, 0.2)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
   inBuildingText: { color: "#10B981", fontSize: 10, fontWeight: "800" },
-  splitFeeBox: { flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "rgba(16, 185, 129, 0.08)", borderRadius: 8, padding: 10, marginTop: 10 },
+  splitFeeBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "rgba(16, 185, 129, 0.08)",
+    borderRadius: 8,
+    padding: 10,
+    marginTop: 10,
+  },
   splitFeeText: { color: "#10B981", fontSize: 11, fontWeight: "600", flex: 1 },
   clientActions: { marginTop: 12 },
-  checkoutBtn: { borderRadius: 8, paddingVertical: 10, flexDirection: "row", alignItems: "center", justifyContent: "center" },
+  checkoutBtn: {
+    borderRadius: 8,
+    paddingVertical: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   checkoutBtnText: { fontSize: 12, fontWeight: "700" },
 });

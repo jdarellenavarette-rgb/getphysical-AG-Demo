@@ -34,9 +34,10 @@ export async function createXenditInvoice(
   payerEmail: string | undefined,
   redirectBaseUrl: string,
 ): Promise<ProviderCheckout> {
-  const feeRule = order.billing_kind === "recurring_subscription"
-    ? requireEnv("XENDIT_FEE_RULE_RECURRING")
-    : requireEnv("XENDIT_FEE_RULE_ONE_TIME");
+  const feeRule =
+    order.billing_kind === "recurring_subscription"
+      ? requireEnv("XENDIT_FEE_RULE_RECURRING")
+      : requireEnv("XENDIT_FEE_RULE_ONE_TIME");
 
   const response = await fetch("https://api.xendit.co/v2/invoices", {
     method: "POST",
@@ -80,7 +81,10 @@ export async function getXenditInvoice(
   return await response.json();
 }
 
-async function stripeRequest<T>(path: string, init: { method: "GET" | "POST"; form?: URLSearchParams; idempotencyKey?: string }): Promise<T> {
+async function stripeRequest<T>(
+  path: string,
+  init: { method: "GET" | "POST"; form?: URLSearchParams; idempotencyKey?: string },
+): Promise<T> {
   const headers: Record<string, string> = {
     Authorization: `Bearer ${requireEnv("STRIPE_SECRET_KEY")}`,
   };
@@ -131,7 +135,9 @@ export async function createStripeCheckoutSession(
   return { providerRef: session.id, checkoutUrl: session.url };
 }
 
-export function getStripePaymentIntent(paymentIntentId: string): Promise<{ id: string; metadata: Record<string, string> }> {
+export function getStripePaymentIntent(
+  paymentIntentId: string,
+): Promise<{ id: string; metadata: Record<string, string> }> {
   return stripeRequest(`payment_intents/${encodeURIComponent(paymentIntentId)}`, { method: "GET" });
 }
 
@@ -171,7 +177,11 @@ export async function createMayaCheckout(
     }),
     signal: AbortSignal.timeout(TIMEOUT_MS),
   });
-  const body = (await response.json().catch(() => ({}))) as { checkoutId?: string; redirectUrl?: string; message?: string };
+  const body = (await response.json().catch(() => ({}))) as {
+    checkoutId?: string;
+    redirectUrl?: string;
+    message?: string;
+  };
   if (!response.ok || !body.checkoutId || !body.redirectUrl) {
     throw new HttpError(502, "MAYA_ERROR", body.message ?? `Maya responded ${response.status}`);
   }

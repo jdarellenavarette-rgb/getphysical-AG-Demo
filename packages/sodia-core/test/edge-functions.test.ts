@@ -57,7 +57,9 @@ describe("edge ⇄ app schema parity", () => {
     { facilityId: "fac_a", sku: "DAY_PASS", idempotencyKey: "short" },
   ];
   it.each(checkoutCases)("checkout schemas agree on %j", (input) => {
-    expect(edge.checkoutRequestSchema.safeParse(input).success).toBe(core.checkoutRequestSchema.safeParse(input).success);
+    expect(edge.checkoutRequestSchema.safeParse(input).success).toBe(
+      core.checkoutRequestSchema.safeParse(input).success,
+    );
   });
 
   const nutritionResults: unknown[] = [
@@ -66,6 +68,29 @@ describe("edge ⇄ app schema parity", () => {
     { headline: "Eggs", items: [{ name: "Egg", portion: "1", cal: -1, p: 6, c: 0, f: 5 }], guruCommentary: "ok" },
   ];
   it.each(nutritionResults)("nutrition result schemas agree on %j", (input) => {
-    expect(edge.nutritionParseResultSchema.safeParse(input).success).toBe(core.nutritionParseResultSchema.safeParse(input).success);
+    expect(edge.nutritionParseResultSchema.safeParse(input).success).toBe(
+      core.nutritionParseResultSchema.safeParse(input).success,
+    );
+  });
+});
+
+describe("request body size limit", () => {
+  it("accepts normal bodies and rejects oversized ones before parsing", async () => {
+    const { readJson, MAX_BODY_BYTES } = await import("../../../supabase/functions/_shared/http");
+    const ok = new Request("https://x/fn", { method: "POST", body: JSON.stringify({ meal: "2 eggs" }) });
+    expect(await readJson(ok)).toEqual({ meal: "2 eggs" });
+
+    const huge = new Request("https://x/fn", { method: "POST", body: "a".repeat(MAX_BODY_BYTES + 1) });
+    await expect(readJson(huge)).rejects.toMatchObject({ status: 413, code: "PAYLOAD_TOO_LARGE" });
+
+    const lying = new Request("https://x/fn", {
+      method: "POST",
+      body: "a".repeat(MAX_BODY_BYTES + 1),
+      headers: { "content-length": "10" },
+    });
+    await expect(readJson(lying)).rejects.toMatchObject({ status: 413 });
+
+    const bad = new Request("https://x/fn", { method: "POST", body: "{not json" });
+    await expect(readJson(bad)).rejects.toMatchObject({ status: 400, code: "INVALID_JSON" });
   });
 });

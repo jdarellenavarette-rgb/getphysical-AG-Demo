@@ -1,7 +1,7 @@
 import React, { useRef } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
-import { WebView, type WebViewMessageEvent } from "react-native-webview";
-import { Navigation, Plus, Minus, Compass } from "lucide-react-native";
+import { WebView, type WebViewHandle, type WebViewMessageEvent } from "../../lib/webview";
+import { Plus, Minus, Compass } from "lucide-react-native";
 import type { FacilityRow } from "sodia-core";
 import { useThemeStore } from "../../theme/theme";
 import type { UserCoordinates } from "../../services/locationService";
@@ -32,7 +32,7 @@ export function DiscoverMapCanvas({
   onRefreshLocation,
 }: DiscoverMapCanvasProps) {
   const { colors, themeMode } = useThemeStore();
-  const webViewRef = useRef<any>(null);
+  const webViewRef = useRef<WebViewHandle>(null);
   const isLight = themeMode === "light";
 
   const mapHtml = buildLeafletMapHtml({
@@ -75,23 +75,23 @@ export function DiscoverMapCanvas({
 
   return (
     <View style={[styles.mapContainer, { backgroundColor: colors.bgScreen }]}>
-      {React.createElement(WebView as any, {
-        ref: webViewRef,
-        originWhitelist: ["*"],
-        source: { html: mapHtml },
-        style: styles.webView,
-        scrollEnabled: false,
-        javaScriptEnabled: true,
-        domStorageEnabled: true,
-        onMessage: handleMessage,
-        renderLoading: () => (
+      <WebView
+        ref={webViewRef}
+        originWhitelist={["*"]}
+        source={{ html: mapHtml }}
+        style={styles.webView}
+        scrollEnabled={false}
+        javaScriptEnabled
+        domStorageEnabled
+        onMessage={handleMessage}
+        renderLoading={() => (
           <View style={[styles.loadingBox, { backgroundColor: colors.bgScreen }]}>
             <ActivityIndicator size="small" color="#E11D48" />
-            <Text style={[styles.loadingText, { color: colors.textMuted }]}>Mobilizing GPS Radar...</Text>
+            <Text style={[styles.loadingText, { color: colors.textMuted }]}>Loading map…</Text>
           </View>
-        ),
-        startInLoadingState: true,
-      })}
+        )}
+        startInLoadingState
+      />
 
       {/* TOP FLOATING GPS STATUS PILL */}
       <View style={[styles.gpsStatusPill, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>

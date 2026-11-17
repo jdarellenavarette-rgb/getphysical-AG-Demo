@@ -3,8 +3,7 @@ import type { CheckoutRequest as CheckoutBody, CheckoutResponse } from "sodia-co
 import { getSupabase } from "../lib/supabase";
 
 export type CheckoutResult =
-  | { ok: true; data: CheckoutResponse }
-  | { ok: false; code: string; message: string; correlationId?: string };
+  { ok: true; data: CheckoutResponse } | { ok: false; code: string; message: string; correlationId?: string };
 
 const FRIENDLY: Record<string, string> = {
   AGE_VERIFICATION_REQUIRED: "Add your date of birth in Settings before buying passes.",
@@ -27,9 +26,9 @@ export async function startCheckout(body: CheckoutBody): Promise<CheckoutResult>
   if (!error && data) return { ok: true, data };
 
   if (error instanceof FunctionsHttpError) {
-    const payload = (await error.context.json().catch(() => null)) as
-      | { error?: { code?: string; message?: string; correlationId?: string } }
-      | null;
+    const payload = (await error.context.json().catch(() => null)) as {
+      error?: { code?: string; message?: string; correlationId?: string };
+    } | null;
     const code = payload?.error?.code ?? "CHECKOUT_FAILED";
     return {
       ok: false,

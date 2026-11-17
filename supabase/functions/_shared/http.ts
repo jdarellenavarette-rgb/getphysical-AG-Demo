@@ -56,12 +56,14 @@ export function handle(
         }
         return json({ error: { code: error.code, message: error.message, correlationId } }, error.status, cors);
       }
-      console.error(JSON.stringify({
-        fn: name,
-        correlationId,
-        code: "INTERNAL",
-        message: error instanceof Error ? error.message : String(error),
-      }));
+      console.error(
+        JSON.stringify({
+          fn: name,
+          correlationId,
+          code: "INTERNAL",
+          message: error instanceof Error ? error.message : String(error),
+        }),
+      );
       return json(
         { error: { code: "INTERNAL", message: "Something went wrong. Please retry.", correlationId } },
         500,
@@ -71,9 +73,43 @@ export function handle(
   };
 }
 
-export async function readJson(req: Request): Promise<unknown> {
+/** Largest request body any function accepts (largest legitimate payload: a provider webhook). */
+export const MAX_BODY_BYTES = 64 * 1024;
+
+/**
+ * Reads the raw body, refusing anything over `maxBytes` before it is parsed or
+ * validated (guards JSON.parse / zod against memory-exhaustion payloads).
+ */
+export async function readBodyText(req: Request, maxBytes = MAX_BODY_BYTES): Promise<string> {
+  const declared = Number(req.headers.get("content-length") ?? "0");
+  if (declared > maxBytes) throw new HttpError(413, "PAYLOAD_TOO_LARGE", "Request body is too large");
+  if (!req.body) return "";
+  const reader = req.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > maxBytes) {
+      await reader.cancel();
+      throw new HttpError(413, "PAYLOAD_TOO_LARGE", "Request body is too large");
+    }
+    chunks.push(value);
+  }
+  const body = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    body.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return new TextDecoder().decode(body);
+}
+
+export async function readJson(req: Request, maxBytes = MAX_BODY_BYTES): Promise<unknown> {
+  const text = await readBodyText(req, maxBytes);
   try {
-    return await req.json();
+    return JSON.parse(text) as unknown;
   } catch {
     throw new HttpError(400, "INVALID_JSON", "Request body must be JSON");
   }

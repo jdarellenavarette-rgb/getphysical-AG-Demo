@@ -23,13 +23,14 @@ import { StaffQuickdashModal } from "./components/business/StaffQuickdashModal";
 import { CoachQuickdashModal } from "./components/business/CoachQuickdashModal";
 import { OrganizerMeetModal } from "./components/profile/OrganizerMeetModal";
 import { AthleteProfileModal, type AthleteProfileData } from "./components/profile/AthleteProfileModal";
-import { getAthleteProfile } from "./data/athleteRosterData";
+import { athleteProfileFromPost } from "./lib/athleteProfile";
 import { useEcosystemStore } from "./store/ecosystemStore";
 import { useCrmMessagingStore } from "./store/crmMessagingStore";
 import { CrmToastBanner } from "./components/common/CrmToastBanner";
 import { useThemeStore } from "./theme/theme";
 import type { FacilityRow } from "sodia-core";
 import { useCheckout } from "./hooks/useCheckout";
+import { useRequireAccount } from "./hooks/useRequireAccount";
 
 export default function App() {
   const insets = useSafeAreaInsets();
@@ -37,9 +38,9 @@ export default function App() {
   const [activeCheckoutItem, setActiveCheckoutItem] = useState<CheckoutRequest | null>(null);
   const [selectedFacilityForModal, setSelectedFacilityForModal] = useState<FacilityRow | null>(null);
   const [selectedAthlete, setSelectedAthlete] = useState<AthleteProfileData | null>(null);
-  const [isStoryViewerOpen, setIsStoryViewerOpen] = useState(false);
+  const [storyOpenId, setStoryOpenId] = useState<string | null>(null);
   const [isStoryCameraOpen, setIsStoryCameraOpen] = useState(false);
-  const [isCommentsOpen, setIsCommentsOpen] = useState(false);
+  const [commentsPostId, setCommentsPostId] = useState<string | null>(null);
   const [isInboxOpen, setIsInboxOpen] = useState(false);
   const [activeChatThread, setActiveChatThread] = useState<DMThread | null>(null);
   const [isActivityOpen, setIsActivityOpen] = useState(false);
@@ -50,17 +51,27 @@ export default function App() {
   const [isCoachDashOpen, setIsCoachDashOpen] = useState(false);
   const [isOrganizerOpen, setIsOrganizerOpen] = useState(false);
 
-  const { provisionPass, facilities } = useEcosystemStore();
+  const { facilities } = useEcosystemStore();
   const { colors } = useThemeStore();
-  const { initRealtimeSubscription, threads } = useCrmMessagingStore();
+  const requireAccount = useRequireAccount();
+  const { initRealtimeSubscription, threads, ensureThread } = useCrmMessagingStore();
 
   // Subscribes to the user's inbox; the returned teardown removes the Realtime channel.
   useEffect(() => initRealtimeSubscription(), [initRealtimeSubscription]);
 
-  // Signed-out preview keeps the local demo pass; signed-in users pay via Xendit/Stripe.
-  const { confirm: confirmCheckout } = useCheckout((item) => {
-    provisionPass(item.facilityName, item.billingKind, item.baseAmountPhp, item.title, item.facilityId);
+  const { confirm: confirmCheckout } = useCheckout(() => {
+    requireAccount("buy a pass");
   });
+  const openComposer = () => {
+    if (requireAccount("share a post")) setIsCreatePostOpen(true);
+  };
+  const openStoryCamera = () => {
+    if (requireAccount("share a story")) setIsStoryCameraOpen(true);
+  };
+  const openInbox = () => {
+    if (requireAccount("send and read messages")) setIsInboxOpen(true);
+  };
+
   const handleCheckoutConfirm = async (item: CheckoutRequest) => {
     if (await confirmCheckout(item)) {
       setActiveCheckoutItem(null);
@@ -69,7 +80,9 @@ export default function App() {
   };
 
   return (
-    <View style={[styles.screenContainer, { paddingTop: Math.max(insets.top, 48), backgroundColor: colors.bgScreen }]}>
+    <View style={[styles.screenContainer, { backgroundColor: colors.bgScreen }]}>
+      {/* The status-bar area takes the header colour, so the header reads as one surface. */}
+      <View style={{ height: insets.top, backgroundColor: colors.bgHeader }} />
       <StatusBar barStyle={colors.statusBarStyle} />
 
       <CrmToastBanner
@@ -84,7 +97,7 @@ export default function App() {
         onOpenMenu={() => setIsMenuOpen(true)}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onOpenActivity={() => setIsActivityOpen(true)}
-        onOpenInbox={() => setIsInboxOpen(true)}
+        onOpenInbox={openInbox}
         onPressLogo={() => setCurrentTab("sodia")}
       />
 
@@ -95,45 +108,53 @@ export default function App() {
               const fac = facilities.find((f) => f.id === id);
               if (fac) setSelectedFacilityForModal(fac);
             }}
-            onOpenCreatePost={() => setIsCreatePostOpen(true)}
-            onOpenStoryCamera={() => setIsStoryCameraOpen(true)}
-            onOpenStory={() => setIsStoryViewerOpen(true)}
-            onOpenComments={() => setIsCommentsOpen(true)}
-            onPressAuthor={(userId, name, avatar) => setSelectedAthlete(getAthleteProfile(name, avatar))}
+            onOpenCreatePost={openComposer}
+            onOpenStoryCamera={openStoryCamera}
+            onOpenStory={setStoryOpenId}
+            onOpenComments={setCommentsPostId}
+            onPressAuthor={(userId, name, avatar) => setSelectedAthlete(athleteProfileFromPost(userId, name, avatar))}
           />
         )}
         {currentTab === "discover" && <DiscoverView onCheckoutItem={(item) => setActiveCheckoutItem(item)} />}
         {currentTab === "cards" && <CardsHub onBrowseVenues={() => setCurrentTab("discover")} />}
         {currentTab === "track" && <TrackHub />}
-        {currentTab === "profile" && (
-          <ProfileHub
-            onBack={() => setCurrentTab("sodia")}
-            onSwitchToBusinessMode={() => setIsStaffDashOpen(true)}
-            onSwitchToCoachDash={() => setIsCoachDashOpen(true)}
-            onOpenMessages={() => setIsInboxOpen(true)}
-          />
-        )}
+        {currentTab === "profile" && <ProfileHub onBack={() => setCurrentTab("sodia")} onOpenMessages={openInbox} />}
       </View>
 
-      <BottomBar currentTab={currentTab} onSelectTab={setCurrentTab} onPressCreate={() => setIsCreatePostOpen(true)} />
+      <BottomBar currentTab={currentTab} onSelectTab={setCurrentTab} onPressCreate={openComposer} />
 
       <StoryViewerModal
-        visible={isStoryViewerOpen}
-        onClose={() => setIsStoryViewerOpen(false)}
-        onOpenCreatePost={() => setIsCreatePostOpen(true)}
-        onOpenComments={() => setIsCommentsOpen(true)}
+        visible={storyOpenId !== null}
+        initialStoryId={storyOpenId}
+        onClose={() => setStoryOpenId(null)}
         onTapLocationTag={(facId) => {
-          setIsStoryViewerOpen(false);
+          setStoryOpenId(null);
           const fac = facilities.find((f) => f.id === facId);
           if (fac) setSelectedFacilityForModal(fac);
         }}
       />
 
-      <CommentsBottomSheet visible={isCommentsOpen} onClose={() => setIsCommentsOpen(false)} />
-      <CreatePostModal visible={isCreatePostOpen} onClose={() => setIsCreatePostOpen(false)} onOpenStoryCamera={() => setIsStoryCameraOpen(true)} />
+      <CommentsBottomSheet
+        visible={commentsPostId !== null}
+        postId={commentsPostId}
+        onClose={() => setCommentsPostId(null)}
+      />
+      <CreatePostModal
+        visible={isCreatePostOpen}
+        onClose={() => setIsCreatePostOpen(false)}
+        onOpenStoryCamera={openStoryCamera}
+      />
       <InstagramStoryCameraModal visible={isStoryCameraOpen} onClose={() => setIsStoryCameraOpen(false)} />
 
-      <Modal visible={isInboxOpen} animationType="slide" onRequestClose={() => setIsInboxOpen(false)}>
+      <Modal
+        visible={isInboxOpen}
+        animationType="slide"
+        onRequestClose={() => {
+          // Back inside a chat returns to the list; back on the list closes the inbox.
+          if (activeChatThread) setActiveChatThread(null);
+          else setIsInboxOpen(false);
+        }}
+      >
         {activeChatThread ? (
           <DMChatView thread={activeChatThread} onBack={() => setActiveChatThread(null)} />
         ) : (
@@ -142,7 +163,7 @@ export default function App() {
       </Modal>
 
       <Modal visible={isActivityOpen} animationType="slide" onRequestClose={() => setIsActivityOpen(false)}>
-        <ActivityView onBack={() => setIsActivityOpen(false)} onNavigateToLift={() => { setIsActivityOpen(false); setCurrentTab("track"); }} />
+        <ActivityView onBack={() => setIsActivityOpen(false)} />
       </Modal>
 
       <MenuDrawerModal
@@ -192,20 +213,28 @@ export default function App() {
         athlete={selectedAthlete}
         onClose={() => setSelectedAthlete(null)}
         onMessageAthlete={(ath) => {
-          setActiveChatThread({
-            id: `thread_${ath.userId}`,
-            name: ath.name,
-            avatar: ath.avatar,
-            lastMessage: "Direct message started",
-            timeAgo: "Just now",
-            unreadCount: 0,
-            type: "direct",
-          });
+          if (!requireAccount("send a message")) return;
+          setActiveChatThread(
+            ensureThread({
+              id: `thread_${ath.userId}`,
+              name: ath.name,
+              avatar: ath.avatar,
+              lastMessage: "",
+              timeAgo: "",
+              unreadCount: 0,
+              type: "direct",
+            }),
+          );
           setIsInboxOpen(true);
         }}
       />
 
-      <UniversalCheckoutModal item={activeCheckoutItem} visible={!!activeCheckoutItem} onClose={() => setActiveCheckoutItem(null)} onConfirm={handleCheckoutConfirm} />
+      <UniversalCheckoutModal
+        item={activeCheckoutItem}
+        visible={!!activeCheckoutItem}
+        onClose={() => setActiveCheckoutItem(null)}
+        onConfirm={handleCheckoutConfirm}
+      />
     </View>
   );
 }

@@ -59,9 +59,18 @@ export async function createFacility(_prev: FacilityFormState, formData: FormDat
 /** Switch which facility the suite operates on (must be one the user staffs). */
 export async function selectFacility(facilityId: string): Promise<void> {
   const supabase = await createServerSupabase();
-  const { data } = await supabase.from("facility_staff").select("facility_id").eq("facility_id", facilityId).maybeSingle();
+  const { data } = await supabase
+    .from("facility_staff")
+    .select("facility_id")
+    .eq("facility_id", facilityId)
+    .maybeSingle();
   if (data) {
-    (await cookies()).set(ACTIVE_FACILITY_COOKIE, facilityId, { httpOnly: true, sameSite: "lax", secure: true, path: "/" });
+    (await cookies()).set(ACTIVE_FACILITY_COOKIE, facilityId, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: true,
+      path: "/",
+    });
   }
   revalidatePath("/");
 }

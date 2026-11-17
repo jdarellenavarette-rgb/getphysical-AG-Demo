@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { View, Text, TouchableOpacity, Image, StyleSheet, Animated } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Bell, X, ArrowRight, Tag } from "lucide-react-native";
+import { Bell, X, Tag } from "lucide-react-native";
 import { useCrmMessagingStore } from "../../store/crmMessagingStore";
 import { useThemeStore } from "../../theme/theme";
 
@@ -29,7 +29,7 @@ export function CrmToastBanner({ onPressToast }: CrmToastBannerProps) {
       style={[
         styles.container,
         {
-          top: Math.max(insets.top, 44) + 6,
+          top: insets.top + 6,
           backgroundColor: colors.bgCard,
           borderColor: "#E11D48",
         },
@@ -71,7 +71,11 @@ export function CrmToastBanner({ onPressToast }: CrmToastBannerProps) {
           ) : null}
         </View>
 
-        <TouchableOpacity onPress={dismissToast} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} style={styles.closeBtn}>
+        <TouchableOpacity
+          onPress={dismissToast}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          style={styles.closeBtn}
+        >
           <X size={16} color={colors.textMuted} />
         </TouchableOpacity>
       </TouchableOpacity>

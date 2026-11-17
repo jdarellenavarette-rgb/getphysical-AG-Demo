@@ -1,4 +1,6 @@
 import { create } from "zustand";
+import { Appearance } from "react-native";
+import * as SecureStore from "expo-secure-store";
 
 export type ThemeMode = "dark" | "light";
 
@@ -59,27 +61,50 @@ export const lightTheme: ColorPalette = {
   statusBarStyle: "dark-content",
 };
 
+/** "system" follows the phone's light/dark setting; the others are a manual choice. */
+export type ThemePreference = "system" | ThemeMode;
+
+const THEME_KEY = "sodia.theme";
+
+const systemMode = (): ThemeMode => (Appearance.getColorScheme() === "dark" ? "dark" : "light");
+const paletteFor = (mode: ThemeMode): ColorPalette => (mode === "light" ? lightTheme : darkTheme);
+const resolve = (preference: ThemePreference): ThemeMode => (preference === "system" ? systemMode() : preference);
+
 interface ThemeState {
+  /** What the person chose. */
+  preference: ThemePreference;
+  /** The theme actually on screen. */
   themeMode: ThemeMode;
   colors: ColorPalette;
-  setThemeMode: (mode: ThemeMode) => void;
-  toggleTheme: () => void;
+  setPreference: (preference: ThemePreference) => void;
 }
 
 export const useThemeStore = create<ThemeState>((set) => ({
-  themeMode: "light",
-  colors: lightTheme,
-  setThemeMode: (mode) =>
-    set({
-      themeMode: mode,
-      colors: mode === "light" ? lightTheme : darkTheme,
-    }),
-  toggleTheme: () =>
-    set((state) => {
-      const nextMode = state.themeMode === "light" ? "dark" : "light";
-      return {
-        themeMode: nextMode,
-        colors: nextMode === "light" ? lightTheme : darkTheme,
-      };
-    }),
+  preference: "system",
+  themeMode: systemMode(),
+  colors: paletteFor(systemMode()),
+  setPreference: (preference) => {
+    const themeMode = resolve(preference);
+    set({ preference, themeMode, colors: paletteFor(themeMode) });
+    SecureStore.setItemAsync(THEME_KEY, preference).catch(() => undefined);
+  },
 }));
+
+/** Restores the saved choice and keeps "system" in step with the phone. Call once at startup. */
+export function initTheme(): () => void {
+  SecureStore.getItemAsync(THEME_KEY)
+    .then((saved) => {
+      if (saved === "light" || saved === "dark" || saved === "system") {
+        const themeMode = resolve(saved);
+        useThemeStore.setState({ preference: saved, themeMode, colors: paletteFor(themeMode) });
+      }
+    })
+    .catch(() => undefined);
+
+  const subscription = Appearance.addChangeListener(() => {
+    if (useThemeStore.getState().preference !== "system") return;
+    const themeMode = systemMode();
+    useThemeStore.setState({ themeMode, colors: paletteFor(themeMode) });
+  });
+  return () => subscription.remove();
+}

@@ -11,9 +11,21 @@ import { DiscoverFilterModal } from "./DiscoverFilterModal";
 import { DiscoverListSection } from "./DiscoverListSection";
 import { FacilityDetailSheet } from "./FacilityDetailSheet";
 import { DiscoverEntitySheet, type DiscoverSelectedEntity } from "./DiscoverEntitySheet";
-import { EXPANDED_FACILITIES, EXPANDED_COACHES, EXPANDED_CLUBS, type DiscoverFilterState, INITIAL_DISCOVER_FILTERS } from "../../data/discoverData";
+import {
+  EXPANDED_FACILITIES,
+  EXPANDED_COACHES,
+  EXPANDED_CLUBS,
+  type DiscoverFilterState,
+  INITIAL_DISCOVER_FILTERS,
+} from "../../data/discoverData";
 import { filterDiscoverItems } from "../../data/discoverFilterHelper";
-import { requestAndFetchUserLocation, DEFAULT_BGC_COORDS, calculateHaversineKm, formatWalkingEta, type UserCoordinates } from "../../services/locationService";
+import {
+  requestAndFetchUserLocation,
+  DEFAULT_BGC_COORDS,
+  calculateHaversineKm,
+  formatWalkingEta,
+  type UserCoordinates,
+} from "../../services/locationService";
 
 export interface CheckoutRequest {
   id: string;
@@ -45,8 +57,12 @@ export function DiscoverView({ onCheckoutItem }: DiscoverViewProps) {
 
   useEffect(() => {
     let active = true;
-    requestAndFetchUserLocation().then((loc) => { if (active) setUserCoords(loc); });
-    return () => { active = false; };
+    requestAndFetchUserLocation().then((loc) => {
+      if (active) setUserCoords(loc);
+    });
+    return () => {
+      active = false;
+    };
   }, []);
 
   const allFacilities = useMemo(() => {
@@ -58,10 +74,11 @@ export function DiscoverView({ onCheckoutItem }: DiscoverViewProps) {
 
   const { filteredFacilities, filteredCoaches, filteredClubs } = useMemo(
     () => filterDiscoverItems(allFacilities, searchQuery, filters),
-    [allFacilities, searchQuery, filters]
+    [allFacilities, searchQuery, filters],
   );
 
-  const hasActiveFilters = filters.category !== "All" || filters.sport !== "All" || filters.priceRange !== "all" || filters.openNowOnly;
+  const hasActiveFilters =
+    filters.category !== "All" || filters.sport !== "All" || filters.priceRange !== "all" || filters.openNowOnly;
   const totalCount = filteredFacilities.length + filteredCoaches.length + filteredClubs.length;
 
   return (
@@ -78,13 +95,18 @@ export function DiscoverView({ onCheckoutItem }: DiscoverViewProps) {
             onChangeText={setSearchQuery}
           />
           {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery("")}><X size={16} color={colors.textMuted} /></TouchableOpacity>
+            <TouchableOpacity onPress={() => setSearchQuery("")}>
+              <X size={16} color={colors.textMuted} />
+            </TouchableOpacity>
           )}
         </View>
 
         <TouchableOpacity
           onPress={() => setIsFilterModalOpen(true)}
-          style={[styles.filterTriggerBtn, { backgroundColor: colors.bgCard, borderColor: hasActiveFilters ? "#E11D48" : colors.borderColor }]}
+          style={[
+            styles.filterTriggerBtn,
+            { backgroundColor: colors.bgCard, borderColor: hasActiveFilters ? "#E11D48" : colors.borderColor },
+          ]}
         >
           <SlidersHorizontal size={18} color={hasActiveFilters ? "#E11D48" : colors.textPrimary} />
           {hasActiveFilters && <View style={styles.filterBadgeDot} />}
@@ -94,7 +116,11 @@ export function DiscoverView({ onCheckoutItem }: DiscoverViewProps) {
           onPress={() => setViewMode(viewMode === "map" ? "list" : "map")}
           style={[styles.viewToggleBtn, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}
         >
-          {viewMode === "map" ? <List size={18} color={colors.textPrimary} /> : <MapIcon size={18} color={colors.textPrimary} />}
+          {viewMode === "map" ? (
+            <List size={18} color={colors.textPrimary} />
+          ) : (
+            <MapIcon size={18} color={colors.textPrimary} />
+          )}
         </TouchableOpacity>
       </View>
 
@@ -132,33 +158,53 @@ export function DiscoverView({ onCheckoutItem }: DiscoverViewProps) {
           />
 
           <View style={styles.carouselSection}>
-            <Text style={[styles.carouselHeaderTitle, { color: colors.textMuted }]}>ATHLETIC HUBS & EXPERIENCES</Text>
+            <Text style={[styles.carouselHeaderTitle, { color: colors.textMuted }]}>NEAR YOU</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carouselScroll}>
               {filteredFacilities.map((fac) => {
                 const isSelected = fac.id === selectedFacilityId;
-                const distKm = calculateHaversineKm(userCoords.latitude, userCoords.longitude, fac.lat ?? 14.549, fac.lng ?? 121.05);
+                const distKm = calculateHaversineKm(
+                  userCoords.latitude,
+                  userCoords.longitude,
+                  fac.lat ?? 14.549,
+                  fac.lng ?? 121.05,
+                );
                 return (
                   <TouchableOpacity
                     key={fac.id}
-                    onPress={() => { setSelectedFacilityId(fac.id); setSelectedDetailFacility(fac); }}
-                    style={[styles.grabCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }, isSelected && styles.grabCardActive]}
+                    onPress={() => {
+                      setSelectedFacilityId(fac.id);
+                      setSelectedDetailFacility(fac);
+                    }}
+                    style={[
+                      styles.grabCard,
+                      { backgroundColor: colors.bgCard, borderColor: colors.borderColor },
+                      isSelected && styles.grabCardActive,
+                    ]}
                   >
                     <Image source={{ uri: fac.cover_image ?? "" }} style={styles.grabCover} />
                     <View style={styles.grabBody}>
                       <View style={styles.grabTopRow}>
-                        <Text style={[styles.grabName, { color: colors.textPrimary }]} numberOfLines={1}>{fac.name}</Text>
+                        <Text style={[styles.grabName, { color: colors.textPrimary }]} numberOfLines={1}>
+                          {fac.name}
+                        </Text>
                         <View style={styles.capacityPill}>
                           <Users size={11} color="#10B981" />
-                          <Text style={styles.capacityPillText}>{fac.inside_now_count ?? 42}/{fac.max_capacity ?? 100}</Text>
+                          <Text style={styles.capacityPillText}>
+                            {fac.inside_now_count ?? 42}/{fac.max_capacity ?? 100}
+                          </Text>
                         </View>
                       </View>
                       <View style={styles.grabLocationRow}>
                         <Navigation size={11} color={colors.textMuted} />
-                        <Text style={[styles.grabDistanceText, { color: colors.textMuted }]}>{distKm} km • {formatWalkingEta(distKm)}</Text>
+                        <Text style={[styles.grabDistanceText, { color: colors.textMuted }]}>
+                          {distKm} km • {formatWalkingEta(distKm)}
+                        </Text>
                       </View>
                       <View style={[styles.grabFooter, { borderTopColor: colors.borderColor }]}>
                         <Text style={[styles.grabPrice, { color: colors.textPrimary }]}>
-                          {fac.registry === "A" ? `₱${fac.day_pass_price_php} Pass` : `₱${fac.court_hourly_price_php}/hr Court`}
+                          {fac.court_hourly_price_php != null && fac.registry !== "A"
+                            ? `₱${fac.court_hourly_price_php.toLocaleString()}/hr Court`
+                            : `₱${(fac.day_pass_price_php ?? 0).toLocaleString()} Pass`}
                         </Text>
                         <TouchableOpacity onPress={() => setSelectedDetailFacility(fac)} style={styles.grabBookCTA}>
                           <Text style={styles.grabBookText}>Passes</Text>
@@ -223,7 +269,7 @@ export function DiscoverView({ onCheckoutItem }: DiscoverViewProps) {
           onCheckoutItem?.({
             id: `entity_book_${Date.now()}`,
             title: itemTitle,
-            subtitle: facName ?? "Athletic Session",
+            subtitle: facName ?? "Session",
             facilityId: facId ?? "fac_metro_core",
             facilityName: facName ?? "Metro Athletic Network",
             baseAmountPhp: pricePhp,

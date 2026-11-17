@@ -1,5 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { Controller, useForm, type FieldPath } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { profileSetupSchema, type ProfileSetupInput } from "sodia-core";
@@ -7,7 +16,11 @@ import { completeProfile, getProfileDraft, isUsernameAvailable, signOut } from "
 import { authStyles as s } from "./auth.styles";
 
 function suggestions(base: string): string[] {
-  const clean = base.toLowerCase().replace(/[^a-z0-9_.]/g, "").slice(0, 18) || "athlete";
+  const clean =
+    base
+      .toLowerCase()
+      .replace(/[^a-z0-9_.]/g, "")
+      .slice(0, 18) || "athlete";
   const n = () => Math.floor(10 + Math.random() * 990);
   return [`${clean}${n()}`, `${clean}.fit`, `${clean}_${n()}`];
 }
@@ -50,7 +63,11 @@ export function ProfileSetupScreen({ onDone }: { onDone: () => void }) {
     } else setFormError(result.message);
   });
 
-  const field = (name: FieldPath<ProfileSetupInput>, label: string, props: Partial<React.ComponentProps<typeof TextInput>> = {}) => (
+  const field = (
+    name: FieldPath<ProfileSetupInput>,
+    label: string,
+    props: Partial<React.ComponentProps<typeof TextInput>> = {},
+  ) => (
     <Controller
       control={form.control}
       name={name}
@@ -60,7 +77,10 @@ export function ProfileSetupScreen({ onDone }: { onDone: () => void }) {
           <TextInput
             value={f.value}
             onChangeText={f.onChange}
-            onBlur={() => { f.onBlur(); if (name === "username") void checkUsername(f.value); }}
+            onBlur={() => {
+              f.onBlur();
+              if (name === "username") void checkUsername(f.value);
+            }}
             placeholderTextColor="#52525B"
             style={[s.input, fieldState.error && s.inputError]}
             accessibilityLabel={label}
@@ -78,27 +98,51 @@ export function ProfileSetupScreen({ onDone }: { onDone: () => void }) {
       <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
         <Text style={s.brand}>ALMOST THERE</Text>
         <Text style={s.title}>Set up your profile</Text>
-        <Text style={s.subtitle}>Your date of birth is private and can't be changed later. You must be 13 or older.</Text>
+        <Text style={s.subtitle}>
+          Your date of birth is private and can't be changed later. You must be 13 or older.
+        </Text>
         <View style={s.row}>
           <View style={s.half}>{field("firstName", "First name", { autoComplete: "given-name" })}</View>
           <View style={s.half}>{field("lastName", "Last name", { autoComplete: "family-name" })}</View>
         </View>
-        {field("username", "Username", { autoCapitalize: "none", autoCorrect: false, placeholder: "e.g. darelle.lifts" })}
+        {field("username", "Username", {
+          autoCapitalize: "none",
+          autoCorrect: false,
+          placeholder: "e.g. alex.lifts",
+        })}
         {alternatives.length > 0 && (
           <View style={s.chips}>
             {alternatives.map((alt) => (
-              <TouchableOpacity key={alt} style={s.chip} onPress={() => { form.setValue("username", alt, { shouldValidate: true }); setAlternatives([]); }}>
+              <TouchableOpacity
+                key={alt}
+                style={s.chip}
+                onPress={() => {
+                  form.setValue("username", alt, { shouldValidate: true });
+                  setAlternatives([]);
+                }}
+              >
                 <Text style={s.chipText}>@{alt}</Text>
               </TouchableOpacity>
             ))}
           </View>
         )}
-        {field("dob", "Date of birth", { placeholder: "YYYY-MM-DD", keyboardType: "numbers-and-punctuation", maxLength: 10 })}
+        {field("dob", "Date of birth", {
+          placeholder: "YYYY-MM-DD",
+          keyboardType: "numbers-and-punctuation",
+          maxLength: 10,
+        })}
         {formError && <Text style={s.formError}>{formError}</Text>}
-        <TouchableOpacity onPress={() => void submit()} disabled={busy} style={[s.button, busy && s.buttonDisabled]} accessibilityRole="button">
+        <TouchableOpacity
+          onPress={() => void submit()}
+          disabled={busy}
+          style={[s.button, busy && s.buttonDisabled]}
+          accessibilityRole="button"
+        >
           {busy ? <ActivityIndicator color="#FFFFFF" /> : <Text style={s.buttonText}>Continue</Text>}
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => void signOut()}><Text style={s.link}>Sign out</Text></TouchableOpacity>
+        <TouchableOpacity onPress={() => void signOut()}>
+          <Text style={s.link}>Sign out</Text>
+        </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
   );

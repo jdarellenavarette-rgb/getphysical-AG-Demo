@@ -37,7 +37,7 @@ export function buildLeafletMapHtml({
       lng: f.lng ?? 121.05,
       price: f.day_pass_price_php ?? f.court_hourly_price_php ?? 250,
       isSelected: f.id === selectedId,
-    }))
+    })),
   );
 
   const coachesJson = JSON.stringify(
@@ -48,7 +48,7 @@ export function buildLeafletMapHtml({
       lng: c.lng,
       label: `★ ${c.name.split(" ")[1] ?? c.name} ₱${(c.hourlyRatePhp / 1000).toFixed(1)}k`,
       isSelected: c.id === selectedId,
-    }))
+    })),
   );
 
   const clubsJson = JSON.stringify(
@@ -59,7 +59,7 @@ export function buildLeafletMapHtml({
       lng: cl.lng,
       label: `${cl.dropInFeePhp > 0 ? "🏆" : "👥"} ${cl.name.split(" ")[0]} ${cl.dropInFeePhp > 0 ? "₱" + cl.dropInFeePhp : "Free"}`,
       isSelected: cl.id === selectedId,
-    }))
+    })),
   );
 
   return `

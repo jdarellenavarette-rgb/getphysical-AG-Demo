@@ -25,9 +25,12 @@ function formatClock(iso: string | null): string {
 }
 
 export function toChatMessage(
-  row: Pick<MessageRow, "id" | "conversation_id" | "sender_id" | "sender_kind" | "body" | "broadcast_id" | "created_at">,
+  row: Pick<
+    MessageRow,
+    "id" | "conversation_id" | "sender_id" | "sender_kind" | "body" | "broadcast_id" | "created_at"
+  >,
   senderName: string,
-  senderAvatar: string | undefined
+  senderAvatar: string | undefined,
 ): CrmChatMessage {
   const fromFacility = row.sender_kind === "FACILITY";
   return {
@@ -46,7 +49,9 @@ export function toChatMessage(
 export async function loadInbox(supabase: GetPhysicalClient, userId: string): Promise<LoadedInbox> {
   const { data: conversations, error } = await supabase
     .from("conversations")
-    .select(`${EXPLICIT_COLUMNS.CONVERSATIONS}, facilities(name, logo_url), conversation_participants(user_id, last_read_at)`)
+    .select(
+      `${EXPLICIT_COLUMNS.CONVERSATIONS}, facilities(name, logo_url), conversation_participants(user_id, last_read_at)`,
+    )
     .order("last_message_at", { ascending: false })
     .limit(100);
   if (error) throw new Error(error.message);
@@ -58,10 +63,17 @@ export async function loadInbox(supabase: GetPhysicalClient, userId: string): Pr
     .filter((id) => id !== userId);
 
   const [{ data: rows, error: messagesError }, { data: people }] = await Promise.all([
-    supabase.from("messages").select(EXPLICIT_COLUMNS.MESSAGES).in("conversation_id", ids).order("created_at", { ascending: true }).limit(2000),
+    supabase
+      .from("messages")
+      .select(EXPLICIT_COLUMNS.MESSAGES)
+      .in("conversation_id", ids)
+      .order("created_at", { ascending: true })
+      .limit(2000),
     otherUserIds.length > 0
       ? supabase.from("profiles").select("id, name, username, avatar_url").in("id", otherUserIds)
-      : Promise.resolve({ data: [] as { id: string; name: string; username: string | null; avatar_url: string | null }[] }),
+      : Promise.resolve({
+          data: [] as { id: string; name: string; username: string | null; avatar_url: string | null }[],
+        }),
   ]);
   if (messagesError) throw new Error(messagesError.message);
 
@@ -73,17 +85,21 @@ export async function loadInbox(supabase: GetPhysicalClient, userId: string): Pr
     const other = people?.find((p) => conversation.conversation_participants.some((cp) => cp.user_id === p.id));
     const isFacility = conversation.kind === "FACILITY";
     const name = isFacility
-      ? conversation.facilities?.name ?? "Facility"
-      : conversation.title ?? other?.name ?? other?.username ?? "Conversation";
+      ? (conversation.facilities?.name ?? "Facility")
+      : (conversation.title ?? other?.name ?? other?.username ?? "Conversation");
     const avatar = (isFacility ? conversation.facilities?.logo_url : other?.avatar_url) ?? "";
 
     const threadRows = (rows ?? []).filter((r) => r.conversation_id === conversation.id);
     messages[conversation.id] = threadRows.map((r) =>
-      toChatMessage(r, r.sender_kind === "FACILITY" ? name : r.sender_id === userId ? "You" : name, avatar || undefined)
+      toChatMessage(
+        r,
+        r.sender_kind === "FACILITY" ? name : r.sender_id === userId ? "You" : name,
+        avatar || undefined,
+      ),
     );
     const last = threadRows[threadRows.length - 1];
     const unreadCount = threadRows.filter(
-      (r) => r.sender_id !== userId && (!mine?.last_read_at || (r.created_at ?? "") > mine.last_read_at)
+      (r) => r.sender_id !== userId && (!mine?.last_read_at || (r.created_at ?? "") > mine.last_read_at),
     ).length;
 
     threads.push({
@@ -93,7 +109,7 @@ export async function loadInbox(supabase: GetPhysicalClient, userId: string): Pr
       lastMessage: last ? (last.broadcast_id ? `📢 ${last.body.split("\n")[0]}` : last.body) : "",
       timeAgo: formatTimeAgo(conversation.last_message_at),
       unreadCount,
-      type: isFacility ? "handshake" : conversation.kind === "GROUP" ? "group" : "direct",
+      type: isFacility ? "facility" : conversation.kind === "GROUP" ? "group" : "direct",
       badgeText: isFacility ? "FACILITY" : undefined,
     });
   }

@@ -1,5 +1,7 @@
 # Sign in with Google & Apple — Setup
 
+> The mobile sign-in screen now offers a mobile number with a code, Google, or guest. Apple sign-in is hidden for now; see `SIGN_IN_AND_PIONEER_ACCOUNTS.md` for the current setup and why Apple must return before an App Store release.
+
 The code is done (mobile + web + database). These console steps connect it to real Google and Apple
 accounts. Never paste client secrets or `.p8` keys into chat or commit them.
 
@@ -9,11 +11,11 @@ Supabase callback URL (used by both providers):
 
 ## How it works
 
-| Where | Apple | Google |
-|---|---|---|
-| iPhone app | Native Apple sheet (Face ID) → ID token → Supabase | Secure browser sheet → Supabase OAuth (PKCE) |
-| Android app | Secure browser sheet → Supabase OAuth | Secure browser sheet → Supabase OAuth |
-| Web Business Suite | Redirect → `/auth/callback` | Redirect → `/auth/callback` |
+| Where              | Apple                                              | Google                                       |
+| ------------------ | -------------------------------------------------- | -------------------------------------------- |
+| iPhone app         | Native Apple sheet (Face ID) → ID token → Supabase | Secure browser sheet → Supabase OAuth (PKCE) |
+| Android app        | Secure browser sheet → Supabase OAuth              | Secure browser sheet → Supabase OAuth        |
+| Web Business Suite | Redirect → `/auth/callback`                        | Redirect → `/auth/callback`                  |
 
 Every route ends in a normal Supabase session, then the same profile setup (username + date of birth with the
 13+ gate). Email one-time codes stay available as a fallback.
@@ -55,11 +57,16 @@ The mobile app uses the browser flow, so no separate iOS/Android Google client I
 
 ## 3. Supabase redirect URLs
 
-**Authentication → URL Configuration → Redirect URLs** must include:
+Set on the live project (Authentication → URL Configuration → Redirect URLs):
 
-- `sodia://auth/callback` (mobile)
-- `http://localhost:3000/auth/callback` and `http://localhost:3000/auth/confirm` (local web)
-- `https://<production web domain>/auth/callback` and `/auth/confirm`
+| Address                               | Used by                                                       |
+| ------------------------------------- | ------------------------------------------------------------- |
+| `sodia://auth/callback`               | The installed mobile app                                      |
+| `exp://**`                            | The mobile app running inside Expo Go during development      |
+| `http://localhost:3000/auth/callback` | The web Business Suite on a developer's machine               |
+| `http://localhost:3000/auth/confirm`  | The web Business Suite's email links on a developer's machine |
+
+Before launch: remove `exp://**`, and add the production web address (`https://<your-domain>/auth/callback` and `/auth/confirm`). Also change **Site URL** from `http://localhost:3000` to the production web address.
 
 ## 4. Testing
 

@@ -27,6 +27,7 @@ grant usage on schema public, extensions, auth to anon, authenticated, service_r
 create table if not exists auth.users (
   id uuid primary key,
   email text,
+  phone text,
   raw_user_meta_data jsonb default '{}'::jsonb,
   created_at timestamptz default now()
 );

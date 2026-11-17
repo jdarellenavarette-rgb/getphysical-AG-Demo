@@ -5,6 +5,7 @@
 export const SODIA_FIELD_LIMITS = {
   POST_CAPTION_MAX_CHARS: 280,
   CHALLENGE_ENTRY_CAPTION_MAX_CHARS: 150,
+  COMMENT_MAX_CHARS: 150,
   BIO_MAX_CHARS: 150,
   FITNESS_GOALS_MIN: 1,
   FITNESS_GOALS_MAX: 5,
@@ -53,10 +54,7 @@ export interface FeeBreakdown {
  * Fixed ₱15 consumer fee on one-time passes/court bookings/tickets;
  * Flat 5% on recurring memberships.
  */
-export function calculateHybridServiceFee(
-  baseAmountPhp: number,
-  billingKind: TransactionBillingKind
-): FeeBreakdown {
+export function calculateHybridServiceFee(baseAmountPhp: number, billingKind: TransactionBillingKind): FeeBreakdown {
   const sanitizedBase = Math.max(0, Math.round(baseAmountPhp * 100) / 100);
   const serviceFeePhp =
     billingKind === "recurring_subscription"
@@ -80,4 +78,3 @@ export function calculateEpleyOneRepMax(weightKg: number, reps: number): number 
   if (reps === 1) return weightKg;
   return Math.round(weightKg * (1 + reps / 30));
 }
-

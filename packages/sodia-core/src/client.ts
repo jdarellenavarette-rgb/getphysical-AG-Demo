@@ -30,7 +30,7 @@ export function assertClientSupabaseConfig(config: Partial<SupabaseConfig>): Sup
   const { supabaseUrl, supabaseAnonKey } = config;
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new SupabaseConfigError(
-      "[sodia-core] Supabase URL and anon key are required. Set NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY (web) or EXPO_PUBLIC_SUPABASE_URL / EXPO_PUBLIC_SUPABASE_ANON_KEY (mobile)."
+      "[sodia-core] Supabase URL and anon key are required. Set NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY (web) or EXPO_PUBLIC_SUPABASE_URL / EXPO_PUBLIC_SUPABASE_ANON_KEY (mobile).",
     );
   }
   if (!/^https:\/\//.test(supabaseUrl) && !/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?/.test(supabaseUrl)) {
@@ -62,7 +62,7 @@ function jwtRole(token: string): string | null {
 /** Creates a strictly typed Supabase client for the GetPhysical schema. */
 export function createGetPhysicalClient(
   config: Partial<SupabaseConfig>,
-  options: GetPhysicalClientOptions = {}
+  options: GetPhysicalClientOptions = {},
 ): GetPhysicalClient {
   const { supabaseUrl, supabaseAnonKey } = assertClientSupabaseConfig(config);
   return createClient<Database>(supabaseUrl, supabaseAnonKey, {

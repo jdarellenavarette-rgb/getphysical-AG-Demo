@@ -39,3 +39,6 @@ yarn-error.log*
 supabase/.temp/
 supabase/.branches/
 supabase/functions/.env
+
+# Local preview screenshots (shared with the team directly, not versioned)
+app-screenshots/

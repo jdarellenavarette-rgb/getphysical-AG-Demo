@@ -1,7 +1,12 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Image, StyleSheet, Modal, ScrollView } from "react-native";
-import { X, CheckCircle2, UserPlus, MessageSquare, Award, Grid, Shield, ArrowLeft } from "lucide-react-native";
+import { CheckCircle2, UserPlus, MessageSquare, Award, Grid, ArrowLeft } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
+import { useEcosystemStore } from "../../store/ecosystemStore";
+import { useFeedStore } from "../../store/feedStore";
+import { Avatar } from "../common/Avatar";
+import { useRequireAccount } from "../../hooks/useRequireAccount";
+import { useEdgeSwipeBack } from "../../hooks/useDismissGestures";
 
 export interface AthleteProfileData {
   userId: string;
@@ -25,25 +30,34 @@ interface AthleteProfileModalProps {
   onMessageAthlete?: (athlete: AthleteProfileData) => void;
 }
 
-export function AthleteProfileModal({
-  visible,
-  athlete,
-  onClose,
-  onMessageAthlete,
-}: AthleteProfileModalProps) {
+export function AthleteProfileModal({ visible, athlete, onClose, onMessageAthlete }: AthleteProfileModalProps) {
   const { colors } = useThemeStore();
-  const [isFollowing, setIsFollowing] = useState(false);
+  const edgeBack = useEdgeSwipeBack(() => onClose());
+  const { profile } = useEcosystemStore();
+  const { followedUserIds, toggleFollow } = useFeedStore();
+  const requireAccount = useRequireAccount();
   const [activeTab, setActiveTab] = useState<"grid" | "pr">("grid");
 
   if (!visible || !athlete) return null;
 
+  const isFollowing = followedUserIds[athlete.userId] ?? false;
+  const isSelf = athlete.userId === profile.id;
+
   return (
     <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
-      <ScrollView style={[styles.container, { backgroundColor: colors.bgScreen }]} contentContainerStyle={styles.content}>
+      <ScrollView
+        {...edgeBack}
+        style={[styles.container, { backgroundColor: colors.bgScreen }]}
+        contentContainerStyle={styles.content}
+      >
         {/* COVER PHOTO & TOP BAR */}
         <View style={styles.coverContainer}>
           <Image
-            source={{ uri: athlete.coverUrl ?? "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80" }}
+            source={{
+              uri:
+                athlete.coverUrl ??
+                "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80",
+            }}
             style={styles.coverPhoto}
           />
           <View style={styles.coverOverlay} />
@@ -56,10 +70,15 @@ export function AthleteProfileModal({
         {/* PROFILE HEADER */}
         <View style={styles.profileHeader}>
           <View style={styles.avatarRow}>
-            <Image source={{ uri: athlete.avatar }} style={[styles.avatar, { borderColor: colors.bgScreen }]} />
+            <Avatar
+              uri={athlete.avatar}
+              name={athlete.name}
+              size={84}
+              style={[styles.avatar, { borderColor: colors.bgScreen }]}
+            />
             <View style={styles.onlinePill}>
               <View style={styles.greenDot} />
-              <Text style={styles.onlineText}>ACTIVE ATHLETE</Text>
+              <Text style={styles.onlineText}>MEMBER</Text>
             </View>
           </View>
 
@@ -68,41 +87,66 @@ export function AthleteProfileModal({
               <Text style={[styles.fullName, { color: colors.textPrimary }]}>{athlete.name}</Text>
               {athlete.isVerified && <CheckCircle2 size={16} color="#38BDF8" fill="#38BDF8" />}
             </View>
-            <Text style={[styles.username, { color: colors.textSecondary }]}>@{athlete.username} • {athlete.specialty}</Text>
-            <Text style={[styles.bioText, { color: colors.textPrimary }]}>{athlete.bio}</Text>
+            <Text style={[styles.username, { color: colors.textSecondary }]}>
+              @{athlete.username}
+              {athlete.specialty ? ` • ${athlete.specialty}` : ""}
+            </Text>
+            {athlete.bio ? <Text style={[styles.bioText, { color: colors.textPrimary }]}>{athlete.bio}</Text> : null}
           </View>
 
-          {/* DUAL ACTION BUTTONS */}
-          <View style={styles.actionBtnRow}>
-            <TouchableOpacity onPress={() => setIsFollowing(!isFollowing)} style={[styles.followBtn, isFollowing && styles.followingBtn]}>
-              <UserPlus size={15} color="#FFFFFF" style={{ marginRight: 6 }} />
-              <Text style={styles.followBtnText}>{isFollowing ? "Following" : "Follow Athlete"}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => {
-                onClose();
-                onMessageAthlete?.(athlete);
-              }}
-              style={[styles.msgBtn, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}
-            >
-              <MessageSquare size={15} color={colors.textPrimary} style={{ marginRight: 6 }} />
-              <Text style={[styles.msgBtnText, { color: colors.textPrimary }]}>Message</Text>
-            </TouchableOpacity>
-          </View>
+          {/* DUAL ACTION BUTTONS (not on your own profile) */}
+          {!isSelf && (
+            <View style={styles.actionBtnRow}>
+              <TouchableOpacity
+                onPress={() => requireAccount("follow people") && toggleFollow(athlete.userId)}
+                style={[styles.followBtn, isFollowing && styles.followingBtn]}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isFollowing }}
+              >
+                <UserPlus size={15} color="#FFFFFF" style={{ marginRight: 6 }} />
+                <Text style={styles.followBtnText}>{isFollowing ? "Following" : "Follow"}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  onClose();
+                  onMessageAthlete?.(athlete);
+                }}
+                style={[styles.msgBtn, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}
+              >
+                <MessageSquare size={15} color={colors.textPrimary} style={{ marginRight: 6 }} />
+                <Text style={[styles.msgBtnText, { color: colors.textPrimary }]}>Message</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           {/* ATHLETIC STATS */}
           <View style={[styles.metricsRow, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
-            <View style={styles.metricItem}><Text style={[styles.metricVal, { color: colors.textPrimary }]}>{athlete.followersCount}</Text><Text style={styles.metricLabel}>Followers</Text></View>
-            <View style={styles.metricItem}><Text style={[styles.metricVal, { color: colors.textPrimary }]}>{athlete.workoutsCount}</Text><Text style={styles.metricLabel}>Workouts</Text></View>
-            <View style={styles.metricItem}><Text style={[styles.metricVal, { color: colors.textPrimary }]}>12</Text><Text style={styles.metricLabel}>PR Stamps</Text></View>
+            <View style={styles.metricItem}>
+              <Text style={[styles.metricVal, { color: colors.textPrimary }]}>{athlete.followersCount}</Text>
+              <Text style={styles.metricLabel}>Followers</Text>
+            </View>
+            <View style={styles.metricItem}>
+              <Text style={[styles.metricVal, { color: colors.textPrimary }]}>{athlete.workoutsCount}</Text>
+              <Text style={styles.metricLabel}>Workouts</Text>
+            </View>
+            <View style={styles.metricItem}>
+              <Text style={[styles.metricVal, { color: colors.textPrimary }]}>12</Text>
+              <Text style={styles.metricLabel}>PR Stamps</Text>
+            </View>
           </View>
 
           {/* TABS */}
           <View style={[styles.tabsHeader, { borderBottomColor: colors.borderColor }]}>
-            <TouchableOpacity onPress={() => setActiveTab("grid")} style={[styles.tabItem, activeTab === "grid" && styles.tabItemActive]}>
+            <TouchableOpacity
+              onPress={() => setActiveTab("grid")}
+              style={[styles.tabItem, activeTab === "grid" && styles.tabItemActive]}
+            >
               <Grid size={16} color={activeTab === "grid" ? "#E11D48" : "#71717A"} />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => setActiveTab("pr")} style={[styles.tabItem, activeTab === "pr" && styles.tabItemActive]}>
+            <TouchableOpacity
+              onPress={() => setActiveTab("pr")}
+              style={[styles.tabItem, activeTab === "pr" && styles.tabItemActive]}
+            >
               <Award size={16} color={activeTab === "pr" ? "#E11D48" : "#71717A"} />
             </TouchableOpacity>
           </View>
@@ -110,6 +154,9 @@ export function AthleteProfileModal({
           {/* TAB 1: PHOTO GRID */}
           {activeTab === "grid" && (
             <View style={styles.photoGrid}>
+              {athlete.photos.length === 0 && (
+                <Text style={[styles.noPhotos, { color: colors.textMuted }]}>No posts to show yet.</Text>
+              )}
               {athlete.photos.map((url, i) => (
                 <View key={i} style={styles.photoWrap}>
                   <Image source={{ uri: url }} style={styles.gridImg} />
@@ -126,8 +173,12 @@ export function AthleteProfileModal({
                   <Text style={styles.prStampBadge}>LIFT STAMP • VERIFIED PR</Text>
                   <Award size={14} color="#10B981" />
                 </View>
-                <Text style={[styles.prMetric, { color: colors.textPrimary }]}>{athlete.prStamp?.metric ?? "225 KG"}</Text>
-                <Text style={[styles.prTitle, { color: colors.textSecondary }]}>{athlete.prStamp?.title ?? "Deadlift 1RM"} • {athlete.prStamp?.venue ?? "Metro Core Arena"}</Text>
+                <Text style={[styles.prMetric, { color: colors.textPrimary }]}>
+                  {athlete.prStamp?.metric ?? "225 KG"}
+                </Text>
+                <Text style={[styles.prTitle, { color: colors.textSecondary }]}>
+                  {athlete.prStamp?.title ?? "Deadlift 1RM"} • {athlete.prStamp?.venue ?? "Metro Core Arena"}
+                </Text>
               </View>
             </View>
           )}
@@ -138,17 +189,37 @@ export function AthleteProfileModal({
 }
 
 const styles = StyleSheet.create({
+  noPhotos: { width: "100%", textAlign: "center", fontSize: 13, paddingVertical: 28 },
   container: { flex: 1 },
   content: { paddingBottom: 60 },
   coverContainer: { position: "relative", width: "100%", height: 140 },
   coverPhoto: { width: "100%", height: "100%" },
   coverOverlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.35)" },
-  backBtn: { position: "absolute", top: 48, left: 16, flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "rgba(0,0,0,0.6)", paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
+  backBtn: {
+    position: "absolute",
+    top: 48,
+    left: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
   backBtnText: { color: "#FFF", fontSize: 12, fontWeight: "700" },
   profileHeader: { paddingHorizontal: 16, marginTop: -40 },
   avatarRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end" },
   avatar: { width: 80, height: 80, borderRadius: 40, borderWidth: 3 },
-  onlinePill: { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: "rgba(16,185,129,0.15)", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999 },
+  onlinePill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: "rgba(16,185,129,0.15)",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+  },
   greenDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "#10B981" },
   onlineText: { color: "#10B981", fontSize: 10, fontWeight: "800" },
   nameRow: { marginTop: 12 },
@@ -157,12 +228,35 @@ const styles = StyleSheet.create({
   username: { fontSize: 12, marginTop: 2 },
   bioText: { fontSize: 13, marginTop: 6, lineHeight: 18 },
   actionBtnRow: { flexDirection: "row", gap: 10, marginTop: 14 },
-  followBtn: { flex: 1, backgroundColor: "#E11D48", borderRadius: 12, paddingVertical: 12, flexDirection: "row", alignItems: "center", justifyContent: "center" },
+  followBtn: {
+    flex: 1,
+    backgroundColor: "#E11D48",
+    borderRadius: 12,
+    paddingVertical: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   followingBtn: { backgroundColor: "#71717A" },
   followBtnText: { color: "#FFF", fontSize: 13, fontWeight: "800" },
-  msgBtn: { flex: 1, borderRadius: 12, paddingVertical: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", borderWidth: 1 },
+  msgBtn: {
+    flex: 1,
+    borderRadius: 12,
+    paddingVertical: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+  },
   msgBtnText: { fontSize: 13, fontWeight: "800" },
-  metricsRow: { flexDirection: "row", justifyContent: "space-around", borderRadius: 14, paddingVertical: 14, marginTop: 16, borderWidth: 1 },
+  metricsRow: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    borderRadius: 14,
+    paddingVertical: 14,
+    marginTop: 16,
+    borderWidth: 1,
+  },
   metricItem: { alignItems: "center" },
   metricVal: { fontSize: 18, fontWeight: "900" },
   metricLabel: { color: "#71717A", fontSize: 10, fontWeight: "700", marginTop: 2 },

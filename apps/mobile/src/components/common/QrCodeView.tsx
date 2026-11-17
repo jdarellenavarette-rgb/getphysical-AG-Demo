@@ -39,7 +39,7 @@ export const QrCodeView = memo(function QrCodeView({
         }
         return runs;
       }),
-    [qr]
+    [qr],
   );
 
   return (
@@ -52,7 +52,10 @@ export const QrCodeView = memo(function QrCodeView({
       {rows.map((runs, y) => (
         <View key={y} style={{ flexDirection: "row", height: cell }}>
           {runs.map((run, i) => (
-            <View key={i} style={{ width: cell * run.length, height: cell, backgroundColor: run.dark ? color : background }} />
+            <View
+              key={i}
+              style={{ width: cell * run.length, height: cell, backgroundColor: run.dark ? color : background }}
+            />
           ))}
         </View>
       ))}

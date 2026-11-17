@@ -12,13 +12,20 @@ export function CreateFacilityForm() {
     <form action={action} noValidate style={{ display: "grid", gap: 14 }}>
       <label style={labelStyle}>
         Facility name
-        <input name="name" required maxLength={120} style={inputStyle} aria-invalid={Boolean(state.fieldErrors?.name)} />
+        <input
+          name="name"
+          required
+          maxLength={120}
+          style={inputStyle}
+          aria-invalid={Boolean(state.fieldErrors?.name)}
+        />
         <span style={errorStyle}>{state.fieldErrors?.name}</span>
       </label>
       <fieldset style={{ border: "none", padding: 0, margin: 0, display: "grid", gap: 8 }}>
         <legend style={{ ...labelStyle, marginBottom: 6 }}>Facility type</legend>
         <label style={radioStyle}>
-          <input type="radio" name="registryType" value="COMMERCIAL" defaultChecked /> Commercial gym (GymDash · Xendit payouts)
+          <input type="radio" name="registryType" value="COMMERCIAL" defaultChecked /> Commercial gym (GymDash · Xendit
+          payouts)
         </label>
         <label style={radioStyle}>
           <input type="radio" name="registryType" value="COMMUNITY" /> Community club (Clubdash · free up to 19 members)
@@ -29,7 +36,11 @@ export function CreateFacilityForm() {
         Address (optional)
         <input name="address" maxLength={200} style={inputStyle} />
       </label>
-      {state.message && <p role="alert" style={{ margin: 0, color: "#FCA5A5", fontSize: 14 }}>{state.message}</p>}
+      {state.message && (
+        <p role="alert" style={{ margin: 0, color: "#FCA5A5", fontSize: 14 }}>
+          {state.message}
+        </p>
+      )}
       <button type="submit" disabled={pending} style={{ ...buttonStyle, opacity: pending ? 0.6 : 1 }}>
         {pending ? "Creating…" : "Create facility"}
       </button>

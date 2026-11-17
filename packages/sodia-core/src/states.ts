@@ -19,14 +19,7 @@ export const UI_STATE_KINDS = [
 export type UIStateKind = (typeof UI_STATE_KINDS)[number];
 
 export type OSResourcePermission =
-  | "location"
-  | "camera"
-  | "microphone"
-  | "contacts"
-  | "photos"
-  | "notifications"
-  | "health_kit"
-  | "biometrics";
+  "location" | "camera" | "microphone" | "contacts" | "photos" | "notifications" | "health_kit" | "biometrics";
 
 export interface ValidationIssue {
   readonly field: string;
@@ -137,7 +130,7 @@ export function createSuccessState<TData>(data: TData): TenStateEnvelope<TData> 
 
 export function createLoadingState<TData>(
   skeletonCount = 3,
-  previousData: TData | null = null
+  previousData: TData | null = null,
 ): TenStateEnvelope<TData> {
   return {
     status: "loading",
@@ -148,7 +141,7 @@ export function createLoadingState<TData>(
 
 export function createEmptyState<TData = null>(
   emptyReason: string,
-  primaryActionLabel: string
+  primaryActionLabel: string,
 ): TenStateEnvelope<TData> {
   return {
     status: "empty",
@@ -157,4 +150,3 @@ export function createEmptyState<TData = null>(
     primaryActionLabel,
   };
 }
-

@@ -8,18 +8,12 @@ import { SODIA_FIELD_LIMITS } from "./constants";
 export const phoneSchema = z
   .string()
   .trim()
-  .regex(
-    /^(?:\+63|0)?9\d{9}$/,
-    "Please enter a valid Philippine mobile number (e.g. +63 917 123 4567)"
-  );
+  .regex(/^(?:\+63|0)?9\d{9}$/, "Please enter a valid Philippine mobile number (e.g. +63 917 123 4567)");
 
 export const otpSchema = z
   .string()
   .trim()
-  .length(
-    SODIA_FIELD_LIMITS.OTP_CODE_LENGTH,
-    `OTP code must be exactly ${SODIA_FIELD_LIMITS.OTP_CODE_LENGTH} digits`
-  )
+  .length(SODIA_FIELD_LIMITS.OTP_CODE_LENGTH, `OTP code must be exactly ${SODIA_FIELD_LIMITS.OTP_CODE_LENGTH} digits`)
   .regex(/^\d+$/, "OTP code must contain only numbers");
 
 export const usernameSchema = z
@@ -27,30 +21,22 @@ export const usernameSchema = z
   .trim()
   .min(3, "Username must be at least 3 characters")
   .max(24, "Username cannot exceed 24 characters")
-  .regex(
-    /^[a-zA-Z0-9_.]+$/,
-    "Username can only contain letters, numbers, underscores, and periods"
-  );
+  .regex(/^[a-zA-Z0-9_.]+$/, "Username can only contain letters, numbers, underscores, and periods");
 
-export const ageGateSchema = z
-  .string()
-  .refine(
-    (dobString) => {
-      const birthDate = new Date(dobString);
-      if (isNaN(birthDate.getTime())) return false;
-      const today = new Date();
-      let age = today.getFullYear() - birthDate.getFullYear();
-      const monthDiff = today.getMonth() - birthDate.getMonth();
-      if (
-        monthDiff < 0 ||
-        (monthDiff === 0 && today.getDate() < birthDate.getDate())
-      ) {
-        age--;
-      }
-      return age >= 13;
-    },
-    { message: "You must be 13 or older to create a GetPhysical account" }
-  );
+export const ageGateSchema = z.string().refine(
+  (dobString) => {
+    const birthDate = new Date(dobString);
+    if (isNaN(birthDate.getTime())) return false;
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age >= 13;
+  },
+  { message: "You must be 13 or older to create a GetPhysical account" },
+);
 
 export function isMinorUser(dobString: string): boolean {
   const birthDate = new Date(dobString);
@@ -58,10 +44,7 @@ export function isMinorUser(dobString: string): boolean {
   const today = new Date();
   let age = today.getFullYear() - birthDate.getFullYear();
   const monthDiff = today.getMonth() - birthDate.getMonth();
-  if (
-    monthDiff < 0 ||
-    (monthDiff === 0 && today.getDate() < birthDate.getDate())
-  ) {
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
     age--;
   }
   return age < 18;
@@ -71,33 +54,24 @@ export const postCaptionSchema = z
   .string()
   .max(
     SODIA_FIELD_LIMITS.POST_CAPTION_MAX_CHARS,
-    `Caption cannot exceed ${SODIA_FIELD_LIMITS.POST_CAPTION_MAX_CHARS} characters`
+    `Caption cannot exceed ${SODIA_FIELD_LIMITS.POST_CAPTION_MAX_CHARS} characters`,
   );
 
 export const challengeEntryCaptionSchema = z
   .string()
   .max(
     SODIA_FIELD_LIMITS.CHALLENGE_ENTRY_CAPTION_MAX_CHARS,
-    `Challenge caption cannot exceed ${SODIA_FIELD_LIMITS.CHALLENGE_ENTRY_CAPTION_MAX_CHARS} characters`
+    `Challenge caption cannot exceed ${SODIA_FIELD_LIMITS.CHALLENGE_ENTRY_CAPTION_MAX_CHARS} characters`,
   );
 
 export const bioSchema = z
   .string()
-  .max(
-    SODIA_FIELD_LIMITS.BIO_MAX_CHARS,
-    `Bio cannot exceed ${SODIA_FIELD_LIMITS.BIO_MAX_CHARS} characters`
-  );
+  .max(SODIA_FIELD_LIMITS.BIO_MAX_CHARS, `Bio cannot exceed ${SODIA_FIELD_LIMITS.BIO_MAX_CHARS} characters`);
 
 export const fitnessGoalsSchema = z
   .array(z.string())
-  .min(
-    SODIA_FIELD_LIMITS.FITNESS_GOALS_MIN,
-    `Select at least ${SODIA_FIELD_LIMITS.FITNESS_GOALS_MIN} goal`
-  )
-  .max(
-    SODIA_FIELD_LIMITS.FITNESS_GOALS_MAX,
-    `Select at most ${SODIA_FIELD_LIMITS.FITNESS_GOALS_MAX} goals`
-  );
+  .min(SODIA_FIELD_LIMITS.FITNESS_GOALS_MIN, `Select at least ${SODIA_FIELD_LIMITS.FITNESS_GOALS_MIN} goal`)
+  .max(SODIA_FIELD_LIMITS.FITNESS_GOALS_MAX, `Select at most ${SODIA_FIELD_LIMITS.FITNESS_GOALS_MAX} goals`);
 
 export const workoutSetSchema = z.object({
   setNumber: z.number().int().positive(),
@@ -131,7 +105,10 @@ export const dobSchema = z
   .string()
   .trim()
   .regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD")
-  .refine((v) => !Number.isNaN(new Date(`${v}T00:00:00Z`).getTime()) && new Date(`${v}T00:00:00Z`) < new Date(), "Enter a real date");
+  .refine(
+    (v) => !Number.isNaN(new Date(`${v}T00:00:00Z`).getTime()) && new Date(`${v}T00:00:00Z`) < new Date(),
+    "Enter a real date",
+  );
 
 export const profileSetupSchema = z.object({
   firstName: z.string().trim().min(1, "First name is required").max(40),

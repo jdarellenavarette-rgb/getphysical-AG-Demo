@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from "react";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
-import { WebView } from "react-native-webview";
+import { WebView, type WebViewHandle } from "../../lib/webview";
 import { Navigation, Maximize2 } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 
@@ -10,9 +10,9 @@ interface StravaRouteMapProps {
   isTracking: boolean;
 }
 
-export function StravaRouteMap({ routeCoords, currentPos, isTracking }: StravaRouteMapProps) {
+export function StravaRouteMap({ routeCoords, currentPos }: StravaRouteMapProps) {
   const { themeMode } = useThemeStore();
-  const webViewRef = useRef<any>(null);
+  const webViewRef = useRef<WebViewHandle>(null);
   const isLight = themeMode === "light";
   const initialPosRef = useRef(currentPos);
   const isMapReadyRef = useRef(false);
@@ -150,8 +150,24 @@ export function StravaRouteMap({ routeCoords, currentPos, isTracking }: StravaRo
 }
 
 const styles = StyleSheet.create({
-  mapContainer: { height: 195, borderRadius: 18, overflow: "hidden", borderWidth: 1.5, borderColor: "rgba(225,29,72,0.35)", position: "relative" },
+  mapContainer: {
+    height: 195,
+    borderRadius: 18,
+    overflow: "hidden",
+    borderWidth: 1.5,
+    borderColor: "rgba(225,29,72,0.35)",
+    position: "relative",
+  },
   webView: { flex: 1, backgroundColor: "transparent" },
   mapFloatingBar: { position: "absolute", bottom: 12, right: 12, gap: 8 },
-  mapBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(9,9,11,0.85)", justifyContent: "center", alignItems: "center", borderWidth: 1, borderColor: "rgba(255,255,255,0.18)" },
+  mapBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(9,9,11,0.85)",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.18)",
+  },
 });

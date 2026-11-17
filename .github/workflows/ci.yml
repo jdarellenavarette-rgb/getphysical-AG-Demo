@@ -21,10 +21,13 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+      - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm typecheck:functions
       - run: pnpm db:types:check
       - run: pnpm test
+      - run: pnpm --filter @getphysical/mobile test
       - run: pnpm --filter @getphysical/web build
         env:
           NEXT_TELEMETRY_DISABLED: "1"

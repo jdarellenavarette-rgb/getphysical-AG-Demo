@@ -10,6 +10,8 @@ interface HeaderBarProps {
   onOpenActivity?: () => void;
   onOpenInbox?: () => void;
   onPressLogo?: () => void;
+  /** Shows the dot on the bell until the activity screen has been opened. */
+  hasUnseenActivity?: boolean;
 }
 
 export function HeaderBar({
@@ -18,6 +20,7 @@ export function HeaderBar({
   onOpenActivity,
   onOpenInbox,
   onPressLogo,
+  hasUnseenActivity = false,
 }: HeaderBarProps) {
   const { colors } = useThemeStore();
   const { threads } = useCrmMessagingStore();
@@ -31,6 +34,8 @@ export function HeaderBar({
           onPress={onOpenMenu}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           style={styles.menuIconBtn}
+          accessibilityRole="button"
+          accessibilityLabel="Open menu"
         >
           <Menu size={22} color={colors.textPrimary} strokeWidth={2.2} />
         </TouchableOpacity>
@@ -48,6 +53,8 @@ export function HeaderBar({
           onPress={onOpenInbox}
           hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }}
           style={styles.iconCircle}
+          accessibilityRole="button"
+          accessibilityLabel="Messages"
         >
           <MessageSquare size={19} color={colors.textPrimary} strokeWidth={2} />
           {unreadCount > 0 && <View style={[styles.notificationDot, { borderColor: colors.bgHeader }]} />}
@@ -57,15 +64,19 @@ export function HeaderBar({
           onPress={onOpenActivity}
           hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }}
           style={styles.iconCircle}
+          accessibilityRole="button"
+          accessibilityLabel="Activity"
         >
           <Bell size={19} color={colors.textPrimary} strokeWidth={2} />
-          <View style={[styles.notificationDot, { borderColor: colors.bgHeader }]} />
+          {hasUnseenActivity && <View style={[styles.notificationDot, { borderColor: colors.bgHeader }]} />}
         </TouchableOpacity>
 
         <TouchableOpacity
           onPress={onOpenSettings}
           hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }}
           style={styles.iconCircle}
+          accessibilityRole="button"
+          accessibilityLabel="Settings"
         >
           <Settings size={19} color={colors.textSecondary} strokeWidth={2} />
         </TouchableOpacity>
@@ -90,6 +101,22 @@ const styles = StyleSheet.create({
   brandTitle: { fontSize: 21, fontWeight: "900", letterSpacing: -0.6 },
   brandDot: { color: "#E11D48" },
   rightGroup: { flexDirection: "row", alignItems: "center", gap: 4 },
-  iconCircle: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center", position: "relative" },
-  notificationDot: { position: "absolute", top: 8, right: 8, width: 7, height: 7, borderRadius: 3.5, backgroundColor: "#E11D48", borderWidth: 1.5 },
+  iconCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+  },
+  notificationDot: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: "#E11D48",
+    borderWidth: 1.5,
+  },
 });

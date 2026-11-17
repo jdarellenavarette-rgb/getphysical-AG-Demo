@@ -63,6 +63,11 @@ export default async function SuiteRootPage() {
   }
 
   return (
-    <BusinessSuiteShell facility={session.active} facilities={session.facilities} operatorName={session.displayName} />
+    <BusinessSuiteShell
+      facility={session.active}
+      facilities={session.facilities}
+      operatorName={session.displayName}
+      profileRoles={session.profileRoles}
+    />
   );
 }

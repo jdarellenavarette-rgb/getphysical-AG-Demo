@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
+import React, { useEffect, useRef, useState, useTransition } from "react";
 import { X, Send, CheckCircle } from "lucide-react";
 import { type SuiteMode } from "./HeroPromoCard";
 import { sendCrmBroadcast, type BroadcastSummary } from "../../app/actions/crm";
@@ -25,6 +25,27 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
   const [isPending, startTransition] = useTransition();
   const facility = useActiveFacility();
 
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  // Dialog behaviour: focus moves in on open, Escape closes, focus returns on close.
+  useEffect(() => {
+    if (!visible) return;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    dialogRef.current?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onCloseRef.current();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      previouslyFocused?.focus();
+    };
+  }, [visible]);
+
   if (!visible) return null;
 
   const getModalConfig = () => {
@@ -34,8 +55,8 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
           title: "Facility & Affiliated Club Broadcast",
           sub: "Broadcast court schedule changes and affiliated club notices",
           segments: [
-            { id: "ALL", label: "All Players (640)" },
-            { id: "SEGMENT_1", label: "Affiliated Clubs (18)" },
+            { id: "ALL", label: "All Players" },
+            { id: "SEGMENT_1", label: "Affiliated Clubs" },
             { id: "SEGMENT_2", label: "Peak Court Bookers" },
             { id: "SEGMENT_3", label: "Tournament Entrants" },
           ],
@@ -48,10 +69,10 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
           title: "Coach Client CRM & Program Nudge",
           sub: "Send macrocycle updates, recovery reminders, and client nudges",
           segments: [
-            { id: "ALL", label: "All Clients (32)" },
+            { id: "ALL", label: "All Clients" },
             { id: "SEGMENT_1", label: "Hypertrophy Track" },
             { id: "SEGMENT_2", label: "Hyrox Endurance" },
-            { id: "SEGMENT_3", label: "At-Risk / Missing Logs (4)" },
+            { id: "SEGMENT_3", label: "At-Risk / Missing Logs" },
           ],
           placeholderTitle: "e.g. Week 4 Deload & 1RM Progression Check",
           placeholderBody: "Ensure your post-workout heart rates and video form checks are logged today.",
@@ -62,10 +83,10 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
           title: "Tournament Participant Broadcast",
           sub: "Dispatch bracket updates, check-in calls, and rule packs",
           segments: [
-            { id: "ALL", label: "All Participants (420)" },
-            { id: "SEGMENT_1", label: "Men / Women Open (128)" },
-            { id: "SEGMENT_2", label: "Mixed Doubles (96)" },
-            { id: "SEGMENT_3", label: "Unverified Waivers (8)" },
+            { id: "ALL", label: "All Participants" },
+            { id: "SEGMENT_1", label: "Men / Women Open" },
+            { id: "SEGMENT_2", label: "Mixed Doubles" },
+            { id: "SEGMENT_3", label: "Unverified Waivers" },
           ],
           placeholderTitle: "e.g. Official Bracket Draw Released & Court Allocation Finalized",
           placeholderBody: "All team captains must check in at Gate B 30 minutes prior to first whistle.",
@@ -77,10 +98,10 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
           title: "Manage Messaging & Promos",
           sub: "Send newsletters, promos, and reminders within your gym",
           segments: [
-            { id: "ALL", label: "All Active (883)" },
-            { id: "SEGMENT_1", label: "At-Risk (42)" },
-            { id: "SEGMENT_2", label: "VIP Pass (210)" },
-            { id: "SEGMENT_3", label: "Class Enrollees (540)" },
+            { id: "ALL", label: "All Active" },
+            { id: "SEGMENT_1", label: "At-Risk" },
+            { id: "SEGMENT_2", label: "VIP Pass" },
+            { id: "SEGMENT_3", label: "Class Enrollees" },
           ],
           placeholderTitle: "e.g. Flash 48-Hour Recovery Clinic & Sauna Access",
           placeholderBody: "Exclusive recovery masterclass with verified PR reviews this Saturday.",
@@ -137,7 +158,13 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
       }}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="broadcast-dialog-title"
+        tabIndex={-1}
         style={{
+          outline: "none",
           width: "100%",
           maxWidth: "540px",
           backgroundColor: "#111319",
@@ -165,11 +192,15 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
               <Send size={16} color="#FFFFFF" />
             </div>
             <div>
-              <h3 style={{ fontSize: "17px", fontWeight: 900, color: "#FFFFFF" }}>{cfg.title}</h3>
+              <h3 id="broadcast-dialog-title" style={{ fontSize: "17px", fontWeight: 900, color: "#FFFFFF" }}>
+                {cfg.title}
+              </h3>
               <p style={{ fontSize: "11px", color: "#9CA3AF" }}>{cfg.sub}</p>
             </div>
           </div>
           <button
+            type="button"
+            aria-label="Close"
             onClick={onClose}
             style={{
               width: "32px",
@@ -189,7 +220,7 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
         {isSent ? (
           <div style={{ padding: "40px 20px", textAlign: "center" }}>
             <CheckCircle size={48} color="#10B981" style={{ margin: "0 auto 14px" }} />
-            <h4 style={{ fontSize: "18px", fontWeight: 800, color: "#FFFFFF" }}>Broadcast Dispatched!</h4>
+            <h4 style={{ fontSize: "18px", fontWeight: 800, color: "#FFFFFF" }}>Broadcast sent</h4>
             <p style={{ fontSize: "12px", color: "#9CA3AF", marginTop: "6px" }}>
               Delivered to {recipientCount} {recipientCount === 1 ? "member" : "members"} of {facility.name}.
             </p>
@@ -202,7 +233,7 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
                 style={{
                   fontSize: "11px",
                   fontWeight: 800,
-                  color: "#6B7280",
+                  color: "#9CA3AF",
                   textTransform: "uppercase",
                   letterSpacing: "0.5px",
                   display: "block",
@@ -239,7 +270,7 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
                 style={{
                   fontSize: "11px",
                   fontWeight: 800,
-                  color: "#6B7280",
+                  color: "#9CA3AF",
                   textTransform: "uppercase",
                   letterSpacing: "0.5px",
                   display: "block",
@@ -249,6 +280,7 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
                 Broadcast Headline
               </label>
               <input
+                aria-label="Title"
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -272,7 +304,7 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
                 style={{
                   fontSize: "11px",
                   fontWeight: 800,
-                  color: "#6B7280",
+                  color: "#9CA3AF",
                   textTransform: "uppercase",
                   letterSpacing: "0.5px",
                   display: "block",
@@ -282,6 +314,7 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
                 Message Content
               </label>
               <textarea
+                aria-label="Message"
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
                 placeholder={cfg.placeholderBody}
@@ -306,7 +339,7 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
                 style={{
                   fontSize: "11px",
                   fontWeight: 800,
-                  color: "#6B7280",
+                  color: "#9CA3AF",
                   textTransform: "uppercase",
                   letterSpacing: "0.5px",
                   display: "block",
@@ -317,6 +350,7 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
               </label>
               <div style={{ display: "flex", gap: "8px" }}>
                 <input
+                  aria-label="Promo code (optional)"
                   type="text"
                   value={promoCode}
                   onChange={(e) => setPromoCode(e.target.value.toUpperCase())}

@@ -95,13 +95,13 @@ export function TriageDashboard() {
 
   const resolveTriage = (id: string) => {
     setTriage((prev) => prev.map((t) => (t.id === id ? { ...t, resolved: true } : t)));
-    setActiveToast("Triage incident resolved and logged to audit trail.");
+    setActiveToast("Sample only: marked as resolved on this screen. Nothing was logged.");
     setTimeout(() => setActiveToast(null), 3000);
   };
 
   const sendWinBackOffer = (id: string, name: string) => {
     setAtRisk((prev) => prev.map((m) => (m.id === id ? { ...m, offerSent: true } : m)));
-    setActiveToast(`Win-back perk (Complimentary 1-on-1 Recovery + Whey Shake) dispatched to ${name}'s VIP Wallet.`);
+    setActiveToast(`Sample only: no offer was sent to ${name}.`);
     setTimeout(() => setActiveToast(null), 4000);
   };
 

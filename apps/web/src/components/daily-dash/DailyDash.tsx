@@ -33,40 +33,21 @@ const INITIAL_SCANS: ScanEvent[] = [
 ];
 
 export function DailyDash() {
-  const [occupancy, setOccupancy] = useState(42);
+  const [occupancy] = useState(42);
   const [maxCapacity] = useState(100);
-  const [gateFlash, setGateFlash] = useState<"IDLE" | "GREEN" | "RED">("IDLE");
-  const [scans, setScans] = useState<ScanEvent[]>(INITIAL_SCANS);
+  const scans = INITIAL_SCANS;
   const [posTab, setPosTab] = useState<"ACCESS" | "STORE">("ACCESS");
   const [cart, setCart] = useState<{ id: string; name: string; price: number; type: "ACCESS" | "STORE" }[]>([]);
   const [checkoutSuccess, setCheckoutSuccess] = useState<string | null>(null);
-
-  const triggerScan = (status: "GRANTED" | "DENIED_EXPIRED" | "OFFLINE_TOTP") => {
-    const isGranted = status !== "DENIED_EXPIRED";
-    setGateFlash(isGranted ? "GREEN" : "RED");
-    if (isGranted) setOccupancy((prev) => Math.min(prev + 1, maxCapacity));
-
-    const newScan: ScanEvent = {
-      id: Date.now().toString(),
-      name: isGranted ? "Live Member " + Math.floor(100 + Math.random() * 900) : "Squatter Detected",
-      avatar: isGranted ? "LM" : "SQ",
-      time: "Just now",
-      status,
-      membership:
-        status === "OFFLINE_TOTP" ? "Offline TOTP 482-911" : isGranted ? "Active All-Access" : "No Valid Pass",
-    };
-    setScans((prev) => [newScan, ...prev.slice(0, 5)]);
-    setTimeout(() => setGateFlash("IDLE"), 1800);
-  };
+  const [cartNotice, setCartNotice] = useState<string | null>(null);
 
   const addToCart = (item: { id: string; name: string; price: number; type: "ACCESS" | "STORE" }) => {
     const hasOpposite = cart.some((c) => c.type !== item.type);
     if (hasOpposite) {
-      alert(
-        "Bifurcated POS Lock: Spec law prohibits mixing recurring Access products with physical Store inventory in a single tender.",
-      );
+      setCartNotice("Passes and shop items are sold separately. Finish or clear this cart first.");
       return;
     }
+    setCartNotice(null);
     setCart((prev) => [...prev, item]);
   };
 
@@ -74,8 +55,9 @@ export function DailyDash() {
 
   const handleTender = (method: string) => {
     if (cart.length === 0) return;
-    const cartType = cart[0]?.type || "ACCESS";
-    setCheckoutSuccess(`Tendered ₱${cartTotal.toLocaleString()} via ${method} (${cartType} Cart)`);
+    setCheckoutSuccess(
+      `Sample only: ₱${cartTotal.toLocaleString()} by ${method} was not charged and no sale was recorded.`,
+    );
     setCart([]);
     setTimeout(() => setCheckoutSuccess(null), 3000);
   };
@@ -97,8 +79,8 @@ export function DailyDash() {
           <div>
             <h2 style={{ fontSize: "18px", fontWeight: 800, color: "#f9fafb" }}>Turnstile Gate 01</h2>
             <p style={{ fontSize: "12px", color: "#10b981", display: "flex", alignItems: "center", gap: "6px" }}>
-              <span style={{ width: "8px", height: "8px", borderRadius: "4px", backgroundColor: "#10b981" }} /> Realtime
-              Supabase Relay
+              <span style={{ width: "8px", height: "8px", borderRadius: "4px", backgroundColor: "#10b981" }} /> Example
+              feed
             </p>
           </div>
           <div style={{ textAlign: "right" }}>
@@ -116,72 +98,20 @@ export function DailyDash() {
           </div>
         </div>
 
-        {/* Turnstile Visual Feedback */}
         <div
           style={{
-            backgroundColor: gateFlash === "GREEN" ? "#065f4640" : gateFlash === "RED" ? "#991b1b40" : "#1e293b",
-            border: `2px solid ${gateFlash === "GREEN" ? "#10b981" : gateFlash === "RED" ? "#ef4444" : "#334155"}`,
+            backgroundColor: "#1e293b",
+            border: "2px solid #334155",
             borderRadius: "10px",
             padding: "18px",
             textAlign: "center",
             marginBottom: "16px",
-            transition: "all 0.2s ease",
+            fontSize: "14px",
+            fontWeight: 700,
+            color: "#cbd5e1",
           }}
         >
-          <div
-            style={{
-              fontSize: "14px",
-              fontWeight: 700,
-              color: gateFlash === "GREEN" ? "#34d399" : gateFlash === "RED" ? "#f87171" : "#9ca3af",
-            }}
-          >
-            {gateFlash === "GREEN"
-              ? "ACCESS GRANTED • TURNSTILE UNLOCKED"
-              : gateFlash === "RED"
-                ? "ACCESS DENIED • SUSPICIOUS / EXPIRED"
-                : "AWAITING NFC / DYNAMIC QR SCAN"}
-          </div>
-          <div style={{ display: "flex", gap: "8px", justifyContent: "center", marginTop: "12px" }}>
-            <button
-              onClick={() => triggerScan("GRANTED")}
-              style={{
-                backgroundColor: "#10b981",
-                color: "#000",
-                padding: "8px 12px",
-                borderRadius: "6px",
-                fontSize: "11px",
-                fontWeight: 700,
-              }}
-            >
-              Simulate Valid Pass
-            </button>
-            <button
-              onClick={() => triggerScan("OFFLINE_TOTP")}
-              style={{
-                backgroundColor: "#3b82f6",
-                color: "#fff",
-                padding: "8px 12px",
-                borderRadius: "6px",
-                fontSize: "11px",
-                fontWeight: 700,
-              }}
-            >
-              Simulate Offline TOTP (482-911)
-            </button>
-            <button
-              onClick={() => triggerScan("DENIED_EXPIRED")}
-              style={{
-                backgroundColor: "#ef4444",
-                color: "#fff",
-                padding: "8px 12px",
-                borderRadius: "6px",
-                fontSize: "11px",
-                fontWeight: 700,
-              }}
-            >
-              Simulate Squatter
-            </button>
-          </div>
+          The door scanner is not connected yet. The entries below are examples.
         </div>
 
         {/* Live Attendance Stream */}
@@ -194,7 +124,7 @@ export function DailyDash() {
             marginBottom: "10px",
           }}
         >
-          Live Gate Event Ledger
+          Example entries
         </h4>
         <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "8px" }}>
           {scans.map((s) => (
@@ -415,20 +345,27 @@ export function DailyDash() {
             )}
           </div>
 
+          {cartNotice && (
+            <div role="alert" style={{ marginTop: "8px", fontSize: "11px", color: "#fca5a5", textAlign: "center" }}>
+              {cartNotice}
+            </div>
+          )}
+
           {checkoutSuccess && (
             <div
+              role="status"
               style={{
-                backgroundColor: "#10b98120",
-                border: "1px solid #10b981",
+                backgroundColor: "#f59e0b20",
+                border: "1px solid #f59e0b",
                 borderRadius: "6px",
                 padding: "8px",
                 marginTop: "8px",
                 fontSize: "11px",
-                color: "#34d399",
+                color: "#fcd34d",
                 textAlign: "center",
               }}
             >
-              ✓ {checkoutSuccess}
+              {checkoutSuccess}
             </div>
           )}
 

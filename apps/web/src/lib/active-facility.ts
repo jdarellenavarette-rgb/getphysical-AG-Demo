@@ -18,6 +18,8 @@ export interface SuiteSession {
   userId: string;
   email: string | null;
   displayName: string;
+  /** Account roles from the profile (e.g. "coach", "organizer"). Not client-writable. */
+  profileRoles: string[];
   facilities: ActiveFacility[];
   active: ActiveFacility | null;
 }
@@ -28,13 +30,17 @@ export async function getSuiteSession(): Promise<SuiteSession | null> {
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) return null;
 
-  const [{ data: staffRows }, { data: profile }] = await Promise.all([
+  const [{ data: staffRows, error: staffError }, { data: profile, error: profileError }] = await Promise.all([
     supabase
       .from("facility_staff")
       .select("role, facilities(id, name, registry_type, plan, logo_url)")
       .eq("user_id", auth.user.id),
-    supabase.from("profiles").select("name, username").eq("id", auth.user.id).maybeSingle(),
+    supabase.from("profiles").select("name, username, roles").eq("id", auth.user.id).maybeSingle(),
   ]);
+  // A failed lookup must not look like "this person has no facility".
+  if (staffError ?? profileError) {
+    throw new Error("Could not load your facilities.", { cause: staffError ?? profileError });
+  }
 
   const facilities: ActiveFacility[] = (staffRows ?? []).flatMap((row) =>
     row.facilities
@@ -58,6 +64,7 @@ export async function getSuiteSession(): Promise<SuiteSession | null> {
     userId: auth.user.id,
     email: auth.user.email ?? null,
     displayName: profile?.name || profile?.username || auth.user.email || "Operator",
+    profileRoles: profile?.roles ?? [],
     facilities,
     active,
   };

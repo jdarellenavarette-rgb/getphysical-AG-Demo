@@ -263,15 +263,7 @@ export function AthleticInboxCRMView({ suiteMode }: AthleticInboxCRMViewProps) {
                         overflow: "hidden",
                       }}
                     >
-                      {t.id === "t_darelle" ? (
-                        <img
-                          src="/profiles/darelle/avatar.png"
-                          alt="Darelle"
-                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                        />
-                      ) : (
-                        t.avatar
-                      )}
+                      {t.avatar}
                     </div>
                     <div>
                       <div style={{ fontSize: "13px", fontWeight: 800, color: theme.textPrimary }}>{t.athleteName}</div>
@@ -334,19 +326,6 @@ export function AthleticInboxCRMView({ suiteMode }: AthleticInboxCRMViewProps) {
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              {activeTicket.id === "t_darelle" && (
-                <img
-                  src="/profiles/darelle/avatar.png"
-                  alt="Darelle Navarette"
-                  style={{
-                    width: "38px",
-                    height: "38px",
-                    borderRadius: "19px",
-                    objectFit: "cover",
-                    border: "2px solid #E11D48",
-                  }}
-                />
-              )}
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   <h4 style={{ fontSize: "15px", fontWeight: 900, color: theme.textPrimary }}>

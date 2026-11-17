@@ -8,6 +8,7 @@ import {
   type CrmBroadcastInput,
   type CrmReplyInput,
 } from "sodia-core";
+import { allowedSuiteModes } from "../../lib/suite-modes";
 import { createServerSupabase } from "../../lib/supabase/server";
 
 export type ActionResult<T> =
@@ -59,6 +60,19 @@ export async function sendCrmBroadcast(input: CrmBroadcastInput): Promise<Action
   const supabase = await createServerSupabase();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) return { ok: false, state: "session_expired", message: "Your session expired. Sign in again." };
+
+  // The workspace a broadcast is sent from must be one this facility and account really have.
+  const [facility, profile] = await Promise.all([
+    supabase.from("facilities").select("registry_type").eq("id", parsed.data.facilityId).maybeSingle(),
+    supabase.from("profiles").select("roles").eq("id", auth.user.id).maybeSingle(),
+  ]);
+  if (facility.error ?? profile.error) return fromDbError((facility.error ?? profile.error)!);
+  if (
+    !facility.data ||
+    !allowedSuiteModes(facility.data.registry_type, profile.data?.roles ?? []).includes(parsed.data.suiteMode)
+  ) {
+    return { ok: false, state: "permission_denied", message: "That workspace isn't available for this facility." };
+  }
 
   const { audience, segmentKey } = toDbAudience(parsed.data.audience);
   const { data, error } = await supabase.rpc("send_crm_broadcast", {
@@ -121,7 +135,7 @@ export interface InboxThread {
   messages: { id: string; fromFacility: boolean; body: string; createdAt: string | null; isBroadcast: boolean }[];
 }
 
-/** Load the facility's CRM inbox (threads + last 50 messages each). */
+/** Load the facility's CRM inbox: the 100 most recent threads with their newest messages. */
 export async function loadFacilityInbox(facilityId: string): Promise<ActionResult<InboxThread[]>> {
   const supabase = await createServerSupabase();
   const { data: auth } = await supabase.auth.getUser();
@@ -159,7 +173,8 @@ export async function loadFacilityInbox(facilityId: string): Promise<ActionResul
       .from("messages")
       .select(EXPLICIT_COLUMNS.MESSAGES)
       .in("conversation_id", conversationIds)
-      .order("created_at", { ascending: true })
+      // Newest first so a busy inbox keeps its latest messages; re-sorted per thread below.
+      .order("created_at", { ascending: false })
       .limit(50 * conversationIds.length),
   ]);
   const firstError = profiles.error ?? memberships.error ?? scans.error ?? messages.error;
@@ -182,7 +197,8 @@ export async function loadFacilityInbox(facilityId: string): Promise<ActionResul
       lastMessageAt: conversation.last_message_at,
       messages: messageRows
         .filter((m) => m.conversation_id === conversation.id)
-        .slice(-50)
+        .slice(0, 50)
+        .reverse()
         .map((m) => ({
           id: m.id,
           fromFacility: m.sender_kind === "FACILITY",

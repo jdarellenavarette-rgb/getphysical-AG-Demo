@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Home, Calendar, MessageSquare, FileText, BarChart2, Settings, Bell, type LucideIcon } from "lucide-react";
+import { Home, Calendar, MessageSquare, FileText, BarChart2, Settings, type LucideIcon } from "lucide-react";
 import { useSuiteTheme } from "./theme";
 
 export type NavTab = "DASHBOARD" | "SPATIAL" | "INBOX" | "BILLING" | "TRIAGE" | "SETTINGS";
@@ -15,18 +15,19 @@ export function NavigationDock({ activeTab, onSelectTab }: NavigationDockProps) 
   const { theme } = useSuiteTheme();
   const navItems: { id: NavTab; icon: LucideIcon; label: string }[] = [
     { id: "DASHBOARD", icon: Home, label: "Dashboard" },
-    { id: "SPATIAL", icon: Calendar, label: "Spatial Schedule" },
-    { id: "INBOX", icon: MessageSquare, label: "Athletic Inbox & CRM" },
-    { id: "BILLING", icon: FileText, label: "Maya Ledgers" },
-    { id: "TRIAGE", icon: BarChart2, label: "Turnstile & Triage" },
-    { id: "SETTINGS", icon: Settings, label: "Facility Settings" },
+    { id: "SPATIAL", icon: Calendar, label: "Schedule" },
+    { id: "INBOX", icon: MessageSquare, label: "Member inbox" },
+    { id: "BILLING", icon: FileText, label: "Front desk and sales" },
+    { id: "TRIAGE", icon: BarChart2, label: "Needs attention" },
+    { id: "SETTINGS", icon: Settings, label: "Settings" },
   ];
 
   return (
-    <div
+    <nav
+      aria-label="Business Suite sections"
       style={{
         width: "74px",
-        height: "100%",
+        alignSelf: "stretch",
         backgroundColor: theme.bgDock,
         borderRight: `1px solid ${theme.borderColor}`,
         display: "flex",
@@ -41,29 +42,24 @@ export function NavigationDock({ activeTab, onSelectTab }: NavigationDockProps) 
     >
       {/* Top Logo & Navigation Items */}
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "28px", width: "100%" }}>
-        {/* GP Logo */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-          }}
+        <button
+          type="button"
+          aria-label="GetPhysical: go to dashboard"
           onClick={() => onSelectTab("DASHBOARD")}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            fontSize: "22px",
+            fontStyle: "italic",
+            fontWeight: 900,
+            color: theme.textPrimary,
+            letterSpacing: "-1.5px",
+            fontFamily: "system-ui, sans-serif",
+          }}
         >
-          <span
-            style={{
-              fontSize: "22px",
-              fontStyle: "italic",
-              fontWeight: 900,
-              color: theme.textPrimary,
-              letterSpacing: "-1.5px",
-              fontFamily: "system-ui, sans-serif",
-            }}
-          >
-            GP
-          </span>
-        </div>
+          GP
+        </button>
 
         {/* Navigation Items Stack */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "14px", width: "100%" }}>
@@ -74,8 +70,11 @@ export function NavigationDock({ activeTab, onSelectTab }: NavigationDockProps) 
             return (
               <button
                 key={item.id}
+                type="button"
                 onClick={() => onSelectTab(item.id)}
                 title={item.label}
+                aria-label={item.label}
+                aria-current={isActive ? "page" : undefined}
                 style={{
                   width: "46px",
                   height: "42px",
@@ -109,42 +108,6 @@ export function NavigationDock({ activeTab, onSelectTab }: NavigationDockProps) 
           })}
         </div>
       </div>
-
-      {/* Bottom Actions: Notifications */}
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "14px" }}>
-        <button
-          title="Notifications & Turnstile Alerts"
-          style={{
-            position: "relative",
-            width: "40px",
-            height: "40px",
-            borderRadius: "20px",
-            backgroundColor: theme.bgCardSecondary,
-            border: `1px solid ${theme.borderColor}`,
-            color: theme.textSecondary,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-            transition: "background-color 0.15s ease",
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = theme.bgCardTertiary)}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = theme.bgCardSecondary)}
-        >
-          <Bell size={18} />
-          <div
-            style={{
-              position: "absolute",
-              top: "9px",
-              right: "9px",
-              width: "7px",
-              height: "7px",
-              borderRadius: "4px",
-              backgroundColor: "#E11D48",
-            }}
-          />
-        </button>
-      </div>
-    </div>
+    </nav>
   );
 }

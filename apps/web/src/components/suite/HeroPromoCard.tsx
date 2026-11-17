@@ -4,7 +4,9 @@ import React from "react";
 import { LiquidChromeCanvas } from "./LiquidChromeCanvas";
 import { useSuiteTheme } from "./theme";
 
-export type SuiteMode = "GYMDASH" | "CLUBDASH" | "COACHDASH" | "ORGANIZERDASH";
+import { type SuiteMode } from "../../lib/suite-modes";
+
+export type { SuiteMode };
 
 interface HeroPromoCardProps {
   onCreateMessage: () => void;

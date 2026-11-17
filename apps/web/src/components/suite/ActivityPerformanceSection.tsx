@@ -226,6 +226,7 @@ export function ActivityPerformanceSection({ timeframe, setTimeframe, suiteMode 
         {/* Time Selector Dropdown */}
         <div style={{ position: "relative" }}>
           <select
+            aria-label="Timeframe"
             value={timeframe}
             onChange={(e) => setTimeframe(e.target.value)}
             style={{

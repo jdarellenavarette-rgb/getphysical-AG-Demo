@@ -1,5 +1,6 @@
 import * as AppleAuthentication from "expo-apple-authentication";
 import * as Crypto from "expo-crypto";
+import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
 import { Platform } from "react-native";
 import { getSupabase } from "../lib/supabase";
@@ -8,10 +9,18 @@ import { getSupabase } from "../lib/supabase";
  * Social sign-in:
  *  - Apple on iOS: native sheet → identity token → Supabase signInWithIdToken (nonce-protected)
  *  - Google (all platforms) and Apple on Android: Supabase OAuth in a secure
- *    browser session with PKCE, returning to sodia://auth/callback
+ *    browser session with PKCE, returning to the app's auth/callback link
  * Both end with a normal Supabase session stored in SecureStore.
  */
-export const OAUTH_REDIRECT_URL = "sodia://auth/callback";
+/**
+ * Where the browser hands control back after sign-in. In an installed build
+ * this is sodia://auth/callback. In Expo Go the app has no scheme of its own,
+ * so it is Expo Go's address (exp://…/--/auth/callback). Both must be on the
+ * project's redirect allow list in Supabase.
+ */
+export function oauthRedirectUrl(): string {
+  return Linking.createURL("auth/callback", { scheme: "sodia" });
+}
 
 export type SocialResult = { ok: true } | { ok: false; cancelled: boolean; message: string };
 
@@ -72,13 +81,14 @@ async function signInWithOAuthBrowser(provider: "google" | "apple"): Promise<Soc
   const supabase = getSupabase();
   if (!supabase) return { ok: false, cancelled: false, message: "Sign-in is unavailable in this build." };
 
+  const redirectTo = oauthRedirectUrl();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
-    options: { redirectTo: OAUTH_REDIRECT_URL, skipBrowserRedirect: true },
+    options: { redirectTo, skipBrowserRedirect: true },
   });
   if (error || !data.url) return { ok: false, cancelled: false, message: "Couldn't start sign-in. Please retry." };
 
-  const result = await WebBrowser.openAuthSessionAsync(data.url, OAUTH_REDIRECT_URL);
+  const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
   if (result.type !== "success") return CANCELLED;
 
   const params = new URL(result.url).searchParams;

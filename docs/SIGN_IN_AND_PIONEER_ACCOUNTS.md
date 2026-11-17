@@ -30,7 +30,7 @@ Sending limits and the reasoning behind them are in `EMAIL_AND_AUTH_LIMITS.md`.
 
 ### Google
 
-Not switched on yet. It needs a Google Cloud OAuth client, which only the account owner can create. Steps are in `SOCIAL_SIGN_IN.md` (the Google section). The project's redirect list is also empty, so add `sodia://auth/callback` under Authentication → URL Configuration when you set Google up.
+Not switched on yet. It needs a Google Cloud OAuth client, which only the account owner can create. Steps are in `SOCIAL_SIGN_IN.md` (the Google section). The redirect addresses the app needs are already on the project.
 
 ### Apple, before an App Store release
 

@@ -57,11 +57,16 @@ The mobile app uses the browser flow, so no separate iOS/Android Google client I
 
 ## 3. Supabase redirect URLs
 
-**Authentication → URL Configuration → Redirect URLs** must include:
+Set on the live project (Authentication → URL Configuration → Redirect URLs):
 
-- `sodia://auth/callback` (mobile)
-- `http://localhost:3000/auth/callback` and `http://localhost:3000/auth/confirm` (local web)
-- `https://<production web domain>/auth/callback` and `/auth/confirm`
+| Address                               | Used by                                                       |
+| ------------------------------------- | ------------------------------------------------------------- |
+| `sodia://auth/callback`               | The installed mobile app                                      |
+| `exp://**`                            | The mobile app running inside Expo Go during development      |
+| `http://localhost:3000/auth/callback` | The web Business Suite on a developer's machine               |
+| `http://localhost:3000/auth/confirm`  | The web Business Suite's email links on a developer's machine |
+
+Before launch: remove `exp://**`, and add the production web address (`https://<your-domain>/auth/callback` and `/auth/confirm`). Also change **Site URL** from `http://localhost:3000` to the production web address.
 
 ## 4. Testing
 

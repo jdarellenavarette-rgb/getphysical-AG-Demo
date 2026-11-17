@@ -1,5 +1,9 @@
 # GetPhysical — QA & Production-Readiness Assessment
 
+> **Status note:** snapshot of the original audit (2026-11-06). Most P0 items (auth, tenant isolation, RLS,
+> append-only ledger, forgeable gate codes, exposed keys, insecure API routes, CI) have since been fixed —
+> see `docs/BACKEND.md`. Kept for history; do not read it as the current state.
+
 **Date:** 2026-11-06 · **Scope:** `apps/mobile` (Sodia, Expo), `apps/web` (Business Suite, Next.js), `packages/sodia-core` · **Commit audited:** `504c617`
 **Benchmark:** what a large consumer "super app" operator (Meta, Grab, Gojek-class) requires before shipping a multi-tenant B2B suite + B2C app to real users and real money.
 

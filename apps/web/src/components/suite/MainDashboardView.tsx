@@ -7,16 +7,12 @@ import { PerformanceTableCard } from "./PerformanceTableCard";
 import { EngagementGaugeCard } from "./EngagementGaugeCard";
 import { CoachAvailabilityCard } from "./CoachAvailabilityCard";
 import { CreateMessageModal } from "./CreateMessageModal";
-import { SpatialCalendar } from "../clubdash/SpatialCalendar";
 
 interface MainDashboardViewProps {
   suiteMode: SuiteMode;
-  onNavigateToSchedule?: () => void;
-  onNavigateToTriage?: () => void;
 }
 
-export function MainDashboardView({ suiteMode, onNavigateToSchedule }: MainDashboardViewProps) {
-  const [timeframe, setTimeframe] = useState("Today");
+export function MainDashboardView({ suiteMode }: MainDashboardViewProps) {
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
 
   return (
@@ -31,11 +27,8 @@ export function MainDashboardView({ suiteMode, onNavigateToSchedule }: MainDashb
       >
         <HeroPromoCard onCreateMessage={() => setIsMessageModalOpen(true)} suiteMode={suiteMode} />
 
-        <ActivityPerformanceSection timeframe={timeframe} setTimeframe={setTimeframe} suiteMode={suiteMode} />
+        <ActivityPerformanceSection suiteMode={suiteMode} />
       </div>
-
-      {/* Clubdash Spatial Facility Allocator: Integrated Directly Inside Clubdash */}
-      {suiteMode === "CLUBDASH" && <SpatialCalendar />}
 
       {/* Bottom Grid: Top Performance Table (Left) + Gauges/Coach (Right) */}
       <div
@@ -45,7 +38,7 @@ export function MainDashboardView({ suiteMode, onNavigateToSchedule }: MainDashb
           gap: "20px",
         }}
       >
-        <PerformanceTableCard suiteMode={suiteMode} onViewAll={() => onNavigateToSchedule?.()} />
+        <PerformanceTableCard suiteMode={suiteMode} />
 
         <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
           <EngagementGaugeCard suiteMode={suiteMode} />

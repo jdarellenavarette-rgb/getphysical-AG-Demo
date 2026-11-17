@@ -22,24 +22,15 @@ export interface BusinessSuiteShellProps {
   profileRoles: string[];
 }
 
-const SCHEDULE_TITLES: Record<SuiteMode, string> = {
-  GYMDASH: "Schedule",
-  CLUBDASH: "Court schedule",
-  COACHDASH: "Client schedule",
-  ORGANIZERDASH: "Match schedule",
-};
-const SALES_TITLES: Record<SuiteMode, string> = {
-  GYMDASH: "Front desk and sales",
-  CLUBDASH: "Front desk and sales",
-  COACHDASH: "Payouts",
-  ORGANIZERDASH: "Registrations and payouts",
-};
-const ATTENTION_TITLES: Record<SuiteMode, string> = {
-  GYMDASH: "Needs attention",
-  CLUBDASH: "Needs attention",
-  COACHDASH: "Client check-ins",
-  ORGANIZERDASH: "Participant check-in",
-};
+/**
+ * Court scheduling belongs to clubs, and the front desk and attention queue to
+ * venues with a door and a till. Coach and organizer workspaces do not get them.
+ */
+function tabsForMode(mode: SuiteMode): NavTab[] {
+  if (mode === "CLUBDASH") return ["DASHBOARD", "SPATIAL", "INBOX", "BILLING", "TRIAGE", "SETTINGS"];
+  if (mode === "GYMDASH") return ["DASHBOARD", "INBOX", "BILLING", "TRIAGE", "SETTINGS"];
+  return ["DASHBOARD", "INBOX", "SETTINGS"];
+}
 
 function TabPanel({ title, children }: { title: string; children: ReactNode }) {
   const { theme } = useSuiteTheme();
@@ -63,7 +54,10 @@ function BusinessSuiteInner({ facility, facilities, operatorName, profileRoles }
   const { theme } = useSuiteTheme();
   const availableModes = allowedSuiteModes(facility.registryType, profileRoles);
   const [suiteMode, setSuiteMode] = useState<SuiteMode>(availableModes[0]!);
-  const [activeTab, setActiveTab] = useState<NavTab>("DASHBOARD");
+  const [selectedTab, setActiveTab] = useState<NavTab>("DASHBOARD");
+  // Each workspace only offers the sections that apply to it.
+  const tabs = tabsForMode(suiteMode);
+  const activeTab = tabs.includes(selectedTab) ? selectedTab : "DASHBOARD";
 
   return (
     <div
@@ -75,7 +69,7 @@ function BusinessSuiteInner({ facility, facilities, operatorName, profileRoles }
         fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
       }}
     >
-      <NavigationDock activeTab={activeTab} onSelectTab={setActiveTab} />
+      <NavigationDock tabs={tabs} activeTab={activeTab} onSelectTab={setActiveTab} />
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, overflowY: "auto" }}>
         <SuiteHeader
@@ -91,12 +85,12 @@ function BusinessSuiteInner({ facility, facilities, operatorName, profileRoles }
           {activeTab === "DASHBOARD" && (
             <>
               <SampleDataNotice area="The dashboard" />
-              <MainDashboardView suiteMode={suiteMode} onNavigateToSchedule={() => setActiveTab("SPATIAL")} />
+              <MainDashboardView suiteMode={suiteMode} />
             </>
           )}
 
           {activeTab === "SPATIAL" && (
-            <TabPanel title={SCHEDULE_TITLES[suiteMode]}>
+            <TabPanel title="Court schedule">
               <SampleDataNotice area="The schedule" />
               <SpatialCalendar />
             </TabPanel>
@@ -112,14 +106,14 @@ function BusinessSuiteInner({ facility, facilities, operatorName, profileRoles }
           )}
 
           {activeTab === "BILLING" && (
-            <TabPanel title={SALES_TITLES[suiteMode]}>
+            <TabPanel title="Front desk and sales">
               <SampleDataNotice area="Door scanning and sales" />
               <DailyDash />
             </TabPanel>
           )}
 
           {activeTab === "TRIAGE" && (
-            <TabPanel title={ATTENTION_TITLES[suiteMode]}>
+            <TabPanel title="Needs attention">
               <SampleDataNotice area="This queue" />
               <TriageDashboard />
             </TabPanel>

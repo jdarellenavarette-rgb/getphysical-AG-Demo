@@ -11,14 +11,14 @@ export interface InboxTicket {
   athleteName: string;
   avatar: string;
   handle: string;
-  channel: "GATE_EXPIRATION" | "AT_RISK" | "FORM_CHECK" | "GENERAL_INQUIRY";
   lastMessage: string;
   time: string;
+  /** The member wrote last, so the thread is waiting on the facility. */
   unread: boolean;
-  status: "OPEN" | "RESOLVED";
+  isActiveMember: boolean;
   tag: string;
   tagColor: string;
-  athleteMeta: { membership: string; lastVisit: string; primary1RM?: string; phone: string };
+  athleteMeta: { membership: string; lastVisit: string };
   messages: { id: string; sender: "athlete" | "business"; text: string; time: string }[];
 }
 
@@ -53,17 +53,15 @@ function toTicket(thread: InboxThread): InboxTicket {
     athleteName: thread.athleteName,
     avatar: initials(thread.athleteName),
     handle: thread.athleteHandle ?? "",
-    channel: "GENERAL_INQUIRY",
     lastMessage: last?.body ?? "No messages yet",
     time: formatTime(thread.lastMessageAt),
     unread: Boolean(last && !last.fromFacility),
-    status: "OPEN",
-    tag: active ? "Active member" : "Inactive member",
+    isActiveMember: active,
+    tag: active ? "Active member" : "Not an active member",
     tagColor: active ? "#059669" : "#9CA3AF",
     athleteMeta: {
       membership: thread.membershipStatus ?? "—",
       lastVisit: thread.lastVisitAt ? new Date(thread.lastVisitAt).toLocaleString() : "No check-ins yet",
-      phone: "—",
     },
     messages: thread.messages.map((m) => ({
       id: m.id,

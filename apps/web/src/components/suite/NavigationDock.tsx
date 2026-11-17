@@ -7,15 +7,17 @@ import { useSuiteTheme } from "./theme";
 export type NavTab = "DASHBOARD" | "SPATIAL" | "INBOX" | "BILLING" | "TRIAGE" | "SETTINGS";
 
 interface NavigationDockProps {
+  /** Sections available in the current workspace. */
+  tabs: NavTab[];
   activeTab: NavTab;
   onSelectTab: (tab: NavTab) => void;
 }
 
-export function NavigationDock({ activeTab, onSelectTab }: NavigationDockProps) {
+export function NavigationDock({ tabs, activeTab, onSelectTab }: NavigationDockProps) {
   const { theme } = useSuiteTheme();
   const navItems: { id: NavTab; icon: LucideIcon; label: string }[] = [
     { id: "DASHBOARD", icon: Home, label: "Dashboard" },
-    { id: "SPATIAL", icon: Calendar, label: "Schedule" },
+    { id: "SPATIAL", icon: Calendar, label: "Court schedule" },
     { id: "INBOX", icon: MessageSquare, label: "Member inbox" },
     { id: "BILLING", icon: FileText, label: "Front desk and sales" },
     { id: "TRIAGE", icon: BarChart2, label: "Needs attention" },
@@ -63,49 +65,51 @@ export function NavigationDock({ activeTab, onSelectTab }: NavigationDockProps) 
 
         {/* Navigation Items Stack */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "14px", width: "100%" }}>
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeTab === item.id;
+          {navItems
+            .filter((item) => tabs.includes(item.id))
+            .map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
 
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => onSelectTab(item.id)}
-                title={item.label}
-                aria-label={item.label}
-                aria-current={isActive ? "page" : undefined}
-                style={{
-                  width: "46px",
-                  height: "42px",
-                  borderRadius: "14px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  cursor: "pointer",
-                  border: "none",
-                  transition: "all 0.2s ease",
-                  background: isActive ? "linear-gradient(135deg, #E11D48 0%, #BE123C 100%)" : "transparent",
-                  color: isActive ? "#FFFFFF" : theme.textMuted,
-                  boxShadow: isActive ? "0 4px 14px rgba(225, 29, 72, 0.35)" : "none",
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.color = theme.textPrimary;
-                    e.currentTarget.style.backgroundColor = theme.bgCardSecondary;
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.color = theme.textMuted;
-                    e.currentTarget.style.backgroundColor = "transparent";
-                  }
-                }}
-              >
-                <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
-              </button>
-            );
-          })}
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => onSelectTab(item.id)}
+                  title={item.label}
+                  aria-label={item.label}
+                  aria-current={isActive ? "page" : undefined}
+                  style={{
+                    width: "46px",
+                    height: "42px",
+                    borderRadius: "14px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    border: "none",
+                    transition: "all 0.2s ease",
+                    background: isActive ? "linear-gradient(135deg, #E11D48 0%, #BE123C 100%)" : "transparent",
+                    color: isActive ? "#FFFFFF" : theme.textMuted,
+                    boxShadow: isActive ? "0 4px 14px rgba(225, 29, 72, 0.35)" : "none",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.color = theme.textPrimary;
+                      e.currentTarget.style.backgroundColor = theme.bgCardSecondary;
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.color = theme.textMuted;
+                      e.currentTarget.style.backgroundColor = "transparent";
+                    }
+                  }}
+                >
+                  <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+                </button>
+              );
+            })}
         </div>
       </div>
     </nav>

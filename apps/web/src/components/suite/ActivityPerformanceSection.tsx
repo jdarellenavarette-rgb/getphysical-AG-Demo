@@ -1,26 +1,15 @@
 "use client";
 
 import React from "react";
-import {
-  Users,
-  CreditCard,
-  ChevronDown,
-  ArrowDownRight,
-  ArrowUpRight,
-  Calendar,
-  Trophy,
-  UserCheck,
-} from "lucide-react";
+import { Users, CreditCard, ArrowDownRight, ArrowUpRight, Calendar, Trophy, UserCheck } from "lucide-react";
 import { type SuiteMode } from "./HeroPromoCard";
 import { useSuiteTheme } from "./theme";
 
 interface ActivityPerformanceSectionProps {
-  timeframe: string;
-  setTimeframe: (t: string) => void;
   suiteMode: SuiteMode;
 }
 
-export function ActivityPerformanceSection({ timeframe, setTimeframe, suiteMode }: ActivityPerformanceSectionProps) {
+export function ActivityPerformanceSection({ suiteMode }: ActivityPerformanceSectionProps) {
   const { theme, isDark } = useSuiteTheme();
   const getMetrics = () => {
     switch (suiteMode) {
@@ -221,43 +210,6 @@ export function ActivityPerformanceSection({ timeframe, setTimeframe, suiteMode 
             {m.title}
           </h2>
           <span style={{ fontSize: "12px", color: theme.textMuted, fontWeight: 600 }}>{m.sub}</span>
-        </div>
-
-        {/* Time Selector Dropdown */}
-        <div style={{ position: "relative" }}>
-          <select
-            aria-label="Timeframe"
-            value={timeframe}
-            onChange={(e) => setTimeframe(e.target.value)}
-            style={{
-              backgroundColor: theme.bgCardSecondary,
-              color: theme.textPrimary,
-              border: `1px solid ${theme.borderColor}`,
-              borderRadius: "10px",
-              padding: "7px 28px 7px 14px",
-              fontSize: "12px",
-              fontWeight: 700,
-              cursor: "pointer",
-              appearance: "none",
-              outline: "none",
-            }}
-          >
-            <option value="Today">Today</option>
-            <option value="This Week">This Week</option>
-            <option value="This Month">This Month</option>
-            <option value="Q4 2026">Q4 2026</option>
-          </select>
-          <ChevronDown
-            size={13}
-            color={theme.textMuted}
-            style={{
-              position: "absolute",
-              right: "10px",
-              top: "50%",
-              transform: "translateY(-50%)",
-              pointerEvents: "none",
-            }}
-          />
         </div>
       </div>
 

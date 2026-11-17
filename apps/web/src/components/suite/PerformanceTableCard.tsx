@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ArrowUpRight, ArrowDownRight, ChevronRight } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { type SuiteMode } from "./HeroPromoCard";
 import { useSuiteTheme } from "./theme";
 
@@ -169,10 +169,9 @@ const ORGANIZER_DATA: TableRowData[] = [
 
 interface PerformanceTableCardProps {
   suiteMode: SuiteMode;
-  onViewAll: () => void;
 }
 
-export function PerformanceTableCard({ suiteMode, onViewAll }: PerformanceTableCardProps) {
+export function PerformanceTableCard({ suiteMode }: PerformanceTableCardProps) {
   const { theme } = useSuiteTheme();
   const getTableMeta = () => {
     switch (suiteMode) {
@@ -223,23 +222,6 @@ export function PerformanceTableCard({ suiteMode, onViewAll }: PerformanceTableC
         <h3 style={{ fontSize: "16px", fontWeight: 900, color: theme.textPrimary, letterSpacing: "-0.3px" }}>
           {meta.title}
         </h3>
-        <button
-          onClick={onViewAll}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "3px",
-            color: theme.accent,
-            fontSize: "12px",
-            fontWeight: 800,
-            transition: "opacity 0.2s",
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.7")}
-          onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
-        >
-          <span>View all</span>
-          <ChevronRight size={14} />
-        </button>
       </div>
 
       {/* Table */}

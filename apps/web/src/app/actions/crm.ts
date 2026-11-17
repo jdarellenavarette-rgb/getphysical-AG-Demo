@@ -210,3 +210,44 @@ export async function loadFacilityInbox(facilityId: string): Promise<ActionResul
   });
   return { ok: true, data: threads };
 }
+
+export interface BroadcastAudiences {
+  activeMembers: number;
+  /** Only segments this facility has actually set up. */
+  segments: { key: "SEGMENT_1" | "SEGMENT_2" | "SEGMENT_3"; label: string }[];
+}
+
+const SENDABLE_SEGMENT_KEYS = ["SEGMENT_1", "SEGMENT_2", "SEGMENT_3"] as const;
+
+/** Who a broadcast can reach: the real active-member count and the facility's own segments. */
+export async function loadBroadcastAudiences(facilityId: string): Promise<ActionResult<BroadcastAudiences>> {
+  const supabase = await createServerSupabase();
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user) return { ok: false, state: "session_expired", message: "Your session expired. Sign in again." };
+
+  const [members, segments] = await Promise.all([
+    supabase
+      .from("facility_memberships")
+      .select("user_id", { count: "exact", head: true })
+      .eq("facility_id", facilityId)
+      .eq("status", "ACTIVE"),
+    supabase
+      .from("facility_segments")
+      .select("key, label")
+      .eq("facility_id", facilityId)
+      .in("key", SENDABLE_SEGMENT_KEYS),
+  ]);
+  const firstError = members.error ?? segments.error;
+  if (firstError) return fromDbError(firstError);
+
+  return {
+    ok: true,
+    data: {
+      activeMembers: members.count ?? 0,
+      segments: (segments.data ?? []).flatMap((segment) => {
+        const key = SENDABLE_SEGMENT_KEYS.find((k) => k === segment.key);
+        return key ? [{ key, label: segment.label }] : [];
+      }),
+    },
+  };
+}

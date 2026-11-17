@@ -3,7 +3,12 @@
 import React, { useEffect, useRef, useState, useTransition } from "react";
 import { X, Send, CheckCircle } from "lucide-react";
 import { type SuiteMode } from "./HeroPromoCard";
-import { sendCrmBroadcast, type BroadcastSummary } from "../../app/actions/crm";
+import {
+  loadBroadcastAudiences,
+  sendCrmBroadcast,
+  type BroadcastAudiences,
+  type BroadcastSummary,
+} from "../../app/actions/crm";
 import { useActiveFacility } from "./ActiveFacilityContext";
 
 interface CreateMessageModalProps {
@@ -25,7 +30,20 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
   const [isPending, startTransition] = useTransition();
   const facility = useActiveFacility();
 
+  const [audiences, setAudiences] = useState<BroadcastAudiences | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
+
+  // Real reach for this facility: active members and any segments it has set up.
+  useEffect(() => {
+    if (!visible) return;
+    let cancelled = false;
+    void loadBroadcastAudiences(facility.id).then((result) => {
+      if (!cancelled && result.ok) setAudiences(result.data);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [visible, facility.id]);
   const onCloseRef = useRef(onClose);
   useEffect(() => {
     onCloseRef.current = onClose;
@@ -54,58 +72,34 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
         return {
           title: "Facility & Affiliated Club Broadcast",
           sub: "Broadcast court schedule changes and affiliated club notices",
-          segments: [
-            { id: "ALL", label: "All Players" },
-            { id: "SEGMENT_1", label: "Affiliated Clubs" },
-            { id: "SEGMENT_2", label: "Peak Court Bookers" },
-            { id: "SEGMENT_3", label: "Tournament Entrants" },
-          ],
           placeholderTitle: "e.g. Court 3 & 4 Resurfacing Scheduled for Tomorrow 06:00-10:00",
           placeholderBody: "Notice to all affiliated leagues: Alternate slots reserved in Court Alpha.",
-          promoLabel: "Attach Court Booking Credit (Optional)",
+          promoLabel: "Promo code to show in the message (optional)",
         };
       case "COACHDASH":
         return {
           title: "Coach Client CRM & Program Nudge",
           sub: "Send macrocycle updates, recovery reminders, and client nudges",
-          segments: [
-            { id: "ALL", label: "All Clients" },
-            { id: "SEGMENT_1", label: "Hypertrophy Track" },
-            { id: "SEGMENT_2", label: "Hyrox Endurance" },
-            { id: "SEGMENT_3", label: "At-Risk / Missing Logs" },
-          ],
           placeholderTitle: "e.g. Week 4 Deload & 1RM Progression Check",
           placeholderBody: "Ensure your post-workout heart rates and video form checks are logged today.",
-          promoLabel: "Attach Session Pack Bonus (Optional)",
+          promoLabel: "Promo code to show in the message (optional)",
         };
       case "ORGANIZERDASH":
         return {
           title: "Tournament Participant Broadcast",
           sub: "Dispatch bracket updates, check-in calls, and rule packs",
-          segments: [
-            { id: "ALL", label: "All Participants" },
-            { id: "SEGMENT_1", label: "Men / Women Open" },
-            { id: "SEGMENT_2", label: "Mixed Doubles" },
-            { id: "SEGMENT_3", label: "Unverified Waivers" },
-          ],
           placeholderTitle: "e.g. Official Bracket Draw Released & Court Allocation Finalized",
           placeholderBody: "All team captains must check in at Gate B 30 minutes prior to first whistle.",
-          promoLabel: "Attach Spectator Pass Code (Optional)",
+          promoLabel: "Promo code to show in the message (optional)",
         };
       case "GYMDASH":
       default:
         return {
           title: "Manage Messaging & Promos",
           sub: "Send newsletters, promos, and reminders within your gym",
-          segments: [
-            { id: "ALL", label: "All Active" },
-            { id: "SEGMENT_1", label: "At-Risk" },
-            { id: "SEGMENT_2", label: "VIP Pass" },
-            { id: "SEGMENT_3", label: "Class Enrollees" },
-          ],
           placeholderTitle: "e.g. Flash 48-Hour Recovery Clinic & Sauna Access",
           placeholderBody: "Exclusive recovery masterclass with verified PR reviews this Saturday.",
-          promoLabel: "Attach Promo Voucher (Optional)",
+          promoLabel: "Promo code to show in the message (optional)",
         };
     }
   };
@@ -222,7 +216,9 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
             <CheckCircle size={48} color="#10B981" style={{ margin: "0 auto 14px" }} />
             <h4 style={{ fontSize: "18px", fontWeight: 800, color: "#FFFFFF" }}>Broadcast sent</h4>
             <p style={{ fontSize: "12px", color: "#9CA3AF", marginTop: "6px" }}>
-              Delivered to {recipientCount} {recipientCount === 1 ? "member" : "members"} of {facility.name}.
+              {recipientCount === 0
+                ? `No active members of ${facility.name} to receive it, so nothing was delivered.`
+                : `Delivered to ${recipientCount} ${recipientCount === 1 ? "member" : "members"} of ${facility.name}.`}
             </p>
           </div>
         ) : (
@@ -240,20 +236,25 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
                   marginBottom: "6px",
                 }}
               >
-                Audience Segment
+                Audience
               </label>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px" }}>
-                {cfg.segments.map((aud) => (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                {[
+                  { id: "ALL" as const, label: "All active members" },
+                  ...(audiences?.segments ?? []).map((segment) => ({ id: segment.key, label: segment.label })),
+                ].map((aud) => (
                   <button
                     key={aud.id}
-                    onClick={() => setAudience(aud.id as typeof audience)}
+                    type="button"
+                    aria-pressed={audience === aud.id}
+                    onClick={() => setAudience(aud.id)}
                     style={{
-                      padding: "8px 4px",
+                      padding: "8px 12px",
                       borderRadius: "10px",
-                      fontSize: "11px",
+                      fontSize: "12px",
                       fontWeight: 700,
-                      backgroundColor: audience === aud.id ? "#FF5364" : "#181B24",
-                      color: audience === aud.id ? "#FFFFFF" : "#9CA3AF",
+                      backgroundColor: audience === aud.id ? "#E11D48" : "#181B24",
+                      color: audience === aud.id ? "#FFFFFF" : "#D1D5DB",
                       border: "1px solid rgba(255, 255, 255, 0.08)",
                       cursor: "pointer",
                     }}
@@ -262,6 +263,15 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
                   </button>
                 ))}
               </div>
+              <p style={{ fontSize: "12px", color: "#D1D5DB", margin: "8px 0 0" }}>
+                {audiences === null
+                  ? "Checking who this will reach…"
+                  : audience !== "ALL"
+                    ? "Goes to the active members in this segment."
+                    : audiences.activeMembers === 0
+                      ? `${facility.name} has no active members yet, so nobody would receive this.`
+                      : `Goes to ${audiences.activeMembers} active ${audiences.activeMembers === 1 ? "member" : "members"} of ${facility.name}.`}
+              </p>
             </div>
 
             {/* Headline */}
@@ -402,7 +412,7 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
             {/* Submit Button */}
             <button
               onClick={handleSend}
-              disabled={isPending}
+              disabled={isPending || (audience === "ALL" && audiences?.activeMembers === 0)}
               style={{
                 marginTop: "10px",
                 padding: "12px",

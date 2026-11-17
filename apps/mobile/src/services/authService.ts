@@ -70,5 +70,8 @@ export async function completeProfile(input: ProfileSetupInput): Promise<AuthRes
 }
 
 export async function signOut(): Promise<void> {
-  await client().auth.signOut();
+  const supabase = getSupabase();
+  if (supabase) {
+    await supabase.auth.signOut();
+  }
 }

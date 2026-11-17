@@ -28,6 +28,8 @@ export interface MobileEcosystemState {
   challenges: readonly PRChallengeRow[];
   userStory: { image: string; text?: string; createdAt: string } | null;
   isOffline: boolean;
+  isGuest: boolean;
+  setIsGuest: (isGuest: boolean) => void;
   activeWorkout: {
     title: string;
     durationSeconds: number;
@@ -99,6 +101,8 @@ export const useEcosystemStore = create<MobileEcosystemState>((set) => ({
     createdAt: new Date().toISOString(),
   },
   isOffline: false,
+  isGuest: false,
+  setIsGuest: (isGuest) => set({ isGuest }),
   activeWorkout: {
     title: "",
     durationSeconds: 0,

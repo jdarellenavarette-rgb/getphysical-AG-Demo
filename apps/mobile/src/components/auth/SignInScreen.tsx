@@ -11,8 +11,13 @@ import { SocialSignInButtons } from "./SocialSignInButtons";
 const emailForm = z.object({ email: emailSchema });
 const codeForm = z.object({ code: emailOtpSchema });
 
-/** Passwordless sign-in / sign-up with a one-time email code. */
-export function SignInScreen() {
+interface SignInScreenProps {
+  onContinueAsGuest?: () => void;
+}
+
+/** Passwordless sign-in / sign-up with Google, Apple, or email code. */
+export function SignInScreen({ onContinueAsGuest }: SignInScreenProps) {
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -31,7 +36,6 @@ export function SignInScreen() {
     if (!email) return;
     setFormError(null);
     const result = await verifyEmailCode(email, code);
-    // Success: the auth gate reacts to the SIGNED_IN event and moves on.
     if (!result.ok) codeStep.setError("code", { message: result.message });
   });
 
@@ -41,12 +45,25 @@ export function SignInScreen() {
     <KeyboardAvoidingView style={s.screen} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
         <Text style={s.brand}>GETPHYSICAL · SODIA</Text>
-        <Text style={s.title}>{email ? "Check your email" : "Sign in or create an account"}</Text>
+        <Text style={s.title}>{email ? "Check your email" : mode === "signup" ? "Create your account" : "Welcome back"}</Text>
         <Text style={s.subtitle}>
-          {email ? `We sent a code to ${email}. It expires in a few minutes.` : "Continue with Apple or Google, or get a one-time code by email."}
+          {email
+            ? `We sent a code to ${email}. It expires in a few minutes.`
+            : "Sign in or sign up with Google, Apple, or email to sync your training & passes."}
         </Text>
 
-        {!email && <SocialSignInButtons onError={setFormError} />}
+        {!email && (
+          <View style={s.modeContainer}>
+            <TouchableOpacity onPress={() => setMode("signin")} style={[s.modeTab, mode === "signin" && s.modeTabActive]}>
+              <Text style={[s.modeTabText, mode === "signin" && s.modeTabTextActive]}>Sign In</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setMode("signup")} style={[s.modeTab, mode === "signup" && s.modeTabActive]}>
+              <Text style={[s.modeTabText, mode === "signup" && s.modeTabTextActive]}>Sign Up</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {!email && <SocialSignInButtons mode={mode} onError={setFormError} />}
 
         {!email ? (
           <Controller
@@ -54,7 +71,7 @@ export function SignInScreen() {
             name="email"
             render={({ field, fieldState }) => (
               <View style={s.field}>
-                <Text style={s.label}>Email</Text>
+                <Text style={s.label}>Email Address</Text>
                 <TextInput
                   value={field.value}
                   onChangeText={field.onChange}
@@ -79,7 +96,7 @@ export function SignInScreen() {
             name="code"
             render={({ field, fieldState }) => (
               <View style={s.field}>
-                <Text style={s.label}>Code</Text>
+                <Text style={s.label}>Verification Code</Text>
                 <TextInput
                   value={field.value}
                   onChangeText={(v) => field.onChange(v.replace(/\D/g, "").slice(0, 8))}
@@ -106,10 +123,14 @@ export function SignInScreen() {
           style={[s.button, busy && s.buttonDisabled]}
           accessibilityRole="button"
         >
-          {busy ? <ActivityIndicator color="#FFFFFF" /> : <Text style={s.buttonText}>{email ? "Verify" : "Email me a code"}</Text>}
+          {busy ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <Text style={s.buttonText}>{email ? "Verify Code" : mode === "signup" ? "Sign Up with Email" : "Sign In with Email"}</Text>
+          )}
         </TouchableOpacity>
 
-        {email && (
+        {email ? (
           <>
             <TouchableOpacity onPress={() => void sendEmailCode(email)} disabled={busy}>
               <Text style={s.link}>Resend code</Text>
@@ -118,7 +139,13 @@ export function SignInScreen() {
               <Text style={s.link}>Use a different email</Text>
             </TouchableOpacity>
           </>
-        )}
+        ) : onContinueAsGuest ? (
+          <TouchableOpacity onPress={onContinueAsGuest} style={s.guestButton} accessibilityRole="button">
+            <Text style={s.guestButtonTitle}>Explore as Guest</Text>
+            <Text style={s.guestButtonSubtitle}>Preview Darelle Navarette&apos;s athlete demo &amp; all features</Text>
+          </TouchableOpacity>
+        ) : null}
+
         <Text style={s.fine}>By continuing you agree to the GetPhysical Terms and Privacy Policy.</Text>
       </ScrollView>
     </KeyboardAvoidingView>

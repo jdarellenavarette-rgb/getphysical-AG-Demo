@@ -29,7 +29,6 @@ import { useCrmMessagingStore } from "./store/crmMessagingStore";
 import { CrmToastBanner } from "./components/common/CrmToastBanner";
 import { useThemeStore } from "./theme/theme";
 import type { FacilityRow } from "sodia-core";
-import { OpeningLoadingScreen } from "./components/common/OpeningLoadingScreen";
 import { useCheckout } from "./hooks/useCheckout";
 
 export default function App() {
@@ -50,7 +49,6 @@ export default function App() {
   const [isStaffDashOpen, setIsStaffDashOpen] = useState(false);
   const [isCoachDashOpen, setIsCoachDashOpen] = useState(false);
   const [isOrganizerOpen, setIsOrganizerOpen] = useState(false);
-  const [isOpeningLoading, setIsOpeningLoading] = useState(true);
 
   const { provisionPass, facilities } = useEcosystemStore();
   const { colors } = useThemeStore();
@@ -73,8 +71,6 @@ export default function App() {
   return (
     <View style={[styles.screenContainer, { paddingTop: Math.max(insets.top, 48), backgroundColor: colors.bgScreen }]}>
       <StatusBar barStyle={colors.statusBarStyle} />
-
-      {isOpeningLoading && <OpeningLoadingScreen onFinish={() => setIsOpeningLoading(false)} />}
 
       <CrmToastBanner
         onPressToast={(threadId) => {

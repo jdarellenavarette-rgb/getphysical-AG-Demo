@@ -141,7 +141,7 @@ export function StoryViewerModal({ visible, initialStoryId, onClose, onTapLocati
         <TouchableOpacity onPress={handleNext} style={styles.rightTapZone} />
 
         {/* SEGMENTED PROGRESS BARS */}
-        <View style={[styles.progressRow, { paddingTop: Math.max(insets.top, 48) + 6 }]}>
+        <View style={[styles.progressRow, { paddingTop: insets.top + 6 }]}>
           {stories.map((s, i) => (
             <View key={s.id} style={styles.segmentTrack}>
               <View

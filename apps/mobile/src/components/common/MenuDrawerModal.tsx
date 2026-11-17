@@ -47,7 +47,7 @@ export function MenuDrawerModal({
         >
           {/* TOP DRAWER HEADER */}
           <View style={[styles.header, { borderBottomColor: colors.borderColor }]}>
-            <Text style={[styles.headerTitle, { color: colors.textMuted }]}>NAVIGATION & MENU</Text>
+            <Text style={[styles.headerTitle, { color: colors.textMuted }]}>MENU</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
               <X size={20} color={colors.textPrimary} />
             </TouchableOpacity>
@@ -79,7 +79,7 @@ export function MenuDrawerModal({
             </TouchableOpacity>
 
             {/* 2. CORE APP NAVIGATION */}
-            <Text style={[styles.sectionHeader, { color: colors.textMuted }]}>APP HUBS</Text>
+            <Text style={[styles.sectionHeader, { color: colors.textMuted }]}>GO TO</Text>
 
             <TouchableOpacity
               onPress={() => {
@@ -92,8 +92,8 @@ export function MenuDrawerModal({
                 <Home size={18} color={colors.textPrimary} />
               </View>
               <View style={styles.navTextWrap}>
-                <Text style={[styles.navTitle, { color: colors.textPrimary }]}>Community Feed</Text>
-                <Text style={[styles.navSubtitle, { color: colors.textMuted }]}>Daily Hustle, stories & workouts</Text>
+                <Text style={[styles.navTitle, { color: colors.textPrimary }]}>Feed</Text>
+                <Text style={[styles.navSubtitle, { color: colors.textMuted }]}>Posts and stories</Text>
               </View>
               <ChevronRight size={16} color={colors.textMuted} />
             </TouchableOpacity>
@@ -109,7 +109,7 @@ export function MenuDrawerModal({
                 <Compass size={18} color={colors.textPrimary} />
               </View>
               <View style={styles.navTextWrap}>
-                <Text style={[styles.navTitle, { color: colors.textPrimary }]}>Venues & Coaches</Text>
+                <Text style={[styles.navTitle, { color: colors.textPrimary }]}>Venues</Text>
                 <Text style={[styles.navSubtitle, { color: colors.textMuted }]}>Gyms, courts & coaches near you</Text>
               </View>
               <ChevronRight size={16} color={colors.textMuted} />
@@ -126,8 +126,8 @@ export function MenuDrawerModal({
                 <Dumbbell size={18} color={colors.textPrimary} />
               </View>
               <View style={styles.navTextWrap}>
-                <Text style={[styles.navTitle, { color: colors.textPrimary }]}>Activity & Nutrition</Text>
-                <Text style={[styles.navSubtitle, { color: colors.textMuted }]}>Lift, GPS Move, Macros & Journey</Text>
+                <Text style={[styles.navTitle, { color: colors.textPrimary }]}>Track</Text>
+                <Text style={[styles.navSubtitle, { color: colors.textMuted }]}>Workouts, runs, food and history</Text>
               </View>
               <ChevronRight size={16} color={colors.textMuted} />
             </TouchableOpacity>
@@ -143,7 +143,7 @@ export function MenuDrawerModal({
                 <CreditCard size={18} color={colors.textPrimary} />
               </View>
               <View style={styles.navTextWrap}>
-                <Text style={[styles.navTitle, { color: colors.textPrimary }]}>Passes & VIP Wallet</Text>
+                <Text style={[styles.navTitle, { color: colors.textPrimary }]}>Wallet</Text>
                 <Text style={[styles.navSubtitle, { color: colors.textMuted }]}>Entry QR, passes & receipts</Text>
               </View>
               <ChevronRight size={16} color={colors.textMuted} />
@@ -160,8 +160,8 @@ export function MenuDrawerModal({
                 <SettingsIcon size={18} color={colors.textPrimary} />
               </View>
               <View style={styles.navTextWrap}>
-                <Text style={[styles.navTitle, { color: colors.textPrimary }]}>Settings & Preferences</Text>
-                <Text style={[styles.navSubtitle, { color: colors.textMuted }]}>Appearance, sensors & roles</Text>
+                <Text style={[styles.navTitle, { color: colors.textPrimary }]}>Settings</Text>
+                <Text style={[styles.navSubtitle, { color: colors.textMuted }]}>Appearance and account</Text>
               </View>
               <ChevronRight size={16} color={colors.textMuted} />
             </TouchableOpacity>
@@ -178,7 +178,7 @@ export function MenuDrawerModal({
                   }}
                   style={[styles.toolBtn, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}
                 >
-                  <RefreshCw size={16} color="#EC4899" />
+                  <RefreshCw size={16} color="#E11D48" />
                   <View style={styles.toolTextWrap}>
                     <Text style={[styles.toolTitle, { color: colors.textPrimary }]}>Reset to Empty State</Text>
                     <Text style={[styles.toolDesc, { color: colors.textMuted }]}>

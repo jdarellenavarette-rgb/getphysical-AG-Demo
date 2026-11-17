@@ -87,7 +87,7 @@ export function DiscoverMapCanvas({
         renderLoading={() => (
           <View style={[styles.loadingBox, { backgroundColor: colors.bgScreen }]}>
             <ActivityIndicator size="small" color="#E11D48" />
-            <Text style={[styles.loadingText, { color: colors.textMuted }]}>Mobilizing GPS Radar...</Text>
+            <Text style={[styles.loadingText, { color: colors.textMuted }]}>Loading map…</Text>
           </View>
         )}
         startInLoadingState

@@ -37,7 +37,7 @@ export function TrackHub() {
         </View>
         <View style={styles.summaryItem}>
           <Text style={[styles.summaryVal, { color: colors.textPrimary }]}>{totalGpsKm} km</Text>
-          <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>GPS Move</Text>
+          <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>Distance</Text>
         </View>
         <TouchableOpacity onPress={() => setIsNasmOpen(true)} style={styles.summaryItem}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>

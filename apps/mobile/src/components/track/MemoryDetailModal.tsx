@@ -82,7 +82,7 @@ export function MemoryDetailModal({ visible, item, onClose }: MemoryDetailModalP
             {/* ACTIONS */}
             <TouchableOpacity onPress={handleShareToFeed} style={styles.shareBtn}>
               <Send size={16} color="#FFF" style={{ marginRight: 8 }} />
-              <Text style={styles.shareBtnText}>Share Stamp to Sodia Feed</Text>
+              <Text style={styles.shareBtnText}>Share to Feed</Text>
             </TouchableOpacity>
           </ScrollView>
         </View>

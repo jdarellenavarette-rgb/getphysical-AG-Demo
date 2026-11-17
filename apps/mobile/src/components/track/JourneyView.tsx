@@ -1,9 +1,21 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
-import { Sparkles } from "lucide-react-native";
+import { TrendingUp } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import { useTrackingStore } from "../../store/trackingStore";
 import { MemoryDetailModal, type JourneyMemoryItem } from "./MemoryDetailModal";
+import { EmptyState } from "../common/EmptyState";
+
+const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+/** Rough energy cost of lifting: about 6.5 kcal a minute. */
+const liftCalories = (durationSeconds: number): number => Math.round((durationSeconds / 60) * 6.5);
+
+function formatDay(iso: string): string {
+  const date = new Date(iso);
+  if (date.toDateString() === new Date().toDateString()) return "Today";
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
 
 export function JourneyView() {
   const { colors } = useThemeStore();
@@ -11,49 +23,57 @@ export function JourneyView() {
   const [showAllActivities, setShowAllActivities] = useState(false);
   const [selectedMemory, setSelectedMemory] = useState<JourneyMemoryItem | null>(null);
 
-  const weeklyBars = [
-    { day: "Sun", height: 45, isPeak: false },
-    { day: "Mon", height: 75, isPeak: false },
-    { day: "Tue", height: 60, isPeak: false },
-    { day: "Wed", height: 95, isPeak: true },
-    { day: "Thu", height: 50, isPeak: false },
-    { day: "Fri", height: 80, isPeak: false },
-    { day: "Sat", height: 35, isPeak: false },
+  // Calories burned per day for the last seven days, ending today.
+  const burnedEntries = [
+    ...moveActivities.map((a) => ({ date: a.date, kcal: a.caloriesBurned })),
+    ...liftSessions.map((l) => ({ date: l.date, kcal: liftCalories(l.durationSeconds) })),
   ];
+  const today = new Date();
+  const week = Array.from({ length: 7 }, (_, i) => {
+    const day = new Date(today);
+    day.setDate(today.getDate() - (6 - i));
+    const key = day.toDateString();
+    const kcal = burnedEntries.filter((e) => new Date(e.date).toDateString() === key).reduce((s, e) => s + e.kcal, 0);
+    return { label: DAY_LABELS[day.getDay()]!, kcal, isToday: i === 6 };
+  });
+  const weekBurned = week.reduce((s, d) => s + d.kcal, 0);
+  const weekMax = Math.max(...week.map((d) => d.kcal), 1);
+  const weekSessions = burnedEntries.filter(
+    (e) => today.getTime() - new Date(e.date).getTime() < 7 * 86_400_000,
+  ).length;
 
-  const totalBurned =
-    moveActivities.reduce((s, a) => s + a.caloriesBurned, 0) +
-    liftSessions.reduce((s, l) => s + Math.round((l.durationSeconds / 60) * 6.5), 0);
-
-  const memories: JourneyMemoryItem[] = [
+  const memories: (JourneyMemoryItem & { date: string })[] = [
     ...moveActivities.map((m) => ({
       id: m.id,
+      date: m.date,
       title: m.title,
-      venue: "GPS route",
-      duration: `${Math.floor(m.durationSeconds / 60)} mins`,
-      time: "Recorded GPS",
+      venue: `${m.distanceKm.toFixed(2)} km`,
+      duration: `${Math.floor(m.durationSeconds / 60)} min`,
+      time: formatDay(m.date),
       cals: `${m.caloriesBurned} kcal`,
-      badge: `${m.sport === "cycling" ? "🚴" : m.sport === "pickleball" ? "🎾" : "🏃"} ${m.sport.toUpperCase()}`,
+      badge: m.sport.toUpperCase(),
     })),
     ...liftSessions.map((l) => ({
       id: l.id,
+      date: l.date,
       title: l.title,
-      venue: `${l.exercises[0]?.name || "Strength"} (${l.totalVolumeKg.toLocaleString()} kg)`,
-      duration: `${Math.floor(l.durationSeconds / 60)} mins`,
-      time: "Strength Session",
-      cals: `${Math.round((l.durationSeconds / 60) * 6.5)} kcal`,
-      badge: "🏋️ STRENGTH",
+      venue: `${l.exercises[0]?.name || "Strength"} • ${l.totalVolumeKg.toLocaleString()} kg`,
+      duration: `${Math.floor(l.durationSeconds / 60)} min`,
+      time: formatDay(l.date),
+      cals: `${liftCalories(l.durationSeconds)} kcal`,
+      badge: "STRENGTH",
     })),
     ...foodMeals.map((f) => ({
       id: f.id,
+      date: f.date,
       title: f.name,
-      venue: `P: ${f.totalP}g • C: ${f.totalC}g • F: ${f.totalF}g`,
-      duration: `${f.items.length} items`,
-      time: "Oracle AI Meal",
+      venue: `P ${f.totalP} g • C ${f.totalC} g • F ${f.totalF} g`,
+      duration: `${f.items.length} ${f.items.length === 1 ? "item" : "items"}`,
+      time: formatDay(f.date),
       cals: `${f.totalCal} kcal`,
-      badge: "🥗 ORACLE FOOD",
+      badge: "MEAL",
     })),
-  ];
+  ].sort((a, b) => b.date.localeCompare(a.date));
 
   const displayedMemories = showAllActivities ? memories : memories.slice(0, 4);
 
@@ -63,43 +83,43 @@ export function JourneyView() {
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      {/* 1. MY JOURNEY HERO HEADER */}
       <View
         style={[styles.heroCard, { backgroundColor: colors.bgCard, borderColor: colors.borderLight, borderWidth: 1 }]}
       >
-        <View style={styles.heroTopRow}>
-          <View>
-            <Text style={[styles.heroTitle, { color: colors.textPrimary }]}>My Journey</Text>
-            <View style={styles.progressSubtitleRow}>
-              <Sparkles size={13} color="#E11D48" />
-              <Text style={styles.progressSubtitle}>Personal Progress & Memories</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* KCAL TOTAL BURNED */}
+        <Text style={[styles.heroEyebrow, { color: colors.textMuted }]}>LAST 7 DAYS</Text>
         <View style={styles.calHeroBlock}>
-          <Text style={styles.calUnit}>Kcal </Text>
-          <Text style={[styles.calValue, { color: colors.textPrimary }]}>{totalBurned}</Text>
+          <Text style={[styles.calValue, { color: colors.textPrimary }]}>{weekBurned.toLocaleString()}</Text>
+          <Text style={[styles.calUnit, { color: colors.textSecondary }]}> kcal burned</Text>
         </View>
-        <Text style={[styles.calSublabel, { color: colors.textSecondary }]}>Total Calories Burned Recorded</Text>
+        <Text style={[styles.calSublabel, { color: colors.textSecondary }]}>
+          {weekSessions === 0
+            ? "Log a workout or a run to start your week."
+            : `${weekSessions} ${weekSessions === 1 ? "session" : "sessions"} this week`}
+        </Text>
 
-        {/* WEEKLY BAR CHART */}
-        <View style={styles.chartWrapper}>
+        <View style={styles.chartWrapper} accessibilityLabel="Calories burned per day this week">
           <View style={styles.barsContainer}>
-            {weeklyBars.map((bar) => (
-              <View key={bar.day} style={styles.barColumn}>
+            {week.map((day, i) => (
+              <View key={`${day.label}_${i}`} style={styles.barColumn}>
                 <View style={[styles.barTrack, { backgroundColor: colors.bgCardSecondary }]}>
                   <View
                     style={[
                       styles.barFill,
-                      { height: `${bar.height}%`, backgroundColor: colors.borderLight },
-                      bar.isPeak && styles.barFillPeak,
+                      {
+                        height: `${Math.round((day.kcal / weekMax) * 100)}%`,
+                        backgroundColor: day.isToday ? colors.accent : colors.textMuted,
+                      },
                     ]}
                   />
                 </View>
-                <Text style={[styles.barDayText, { color: colors.textMuted }, bar.isPeak && styles.barDayTextPeak]}>
-                  {bar.day}
+                <Text
+                  style={[
+                    styles.barDayText,
+                    { color: day.isToday ? colors.accent : colors.textMuted },
+                    day.isToday && { fontWeight: "800" },
+                  ]}
+                >
+                  {day.label}
                 </Text>
               </View>
             ))}
@@ -107,15 +127,27 @@ export function JourneyView() {
         </View>
       </View>
 
-      {/* 2. ACTIVITY HISTORY & MEMORIES LIST */}
       <View style={styles.sectionHeaderRow}>
-        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>
-          TRACK MEMORIES & HISTORY ({memories.length})
-        </Text>
-        <TouchableOpacity onPress={() => setShowAllActivities(!showAllActivities)}>
-          <Text style={styles.viewAllText}>{showAllActivities ? "Show Less" : "View All"}</Text>
-        </TouchableOpacity>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>HISTORY</Text>
+        {memories.length > 4 && (
+          <TouchableOpacity
+            onPress={() => setShowAllActivities(!showAllActivities)}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            accessibilityRole="button"
+          >
+            <Text style={styles.viewAllText}>{showAllActivities ? "Show less" : "View all"}</Text>
+          </TouchableOpacity>
+        )}
       </View>
+
+      {memories.length === 0 && (
+        <EmptyState
+          compact
+          icon={TrendingUp}
+          title="No activity yet"
+          body="Workouts, runs and meals you log will appear here."
+        />
+      )}
 
       <View style={styles.activitiesList}>
         {displayedMemories.map((act) => (
@@ -147,6 +179,7 @@ export function JourneyView() {
 }
 
 const styles = StyleSheet.create({
+  heroEyebrow: { fontSize: 11, fontWeight: "800", letterSpacing: 0.8 },
   container: { flex: 1 },
   content: { padding: 16, paddingBottom: 110 },
   heroCard: {
@@ -173,10 +206,10 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   streakBadgeText: { color: "#D97706", fontSize: 11, fontWeight: "800" },
-  calHeroBlock: { flexDirection: "row", alignItems: "baseline", justifyContent: "center", marginTop: 18 },
-  calUnit: { color: "#E11D48", fontSize: 20, fontWeight: "800" },
+  calHeroBlock: { flexDirection: "row", alignItems: "baseline", marginTop: 6 },
+  calUnit: { fontSize: 15, fontWeight: "600" },
   calValue: { fontSize: 40, fontWeight: "900", letterSpacing: -1 },
-  calSublabel: { textAlign: "center", fontSize: 12, fontWeight: "600", marginTop: 2 },
+  calSublabel: { fontSize: 13, marginTop: 2 },
   chartWrapper: { marginTop: 22, marginBottom: 18 },
   barsContainer: {
     flexDirection: "row",

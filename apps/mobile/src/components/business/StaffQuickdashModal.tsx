@@ -71,7 +71,7 @@ export function StaffQuickdashModal({ visible, onClose }: StaffQuickdashModalPro
           style={[
             styles.topBar,
             {
-              paddingTop: Math.max(insets.top, 50) + 10,
+              paddingTop: insets.top + 10,
               backgroundColor: colors.bgHeader,
               borderBottomColor: colors.borderColor,
             },
@@ -93,7 +93,7 @@ export function StaffQuickdashModal({ visible, onClose }: StaffQuickdashModalPro
             <Text style={[styles.venueTitle, { color: colors.textPrimary }]}>
               Metro Core Arena • Turnstile Station #1
             </Text>
-            <Text style={[styles.venueSub, { color: colors.textMuted }]}>Hardware TOTP & DTR Attendance Validator</Text>
+            <Text style={[styles.venueSub, { color: colors.textMuted }]}>Scan member passes and staff check-ins</Text>
             <TouchableOpacity
               onPress={() => setIsScannerOpen(true)}
               accessibilityRole="button"

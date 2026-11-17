@@ -3,6 +3,7 @@ import { View, TouchableOpacity, StyleSheet, Text } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Home, Compass, Plus, Dumbbell, CreditCard } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
+import { haptics } from "../../lib/haptics";
 
 export type MobileTab = "sodia" | "discover" | "track" | "cards" | "profile";
 
@@ -12,7 +13,11 @@ interface BottomBarProps {
   onPressCreate?: () => void;
 }
 
-export function BottomBar({ currentTab, onSelectTab, onPressCreate }: BottomBarProps) {
+export function BottomBar({ currentTab, onSelectTab: selectTab, onPressCreate }: BottomBarProps) {
+  const onSelectTab = (tab: MobileTab) => {
+    if (tab !== currentTab) haptics.tap();
+    selectTab(tab);
+  };
   const insets = useSafeAreaInsets();
   const bottomOffset = Math.max(insets.bottom, 10);
   const { colors, themeMode } = useThemeStore();

@@ -18,6 +18,7 @@ import { SODIA_FIELD_LIMITS } from "sodia-core";
 import { PostMediaAttachmentBar } from "./PostMediaAttachmentBar";
 import { Avatar } from "../common/Avatar";
 import { formatClipDuration, usePostMedia } from "../../hooks/usePostMedia";
+import { haptics } from "../../lib/haptics";
 
 interface CreatePostModalProps {
   visible: boolean;
@@ -85,6 +86,7 @@ export function CreatePostModal({ visible, onClose, onOpenStoryCamera, defaultMo
     } else {
       addPost(text, selectedFacilityId ?? undefined, undefined, media?.uri ?? null);
     }
+    haptics.success();
     handleClose();
   };
 
@@ -152,7 +154,7 @@ export function CreatePostModal({ visible, onClose, onOpenStoryCamera, defaultMo
                 <Text style={[styles.authorName, { color: colors.textPrimary }]}>
                   {profile.first_name} {profile.last_name}
                 </Text>
-                <Text style={styles.privacyPill}>Public • Sodia Feed</Text>
+                <Text style={styles.privacyPill}>Public</Text>
               </View>
             </View>
 
@@ -160,7 +162,7 @@ export function CreatePostModal({ visible, onClose, onOpenStoryCamera, defaultMo
               <>
                 <TextInput
                   style={[styles.captionInput, { color: colors.textPrimary }]}
-                  placeholder="What did you crush today? Share lift metrics..."
+                  placeholder="What did you do today?"
                   placeholderTextColor={colors.textMuted}
                   multiline
                   value={caption}
@@ -240,7 +242,7 @@ export function CreatePostModal({ visible, onClose, onOpenStoryCamera, defaultMo
                 <View style={[styles.statusCanvas, { backgroundColor: selectedBgColor }]}>
                   <TextInput
                     style={styles.statusTextInput}
-                    placeholder="What's on your athletic mind?"
+                    placeholder="What's on your mind?"
                     placeholderTextColor="rgba(255,255,255,0.6)"
                     multiline
                     value={caption}

@@ -1,14 +1,16 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
-import { Plus } from "lucide-react-native";
+import { Plus, Users } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { useThemeStore } from "../../theme/theme";
 import { useFeedStore } from "../../store/feedStore";
 import { OWN_STORY_ID } from "../../lib/stories";
 import { Avatar } from "../common/Avatar";
+import { EmptyState } from "../common/EmptyState";
 import { useRequireAccount } from "../../hooks/useRequireAccount";
+import { haptics } from "../../lib/haptics";
 import { TenStateView } from "../common/TenStateView";
-import { createSuccessState, createEmptyState } from "sodia-core";
+import { createSuccessState } from "sodia-core";
 import { SodiaPostCard } from "./SodiaPostCard";
 
 interface SodiaFeedProps {
@@ -34,7 +36,9 @@ export function SodiaFeed({
 
   const requireAccount = useRequireAccount();
   const likePost = (id: string) => {
-    if (requireAccount("like posts")) toggleLike(id);
+    if (!requireAccount("like posts")) return;
+    haptics.impact();
+    toggleLike(id);
   };
   const joinChallenge = (id: string) => {
     if (requireAccount("join a challenge")) toggleChallenge(id);
@@ -50,10 +54,8 @@ export function SodiaFeed({
     { id: OWN_STORY_ID, name: "Your Story", isMe: true, hasStory: !!userStory, image: profile.avatar_url },
   ];
 
-  const feedState =
-    posts.length === 0
-      ? createEmptyState("No posts yet. Share your first workout or status.", "Create Post")
-      : createSuccessState(posts);
+  // The empty feed has its own message above; the state view covers loading and errors.
+  const feedState = createSuccessState(posts);
 
   return (
     <ScrollView
@@ -65,7 +67,8 @@ export function SodiaFeed({
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={[styles.storiesContainer, { borderBottomColor: colors.borderColor }]}
+        style={[styles.storiesTray, { borderBottomColor: colors.borderColor }]}
+        contentContainerStyle={styles.storiesContainer}
       >
         {stories.map((st) => (
           <TouchableOpacity
@@ -108,6 +111,15 @@ export function SodiaFeed({
       </ScrollView>
 
       {/* 2. FEED POSTS */}
+      {posts.length === 0 && (
+        <EmptyState
+          icon={Users}
+          title="Your feed is empty"
+          body="Share a workout or a photo, and posts from people you follow will show up here."
+          actionLabel="Create a post"
+          onAction={onOpenCreatePost}
+        />
+      )}
       <TenStateView state={feedState} onRetry={onOpenCreatePost}>
         {() => (
           <View style={styles.feedList}>
@@ -141,7 +153,8 @@ export function SodiaFeed({
 const styles = StyleSheet.create({
   container: { flex: 1 },
   contentContainer: { paddingBottom: 110, paddingTop: 10 },
-  storiesContainer: { paddingHorizontal: 16, gap: 14, paddingBottom: 14, borderBottomWidth: 1 },
+  storiesTray: { flexGrow: 0, borderBottomWidth: 1 },
+  storiesContainer: { paddingHorizontal: 16, gap: 14, paddingBottom: 14 },
   storyItem: { alignItems: "center", width: 68 },
   storyRing: {
     width: 64,

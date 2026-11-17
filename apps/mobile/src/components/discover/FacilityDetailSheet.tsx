@@ -34,7 +34,7 @@ export function FacilityDetailSheet({ facility, visible, onClose, onSelectPass }
         {
           id: "pass_day",
           title: "All-Access Day Pass",
-          subtitle: "Single-day turnstile entry • Free lockers & sauna",
+          subtitle: "Entry for one day",
           pricePhp: facility.day_pass_price_php ?? 250,
           billingKind: "one_time_pass",
         },
@@ -81,9 +81,14 @@ export function FacilityDetailSheet({ facility, visible, onClose, onSelectPass }
 
   const activePass = passOptions.find((p) => p.id === selectedPassId) ?? passOptions[0];
 
-  const amenities = isGym
-    ? ["Olympic Barbells", "Turf Sprint Track", "Recovery Sauna", "Showers & Lockers", "Specialty Cafe"]
-    : ["4 Regulation Courts", "Pro Lighting", "Equipment Rental", "Player Lounge", "Covered Facility"];
+  // The venue's own amenities and opening hours, not a generic list.
+  const amenities: readonly string[] = Array.isArray(facility.amenities)
+    ? facility.amenities.filter((item): item is string => typeof item === "string")
+    : [];
+  const inside = facility.inside_now_count ?? 0;
+  const capacity = facility.max_capacity ?? 0;
+  const fill = capacity > 0 ? inside / capacity : 0;
+  const busyLabel = fill >= 0.8 ? "Very busy" : fill >= 0.5 ? "Getting busy" : "Not busy";
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -97,7 +102,7 @@ export function FacilityDetailSheet({ facility, visible, onClose, onSelectPass }
             </TouchableOpacity>
             <View style={styles.registryTag}>
               <Text style={styles.registryTagText}>
-                {isGym ? "REGISTRY A • COMMERCIAL ARENA" : "REGISTRY B • COURT CLUB"}
+                {(facility.category ?? (isGym ? "Gym" : "Courts")).toUpperCase()}
               </Text>
             </View>
           </View>
@@ -132,10 +137,10 @@ export function FacilityDetailSheet({ facility, visible, onClose, onSelectPass }
                 <View style={styles.occupancyHeader}>
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
                     <View style={styles.greenDot} />
-                    <Text style={[styles.occupancyTitle, { color: colors.textPrimary }]}>LIVE ATHLETE DENSITY</Text>
+                    <Text style={[styles.occupancyTitle, { color: colors.textPrimary }]}>HOW BUSY</Text>
                   </View>
                   <Text style={styles.occupancyCounts}>
-                    {facility.inside_now_count ?? 42} / {facility.max_capacity ?? 100} Capacity
+                    {inside} / {capacity} people
                   </Text>
                 </View>
                 <View style={[styles.meterTrack, { backgroundColor: colors.borderColor }]}>
@@ -143,20 +148,21 @@ export function FacilityDetailSheet({ facility, visible, onClose, onSelectPass }
                     style={[
                       styles.meterFill,
                       {
-                        width: `${Math.min(100, ((facility.inside_now_count ?? 42) / (facility.max_capacity ?? 100)) * 100)}%`,
+                        width: `${Math.min(100, Math.round(fill * 100))}%`,
                       },
                     ]}
                   />
                 </View>
                 <Text style={[styles.occupancySub, { color: colors.textMuted }]}>
-                  Peak hours: 5:30 PM - 8:00 PM • Smooth turnstile flow now
+                  {busyLabel}
+                  {facility.hours ? ` • Open ${facility.hours}` : ""}
                 </Text>
               </View>
             </View>
 
             {/* AMENITIES */}
             <View style={styles.amenitiesSection}>
-              <Text style={[styles.sectionHeader, { color: colors.textMuted }]}>FACILITY AMENITIES</Text>
+              <Text style={[styles.sectionHeader, { color: colors.textMuted }]}>AMENITIES</Text>
               <View style={styles.amenitiesRow}>
                 {amenities.map((item) => (
                   <View
@@ -195,7 +201,7 @@ export function FacilityDetailSheet({ facility, visible, onClose, onSelectPass }
 
             {/* PASS & PRICING SELECTOR */}
             <View style={styles.pricingSection}>
-              <Text style={[styles.sectionHeader, { color: colors.textMuted }]}>SELECT ACCESS TIER</Text>
+              <Text style={[styles.sectionHeader, { color: colors.textMuted }]}>CHOOSE A PASS</Text>
               <View style={{ gap: 10 }}>
                 {passOptions.map((opt) => {
                   const isSelected = opt.id === (activePass?.id ?? "");
@@ -236,7 +242,7 @@ export function FacilityDetailSheet({ facility, visible, onClose, onSelectPass }
           {activePass && (
             <View style={[styles.footerBar, { backgroundColor: colors.bgCard, borderTopColor: colors.borderColor }]}>
               <View>
-                <Text style={[styles.footerLabel, { color: colors.textMuted }]}>Total Amount</Text>
+                <Text style={[styles.footerLabel, { color: colors.textMuted }]}>Subtotal</Text>
                 <Text style={[styles.footerPrice, { color: colors.textPrimary }]}>
                   ₱{activePass.pricePhp.toFixed(2)}
                 </Text>

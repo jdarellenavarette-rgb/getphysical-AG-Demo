@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from "react-native";
 import { Sparkles, Check, Trash2 } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
+import { haptics } from "../../lib/haptics";
 import { useTrackingStore } from "../../store/trackingStore";
 import { askOracleAiFoodGuru, type OracleAnalysisResult } from "../../services/oracleNutritionService";
 import { styles } from "./FoodTrackerView.styles";
@@ -27,7 +28,7 @@ export function FoodTrackerView() {
       const res = await askOracleAiFoodGuru(nlpInput.trim());
       setOracleDraft(res);
     } catch {
-      Alert.alert("Oracle", "Could not analyze meal. Please check network or try again.");
+      Alert.alert("Couldn't estimate that meal", "Check your connection and try again.");
     } finally {
       setIsAnalyzing(false);
     }
@@ -46,7 +47,7 @@ export function FoodTrackerView() {
     });
     setOracleDraft(null);
     setNlpInput("");
-    Alert.alert("Logged to Diary!", `${oracleDraft.headline} added to your daily memories.`);
+    haptics.success();
   };
 
   return (
@@ -126,12 +127,12 @@ export function FoodTrackerView() {
         <View style={styles.oracleTop}>
           <View style={styles.oracleBadge}>
             <Sparkles size={13} color="#F59E0B" fill="#F59E0B" />
-            <Text style={styles.oracleBadgeText}>ORACLE</Text>
+            <Text style={styles.oracleBadgeText}>AI ESTIMATE</Text>
           </View>
         </View>
 
         <Text style={[styles.oracleInstruct, { color: colors.textPrimary }]}>
-          Type random foods in casual language, Oracle computes the macros:
+          Describe what you ate and we'll estimate the calories and macros.
         </Text>
 
         <View style={styles.oracleInputRow}>
@@ -186,7 +187,7 @@ export function FoodTrackerView() {
       {/* 3. HYDRATION QUICK LOG */}
       <View style={[styles.hydrationCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
         <View style={styles.hydrationHeader}>
-          <Text style={[styles.hydrationTitle, { color: colors.textPrimary }]}>Hydration Target</Text>
+          <Text style={[styles.hydrationTitle, { color: colors.textPrimary }]}>Water</Text>
           <Text style={styles.hydrationVal}>
             {hydrationLiters}L / {dailyTargets.hydration}L
           </Text>
@@ -221,9 +222,7 @@ export function FoodTrackerView() {
       {/* 4. TODAY'S MEAL DIARY */}
       <View style={[styles.foodHistoryList, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
         <View style={styles.historyHeader}>
-          <Text style={[styles.historyTitle, { color: colors.textPrimary }]}>
-            Today's Logged Meals ({foodMeals.length})
-          </Text>
+          <Text style={[styles.historyTitle, { color: colors.textPrimary }]}>Meals ({foodMeals.length})</Text>
           {foodMeals.length > 0 && (
             <TouchableOpacity onPress={clearFoodMeals} style={styles.clearLogsBtn}>
               <Trash2 size={12} color="#EF4444" />

@@ -1,7 +1,10 @@
 import React, { useState } from "react";
-import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Image, Text, TouchableOpacity } from "react-native";
 import { signInWithGoogle } from "../../services/socialAuth";
 import { authStyles as s } from "./auth.styles";
+
+// Google's "G" mark, as required by its sign-in branding guidelines.
+const GOOGLE_MARK = require("../../../assets/brand/google_g.png");
 
 interface GoogleSignInButtonProps {
   onError: (message: string | null) => void;
@@ -33,9 +36,7 @@ export function GoogleSignInButton({ onError }: GoogleSignInButtonProps) {
         <ActivityIndicator color="#1F1F1F" />
       ) : (
         <>
-          <View style={s.googleGLogo}>
-            <Text style={s.googleGText}>G</Text>
-          </View>
+          <Image source={GOOGLE_MARK} style={s.googleMark} accessibilityIgnoresInvertColors />
           <Text style={s.socialGoogleText}>Continue with Google</Text>
         </>
       )}

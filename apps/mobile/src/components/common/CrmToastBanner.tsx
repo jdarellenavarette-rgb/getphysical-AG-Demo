@@ -29,7 +29,7 @@ export function CrmToastBanner({ onPressToast }: CrmToastBannerProps) {
       style={[
         styles.container,
         {
-          top: Math.max(insets.top, 44) + 6,
+          top: insets.top + 6,
           backgroundColor: colors.bgCard,
           borderColor: "#E11D48",
         },

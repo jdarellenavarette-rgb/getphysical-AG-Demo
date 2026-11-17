@@ -158,7 +158,7 @@ export function DiscoverView({ onCheckoutItem }: DiscoverViewProps) {
           />
 
           <View style={styles.carouselSection}>
-            <Text style={[styles.carouselHeaderTitle, { color: colors.textMuted }]}>ATHLETIC HUBS & EXPERIENCES</Text>
+            <Text style={[styles.carouselHeaderTitle, { color: colors.textMuted }]}>NEAR YOU</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carouselScroll}>
               {filteredFacilities.map((fac) => {
                 const isSelected = fac.id === selectedFacilityId;
@@ -269,7 +269,7 @@ export function DiscoverView({ onCheckoutItem }: DiscoverViewProps) {
           onCheckoutItem?.({
             id: `entity_book_${Date.now()}`,
             title: itemTitle,
-            subtitle: facName ?? "Athletic Session",
+            subtitle: facName ?? "Session",
             facilityId: facId ?? "fac_metro_core",
             facilityName: facName ?? "Metro Athletic Network",
             baseAmountPhp: pricePhp,

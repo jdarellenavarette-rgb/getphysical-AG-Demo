@@ -34,7 +34,7 @@ export function StatementOfAccountModal({ visible, passes, onClose, onSelectPass
           style={[
             styles.topBar,
             {
-              paddingTop: Math.max(insets.top, 50) + 10,
+              paddingTop: insets.top + 10,
               backgroundColor: colors.bgHeader,
               borderBottomColor: colors.borderColor,
             },
@@ -105,7 +105,7 @@ export function StatementOfAccountModal({ visible, passes, onClose, onSelectPass
                   style={[styles.txRow, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}
                 >
                   <View style={styles.txIconWrap}>
-                    <FileText size={16} color="#EC4899" />
+                    <FileText size={16} color="#E11D48" />
                   </View>
                   <View style={styles.txDetails}>
                     <Text style={[styles.txTitle, { color: colors.textPrimary }]}>{p.pass_type}</Text>
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 8,
-    backgroundColor: "rgba(236, 72, 153, 0.15)",
+    backgroundColor: "rgba(225, 29, 72, 0.15)",
     alignItems: "center",
     justifyContent: "center",
   },

@@ -5,6 +5,7 @@ import type { SodiaPostRow } from "sodia-core";
 import { useThemeStore } from "../../theme/theme";
 import { PlayableVideoView } from "./PlayableVideoView";
 import { Avatar } from "../common/Avatar";
+import { DoubleTapLike } from "./DoubleTapLike";
 import { formatTimeAgo } from "../../services/messagingService";
 
 interface SodiaPostCardProps {
@@ -59,7 +60,7 @@ export function SodiaPostCard({
   const challengeId = String(stampObj?.challengeId ?? post.id);
 
   const sharePost = () => {
-    void Share.share({ message: `${post.author_name ?? "An athlete"} on Sodia: ${post.content ?? ""}`.trim() });
+    void Share.share({ message: `${post.author_name ?? "Someone"} on GetPhysical: ${post.content ?? ""}`.trim() });
   };
 
   const confirmDelete = () => {
@@ -143,7 +144,7 @@ export function SodiaPostCard({
           </View>
         </View>
       ) : (
-        <View style={styles.mediaContainer}>
+        <DoubleTapLike onLike={() => !isLiked && onToggleLike(post.id)} style={styles.mediaContainer}>
           <Image source={{ uri: post.media_url ?? "" }} style={styles.mediaPhoto} resizeMode="cover" />
 
           {/* PR CHALLENGE FLOATING BADGE */}
@@ -177,7 +178,7 @@ export function SodiaPostCard({
               </View>
             </TouchableOpacity>
           )}
-        </View>
+        </DoubleTapLike>
       )}
 
       {/* 3. CHALLENGE BANNER CALLOUT (FOR PR CHALLENGE POSTS) */}

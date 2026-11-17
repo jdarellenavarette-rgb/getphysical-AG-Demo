@@ -64,7 +64,7 @@ export function OrganizerMeetModal({ visible, onClose }: OrganizerMeetModalProps
           style={[
             styles.topBar,
             {
-              paddingTop: Math.max(insets.top, 50) + 10,
+              paddingTop: insets.top + 10,
               backgroundColor: colors.bgHeader,
               borderBottomColor: colors.borderColor,
             },

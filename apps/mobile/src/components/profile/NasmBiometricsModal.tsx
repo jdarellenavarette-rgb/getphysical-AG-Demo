@@ -24,7 +24,7 @@ const ACTIVITY_MULTIPLIERS = {
   sedentary: { label: "Sedentary (Desk Job)", factor: 1.2 },
   light: { label: "Light (1-2 days/wk)", factor: 1.375 },
   moderate: { label: "Moderate (3-5 days/wk)", factor: 1.55 },
-  heavy: { label: "Heavy / Athletic (6-7 days/wk)", factor: 1.725 },
+  heavy: { label: "Very active (6-7 days/wk)", factor: 1.725 },
   athlete: { label: "Elite Athlete (2x/day)", factor: 1.9 },
 };
 
@@ -205,7 +205,7 @@ export function NasmBiometricsModal({ visible, onClose }: NasmBiometricsModalPro
             </View>
 
             {/* ATHLETIC GOAL */}
-            <Text style={[styles.labelTitle, { color: colors.textPrimary, marginTop: 14 }]}>Primary Athletic Goal</Text>
+            <Text style={[styles.labelTitle, { color: colors.textPrimary, marginTop: 14 }]}>Your goal</Text>
             <View style={styles.optionsWrap}>
               {(Object.keys(GOAL_ADJUSTMENTS) as (keyof typeof GOAL_ADJUSTMENTS)[]).map((k) => (
                 <TouchableOpacity

@@ -40,6 +40,26 @@ Setup steps for text-message codes and for creating the first real account of ea
 
 Still built-in sample content, next to be connected to the database: the venues, coaches and clubs on the Venues tab, and the coach, staff and organizer workspaces (visible only to accounts holding those roles).
 
+**Design pass one is done.** Checked screen by screen in a phone-sized browser, in light and dark.
+
+| Area           | What changed                                                                                                                                        |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sign-in        | Google's own mark on the Google button.                                                                                                             |
+| Theme          | Follows the phone's light or dark setting by default; Settings offers System, Light and Dark and remembers the choice.                              |
+| Colour         | One accent colour throughout (the second pink accent is gone). The status-bar area takes the header colour.                                         |
+| Haptics        | Feedback on tab changes, likes, ticking a set, starting and finishing a workout or run, posting, sending a message and logging a meal.              |
+| Empty states   | One shared pattern: icon, one line of explanation, at most one action. Used on the feed, wallet, journey and lists.                                 |
+| Feed           | Double-tap a photo to like, with a heart animation. Story tray layout fixed.                                                                        |
+| Wallet         | With no passes: one message, one action ("Find a venue") and a scan link, instead of three overlapping buttons and two empty states.                |
+| Active workout | A set table with typed weight (decimals allowed) and reps, 44pt tick targets, add and remove set, a clock-style timer and a single Finish button.   |
+| Run screen     | Start, pause and finish sit above the map instead of under the tab bar. Plain labels. The sport locks once recording starts.                        |
+| Journey        | The weekly chart is real: calories per day for the last seven days with today highlighted. History is dated and sorted, newest first.               |
+| Venue detail   | Shows the venue's own category, amenities and opening hours, and an honest busy meter.                                                              |
+| Wording        | Internal terms replaced with plain ones across the app ("Registry A", "TOTP Turnstile", "Oracle", "Programs Vault", "Athlete Density" and similar). |
+| Safe areas     | Screens use the phone's real top inset instead of a forced minimum.                                                                                 |
+
+Still short of the reference apps, and planned next: swipe-to-dismiss bottom sheets, real screen-to-screen navigation with back gestures, list virtualisation for long feeds, loading skeletons once data loads from the server, and sport icons in place of emoji.
+
 Not covered by the browser run: confirmation dialogs (discard workout, delete post) and the camera, which need a real device.
 
 ## How this was tested

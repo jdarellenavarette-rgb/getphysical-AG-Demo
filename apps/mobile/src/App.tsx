@@ -80,7 +80,9 @@ export default function App() {
   };
 
   return (
-    <View style={[styles.screenContainer, { paddingTop: Math.max(insets.top, 48), backgroundColor: colors.bgScreen }]}>
+    <View style={[styles.screenContainer, { backgroundColor: colors.bgScreen }]}>
+      {/* The status-bar area takes the header colour, so the header reads as one surface. */}
+      <View style={{ height: insets.top, backgroundColor: colors.bgHeader }} />
       <StatusBar barStyle={colors.statusBarStyle} />
 
       <CrmToastBanner

@@ -15,6 +15,7 @@ import { useThemeStore } from "../../theme/theme";
 import { isOwnMessage, useCrmMessagingStore } from "../../store/crmMessagingStore";
 import type { DMThread } from "./InboxView";
 import { Avatar } from "../common/Avatar";
+import { haptics } from "../../lib/haptics";
 import { chatStyles as styles } from "./DMChatView.styles";
 
 interface DMChatViewProps {
@@ -61,6 +62,7 @@ export function DMChatView({ thread, onBack }: DMChatViewProps) {
 
   const handleSendMessage = () => {
     if (!inputText.trim()) return;
+    haptics.tap();
     sendMessage(thread.id, inputText.trim());
     setInputText("");
     setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 150);
@@ -77,8 +79,8 @@ export function DMChatView({ thread, onBack }: DMChatViewProps) {
         style={[
           styles.header,
           {
-            paddingTop: Math.max(insets.top, 50) + 6,
-            height: Math.max(insets.top, 50) + 56,
+            paddingTop: insets.top + 6,
+            height: insets.top + 56,
             backgroundColor: colors.bgHeader,
             borderBottomColor: colors.borderColor,
           },

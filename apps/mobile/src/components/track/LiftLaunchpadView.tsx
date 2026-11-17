@@ -78,7 +78,7 @@ export function LiftLaunchpadView({
 
       <View style={[styles.launchpadCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
         <Dumbbell size={28} color="#E11D48" style={{ marginBottom: 6 }} />
-        <Text style={[styles.launchpadTitle, { color: colors.textPrimary }]}>Quick Strength Session</Text>
+        <Text style={[styles.launchpadTitle, { color: colors.textPrimary }]}>Quick workout</Text>
         <TextInput
           style={[
             styles.customRoutineInput,
@@ -99,7 +99,7 @@ export function LiftLaunchpadView({
       <View style={styles.programsSectionHeader}>
         <View style={styles.headerLeft}>
           <BookOpen size={16} color="#E11D48" />
-          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Training Programs Vault</Text>
+          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Programs</Text>
         </View>
         <TouchableOpacity onPress={() => setIsCreateOpen(true)} style={styles.createProgBtn}>
           <Plus size={13} color="#E11D48" />

@@ -22,8 +22,8 @@ export function ActivityView({ onBack }: ActivityViewProps) {
         style={[
           styles.header,
           {
-            paddingTop: Math.max(insets.top, 50) + 6,
-            height: Math.max(insets.top, 50) + 54,
+            paddingTop: insets.top + 6,
+            height: insets.top + 54,
             backgroundColor: colors.bgHeader,
             borderBottomColor: colors.borderColor,
           },

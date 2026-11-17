@@ -1,8 +1,9 @@
 import React from "react";
 import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet } from "react-native";
-import { AlertCircle, WifiOff, Clock, Search, ShieldAlert, RefreshCw } from "lucide-react-native";
+import { AlertCircle, WifiOff, Clock, Search, ShieldAlert, RefreshCw, Inbox } from "lucide-react-native";
 import type { TenStateEnvelope } from "sodia-core";
 import { useThemeStore } from "../../theme/theme";
+import { EmptyState } from "./EmptyState";
 
 interface TenStateViewProps<T> {
   state: TenStateEnvelope<T>;
@@ -18,29 +19,26 @@ export function TenStateView<T>({ state, onRetry, children }: TenStateViewProps<
       return (
         <View style={[styles.centerContainer, { backgroundColor: colors.bgScreen }]}>
           <ActivityIndicator size="large" color="#E11D48" />
-          <Text style={[styles.loadingText, { color: colors.textMuted }]}>Syncing GetPhysical state...</Text>
+          <Text style={[styles.loadingText, { color: colors.textMuted }]}>Loading…</Text>
         </View>
       );
 
     case "empty":
       return (
-        <View style={[styles.centerContainer, { backgroundColor: colors.bgScreen }]}>
-          <AlertCircle size={44} color={colors.textMuted} />
-          <Text style={[styles.stateTitle, { color: colors.textPrimary }]}>Nothing here yet</Text>
-          <Text style={[styles.stateSubtitle, { color: colors.textSecondary }]}>{state.emptyReason}</Text>
-          {onRetry && (
-            <TouchableOpacity style={styles.primaryButton} onPress={onRetry}>
-              <Text style={styles.primaryButtonText}>{state.primaryActionLabel}</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+        <EmptyState
+          icon={Inbox}
+          title="Nothing here yet"
+          body={state.emptyReason}
+          actionLabel={onRetry ? state.primaryActionLabel : undefined}
+          onAction={onRetry}
+        />
       );
 
     case "error":
       return (
         <View style={[styles.centerContainer, { backgroundColor: colors.bgScreen }]}>
           <AlertCircle size={44} color="#EF4444" />
-          <Text style={[styles.stateTitle, { color: colors.textPrimary }]}>Unable to Load Data</Text>
+          <Text style={[styles.stateTitle, { color: colors.textPrimary }]}>Couldn't load this</Text>
           <Text style={[styles.stateSubtitle, { color: colors.textSecondary }]}>{state.userMessage}</Text>
           {state.retryable && onRetry && (
             <TouchableOpacity

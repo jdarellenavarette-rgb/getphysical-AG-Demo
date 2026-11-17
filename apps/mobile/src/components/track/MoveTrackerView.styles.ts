@@ -28,7 +28,7 @@ export const styles = StyleSheet.create({
     borderRadius: 999,
   },
   livePulse: { width: 7, height: 7, borderRadius: 3.5, backgroundColor: "#E11D48" },
-  liveText: { color: "#E11D48", fontSize: 10, fontWeight: "900" },
+  liveText: { color: "#E11D48", fontSize: 12, fontWeight: "700" },
   activityTag: { fontSize: 10, fontWeight: "700" },
   hudContainer: { alignItems: "center", marginVertical: 10 },
   hudTimer: { fontSize: 56, fontWeight: "900", letterSpacing: -2 },
@@ -43,7 +43,7 @@ export const styles = StyleSheet.create({
   metricVal: { fontSize: 26, fontWeight: "900" },
   metricLabel: { fontSize: 10, fontWeight: "700", marginTop: 2 },
   metricDivider: { width: 1, height: 30 },
-  actionWrap: { marginTop: 16 },
+  actionWrap: { marginTop: 16, marginBottom: 16 },
   startBtn: {
     backgroundColor: "#E11D48",
     borderRadius: 999,

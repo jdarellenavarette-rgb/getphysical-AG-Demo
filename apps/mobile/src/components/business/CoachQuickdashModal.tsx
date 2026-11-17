@@ -47,7 +47,7 @@ export function CoachQuickdashModal({ visible, onClose }: CoachQuickdashModalPro
           style={[
             styles.topBar,
             {
-              paddingTop: Math.max(insets.top, 50) + 10,
+              paddingTop: insets.top + 10,
               backgroundColor: colors.bgHeader,
               borderBottomColor: colors.borderColor,
             },
@@ -55,7 +55,7 @@ export function CoachQuickdashModal({ visible, onClose }: CoachQuickdashModalPro
         >
           <TouchableOpacity onPress={onClose} style={styles.backBtn}>
             <ArrowLeft size={20} color={colors.textPrimary} />
-            <Text style={[styles.backBtnText, { color: colors.textPrimary }]}>Back to Athlete App</Text>
+            <Text style={[styles.backBtnText, { color: colors.textPrimary }]}>Back</Text>
           </TouchableOpacity>
           <View style={styles.badge}>
             <Sparkles size={12} color="#3B82F6" />

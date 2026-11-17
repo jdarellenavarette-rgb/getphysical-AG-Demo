@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     backgroundColor: "#16161A",
     borderWidth: 1.5,
-    borderColor: "rgba(236, 72, 153, 0.4)",
+    borderColor: "rgba(225, 29, 72, 0.4)",
     overflow: "hidden",
     marginHorizontal: 4,
     marginVertical: 10,
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   vipTag: {
-    color: "#EC4899",
+    color: "#E11D48",
     fontSize: 10,
     fontWeight: "900",
   },
@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
   },
   passType: {
-    color: "#EC4899",
+    color: "#E11D48",
     fontSize: 12,
     marginTop: 4,
     fontWeight: "800",

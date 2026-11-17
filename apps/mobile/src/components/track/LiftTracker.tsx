@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Modal, TextInput, Alert } from "react-native";
-import { Check, Plus, Award, Flame } from "lucide-react-native";
+import { Plus, Minus, Award, Flame, Timer } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { useTrackingStore, type LoggedSet, type ProgramExercise } from "../../store/trackingStore";
 import { LiftLaunchpadView } from "./LiftLaunchpadView";
+import { SetRow, SetTableHeader } from "./SetRow";
+import { haptics } from "../../lib/haptics";
 
 const REST_SECONDS = 90;
+
+const formatClock = (seconds: number): string => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 
 /** A new session starts with untouched sets; nothing counts until it is ticked. */
 const BLANK_SETS: LoggedSet[] = [
@@ -27,6 +31,8 @@ export function LiftTracker() {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [sets, setSets] = useState<LoggedSet[]>(BLANK_SETS);
   const [isFinishModalOpen, setIsFinishModalOpen] = useState(false);
+  // Bumped for every new session so the set rows start from fresh typed values.
+  const [sessionId, setSessionId] = useState(0);
 
   useEffect(() => {
     let t: ReturnType<typeof setInterval> | null = null;
@@ -40,23 +46,28 @@ export function LiftTracker() {
   }, [isTraining]);
 
   const toggleSet = (idx: number) => {
-    if (!sets[idx]?.isCompleted) setRestSeconds(REST_SECONDS);
+    const completing = !sets[idx]?.isCompleted;
+    if (completing) {
+      haptics.impact();
+      setRestSeconds(REST_SECONDS);
+    }
     setSets((prev) => prev.map((s, i) => (i === idx ? { ...s, isCompleted: !s.isCompleted } : s)));
   };
 
-  const adjustWeight = (idx: number, delta: number) => {
-    setSets((prev) => prev.map((s, i) => (i === idx ? { ...s, weight: Math.max(0, s.weight + delta) } : s)));
-  };
-  const adjustReps = (idx: number, delta: number) => {
-    setSets((prev) => prev.map((s, i) => (i === idx ? { ...s, reps: Math.max(1, s.reps + delta) } : s)));
+  const updateSet = (idx: number, patch: Partial<Pick<LoggedSet, "weight" | "reps">>) => {
+    setSets((prev) => prev.map((s, i) => (i === idx ? { ...s, ...patch } : s)));
   };
   const addSet = () => {
-    const last = sets[sets.length - 1];
-    setSets((prev) => [
-      ...prev,
-      { setNumber: prev.length + 1, weight: last?.weight ?? 100, reps: last?.reps ?? 5, isCompleted: false },
-    ]);
+    haptics.tap();
+    setSets((prev) => {
+      const last = prev[prev.length - 1];
+      return [
+        ...prev,
+        { setNumber: prev.length + 1, weight: last?.weight ?? 60, reps: last?.reps ?? 5, isCompleted: false },
+      ];
+    });
   };
+  const removeLastSet = () => setSets((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev));
 
   const completedSets = sets.filter((s) => s.isCompleted);
   const totalVolumeKg = completedSets.reduce((sum, s) => sum + s.weight * s.reps, 0);
@@ -67,6 +78,7 @@ export function LiftTracker() {
     setElapsedSeconds(0);
     setRestSeconds(0);
     setSets(BLANK_SETS);
+    setSessionId((n) => n + 1);
   };
 
   const confirmDiscard = () => {
@@ -120,6 +132,7 @@ export function LiftTracker() {
       );
     }
 
+    haptics.success();
     endSession();
     Alert.alert("Workout saved", "Your session is in your training history.");
   };
@@ -141,6 +154,8 @@ export function LiftTracker() {
         })),
       );
     }
+    setSessionId((n) => n + 1);
+    haptics.impact();
     setIsTraining(true);
   };
 
@@ -171,18 +186,23 @@ export function LiftTracker() {
             placeholderTextColor={colors.textMuted}
             accessibilityLabel="Workout name"
           />
-          <Text style={styles.timerText}>
-            Active Time: {Math.floor(elapsedSeconds / 60)}m {elapsedSeconds % 60}s
-          </Text>
+          <View style={styles.timerRow}>
+            <Timer size={14} color={colors.accentGreen} />
+            <Text style={[styles.timerText, { color: colors.accentGreen }]}>{formatClock(elapsedSeconds)}</Text>
+          </View>
         </View>
-        <TouchableOpacity onPress={() => setIsFinishModalOpen(true)} style={styles.finishButton}>
-          <Text style={styles.finishText}>FINISH</Text>
+        <TouchableOpacity
+          onPress={() => setIsFinishModalOpen(true)}
+          style={[styles.finishButton, { backgroundColor: colors.accent }]}
+          accessibilityRole="button"
+        >
+          <Text style={styles.finishText}>Finish</Text>
         </TouchableOpacity>
       </View>
 
       {restSeconds > 0 && (
         <View style={[styles.circularTimerCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
-          <Text style={[styles.restTitle, { color: colors.textMuted }]}>REST INTERVAL TIMER</Text>
+          <Text style={[styles.restTitle, { color: colors.textMuted }]}>REST</Text>
           <View style={styles.timerRingRow}>
             <TouchableOpacity
               onPress={() => setRestSeconds((s) => Math.max(0, s - 15))}
@@ -192,7 +212,7 @@ export function LiftTracker() {
             </TouchableOpacity>
             <View style={styles.circularClock}>
               <Text style={[styles.secondsBig, { color: colors.textPrimary }]}>{restSeconds}</Text>
-              <Text style={styles.secondsLabel}>SEC REST</Text>
+              <Text style={styles.secondsLabel}>SEC</Text>
             </View>
             <TouchableOpacity
               onPress={() => setRestSeconds((s) => s + 15)}
@@ -202,70 +222,44 @@ export function LiftTracker() {
             </TouchableOpacity>
           </View>
           <TouchableOpacity onPress={() => setRestSeconds(0)} style={styles.skipBtn}>
-            <Text style={[styles.skipText, { color: colors.textMuted }]}>Skip Rest Timer</Text>
+            <Text style={[styles.skipText, { color: colors.textMuted }]}>Skip rest</Text>
           </TouchableOpacity>
         </View>
       )}
 
       <View style={[styles.exerciseCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
-        <View style={styles.exerciseHeader}>
-          <TextInput
-            style={[styles.exerciseNameInput, { color: colors.textPrimary }]}
-            value={activeExerciseName}
-            onChangeText={setActiveExerciseName}
-            placeholder="Exercise name"
-            placeholderTextColor={colors.textMuted}
-            accessibilityLabel="Exercise name"
-          />
-          <View style={styles.targetBadge}>
-            <Text style={styles.targetBadgeText}>CUSTOM LIFTS</Text>
-          </View>
-        </View>
+        <TextInput
+          style={[styles.exerciseNameInput, { color: colors.textPrimary }]}
+          value={activeExerciseName}
+          onChangeText={setActiveExerciseName}
+          placeholder="Exercise name"
+          placeholderTextColor={colors.textMuted}
+          accessibilityLabel="Exercise name"
+        />
 
+        <SetTableHeader />
         <View style={styles.setGrid}>
           {sets.map((set, idx) => (
-            <View
-              key={set.setNumber}
-              style={[
-                styles.setRow,
-                { backgroundColor: colors.bgCardSecondary },
-                set.isCompleted && styles.setRowCompleted,
-              ]}
-            >
-              <Text style={[styles.setNumberText, { color: colors.textMuted }]}>SET {set.setNumber}</Text>
-              <View style={styles.weightRepControls}>
-                <TouchableOpacity onPress={() => adjustWeight(idx, -5)} style={styles.stepBtn}>
-                  <Text style={[styles.stepBtnText, { color: colors.textPrimary }]}>-</Text>
-                </TouchableOpacity>
-                <Text style={[styles.setWeightText, { color: colors.textPrimary }]}>{set.weight}kg</Text>
-                <TouchableOpacity onPress={() => adjustWeight(idx, 5)} style={styles.stepBtn}>
-                  <Text style={[styles.stepBtnText, { color: colors.textPrimary }]}>+</Text>
-                </TouchableOpacity>
-                <Text style={{ color: colors.textMuted, marginHorizontal: 4 }}>×</Text>
-                <TouchableOpacity onPress={() => adjustReps(idx, -1)} style={styles.stepBtn}>
-                  <Text style={[styles.stepBtnText, { color: colors.textPrimary }]}>-</Text>
-                </TouchableOpacity>
-                <Text style={[styles.setWeightText, { color: colors.textPrimary }]}>{set.reps}r</Text>
-                <TouchableOpacity onPress={() => adjustReps(idx, 1)} style={styles.stepBtn}>
-                  <Text style={[styles.stepBtnText, { color: colors.textPrimary }]}>+</Text>
-                </TouchableOpacity>
-              </View>
-              <TouchableOpacity
-                onPress={() => toggleSet(idx)}
-                style={[
-                  styles.checkCircle,
-                  { borderColor: colors.borderColor },
-                  set.isCompleted && styles.checkCircleCompleted,
-                ]}
-              >
-                {set.isCompleted && <Check size={14} color="#FFFFFF" strokeWidth={3} />}
-              </TouchableOpacity>
-            </View>
+            <SetRow
+              key={`${sessionId}_${set.setNumber}`}
+              set={set}
+              onChange={(patch) => updateSet(idx, patch)}
+              onToggle={() => toggleSet(idx)}
+            />
           ))}
-          <TouchableOpacity onPress={addSet} style={styles.addSetBtn}>
-            <Plus size={16} color="#E11D48" style={{ marginRight: 6 }} />
-            <Text style={[styles.addSetText, { color: colors.accent }]}>Add Next Set</Text>
+        </View>
+
+        <View style={styles.setActions}>
+          <TouchableOpacity onPress={addSet} style={styles.addSetBtn} accessibilityRole="button">
+            <Plus size={16} color={colors.accent} />
+            <Text style={[styles.addSetText, { color: colors.accent }]}>Add set</Text>
           </TouchableOpacity>
+          {sets.length > 1 && (
+            <TouchableOpacity onPress={removeLastSet} style={styles.addSetBtn} accessibilityRole="button">
+              <Minus size={16} color={colors.textMuted} />
+              <Text style={[styles.addSetText, { color: colors.textMuted }]}>Remove last</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
@@ -323,10 +317,17 @@ export function LiftTracker() {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 },
-  titleInput: { fontSize: 18, fontWeight: "800" },
-  timerText: { color: "#10B981", fontSize: 12, marginTop: 2, fontWeight: "700" },
-  finishButton: { backgroundColor: "#10B981", paddingHorizontal: 16, paddingVertical: 8, borderRadius: 10 },
-  finishText: { color: "#000000", fontWeight: "900", fontSize: 12 },
+  titleInput: { fontSize: 22, fontWeight: "800", paddingVertical: 0 },
+  timerRow: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 4 },
+  timerText: { fontSize: 15, fontWeight: "700", fontVariant: ["tabular-nums"] },
+  finishButton: {
+    minHeight: 44,
+    paddingHorizontal: 22,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  finishText: { color: "#FFFFFF", fontWeight: "800", fontSize: 15 },
   circularTimerCard: { borderRadius: 18, padding: 14, alignItems: "center", borderWidth: 1, marginBottom: 14 },
   restTitle: { fontSize: 11, fontWeight: "700" },
   timerRingRow: { flexDirection: "row", alignItems: "center", gap: 16, marginVertical: 8 },
@@ -347,48 +348,11 @@ const styles = StyleSheet.create({
   skipBtn: { padding: 4 },
   skipText: { fontSize: 11, fontWeight: "700" },
   exerciseCard: { borderRadius: 18, borderWidth: 1, padding: 14 },
-  exerciseHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
-  exerciseNameInput: { fontSize: 16, fontWeight: "800", flex: 1 },
-  targetBadge: { backgroundColor: "rgba(225,29,72,0.15)", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
-  targetBadgeText: { color: "#E11D48", fontSize: 9, fontWeight: "800" },
-  setGrid: { gap: 8 },
-  setRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderRadius: 10,
-    padding: 10,
-  },
-  setRowCompleted: { backgroundColor: "rgba(16,185,129,0.12)" },
-  setNumberText: { fontSize: 11, fontWeight: "800" },
-  weightRepControls: { flexDirection: "row", alignItems: "center" },
-  stepBtn: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
-    backgroundColor: "rgba(255,255,255,0.1)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  stepBtnText: { fontSize: 13, fontWeight: "800" },
-  setWeightText: { fontSize: 13, fontWeight: "800", marginHorizontal: 4 },
-  checkCircle: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  checkCircleCompleted: { borderColor: "#10B981", backgroundColor: "#10B981" },
-  addSetBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 10,
-    marginTop: 8,
-  },
-  addSetText: { fontSize: 13, fontWeight: "700" },
+  exerciseNameInput: { fontSize: 18, fontWeight: "800", marginBottom: 12, paddingVertical: 0 },
+  setGrid: { gap: 6 },
+  setActions: { flexDirection: "row", justifyContent: "space-between", marginTop: 8 },
+  addSetBtn: { flexDirection: "row", alignItems: "center", gap: 6, minHeight: 44, paddingHorizontal: 6 },
+  addSetText: { fontSize: 14, fontWeight: "700" },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.65)",

@@ -1,10 +1,29 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowLeft, Briefcase, UserCheck, Calendar, ChevronRight, Moon, Sun, LogIn, LogOut } from "lucide-react-native";
+import {
+  ArrowLeft,
+  Briefcase,
+  UserCheck,
+  Calendar,
+  ChevronRight,
+  Moon,
+  Sun,
+  Smartphone,
+  LogIn,
+  LogOut,
+  type LucideIcon,
+} from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
-import { useThemeStore } from "../../theme/theme";
+import { useThemeStore, type ThemePreference } from "../../theme/theme";
+import { haptics } from "../../lib/haptics";
 import { signOut } from "../../services/authService";
+
+const THEME_OPTIONS: { value: ThemePreference; label: string; Icon: LucideIcon }[] = [
+  { value: "system", label: "System", Icon: Smartphone },
+  { value: "light", label: "Light", Icon: Sun },
+  { value: "dark", label: "Dark", Icon: Moon },
+];
 
 interface SettingsModalProps {
   visible: boolean;
@@ -23,7 +42,7 @@ export function SettingsModal({
 }: SettingsModalProps) {
   const insets = useSafeAreaInsets();
   const { profile, isGuest, setIsGuest } = useEcosystemStore();
-  const { colors, themeMode, setThemeMode } = useThemeStore();
+  const { colors, preference, setPreference } = useThemeStore();
   // Workspaces are offered only for roles this account actually holds.
   const roles: readonly string[] = profile.user_roles ?? [];
   const canStaff = roles.includes("staff");
@@ -38,7 +57,7 @@ export function SettingsModal({
           style={[
             styles.topBar,
             {
-              paddingTop: Math.max(insets.top, 50) + 10,
+              paddingTop: insets.top + 10,
               borderBottomColor: colors.borderColor,
               backgroundColor: colors.bgHeader,
             },
@@ -48,42 +67,43 @@ export function SettingsModal({
             <ArrowLeft size={20} color={colors.textPrimary} />
             <Text style={[styles.backBtnText, { color: colors.textPrimary }]}>Back</Text>
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>SETTINGS & PREFERENCES</Text>
+          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Settings</Text>
           <View style={{ width: 44 }} />
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
           {/* THEME & APPEARANCE */}
           <View style={[styles.card, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
-            <View style={styles.cardTitleRow}>
-              {themeMode === "dark" ? <Moon size={15} color="#6366F1" /> : <Sun size={15} color="#F59E0B" />}
-              <Text style={styles.cardHeader}>APPEARANCE & THEME</Text>
-            </View>
-            <View style={[styles.themeToggleRow, { backgroundColor: colors.bgInput }]}>
-              <TouchableOpacity
-                onPress={() => setThemeMode("dark")}
-                style={[styles.themeOptionBtn, themeMode === "dark" && styles.themeOptionBtnActive]}
-              >
-                <Moon size={14} color={themeMode === "dark" ? "#FFFFFF" : colors.textMuted} />
-                <Text style={[styles.themeOptionText, themeMode === "dark" && styles.themeOptionTextActive]}>
-                  Dark Mode
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => setThemeMode("light")}
-                style={[styles.themeOptionBtn, themeMode === "light" && styles.themeOptionBtnActive]}
-              >
-                <Sun size={14} color={themeMode === "light" ? "#FFFFFF" : colors.textMuted} />
-                <Text style={[styles.themeOptionText, themeMode === "light" && styles.themeOptionTextActive]}>
-                  Light Mode
-                </Text>
-              </TouchableOpacity>
+            <Text style={[styles.cardHeader, { marginBottom: 12 }]}>APPEARANCE</Text>
+            <View
+              style={[styles.themeToggleRow, { backgroundColor: colors.bgInput }]}
+              accessibilityRole="radiogroup"
+              accessibilityLabel="Appearance"
+            >
+              {THEME_OPTIONS.map(({ value, label, Icon }) => {
+                const selected = preference === value;
+                return (
+                  <TouchableOpacity
+                    key={value}
+                    onPress={() => {
+                      haptics.tap();
+                      setPreference(value);
+                    }}
+                    style={[styles.themeOptionBtn, selected && { backgroundColor: colors.accent }]}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected }}
+                  >
+                    <Icon size={14} color={selected ? "#FFFFFF" : colors.textMuted} />
+                    <Text style={[styles.themeOptionText, selected && styles.themeOptionTextActive]}>{label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           </View>
 
           {/* ATHLETE PROFILE */}
           <View style={[styles.card, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
-            <Text style={styles.cardHeader}>ATHLETE PROFILE</Text>
+            <Text style={styles.cardHeader}>PROFILE</Text>
             <View style={[styles.row, { borderBottomColor: colors.borderLight }]}>
               <Text style={[styles.label, { color: colors.textSecondary }]}>Display Name</Text>
               <Text style={[styles.value, { color: colors.textPrimary }]}>
@@ -98,9 +118,9 @@ export function SettingsModal({
 
           {/* ACCOUNT & AUTH */}
           <View style={[styles.card, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
-            <Text style={styles.cardHeader}>ACCOUNT & AUTHENTICATION</Text>
+            <Text style={styles.cardHeader}>ACCOUNT</Text>
             <View style={[styles.row, { borderBottomColor: colors.borderLight }]}>
-              <Text style={[styles.label, { color: colors.textSecondary }]}>Session Mode</Text>
+              <Text style={[styles.label, { color: colors.textSecondary }]}>Status</Text>
               <Text style={[styles.value, { color: isGuest ? "#F59E0B" : "#10B981" }]}>
                 {isGuest ? "Guest preview" : "Signed in"}
               </Text>
@@ -196,7 +216,7 @@ const styles = StyleSheet.create({
   },
   backBtn: { flexDirection: "row", alignItems: "center", minWidth: 44, minHeight: 44 },
   backBtnText: { fontSize: 13, fontWeight: "700", marginLeft: 4 },
-  headerTitle: { fontSize: 13, fontWeight: "800", letterSpacing: 0.8 },
+  headerTitle: { fontSize: 16, fontWeight: "800" },
   scrollContent: { padding: 16, paddingBottom: 60, gap: 14 },
   card: { borderRadius: 16, padding: 16, borderWidth: 1 },
   cardTitleRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 12 },
@@ -218,7 +238,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 8,
   },
-  themeOptionBtnActive: { backgroundColor: "#E11D48" },
   themeOptionText: { color: "#A1A1AA", fontSize: 12, fontWeight: "700" },
   themeOptionTextActive: { color: "#FFFFFF", fontWeight: "800" },
   row: {

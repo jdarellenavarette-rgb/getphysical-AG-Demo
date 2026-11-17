@@ -21,7 +21,7 @@ it("launches through the splash and sign-in into an empty guest app without cras
   // Splash runs ~2.5 s, then the sign-in screen offers guest mode.
   fireEvent.press(await screen.findByText("Continue as guest", {}, { timeout: 10000 }));
   // A guest starts with nothing: the feed shows its empty state and no sample persona.
-  expect(await screen.findByText(/No posts yet/, {}, { timeout: 10000 })).toBeTruthy();
+  expect(await screen.findByText("Your feed is empty", {}, { timeout: 10000 })).toBeTruthy();
   expect(screen.queryByText("Continue as guest")).toBeNull();
   expect(screen.queryByText(/Darelle/)).toBeNull();
 });

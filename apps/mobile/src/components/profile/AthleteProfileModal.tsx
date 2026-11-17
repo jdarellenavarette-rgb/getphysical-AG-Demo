@@ -75,7 +75,7 @@ export function AthleteProfileModal({ visible, athlete, onClose, onMessageAthlet
             />
             <View style={styles.onlinePill}>
               <View style={styles.greenDot} />
-              <Text style={styles.onlineText}>ACTIVE ATHLETE</Text>
+              <Text style={styles.onlineText}>MEMBER</Text>
             </View>
           </View>
 

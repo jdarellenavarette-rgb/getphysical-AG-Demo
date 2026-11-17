@@ -74,7 +74,7 @@ export function AddMembershipChoiceModal({
 
           <View style={styles.securityRow}>
             <ShieldCheck size={14} color="#10B981" />
-            <Text style={styles.securityText}>Dynamic TOTP 60s Encryption • Sodia Turnstile Gate</Text>
+            <Text style={styles.securityText}>Your entry code refreshes every 60 seconds</Text>
           </View>
         </View>
       </View>

@@ -37,7 +37,7 @@ export function TurnstileQRModal({ visible, onClose, facilityName, passId, onSig
           style={[
             styles.topBar,
             {
-              paddingTop: Math.max(insets.top, 50) + 10,
+              paddingTop: insets.top + 10,
               backgroundColor: colors.bgHeader,
               borderBottomColor: colors.borderColor,
             },
@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     padding: 24,
     alignItems: "center",
-    shadowColor: "#EC4899",
+    shadowColor: "#E11D48",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.25,
     shadowRadius: 16,

@@ -8,6 +8,7 @@ import { useTrackingStore, type MoveSportType } from "../../store/trackingStore"
 import { requestAndFetchUserLocation, DEFAULT_BGC_COORDS, calculateHaversineKm } from "../../services/locationService";
 import { StravaRouteMap } from "./StravaRouteMap";
 import { SPORTS_LIST } from "./trackConstants";
+import { haptics } from "../../lib/haptics";
 import { styles } from "./MoveTrackerView.styles";
 
 /** Activities shorter than this are not saved. */
@@ -114,6 +115,9 @@ export function MoveTrackerView() {
     distanceKm > 0 ? distanceKm * activeSportObj.rateKcal : (seconds / 60) * (activeSportObj.rateKcal * 0.05),
   );
 
+  // The sport is fixed once recording starts, so a saved activity cannot change type.
+  const canChangeSport = !isActive && seconds === 0 && !isFinished;
+
   const handleFinish = () => {
     // Nothing worth keeping yet: offer to discard instead of saving an empty activity.
     if (seconds < MIN_SAVE_SECONDS) {
@@ -123,6 +127,7 @@ export function MoveTrackerView() {
       ]);
       return;
     }
+    haptics.success();
     setIsActive(false);
     setIsFinished(true);
     saveMoveActivity({
@@ -162,11 +167,15 @@ export function MoveTrackerView() {
         {SPORTS_LIST.map((sp) => (
           <TouchableOpacity
             key={sp.id}
-            onPress={() => !isActive && setSelectedSport(sp.id)}
+            onPress={() => canChangeSport && setSelectedSport(sp.id)}
+            disabled={!canChangeSport}
+            accessibilityRole="button"
+            accessibilityState={{ selected: selectedSport === sp.id, disabled: !canChangeSport }}
             style={[
               styles.sportPill,
               { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor },
               selectedSport === sp.id && styles.sportPillActive,
+              !canChangeSport && selectedSport !== sp.id && { opacity: 0.4 },
             ]}
           >
             <Text style={styles.sportEmoji}>{sp.icon}</Text>
@@ -183,15 +192,11 @@ export function MoveTrackerView() {
         ))}
       </ScrollView>
 
-      {/* 2. GP GPS STATUS BADGE */}
       <View style={styles.statusRow}>
         <View style={styles.livePill}>
           <View style={styles.livePulse} />
-          <Text style={styles.liveText}>{isActive ? "GPS LIVE • TRACKING" : "GPS READY • SATELLITE LOCK"}</Text>
+          <Text style={styles.liveText}>{isActive ? "Recording" : seconds > 0 ? "Paused" : "Ready"}</Text>
         </View>
-        <Text style={[styles.activityTag, { color: colors.textMuted }]}>
-          {activeSportObj.icon} {activeSportObj.label.toUpperCase()}
-        </Text>
       </View>
 
       {/* 3. HUD DIGITAL READOUT */}
@@ -200,41 +205,61 @@ export function MoveTrackerView() {
         <View style={styles.dualMetricsRow}>
           <View style={styles.metricCol}>
             <Text style={[styles.metricVal, { color: colors.textPrimary }]}>{distanceKm.toFixed(2)}</Text>
-            <Text style={[styles.metricLabel, { color: colors.textMuted }]}>KILOMETERS</Text>
+            <Text style={[styles.metricLabel, { color: colors.textMuted }]}>DISTANCE (KM)</Text>
           </View>
           <View style={[styles.metricDivider, { backgroundColor: colors.borderColor }]} />
           <View style={styles.metricCol}>
             <Text style={[styles.metricVal, { color: colors.textPrimary }]}>{formatPace()}</Text>
-            <Text style={[styles.metricLabel, { color: colors.textMuted }]}>MIN / KM PACE</Text>
+            <Text style={[styles.metricLabel, { color: colors.textMuted }]}>PACE (/KM)</Text>
           </View>
           <View style={[styles.metricDivider, { backgroundColor: colors.borderColor }]} />
           <View style={styles.metricCol}>
             <Text style={[styles.metricVal, { color: colors.textPrimary }]}>{calBurned}</Text>
-            <Text style={[styles.metricLabel, { color: colors.textMuted }]}>EST. KCAL</Text>
+            <Text style={[styles.metricLabel, { color: colors.textMuted }]}>CALORIES</Text>
           </View>
         </View>
       </View>
-
-      {/* 4. REAL ROUTE MAP */}
-      <StravaRouteMap routeCoords={route} currentPos={currentCoords} isTracking={isActive} />
 
       {/* 5. CONTROLS */}
       {!isFinished ? (
         <View style={styles.actionWrap}>
           {!isActive && seconds === 0 ? (
-            <TouchableOpacity onPress={() => setIsActive(true)} style={styles.startBtn}>
+            <TouchableOpacity
+              onPress={() => {
+                haptics.impact();
+                setIsActive(true);
+              }}
+              style={styles.startBtn}
+              accessibilityRole="button"
+            >
               <Play size={20} color="#FFFFFF" fill="#FFFFFF" style={{ marginRight: 8 }} />
-              <Text style={styles.startBtnText}>Start {activeSportObj.label} Tracking</Text>
+              <Text style={styles.startBtnText}>Start {activeSportObj.label.toLowerCase()}</Text>
             </TouchableOpacity>
           ) : (
             <View style={styles.circularControlsRow}>
               {isActive ? (
-                <TouchableOpacity onPress={() => setIsActive(false)} style={styles.pauseCircleBtn}>
+                <TouchableOpacity
+                  onPress={() => {
+                    haptics.tap();
+                    setIsActive(false);
+                  }}
+                  style={styles.pauseCircleBtn}
+                  accessibilityRole="button"
+                  accessibilityLabel="Pause"
+                >
                   <Pause size={28} color="#FFFFFF" fill="#FFFFFF" />
                   <Text style={styles.circleBtnLabel}>PAUSE</Text>
                 </TouchableOpacity>
               ) : (
-                <TouchableOpacity onPress={() => setIsActive(true)} style={styles.resumeCircleBtn}>
+                <TouchableOpacity
+                  onPress={() => {
+                    haptics.tap();
+                    setIsActive(true);
+                  }}
+                  style={styles.resumeCircleBtn}
+                  accessibilityRole="button"
+                  accessibilityLabel="Resume"
+                >
                   <Play size={28} color="#FFFFFF" fill="#FFFFFF" />
                   <Text style={styles.circleBtnLabel}>RESUME</Text>
                 </TouchableOpacity>
@@ -242,6 +267,8 @@ export function MoveTrackerView() {
               <TouchableOpacity
                 onPress={handleFinish}
                 style={[styles.stopCircleBtn, { backgroundColor: colors.textPrimary }]}
+                accessibilityRole="button"
+                accessibilityLabel="Finish"
               >
                 <Square size={24} color={colors.bgScreen} fill={colors.bgScreen} />
                 <Text style={[styles.circleBtnLabelDark, { color: colors.bgScreen }]}>FINISH</Text>
@@ -252,11 +279,9 @@ export function MoveTrackerView() {
       ) : (
         <View style={[styles.finishedCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
           <CheckCircle2 size={36} color="#059669" />
-          <Text style={[styles.finishedTitle, { color: colors.textPrimary }]}>
-            {activeSportObj.label} Saved to Memories!
-          </Text>
+          <Text style={[styles.finishedTitle, { color: colors.textPrimary }]}>{activeSportObj.label} saved</Text>
           <Text style={[styles.finishedDesc, { color: colors.textMuted }]}>
-            {distanceKm.toFixed(2)} km in {formatTime(seconds)} • {calBurned} active kcal burned
+            {distanceKm.toFixed(2)} km in {formatTime(seconds)} • {calBurned} kcal
           </Text>
           {!sharedToFeed ? (
             <TouchableOpacity
@@ -288,6 +313,9 @@ export function MoveTrackerView() {
           </TouchableOpacity>
         </View>
       )}
+
+      {/* 4. REAL ROUTE MAP */}
+      <StravaRouteMap routeCoords={route} currentPos={currentCoords} isTracking={isActive} />
     </ScrollView>
   );
 }

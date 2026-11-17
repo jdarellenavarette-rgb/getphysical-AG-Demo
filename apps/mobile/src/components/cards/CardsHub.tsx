@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
-import { Plus, Wallet, Ticket, ChevronRight, QrCode } from "lucide-react-native";
+import { Plus, Wallet, ChevronRight, QrCode } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { ExactVIPCard } from "./ExactVIPCard";
 import { ReceiptModal } from "./ReceiptModal";
@@ -9,6 +9,8 @@ import { TurnstileQRModal } from "./TurnstileQRModal";
 import { AddMembershipChoiceModal } from "./AddMembershipChoiceModal";
 import { QrScannerModal } from "./QrScannerModal";
 import { useThemeStore } from "../../theme/theme";
+import { EmptyState } from "../common/EmptyState";
+import { haptics } from "../../lib/haptics";
 import type { PassRow } from "sodia-core";
 import { isPassUsable, passStatusLabel, passVenueName } from "../../lib/passDisplay";
 
@@ -17,7 +19,7 @@ interface CardsHubProps {
 }
 
 export function CardsHub({ onBrowseVenues }: CardsHubProps) {
-  const { passes, profile, facilities, purchases, setIsGuest } = useEcosystemStore();
+  const { passes, facilities, purchases, setIsGuest } = useEcosystemStore();
   const { colors } = useThemeStore();
   const [selectedPassForReceipt, setSelectedPassForReceipt] = useState<PassRow | null>(null);
   const [isSoaOpen, setIsSoaOpen] = useState(false);
@@ -35,99 +37,95 @@ export function CardsHub({ onBrowseVenues }: CardsHubProps) {
       contentContainerStyle={styles.contentContainer}
       showsVerticalScrollIndicator={false}
     >
-      {/* USER GREETING */}
       <View style={styles.userGreetingRow}>
         <View>
-          <Text style={[styles.userName, { color: colors.textPrimary }]}>Hello, {profile.first_name}</Text>
+          <Text style={[styles.userName, { color: colors.textPrimary }]}>Wallet</Text>
           <Text style={[styles.userHandle, { color: colors.textMuted }]}>Your passes and memberships</Text>
         </View>
       </View>
 
-      {/* 3D VIP CARD STACK OR EMPTY CARD OUTLINE */}
-      {activePass ? (
-        <View style={styles.cardWrapper}>
-          <ExactVIPCard pass={activePass} facilityName={activeVenue} />
-        </View>
+      {!activePass ? (
+        // Nothing to show yet: one clear way forward, plus the scanner for people handed a QR code.
+        <>
+          <EmptyState
+            icon={Wallet}
+            title="No passes yet"
+            body="Buy a day pass or membership at a venue and your entry QR code will live here."
+            actionLabel="Find a venue"
+            onAction={onBrowseVenues}
+          />
+          <TouchableOpacity
+            onPress={() => setIsClubScannerOpen(true)}
+            style={styles.scanLink}
+            accessibilityRole="button"
+          >
+            <QrCode size={16} color={colors.accent} />
+            <Text style={[styles.scanLinkText, { color: colors.accent }]}>Scan a QR code to join</Text>
+          </TouchableOpacity>
+        </>
       ) : (
-        <View style={styles.emptyCardContainer}>
-          <View style={[styles.emptyCardDashed, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
-            <Wallet size={40} color="#EC4899" />
-            <Text style={[styles.emptyCardTitle, { color: colors.textPrimary }]}>No Active Passes</Text>
-            <Text style={[styles.emptyCardDesc, { color: colors.textSecondary }]}>
-              Add a day pass or membership to get your entry QR code.
-            </Text>
-            <TouchableOpacity onPress={() => setIsAddMembershipChoiceOpen(true)} style={styles.getPassButton}>
-              <Plus size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
-              <Text style={styles.getPassButtonText}>Add Membership</Text>
+        <>
+          <View style={styles.cardWrapper}>
+            <ExactVIPCard pass={activePass} facilityName={activeVenue} />
+          </View>
+
+          <View style={styles.actionPillsRow}>
+            <TouchableOpacity
+              onPress={() => setIsAddMembershipChoiceOpen(true)}
+              style={[styles.actionPill, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}
+              accessibilityRole="button"
+            >
+              <Plus size={16} color={colors.accent} />
+              <Text style={[styles.actionPillText, { color: colors.textPrimary }]}>Add Pass</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                haptics.tap();
+                setIsQrOpen(true);
+              }}
+              style={[styles.actionPill, styles.actionPillPrimary]}
+              accessibilityRole="button"
+            >
+              <QrCode size={16} color="#FFFFFF" />
+              <Text style={[styles.actionPillText, { color: "#FFFFFF" }]}>Show Entry QR</Text>
             </TouchableOpacity>
           </View>
-        </View>
-      )}
 
-      {/* QUICK ACTION PILLS (ADD, SEND/GIFT, PAY) */}
-      <View style={styles.actionPillsRow}>
-        <TouchableOpacity
-          onPress={() => setIsAddMembershipChoiceOpen(true)}
-          style={[styles.actionPill, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}
-        >
-          <Plus size={16} color="#EC4899" />
-          <Text style={[styles.actionPillText, { color: colors.textPrimary }]}>Add Pass</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() => (activePass ? setIsQrOpen(true) : setIsAddMembershipChoiceOpen(true))}
-          style={[styles.actionPill, styles.actionPillPrimary]}
-          accessibilityRole="button"
-        >
-          <QrCode size={16} color="#FFFFFF" />
-          <Text style={[styles.actionPillText, { color: "#FFFFFF" }]}>Show Entry QR</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* RECENT TRANSACTIONS SHEET */}
-      <View style={[styles.historySheet, { backgroundColor: colors.bgCard }]}>
-        <View style={styles.historyHeader}>
-          <Text style={[styles.historyTitle, { color: colors.textPrimary }]}>Your Passes</Text>
-          {passes.length > 0 && (
-            <TouchableOpacity onPress={() => setIsSoaOpen(true)}>
-              <Text style={styles.viewAllText}>View All</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {passes.length === 0 ? (
-          <View style={styles.emptyLedgerBox}>
-            <Ticket size={28} color={colors.textMuted} />
-            <Text style={[styles.emptyLedgerTitle, { color: colors.textPrimary }]}>No passes yet</Text>
-            <Text style={[styles.emptyLedgerSubtitle, { color: colors.textMuted }]}>
-              Passes you buy or receive will appear here.
-            </Text>
-          </View>
-        ) : (
-          <View style={styles.txList}>
-            {passes.map((p) => (
-              <TouchableOpacity
-                key={p.id}
-                onPress={() => setSelectedPassForReceipt(p)}
-                style={[styles.txRow, { backgroundColor: colors.bgCardSecondary }]}
-              >
-                <View>
-                  <Text style={[styles.txName, { color: colors.textPrimary }]}>{p.pass_type}</Text>
-                  <Text style={[styles.txTime, { color: colors.textMuted }]}>
-                    {passVenueName(p, facilities, purchases[p.id])}
-                  </Text>
-                </View>
-                <View style={styles.txRight}>
-                  <Text style={[styles.txStatus, !isPassUsable(p) && { color: colors.textMuted }]}>
-                    {passStatusLabel(p)}
-                  </Text>
-                  <ChevronRight size={16} color={colors.textMuted} />
-                </View>
+          <View style={[styles.historySheet, { backgroundColor: colors.bgCard }]}>
+            <View style={styles.historyHeader}>
+              <Text style={[styles.historyTitle, { color: colors.textPrimary }]}>Your Passes</Text>
+              <TouchableOpacity onPress={() => setIsSoaOpen(true)} accessibilityRole="button">
+                <Text style={styles.viewAllText}>Statement</Text>
               </TouchableOpacity>
-            ))}
+            </View>
+            <View style={styles.txList}>
+              {passes.map((p) => (
+                <TouchableOpacity
+                  key={p.id}
+                  onPress={() => setSelectedPassForReceipt(p)}
+                  style={[styles.txRow, { backgroundColor: colors.bgCardSecondary }]}
+                  accessibilityRole="button"
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text numberOfLines={1} style={[styles.txName, { color: colors.textPrimary }]}>
+                      {p.pass_type}
+                    </Text>
+                    <Text numberOfLines={1} style={[styles.txTime, { color: colors.textMuted }]}>
+                      {passVenueName(p, facilities, purchases[p.id])}
+                    </Text>
+                  </View>
+                  <View style={styles.txRight}>
+                    <Text style={[styles.txStatus, !isPassUsable(p) && { color: colors.textMuted }]}>
+                      {passStatusLabel(p)}
+                    </Text>
+                    <ChevronRight size={16} color={colors.textMuted} />
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
-        )}
-      </View>
+        </>
+      )}
 
       <ReceiptModal
         visible={!!selectedPassForReceipt}
@@ -165,6 +163,8 @@ export function CardsHub({ onBrowseVenues }: CardsHubProps) {
 }
 
 const styles = StyleSheet.create({
+  scanLink: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, minHeight: 44 },
+  scanLinkText: { fontSize: 14, fontWeight: "700" },
   container: { flex: 1 },
   contentContainer: { paddingBottom: 110 },
   userGreetingRow: {
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
   getPassButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#EC4899",
+    backgroundColor: "#E11D48",
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: 999,

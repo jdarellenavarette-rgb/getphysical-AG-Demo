@@ -16,7 +16,7 @@ export default async function OverviewPage() {
   const { active } = await requireSuiteSession();
   const [attendance, members] = await Promise.all([
     loadAttendanceSummary(active.id),
-    loadMembers(active.id, { status: "ALL" }),
+    loadMembers(active.id, { standing: "ALL" }),
   ]);
   const peak = Math.max(1, ...attendance.daily.map((d) => d.granted));
   const weekTotal = attendance.daily.reduce((sum, d) => sum + d.granted, 0);
@@ -31,8 +31,12 @@ export default async function OverviewPage() {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Active members"
-          value={String(members.activeCount)}
-          hint={`${members.total} on your list in total`}
+          value={String(members.counts.ACTIVE)}
+          hint={
+            active.registryType === "COMMERCIAL"
+              ? `${members.counts.LAPSED} lapsed · ${members.counts.NO_PASS} without a pass`
+              : `${members.total} on your list in total`
+          }
         />
         <StatCard label="Check-ins today" value={String(attendance.grantedToday)} />
         <StatCard

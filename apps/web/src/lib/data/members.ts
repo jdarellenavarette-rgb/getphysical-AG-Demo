@@ -1,81 +1,82 @@
 import "server-only";
-import type { Database } from "sodia-core";
+import { memberDirectoryRowSchema, type MemberStanding } from "sodia-core";
+import { z } from "zod";
 import { createServerSupabase } from "../supabase/server";
-
-export type MembershipStatus = Database["public"]["Enums"]["membership_status"];
 
 export interface MemberRow {
   userId: string;
   name: string;
   handle: string | null;
-  status: MembershipStatus;
+  standing: MemberStanding;
   source: string;
   joinedAt: string | null;
+  passValidUntil: string | null;
+  lastPassEndedAt: string | null;
   lastVisitAt: string | null;
+  broadcastsMuted: boolean;
 }
+
+export type StandingCounts = Record<MemberStanding, number>;
 
 export interface MemberList {
   members: MemberRow[];
-  /** Members of this facility before search and status filters. */
+  /** Everyone on the venue's list, before search and filters. */
   total: number;
-  activeCount: number;
+  counts: StandingCounts;
+  /** Members a broadcast can reach, by audience (muted members excluded). */
+  reach: { all: number; active: number; lapsed: number };
 }
 
-const MAX_MEMBERS = 1000;
+/**
+ * The venue's member directory. Standing is decided once, in the database
+ * (`facility_member_directory`), so this screen, the door and the mobile app agree.
+ */
+export async function loadMemberDirectory(facilityId: string): Promise<MemberRow[]> {
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase.rpc("facility_member_directory", { p_facility_id: facilityId });
+  if (error) throw new Error("Could not load members.", { cause: error });
+  return z
+    .array(memberDirectoryRowSchema)
+    .parse(data)
+    .map((row) => ({
+      userId: row.user_id,
+      name: row.name,
+      handle: row.username ? `@${row.username}` : null,
+      standing: row.standing,
+      source: row.source,
+      joinedAt: row.joined_at,
+      passValidUntil: row.pass_valid_until,
+      lastPassEndedAt: row.last_pass_ended_at,
+      lastVisitAt: row.last_visit_at,
+      broadcastsMuted: row.broadcasts_muted,
+    }));
+}
 
-/** The facility's members with profile names and last granted check-in. RLS limits rows to staff of the facility. */
+export function summarizeMembers(all: MemberRow[]): Pick<MemberList, "total" | "counts" | "reach"> {
+  const counts: StandingCounts = { ACTIVE: 0, LAPSED: 0, NO_PASS: 0, PENDING: 0, CANCELLED: 0 };
+  for (const member of all) counts[member.standing] += 1;
+  const reachable = all.filter((m) => !m.broadcastsMuted);
+  return {
+    total: all.length,
+    counts,
+    reach: {
+      all: reachable.filter((m) => m.standing !== "CANCELLED" && m.standing !== "PENDING").length,
+      active: reachable.filter((m) => m.standing === "ACTIVE").length,
+      lapsed: reachable.filter((m) => m.standing === "LAPSED").length,
+    },
+  };
+}
+
 export async function loadMembers(
   facilityId: string,
-  filters: { query?: string; status?: MembershipStatus | "ALL" },
+  filters: { query?: string; standing?: MemberStanding | "ALL" },
 ): Promise<MemberList> {
-  const supabase = await createServerSupabase();
-  const { data: memberships, error } = await supabase
-    .from("facility_memberships")
-    .select("user_id, status, source, joined_at")
-    .eq("facility_id", facilityId)
-    .order("joined_at", { ascending: false })
-    .limit(MAX_MEMBERS);
-  if (error) throw new Error("Could not load members.", { cause: error });
-  if (memberships.length === 0) return { members: [], total: 0, activeCount: 0 };
-
-  const userIds = memberships.map((m) => m.user_id);
-  const [profiles, scans] = await Promise.all([
-    supabase.from("profiles").select("id, name, username").in("id", userIds),
-    supabase
-      .from("access_scans")
-      .select("user_id, created_at")
-      .eq("facility_id", facilityId)
-      .eq("status", "GRANTED")
-      .order("created_at", { ascending: false })
-      .limit(2000),
-  ]);
-  if (profiles.error ?? scans.error)
-    throw new Error("Could not load members.", { cause: profiles.error ?? scans.error });
-
-  const profileById = new Map(profiles.data.map((p) => [p.id, p]));
-  const lastVisit = new Map<string, string>();
-  for (const scan of scans.data) {
-    if (scan.user_id && scan.created_at && !lastVisit.has(scan.user_id)) lastVisit.set(scan.user_id, scan.created_at);
-  }
-
-  const all: MemberRow[] = memberships.map((m) => {
-    const profile = profileById.get(m.user_id);
-    return {
-      userId: m.user_id,
-      name: profile?.name || profile?.username || "Member",
-      handle: profile?.username ? `@${profile.username}` : null,
-      status: m.status,
-      source: m.source,
-      joinedAt: m.joined_at,
-      lastVisitAt: lastVisit.get(m.user_id) ?? null,
-    };
-  });
-
+  const all = await loadMemberDirectory(facilityId);
   const needle = filters.query?.trim().toLowerCase().replace(/^@/, "") ?? "";
   const members = all.filter(
     (m) =>
-      (!filters.status || filters.status === "ALL" || m.status === filters.status) &&
+      (!filters.standing || filters.standing === "ALL" || m.standing === filters.standing) &&
       (!needle || m.name.toLowerCase().includes(needle) || (m.handle ?? "").toLowerCase().includes(needle)),
   );
-  return { members, total: all.length, activeCount: all.filter((m) => m.status === "ACTIVE").length };
+  return { members, ...summarizeMembers(all) };
 }

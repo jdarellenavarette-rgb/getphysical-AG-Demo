@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { MessageRow } from "sodia-core";
+import { describeStanding, memberStandingSchema, type MessageRow } from "sodia-core";
 import { loadFacilityInbox, type InboxThread } from "../../app/actions/crm";
 import { getBrowserSupabase } from "../../lib/supabase/browser";
 
@@ -46,7 +46,9 @@ function initials(name: string): string {
 
 function toTicket(thread: InboxThread): InboxTicket {
   const last = thread.messages[thread.messages.length - 1];
-  const active = thread.membershipStatus === "ACTIVE";
+  const standing = memberStandingSchema.safeParse(thread.membershipStatus);
+  const active = standing.success && standing.data === "ACTIVE";
+  const standingLabel = standing.success ? describeStanding(standing.data).label : "Not a member";
   return {
     id: thread.conversationId,
     athleteId: thread.athleteId,
@@ -57,10 +59,10 @@ function toTicket(thread: InboxThread): InboxTicket {
     time: formatTime(thread.lastMessageAt),
     unread: Boolean(last && !last.fromFacility),
     isActiveMember: active,
-    tag: active ? "Active member" : "Not an active member",
+    tag: standingLabel,
     tagColor: active ? "#059669" : "#9CA3AF",
     athleteMeta: {
-      membership: thread.membershipStatus ?? "—",
+      membership: standingLabel,
       lastVisit: thread.lastVisitAt ? new Date(thread.lastVisitAt).toLocaleString() : "No check-ins yet",
     },
     messages: thread.messages.map((m) => ({

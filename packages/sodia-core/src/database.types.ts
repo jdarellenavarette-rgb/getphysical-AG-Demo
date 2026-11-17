@@ -616,6 +616,7 @@ export type Database = {
       };
       facility_memberships: {
         Row: {
+          broadcasts_muted: boolean;
           facility_id: string;
           joined_at: string | null;
           source: string;
@@ -624,6 +625,7 @@ export type Database = {
           user_id: string;
         };
         Insert: {
+          broadcasts_muted?: boolean;
           facility_id: string;
           joined_at?: string | null;
           source?: string;
@@ -632,6 +634,7 @@ export type Database = {
           user_id: string;
         };
         Update: {
+          broadcasts_muted?: boolean;
           facility_id?: string;
           joined_at?: string | null;
           source?: string;
@@ -1841,6 +1844,13 @@ export type Database = {
         };
         Returns: Database["public"]["Tables"]["payment_orders"]["Row"];
       };
+      end_membership: {
+        Args: {
+          p_facility_id: string;
+          p_user_id: string;
+        };
+        Returns: Json;
+      };
       ensure_facility_conversation: {
         Args: {
           p_facility_id: string;
@@ -1858,6 +1868,12 @@ export type Database = {
         };
         Returns: { id: string | null; slug: string | null; name: string | null; registry_type: Database["public"]["Enums"]["registry_type"] | null; category: string | null; lat: number | null; lng: number | null; logo_url: string | null; is_open: boolean | null; inside_now_count: number | null; max_capacity: number | null; rating: number | null; distance_km: number | null }[];
       };
+      facility_member_directory: {
+        Args: {
+          p_facility_id: string;
+        };
+        Returns: { user_id: string | null; name: string | null; username: string | null; avatar_url: string | null; membership_status: Database["public"]["Enums"]["membership_status"] | null; source: string | null; joined_at: string | null; standing: string | null; pass_valid_until: string | null; last_pass_ended_at: string | null; last_visit_at: string | null; broadcasts_muted: boolean | null }[];
+      };
       get_my_profile: {
         Args: Record<PropertyKey, never>;
         Returns: Database["public"]["Tables"]["profiles"]["Row"];
@@ -1866,6 +1882,14 @@ export type Database = {
         Args: {
           p_kind: Database["public"]["Enums"]["qr_kind"];
           p_target?: string;
+        };
+        Returns: Json;
+      };
+      grant_complimentary_pass: {
+        Args: {
+          p_facility_id: string;
+          p_user_id: string;
+          p_days: number;
         };
         Returns: Json;
       };
@@ -1900,11 +1924,21 @@ export type Database = {
         };
         Returns: boolean;
       };
+      leave_facility: {
+        Args: {
+          p_facility_id: string;
+        };
+        Returns: undefined;
+      };
       mark_conversation_read: {
         Args: {
           p_conversation_id: string;
         };
         Returns: undefined;
+      };
+      my_memberships: {
+        Args: Record<PropertyKey, never>;
+        Returns: { facility_id: string | null; facility_name: string | null; slug: string | null; logo_url: string | null; registry_type: Database["public"]["Enums"]["registry_type"] | null; standing: string | null; pass_valid_until: string | null; broadcasts_muted: boolean | null; joined_at: string | null }[];
       };
       open_direct_conversation: {
         Args: {
@@ -1960,6 +1994,13 @@ export type Database = {
           p_badge_text?: string;
         };
         Returns: Database["public"]["Tables"]["crm_broadcasts"]["Row"];
+      };
+      set_venue_broadcasts_muted: {
+        Args: {
+          p_facility_id: string;
+          p_muted: boolean;
+        };
+        Returns: undefined;
       };
       settle_payment_order: {
         Args: {

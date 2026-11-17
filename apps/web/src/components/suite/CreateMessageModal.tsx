@@ -19,7 +19,9 @@ interface CreateMessageModalProps {
 }
 
 export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSent }: CreateMessageModalProps) {
-  const [audience, setAudience] = useState<"ALL" | "SEGMENT_1" | "SEGMENT_2" | "SEGMENT_3">("ALL");
+  const [audience, setAudience] = useState<"ALL" | "ACTIVE" | "LAPSED" | "SEGMENT_1" | "SEGMENT_2" | "SEGMENT_3">(
+    "ALL",
+  );
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [promoCode, setPromoCode] = useState("");
@@ -65,6 +67,18 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
   }, [visible]);
 
   if (!visible) return null;
+
+  // Members the chosen audience reaches; null when it is a segment (counted by the database on send).
+  const reach =
+    audiences === null
+      ? null
+      : audience === "ALL"
+        ? audiences.all
+        : audience === "ACTIVE"
+          ? audiences.active
+          : audience === "LAPSED"
+            ? audiences.lapsed
+            : null;
 
   const getModalConfig = () => {
     switch (suiteMode) {
@@ -217,7 +231,7 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
             <h4 style={{ fontSize: "18px", fontWeight: 800, color: "#FFFFFF" }}>Broadcast sent</h4>
             <p style={{ fontSize: "12px", color: "#9CA3AF", marginTop: "6px" }}>
               {recipientCount === 0
-                ? `No active members of ${facility.name} to receive it, so nothing was delivered.`
+                ? `Nobody in that audience at ${facility.name}, so nothing was delivered.`
                 : `Delivered to ${recipientCount} ${recipientCount === 1 ? "member" : "members"} of ${facility.name}.`}
             </p>
           </div>
@@ -240,7 +254,13 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
               </label>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                 {[
-                  { id: "ALL" as const, label: "All active members" },
+                  { id: "ALL" as const, label: "All members" },
+                  ...(audiences?.usesPasses
+                    ? [
+                        { id: "ACTIVE" as const, label: "Active (valid pass)" },
+                        { id: "LAPSED" as const, label: "Lapsed (win-back)" },
+                      ]
+                    : []),
                   ...(audiences?.segments ?? []).map((segment) => ({ id: segment.key, label: segment.label })),
                 ].map((aud) => (
                   <button
@@ -266,11 +286,11 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
               <p style={{ fontSize: "12px", color: "#D1D5DB", margin: "8px 0 0" }}>
                 {audiences === null
                   ? "Checking who this will reach…"
-                  : audience !== "ALL"
-                    ? "Goes to the active members in this segment."
-                    : audiences.activeMembers === 0
-                      ? `${facility.name} has no active members yet, so nobody would receive this.`
-                      : `Goes to ${audiences.activeMembers} active ${audiences.activeMembers === 1 ? "member" : "members"} of ${facility.name}.`}
+                  : reach === null
+                    ? "Goes to the members in this segment who haven't muted you."
+                    : reach === 0
+                      ? "Nobody is in this audience right now, so nothing would be delivered."
+                      : `Goes to ${reach} ${reach === 1 ? "member" : "members"} of ${facility.name}. Members who muted your broadcasts are left out.`}
               </p>
             </div>
 
@@ -412,7 +432,7 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
             {/* Submit Button */}
             <button
               onClick={handleSend}
-              disabled={isPending || (audience === "ALL" && audiences?.activeMembers === 0)}
+              disabled={isPending || reach === 0}
               style={{
                 marginTop: "10px",
                 padding: "12px",

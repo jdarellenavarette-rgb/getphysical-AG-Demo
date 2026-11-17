@@ -156,11 +156,7 @@ export async function loadFacilityInbox(facilityId: string): Promise<ActionResul
 
   const [profiles, memberships, scans, messages] = await Promise.all([
     supabase.from("profiles").select("id, name, username, avatar_url, avatar").in("id", athleteIds),
-    supabase
-      .from("facility_memberships")
-      .select("user_id, status")
-      .eq("facility_id", facilityId)
-      .in("user_id", athleteIds),
+    supabase.rpc("facility_member_directory", { p_facility_id: facilityId }),
     supabase
       .from("access_scans")
       .select("user_id, created_at")
@@ -192,7 +188,7 @@ export async function loadFacilityInbox(facilityId: string): Promise<ActionResul
       athleteName: profile?.name || profile?.username || "Member",
       athleteAvatar: profile?.avatar_url ?? profile?.avatar ?? null,
       athleteHandle: profile?.username ? `@${profile.username}` : null,
-      membershipStatus: membershipRows.find((m) => m.user_id === conversation.athlete_id)?.status ?? null,
+      membershipStatus: membershipRows.find((m) => m.user_id === conversation.athlete_id)?.standing ?? null,
       lastVisitAt: scanRows.find((s) => s.user_id === conversation.athlete_id)?.created_at ?? null,
       lastMessageAt: conversation.last_message_at,
       messages: messageRows
@@ -212,38 +208,44 @@ export async function loadFacilityInbox(facilityId: string): Promise<ActionResul
 }
 
 export interface BroadcastAudiences {
-  activeMembers: number;
+  /** Members each audience reaches. Members who muted the venue are already excluded. */
+  all: number;
+  active: number;
+  lapsed: number;
+  /** Lapsed and active audiences only mean something where a pass is needed. */
+  usesPasses: boolean;
   /** Only segments this facility has actually set up. */
   segments: { key: "SEGMENT_1" | "SEGMENT_2" | "SEGMENT_3"; label: string }[];
 }
 
 const SENDABLE_SEGMENT_KEYS = ["SEGMENT_1", "SEGMENT_2", "SEGMENT_3"] as const;
 
-/** Who a broadcast can reach: the real active-member count and the facility's own segments. */
+/** Who a broadcast can reach, counted from the same member directory the Members screen shows. */
 export async function loadBroadcastAudiences(facilityId: string): Promise<ActionResult<BroadcastAudiences>> {
   const supabase = await createServerSupabase();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) return { ok: false, state: "session_expired", message: "Your session expired. Sign in again." };
 
-  const [members, segments] = await Promise.all([
-    supabase
-      .from("facility_memberships")
-      .select("user_id", { count: "exact", head: true })
-      .eq("facility_id", facilityId)
-      .eq("status", "ACTIVE"),
+  const [directory, segments, facility] = await Promise.all([
+    supabase.rpc("facility_member_directory", { p_facility_id: facilityId }),
     supabase
       .from("facility_segments")
       .select("key, label")
       .eq("facility_id", facilityId)
       .in("key", SENDABLE_SEGMENT_KEYS),
+    supabase.from("facilities").select("registry_type").eq("id", facilityId).maybeSingle(),
   ]);
-  const firstError = members.error ?? segments.error;
+  const firstError = directory.error ?? segments.error ?? facility.error;
   if (firstError) return fromDbError(firstError);
 
+  const reachable = (directory.data ?? []).filter((member) => !member.broadcasts_muted);
   return {
     ok: true,
     data: {
-      activeMembers: members.count ?? 0,
+      all: reachable.filter((m) => m.membership_status === "ACTIVE").length,
+      active: reachable.filter((m) => m.standing === "ACTIVE").length,
+      lapsed: reachable.filter((m) => m.standing === "LAPSED").length,
+      usesPasses: facility.data?.registry_type === "COMMERCIAL",
       segments: (segments.data ?? []).flatMap((segment) => {
         const key = SENDABLE_SEGMENT_KEYS.find((k) => k === segment.key);
         return key ? [{ key, label: segment.label }] : [];

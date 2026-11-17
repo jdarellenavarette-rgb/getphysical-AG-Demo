@@ -4,6 +4,7 @@ import { Heart, MessageCircle, Send, MapPin, MoreHorizontal, Play, Trophy, Tag }
 import type { SodiaPostRow } from "sodia-core";
 import { useThemeStore } from "../../theme/theme";
 import { PlayableVideoView } from "./PlayableVideoView";
+import { Avatar } from "../common/Avatar";
 import { formatTimeAgo } from "../../services/messagingService";
 
 interface SodiaPostCardProps {
@@ -77,7 +78,12 @@ export function SodiaPostCard({
           style={{ flexDirection: "row", alignItems: "center", flex: 1 }}
         >
           <View style={[styles.authorAvatarRing, isAd && { borderColor: "#F59E0B" }]}>
-            <Image source={{ uri: post.author_avatar ?? profileAvatar ?? "" }} style={styles.postAvatar} />
+            <Avatar
+              uri={post.author_avatar ?? (isOwn ? profileAvatar : null)}
+              name={post.author_name}
+              size={32}
+              style={styles.postAvatar}
+            />
           </View>
           <View style={styles.postAuthorInfo}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>

@@ -1,10 +1,12 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
 import { Plus } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { useThemeStore } from "../../theme/theme";
 import { useFeedStore } from "../../store/feedStore";
-import { OWN_STORY_ID, SEED_STORIES } from "../../data/seedStories";
+import { OWN_STORY_ID } from "../../lib/stories";
+import { Avatar } from "../common/Avatar";
+import { useRequireAccount } from "../../hooks/useRequireAccount";
 import { TenStateView } from "../common/TenStateView";
 import { createSuccessState, createEmptyState } from "sodia-core";
 import { SodiaPostCard } from "./SodiaPostCard";
@@ -30,25 +32,27 @@ export function SodiaFeed({
   const { colors } = useThemeStore();
   const { likedPostIds, joinedChallengeIds, commentsByPost, toggleLike, toggleChallenge, forgetPost } = useFeedStore();
 
+  const requireAccount = useRequireAccount();
+  const likePost = (id: string) => {
+    if (requireAccount("like posts")) toggleLike(id);
+  };
+  const joinChallenge = (id: string) => {
+    if (requireAccount("join a challenge")) toggleChallenge(id);
+  };
+
   const handleDelete = (id: string) => {
     deletePost(id);
     forgetPost(id);
   };
 
+  // Other people's stories will come from the server; for now the tray holds only your own.
   const stories = [
     { id: OWN_STORY_ID, name: "Your Story", isMe: true, hasStory: !!userStory, image: profile.avatar_url },
-    ...SEED_STORIES.map((story) => ({
-      id: story.id,
-      name: story.shortName,
-      isMe: false,
-      hasStory: true,
-      image: story.avatar,
-    })),
   ];
 
   const feedState =
     posts.length === 0
-      ? createEmptyState("Your community feed is quiet. Share your first workout or status.", "+ Create Post")
+      ? createEmptyState("No posts yet. Share your first workout or status.", "Create Post")
       : createSuccessState(posts);
 
   return (
@@ -83,7 +87,7 @@ export function SodiaFeed({
                 st.isMe && !st.hasStory && { borderColor: colors.borderLight },
               ]}
             >
-              <Image source={{ uri: st.image ?? "" }} style={styles.storyAvatar} />
+              <Avatar uri={st.image} name={profile.name} size={58} style={styles.storyAvatar} />
               {st.isMe && (
                 <TouchableOpacity
                   onPress={(e) => {
@@ -119,8 +123,8 @@ export function SodiaFeed({
                   false
                 }
                 commentCount={commentsByPost[post.id]?.length ?? 0}
-                onToggleLike={toggleLike}
-                onToggleChallenge={toggleChallenge}
+                onToggleLike={likePost}
+                onToggleChallenge={joinChallenge}
                 onDelete={handleDelete}
                 onOpenComments={onOpenComments}
                 onPressFacilityCTA={onPressFacilityCTA}

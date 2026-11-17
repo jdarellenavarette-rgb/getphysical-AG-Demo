@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, ScrollView } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Search, ArrowLeft } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import { useCrmMessagingStore } from "../../store/crmMessagingStore";
+import { Avatar } from "../common/Avatar";
 
 export interface DMThread {
   id: string;
@@ -96,7 +97,7 @@ export function InboxView({ onBack, onSelectThread }: InboxViewProps) {
             style={[styles.threadItem, { borderBottomColor: colors.borderColor }]}
           >
             <View style={styles.avatarContainer}>
-              <Image source={{ uri: t.avatar }} style={styles.avatar} />
+              <Avatar uri={t.avatar} name={t.name} size={52} style={styles.avatar} />
               {t.isOnline && <View style={[styles.onlineBadge, { borderColor: colors.bgScreen }]} />}
             </View>
 

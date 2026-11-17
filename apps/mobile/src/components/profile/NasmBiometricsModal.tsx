@@ -53,7 +53,7 @@ export function NasmBiometricsModal({ visible, onClose }: NasmBiometricsModalPro
   const numHeight = parseFloat(heightCm) || 175;
   const numWeight = parseFloat(weightKg) || 80;
 
-  // NASM Mifflin-St Jeor Equation
+  // Mifflin-St Jeor equation
   const bmr = Math.round(10 * numWeight + 6.25 * numHeight - 5 * numAge + (gender === "male" ? 5 : -161));
   const tdee = Math.round(bmr * ACTIVITY_MULTIPLIERS[activity].factor);
   const targetCalories = Math.max(1200, tdee + GOAL_ADJUSTMENTS[goal].calDelta);
@@ -74,7 +74,7 @@ export function NasmBiometricsModal({ visible, onClose }: NasmBiometricsModalPro
       },
     );
     Alert.alert(
-      "NASM Targets Synced!",
+      "Targets saved",
       `Daily Targets: ${targetCalories} kcal (P: ${targetProtein}g • C: ${targetCarbs}g • F: ${targetFat}g)`,
     );
     onClose();
@@ -87,7 +87,7 @@ export function NasmBiometricsModal({ visible, onClose }: NasmBiometricsModalPro
           <View style={styles.header}>
             <View style={styles.badgeRow}>
               <Calculator size={16} color="#E11D48" />
-              <Text style={styles.badgeText}>NASM BODY COMP & TARGETS</Text>
+              <Text style={styles.badgeText}>BODY METRICS & TARGETS</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
               <X size={20} color={colors.textMuted} />

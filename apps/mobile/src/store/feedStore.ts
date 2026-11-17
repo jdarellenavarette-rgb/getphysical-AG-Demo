@@ -1,5 +1,14 @@
 import { create } from "zustand";
-import { SEED_COMMENTS, type FeedComment } from "../data/seedComments";
+/** A comment on a feed post. */
+export interface FeedComment {
+  id: string;
+  author: string;
+  avatar: string;
+  text: string;
+  createdAt: string;
+  likes: number;
+  isLiked: boolean;
+}
 
 interface FeedState {
   likedPostIds: Readonly<Record<string, boolean>>;
@@ -13,6 +22,8 @@ interface FeedState {
   toggleCommentLike: (postId: string, commentId: string) => void;
   /** Drops everything attached to a deleted post. */
   forgetPost: (postId: string) => void;
+  /** Clears everything (sign-out, or switching account). */
+  resetFeed: () => void;
 }
 
 /**
@@ -23,7 +34,7 @@ export const useFeedStore = create<FeedState>((set) => ({
   likedPostIds: {},
   joinedChallengeIds: {},
   followedUserIds: {},
-  commentsByPost: SEED_COMMENTS,
+  commentsByPost: {},
 
   toggleLike: (postId) =>
     set((state) => ({ likedPostIds: { ...state.likedPostIds, [postId]: !state.likedPostIds[postId] } })),
@@ -56,6 +67,8 @@ export const useFeedStore = create<FeedState>((set) => ({
         ),
       },
     })),
+
+  resetFeed: () => set({ likedPostIds: {}, joinedChallengeIds: {}, followedUserIds: {}, commentsByPost: {} }),
 
   forgetPost: (postId) =>
     set((state) => {

@@ -4,6 +4,8 @@ import { CheckCircle2, UserPlus, MessageSquare, Award, Grid, ArrowLeft } from "l
 import { useThemeStore } from "../../theme/theme";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { useFeedStore } from "../../store/feedStore";
+import { Avatar } from "../common/Avatar";
+import { useRequireAccount } from "../../hooks/useRequireAccount";
 
 export interface AthleteProfileData {
   userId: string;
@@ -31,6 +33,7 @@ export function AthleteProfileModal({ visible, athlete, onClose, onMessageAthlet
   const { colors } = useThemeStore();
   const { profile } = useEcosystemStore();
   const { followedUserIds, toggleFollow } = useFeedStore();
+  const requireAccount = useRequireAccount();
   const [activeTab, setActiveTab] = useState<"grid" | "pr">("grid");
 
   if (!visible || !athlete) return null;
@@ -64,7 +67,12 @@ export function AthleteProfileModal({ visible, athlete, onClose, onMessageAthlet
         {/* PROFILE HEADER */}
         <View style={styles.profileHeader}>
           <View style={styles.avatarRow}>
-            <Image source={{ uri: athlete.avatar }} style={[styles.avatar, { borderColor: colors.bgScreen }]} />
+            <Avatar
+              uri={athlete.avatar}
+              name={athlete.name}
+              size={84}
+              style={[styles.avatar, { borderColor: colors.bgScreen }]}
+            />
             <View style={styles.onlinePill}>
               <View style={styles.greenDot} />
               <Text style={styles.onlineText}>ACTIVE ATHLETE</Text>
@@ -87,7 +95,7 @@ export function AthleteProfileModal({ visible, athlete, onClose, onMessageAthlet
           {!isSelf && (
             <View style={styles.actionBtnRow}>
               <TouchableOpacity
-                onPress={() => toggleFollow(athlete.userId)}
+                onPress={() => requireAccount("follow people") && toggleFollow(athlete.userId)}
                 style={[styles.followBtn, isFollowing && styles.followingBtn]}
                 accessibilityRole="button"
                 accessibilityState={{ selected: isFollowing }}

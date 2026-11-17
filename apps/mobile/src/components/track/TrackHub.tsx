@@ -44,7 +44,7 @@ export function TrackHub() {
             <Text style={[styles.summaryVal, { color: colors.textPrimary }]}>{dailyTargets.calories}</Text>
             <Zap size={11} color="#E11D48" />
           </View>
-          <Text style={[styles.summaryLabel, { color: "#E11D48", fontWeight: "700" }]}>NASM Goal</Text>
+          <Text style={[styles.summaryLabel, { color: "#E11D48", fontWeight: "700" }]}>Daily Goal</Text>
         </TouchableOpacity>
       </View>
 

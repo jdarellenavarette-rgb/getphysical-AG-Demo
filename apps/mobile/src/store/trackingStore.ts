@@ -124,104 +124,50 @@ export interface TrackingState {
   deleteFoodMeal: (id: string) => void;
   clearFoodMeals: () => void;
   addHydration: (liters: number) => void;
+  /** True once the person has entered their own body metrics. */
+  hasSetBiometrics: boolean;
+  resetTracking: () => void;
 }
 
-const INITIAL_PROGRAMS: TrainingProgram[] = [
-  {
-    id: "prog_ppl",
-    title: "NASM Athletic Hypertrophy Split",
-    description: "3-Day Push/Pull/Legs periodized for muscle mass & core stability.",
-    days: [
-      {
-        id: "day_push",
-        dayName: "Day 1: Upper Push",
-        exercises: [
-          { name: "Barbell Incline Bench Press", sets: 4, reps: 8, weightKg: 85 },
-          { name: "Dumbbell Shoulder Press", sets: 3, reps: 10, weightKg: 28 },
-          { name: "Cable Chest Flyes", sets: 3, reps: 12, weightKg: 20 },
-        ],
-      },
-      {
-        id: "day_pull",
-        dayName: "Day 2: Posterior Pull",
-        exercises: [
-          { name: "Conventional Deadlift", sets: 3, reps: 5, weightKg: 180 },
-          { name: "Barbell Bent-Over Row", sets: 4, reps: 8, weightKg: 90 },
-          { name: "Weighted Pull-Ups", sets: 3, reps: 8, weightKg: 15 },
-        ],
-      },
-      {
-        id: "day_legs",
-        dayName: "Day 3: Lower Body Power",
-        exercises: [
-          { name: "Barbell Back Squat", sets: 4, reps: 6, weightKg: 140 },
-          { name: "Romanian Deadlift", sets: 3, reps: 10, weightKg: 110 },
-          { name: "Standing Calf Raises", sets: 4, reps: 15, weightKg: 60 },
-        ],
-      },
-    ],
-  },
-];
-
-const INITIAL_BIOMETRICS: UserBiometrics = {
-  age: 28,
+/**
+ * Neutral starting values so the calculators have something to work from.
+ * `hasSetBiometrics` stays false until the person enters their own.
+ */
+const DEFAULT_BIOMETRICS: UserBiometrics = {
+  age: 30,
   gender: "male",
-  heightCm: 178,
-  weightKg: 82,
-  activityLevel: "heavy",
-  goal: "hypertrophy",
-  bmr: 1815,
-  tdee: 2720,
-  bmi: 25.9,
+  heightCm: 170,
+  weightKg: 70,
+  activityLevel: "moderate",
+  goal: "maintenance",
+  bmr: 0,
+  tdee: 0,
+  bmi: 0,
 };
 
+const DEFAULT_TARGETS = { calories: 2000, protein: 120, carbs: 250, fat: 65, hydration: 2.5 };
+
 export const useTrackingStore = create<TrackingState>((set) => ({
-  liftSessions: [
-    {
-      id: "lift_seed_1",
-      title: "Heavy Pull & Posterior Chain",
-      date: new Date(Date.now() - 7200000).toISOString(),
-      durationSeconds: 3120,
-      exercises: [
-        {
-          id: "ex_1",
-          name: "Conventional Deadlift",
-          sets: [
-            { setNumber: 1, weight: 140, reps: 5, isCompleted: true },
-            { setNumber: 2, weight: 180, reps: 3, isCompleted: true },
-            { setNumber: 3, weight: 225, reps: 1, isCompleted: true },
-          ],
-        },
-      ],
-      totalVolumeKg: 1465,
-      totalSets: 3,
-      isPR: true,
-    },
-  ],
-  moveActivities: [
-    {
-      id: "move_seed_1",
-      sport: "run",
-      title: "BGC Greenway Strava 5K Loop",
-      date: new Date(Date.now() - 86400000).toISOString(),
-      durationSeconds: 1680,
-      distanceKm: 5.02,
-      paceMinKm: "5:34",
-      avgSpeedKmH: 10.7,
-      caloriesBurned: 342,
-      routeCoords: [
-        [14.5492, 121.0487],
-        [14.551, 121.0505],
-        [14.553, 121.052],
-        [14.5512, 121.0482],
-      ],
-    },
-  ],
+  liftSessions: [],
+  moveActivities: [],
   foodMeals: [],
-  savedPrograms: INITIAL_PROGRAMS,
-  userBiometrics: INITIAL_BIOMETRICS,
-  hydrationLiters: 1.75,
-  dailyTargets: { calories: 2650, protein: 180, carbs: 280, fat: 72, hydration: 3.0 },
+  savedPrograms: [],
+  userBiometrics: DEFAULT_BIOMETRICS,
+  hasSetBiometrics: false,
+  hydrationLiters: 0,
+  dailyTargets: DEFAULT_TARGETS,
+
+  resetTracking: () =>
+    set({
+      liftSessions: [],
+      moveActivities: [],
+      foodMeals: [],
+      savedPrograms: [],
+      userBiometrics: DEFAULT_BIOMETRICS,
+      hasSetBiometrics: false,
+      hydrationLiters: 0,
+      dailyTargets: DEFAULT_TARGETS,
+    }),
 
   saveLiftSession: (data) => {
     const s: LiftSession = { ...data, id: `lift_${Date.now()}`, date: new Date().toISOString() };
@@ -247,6 +193,7 @@ export const useTrackingStore = create<TrackingState>((set) => ({
   updateBiometrics: (bio, targets) =>
     set((state) => ({
       userBiometrics: { ...state.userBiometrics, ...bio },
+      hasSetBiometrics: true,
       dailyTargets: targets ? { ...state.dailyTargets, ...targets } : state.dailyTargets,
     })),
 

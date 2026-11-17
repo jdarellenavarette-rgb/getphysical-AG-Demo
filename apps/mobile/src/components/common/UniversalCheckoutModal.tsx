@@ -83,7 +83,7 @@ export function UniversalCheckoutModal({ item, visible, onClose, onConfirm }: Un
 
           {isGuest && (
             <Text style={[styles.previewNote, { color: colors.textMuted }]}>
-              Guest preview: no payment is taken. Sign in to buy a real pass.
+              Sign in or create an account to buy this pass.
             </Text>
           )}
           <TouchableOpacity
@@ -99,7 +99,7 @@ export function UniversalCheckoutModal({ item, visible, onClose, onConfirm }: Un
               <>
                 <Shield size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
                 <Text style={styles.payButtonText}>
-                  {isGuest ? "Get Demo Pass" : fee.totalChargePhp === 0 ? "Confirm" : "Continue to Payment"}
+                  {isGuest ? "Sign In to Buy" : fee.totalChargePhp === 0 ? "Confirm" : "Continue to Payment"}
                 </Text>
               </>
             )}

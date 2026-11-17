@@ -36,8 +36,25 @@ enable_confirmations = true
 
 [auth.rate_limit]
 email_sent = 4
+sms_sent = 30
 sign_in_sign_ups = 30
 token_verifications = 30
+
+# Mobile-number sign-in (the app's primary method). Codes are sent by an SMS
+# provider; its credentials come from the environment (never commit them):
+#   SUPABASE_AUTH_SMS_TWILIO_ACCOUNT_SID / _MESSAGE_SERVICE_SID / _AUTH_TOKEN
+# Any provider Supabase supports works (Twilio, Twilio Verify, MessageBird, Vonage, Textlocal).
+[auth.sms]
+enable_signup = true
+enable_confirmations = true
+template = "Your GetPhysical code is {{ .Code }}. It expires in 10 minutes."
+max_frequency = "60s"
+
+[auth.sms.twilio]
+enabled = true
+account_sid = "env(SUPABASE_AUTH_SMS_TWILIO_ACCOUNT_SID)"
+message_service_sid = "env(SUPABASE_AUTH_SMS_TWILIO_MESSAGE_SERVICE_SID)"
+auth_token = "env(SUPABASE_AUTH_SMS_TWILIO_AUTH_TOKEN)"
 
 # Social sign-in. Secrets come from the environment (never commit them):
 #   SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID / _SECRET, SUPABASE_AUTH_EXTERNAL_APPLE_CLIENT_ID / _SECRET

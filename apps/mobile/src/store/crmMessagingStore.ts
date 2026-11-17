@@ -2,7 +2,6 @@ import { create } from "zustand";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import type { CrmChatMessage, MessageRow } from "sodia-core";
 import type { DMThread } from "../components/sodia/InboxView";
-import { SIGNED_OUT_MESSAGES, SIGNED_OUT_THREADS } from "../data/crmSeedThreads";
 import { getSessionUserId, getSupabase } from "../lib/supabase";
 import { loadInbox, toChatMessage } from "../services/messagingService";
 
@@ -57,8 +56,8 @@ function teardown(): void {
 }
 
 export const useCrmMessagingStore = create<CrmMessagingState>((set, get) => ({
-  threads: SIGNED_OUT_THREADS,
-  threadMessages: SIGNED_OUT_MESSAGES,
+  threads: [],
+  threadMessages: {},
   activeToast: null,
   syncState: "signed_out",
   lastError: null,
@@ -91,7 +90,7 @@ export const useCrmMessagingStore = create<CrmMessagingState>((set, get) => ({
     const userId = await getSessionUserId();
     currentUserId = userId;
     if (!supabase || !userId) {
-      set({ threads: SIGNED_OUT_THREADS, threadMessages: SIGNED_OUT_MESSAGES, syncState: "signed_out" });
+      set({ threads: [], threadMessages: {}, syncState: "signed_out", activeToast: null });
       return;
     }
     set({ syncState: "loading" });

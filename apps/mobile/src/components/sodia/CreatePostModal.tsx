@@ -16,6 +16,7 @@ import { useEcosystemStore } from "../../store/ecosystemStore";
 import { useThemeStore } from "../../theme/theme";
 import { SODIA_FIELD_LIMITS } from "sodia-core";
 import { PostMediaAttachmentBar } from "./PostMediaAttachmentBar";
+import { Avatar } from "../common/Avatar";
 import { formatClipDuration, usePostMedia } from "../../hooks/usePostMedia";
 
 interface CreatePostModalProps {
@@ -146,7 +147,7 @@ export function CreatePostModal({ visible, onClose, onOpenStoryCamera, defaultMo
             keyboardShouldPersistTaps="handled"
           >
             <View style={styles.authorRow}>
-              <Image source={{ uri: profile.avatar_url ?? "" }} style={styles.avatar} />
+              <Avatar uri={profile.avatar_url} name={profile.name} size={42} style={styles.avatar} />
               <View style={styles.authorMeta}>
                 <Text style={[styles.authorName, { color: colors.textPrimary }]}>
                   {profile.first_name} {profile.last_name}

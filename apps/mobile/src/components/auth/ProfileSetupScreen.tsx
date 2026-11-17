@@ -108,7 +108,7 @@ export function ProfileSetupScreen({ onDone }: { onDone: () => void }) {
         {field("username", "Username", {
           autoCapitalize: "none",
           autoCorrect: false,
-          placeholder: "e.g. darelle.lifts",
+          placeholder: "e.g. alex.lifts",
         })}
         {alternatives.length > 0 && (
           <View style={s.chips}>

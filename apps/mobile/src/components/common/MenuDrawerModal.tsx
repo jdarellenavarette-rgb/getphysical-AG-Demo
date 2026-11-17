@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView, Image } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView } from "react-native";
 import {
   X,
   Home,
@@ -13,7 +13,7 @@ import {
 } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { useThemeStore } from "../../theme/theme";
-import { DARELLE_AVATAR } from "../../constants/darelleAssets";
+import { Avatar } from "./Avatar";
 
 interface MenuDrawerModalProps {
   visible: boolean;
@@ -63,7 +63,7 @@ export function MenuDrawerModal({
               activeOpacity={0.8}
               style={[styles.userCard, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}
             >
-              <Image source={{ uri: profile.avatar_url ?? DARELLE_AVATAR }} style={styles.avatar} />
+              <Avatar uri={profile.avatar_url} name={profile.name} size={48} style={styles.avatar} />
               <View style={styles.userInfo}>
                 <Text style={[styles.userName, { color: colors.textPrimary }]}>
                   {profile.name ?? `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim()}

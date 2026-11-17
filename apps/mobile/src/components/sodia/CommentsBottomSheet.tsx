@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Image,
   TextInput,
   StyleSheet,
   Modal,
@@ -16,6 +15,8 @@ import { X, Heart } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { useThemeStore } from "../../theme/theme";
 import { useFeedStore } from "../../store/feedStore";
+import { Avatar } from "../common/Avatar";
+import { useRequireAccount } from "../../hooks/useRequireAccount";
 import { formatTimeAgo } from "../../services/messagingService";
 import { SODIA_FIELD_LIMITS } from "sodia-core";
 
@@ -31,12 +32,13 @@ export function CommentsBottomSheet({ visible, onClose, postId }: CommentsBottom
   const { profile } = useEcosystemStore();
   const { colors } = useThemeStore();
   const { commentsByPost, addComment, toggleCommentLike } = useFeedStore();
+  const requireAccount = useRequireAccount();
   const [commentText, setCommentText] = useState("");
   const comments = postId ? (commentsByPost[postId] ?? []) : [];
 
   const handlePost = () => {
     const text = commentText.trim();
-    if (!text || !postId) return;
+    if (!text || !postId || !requireAccount("comment")) return;
     addComment(postId, {
       author: `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim(),
       avatar: profile.avatar_url ?? "",
@@ -83,7 +85,7 @@ export function CommentsBottomSheet({ visible, onClose, postId }: CommentsBottom
             )}
             {comments.map((c) => (
               <View key={c.id} style={styles.commentItem}>
-                <Image source={{ uri: c.avatar }} style={styles.commentAvatar} />
+                <Avatar uri={c.avatar} name={c.author} size={34} style={styles.commentAvatar} />
                 <View style={styles.commentBody}>
                   <View style={styles.authorRow}>
                     <Text style={[styles.commentAuthor, { color: colors.textPrimary }]}>{c.author}</Text>
@@ -131,7 +133,7 @@ export function CommentsBottomSheet({ visible, onClose, postId }: CommentsBottom
 
           {/* INPUT BAR */}
           <View style={styles.inputBar}>
-            <Image source={{ uri: profile.avatar_url ?? "" }} style={styles.inputAvatar} />
+            <Avatar uri={profile.avatar_url} name={profile.name} size={32} style={styles.inputAvatar} />
             <TextInput
               style={[styles.textInput, { backgroundColor: colors.bgInput, color: colors.textPrimary }]}
               placeholder="Add a comment..."

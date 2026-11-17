@@ -75,7 +75,7 @@ export function MoveTrackerView() {
           const last = currentCoordsRef.current;
           const movedKm = calculateHaversineKm(last[0], last[1], lat, lng);
 
-          // Strava threshold: only advance when physical displacement is >= 2.5 meters (0.0025 km)
+          // Only advance when physical displacement is >= 2.5 meters (0.0025 km)
           if (movedKm >= 0.0025) {
             const nextPt: [number, number] = [lat, lng];
             setCurrentCoords(nextPt);

@@ -3,7 +3,6 @@ import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView } from "rea
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft, QrCode, CheckCircle2, XCircle, Clock, Shield } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
-import { useEcosystemStore } from "../../store/ecosystemStore";
 import { QrScannerModal } from "../cards/QrScannerModal";
 
 interface StaffQuickdashModalProps {
@@ -22,8 +21,8 @@ interface ScanLog {
 export function StaffQuickdashModal({ visible, onClose }: StaffQuickdashModalProps) {
   const insets = useSafeAreaInsets();
   const { colors } = useThemeStore();
-  const { isGuest } = useEcosystemStore();
-  const showSamples = isGuest || __DEV__;
+  // Sample data is a development aid only.
+  const showSamples = __DEV__;
   const [lastScanResult, setLastScanResult] = useState<"GREEN" | "BLUE" | "RED" | null>(null);
   const [scanLogs, setScanLogs] = useState<ScanLog[]>([]);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
@@ -37,7 +36,7 @@ export function StaffQuickdashModal({ visible, onClose }: StaffQuickdashModalPro
     if (type === "GREEN") {
       newLog = {
         id: `scan_${Date.now()}`,
-        name: "Darelle Navarette",
+        name: "Sample Member",
         type: "MEMBER_ENTRY",
         time: timeStr,
         detail: "VIP Monthly • Turnstile Gate A Unlocked (TOTP Verified)",
@@ -45,7 +44,7 @@ export function StaffQuickdashModal({ visible, onClose }: StaffQuickdashModalPro
     } else if (type === "BLUE") {
       newLog = {
         id: `scan_${Date.now()}`,
-        name: "Staff: Honzel C.",
+        name: "Sample Staff",
         type: "STAFF_DTR",
         time: timeStr,
         detail: "DTR In-Clock Verified • Front Desk Station #1",

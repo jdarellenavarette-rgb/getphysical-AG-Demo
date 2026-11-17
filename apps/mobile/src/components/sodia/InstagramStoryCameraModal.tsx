@@ -4,6 +4,7 @@ import { CameraView, useCameraPermissions } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
 import { X, Zap, ZapOff, RefreshCw, ChevronLeft, Send, Camera, Image as ImageIcon } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
+import { Avatar } from "../common/Avatar";
 
 interface InstagramStoryCameraModalProps {
   visible: boolean;
@@ -100,7 +101,7 @@ export function InstagramStoryCameraModal({ visible, onClose }: InstagramStoryCa
             <View style={styles.previewBottomTray}>
               <TouchableOpacity onPress={handlePublishStory} style={styles.yourStoryBtn} accessibilityRole="button">
                 <View style={styles.yourStoryAvatarRing}>
-                  <Image source={{ uri: profile.avatar_url ?? "" }} style={styles.yourStoryAvatar} />
+                  <Avatar uri={profile.avatar_url} name={profile.name} size={28} style={styles.yourStoryAvatar} />
                   <View style={styles.storyAddBadge}>
                     <Text style={styles.storyAddPlus}>+</Text>
                   </View>

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, TextInput } from "react-native";
-import { Award, Dumbbell, Flame, Plus, ChevronRight, BookOpen } from "lucide-react-native";
+import { Dumbbell, Flame, Plus, ChevronRight, BookOpen } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import { useTrackingStore, type LiftSession, type ProgramDay, type ProgramExercise } from "../../store/trackingStore";
 import { CreateProgramModal } from "./CreateProgramModal";
@@ -10,6 +10,22 @@ interface LiftLaunchpadViewProps {
   setWorkoutTitle: (t: string) => void;
   onStartTraining: (title?: string, exercises?: ProgramExercise[]) => void;
   liftSessions: LiftSession[];
+}
+
+const BEST_LIFTS = [
+  { name: "Deadlift", match: /deadlift/i },
+  { name: "Bench", match: /bench/i },
+  { name: "Squat", match: /squat/i },
+];
+
+/** Heaviest completed set across the person's own sessions for a lift. */
+function bestWeightFor(sessions: readonly LiftSession[], match: RegExp): number {
+  return sessions
+    .flatMap((session) => session.exercises)
+    .filter((exercise) => match.test(exercise.name))
+    .flatMap((exercise) => exercise.sets)
+    .filter((set) => set.isCompleted)
+    .reduce((best, set) => Math.max(best, set.weight), 0);
 }
 
 export function LiftLaunchpadView({
@@ -35,27 +51,29 @@ export function LiftLaunchpadView({
       contentContainerStyle={styles.emptyContent}
     >
       <View style={styles.prHeaderRow}>
-        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Personal Bests (1RM)</Text>
-        <View style={styles.verifiedTrophyPill}>
-          <Award size={13} color="#10B981" />
-          <Text style={styles.verifiedTrophyText}>VERIFIED</Text>
-        </View>
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Personal Bests</Text>
       </View>
 
       <View style={styles.prRingsRow}>
-        {[
-          { name: "Deadlift", val: "225", unit: "KG" },
-          { name: "Bench", val: "145", unit: "KG" },
-          { name: "Squat", val: "190", unit: "KG" },
-        ].map((pr) => (
-          <View key={pr.name} style={styles.prRingItem}>
-            <View style={[styles.prRingCircle, { backgroundColor: colors.bgCard, borderColor: colors.accent }]}>
-              <Text style={[styles.prRingWeight, { color: colors.textPrimary }]}>{pr.val}</Text>
-              <Text style={styles.prRingUnit}>{pr.unit}</Text>
+        {BEST_LIFTS.map((lift) => {
+          const best = bestWeightFor(liftSessions, lift.match);
+          return (
+            <View key={lift.name} style={styles.prRingItem}>
+              <View
+                style={[
+                  styles.prRingCircle,
+                  { backgroundColor: colors.bgCard, borderColor: best ? colors.accent : colors.borderColor },
+                ]}
+              >
+                <Text style={[styles.prRingWeight, { color: best ? colors.textPrimary : colors.textMuted }]}>
+                  {best || "—"}
+                </Text>
+                <Text style={styles.prRingUnit}>KG</Text>
+              </View>
+              <Text style={[styles.prRingLabel, { color: colors.textMuted }]}>{lift.name}</Text>
             </View>
-            <Text style={[styles.prRingLabel, { color: colors.textMuted }]}>{pr.name}</Text>
-          </View>
-        ))}
+          );
+        })}
       </View>
 
       <View style={[styles.launchpadCard, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
@@ -68,12 +86,12 @@ export function LiftLaunchpadView({
           ]}
           value={workoutTitle}
           onChangeText={setWorkoutTitle}
-          placeholder="Routine Title (e.g. Heavy Squat & Pull)"
+          placeholder="Workout name (optional)"
           placeholderTextColor={colors.textMuted}
         />
         <TouchableOpacity onPress={() => onStartTraining()} style={styles.startWorkoutButton}>
           <Flame size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
-          <Text style={styles.startWorkoutText}>Start Heavy Session</Text>
+          <Text style={styles.startWorkoutText}>Start Session</Text>
         </TouchableOpacity>
       </View>
 
@@ -85,9 +103,15 @@ export function LiftLaunchpadView({
         </View>
         <TouchableOpacity onPress={() => setIsCreateOpen(true)} style={styles.createProgBtn}>
           <Plus size={13} color="#E11D48" />
-          <Text style={styles.createProgText}>+ New Program</Text>
+          <Text style={styles.createProgText}>New Program</Text>
         </TouchableOpacity>
       </View>
+
+      {savedPrograms.length === 0 && (
+        <Text style={[styles.emptyNote, { color: colors.textMuted }]}>
+          No programs yet. Create one to plan your training days.
+        </Text>
+      )}
 
       {/* Program Selector Tabs */}
       <ScrollView
@@ -151,8 +175,13 @@ export function LiftLaunchpadView({
       {/* History */}
       <View style={[styles.historyBox, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
         <Text style={[styles.historyHeaderTitle, { color: colors.textPrimary }]}>
-          Strength Memories & History ({liftSessions.length})
+          Workout History ({liftSessions.length})
         </Text>
+        {liftSessions.length === 0 && (
+          <Text style={[styles.emptyNote, { color: colors.textMuted }]}>
+            No workouts yet. Finish a session and it will be saved here.
+          </Text>
+        )}
         {liftSessions.map((session) => (
           <View key={session.id} style={[styles.historyRow, { borderBottomColor: colors.borderColor }]}>
             <View>
@@ -177,6 +206,7 @@ export function LiftLaunchpadView({
 }
 
 const styles = StyleSheet.create({
+  emptyNote: { fontSize: 13, lineHeight: 19, paddingVertical: 12 },
   container: { flex: 1, padding: 16 },
   emptyContent: { paddingBottom: 110 },
   prHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 },

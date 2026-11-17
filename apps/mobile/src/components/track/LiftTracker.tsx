@@ -21,8 +21,8 @@ export function LiftTracker() {
   const { liftSessions, saveLiftSession } = useTrackingStore();
 
   const [isTraining, setIsTraining] = useState(false);
-  const [workoutTitle, setWorkoutTitle] = useState("Conventional Deadlift Routine");
-  const [activeExerciseName, setActiveExerciseName] = useState("Conventional Deadlift");
+  const [workoutTitle, setWorkoutTitle] = useState("");
+  const [activeExerciseName, setActiveExerciseName] = useState("");
   const [restSeconds, setRestSeconds] = useState(0);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [sets, setSets] = useState<LoggedSet[]>(BLANK_SETS);
@@ -93,10 +93,13 @@ export function LiftTracker() {
       .reduce((best, set) => Math.max(best, set.weight), 0);
     const isPR = previousBest > 0 && topSet.weight > previousBest;
 
+    const title = workoutTitle.trim() || "Workout";
+    const exerciseName = activeExerciseName.trim() || "Exercise";
+
     saveLiftSession({
-      title: workoutTitle,
+      title,
       durationSeconds: elapsedSeconds,
-      exercises: [{ id: `ex_${Date.now()}`, name: activeExerciseName, sets: completedSets }],
+      exercises: [{ id: `ex_${Date.now()}`, name: exerciseName, sets: completedSets }],
       totalVolumeKg,
       totalSets: completedSets.length,
       isPR,
@@ -104,12 +107,12 @@ export function LiftTracker() {
 
     if (shareToFeed) {
       addPost(
-        `${workoutTitle}: ${completedSets.length} sets, ${totalVolumeKg.toLocaleString()} kg total volume.${isPR ? " New personal best!" : ""}`,
+        `${title}: ${completedSets.length} sets, ${totalVolumeKg.toLocaleString()} kg total volume.${isPR ? " New personal best!" : ""}`,
         undefined,
         {
           id: `stamp_lift_${Date.now()}`,
           type: "lift",
-          title: `${activeExerciseName} top set`,
+          title: `${exerciseName} top set`,
           primaryMetric: `${topSet.weight} kg × ${topSet.reps}`,
           isVerified: false,
           isPR,
@@ -164,6 +167,9 @@ export function LiftTracker() {
             style={[styles.titleInput, { color: colors.textPrimary }]}
             value={workoutTitle}
             onChangeText={setWorkoutTitle}
+            placeholder="Workout name"
+            placeholderTextColor={colors.textMuted}
+            accessibilityLabel="Workout name"
           />
           <Text style={styles.timerText}>
             Active Time: {Math.floor(elapsedSeconds / 60)}m {elapsedSeconds % 60}s
@@ -207,6 +213,9 @@ export function LiftTracker() {
             style={[styles.exerciseNameInput, { color: colors.textPrimary }]}
             value={activeExerciseName}
             onChangeText={setActiveExerciseName}
+            placeholder="Exercise name"
+            placeholderTextColor={colors.textMuted}
+            accessibilityLabel="Exercise name"
           />
           <View style={styles.targetBadge}>
             <Text style={styles.targetBadgeText}>CUSTOM LIFTS</Text>

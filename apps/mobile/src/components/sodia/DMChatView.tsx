@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Image,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
@@ -15,6 +14,7 @@ import { ArrowLeft, Send, Radio, Tag } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import { isOwnMessage, useCrmMessagingStore } from "../../store/crmMessagingStore";
 import type { DMThread } from "./InboxView";
+import { Avatar } from "../common/Avatar";
 import { chatStyles as styles } from "./DMChatView.styles";
 
 interface DMChatViewProps {
@@ -93,7 +93,7 @@ export function DMChatView({ thread, onBack }: DMChatViewProps) {
         >
           <ArrowLeft size={22} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Image source={{ uri: thread.avatar }} style={styles.headerAvatar} />
+        <Avatar uri={thread.avatar} name={thread.name} size={36} style={styles.headerAvatar} />
         <View style={styles.headerMeta}>
           <Text style={[styles.headerName, { color: colors.textPrimary }]}>{thread.name}</Text>
           {thread.isOnline ? <Text style={styles.headerStatus}>Active now</Text> : null}

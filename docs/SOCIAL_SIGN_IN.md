@@ -1,5 +1,7 @@
 # Sign in with Google & Apple — Setup
 
+> The mobile sign-in screen now offers a mobile number with a code, Google, or guest. Apple sign-in is hidden for now; see `SIGN_IN_AND_PIONEER_ACCOUNTS.md` for the current setup and why Apple must return before an App Store release.
+
 The code is done (mobile + web + database). These console steps connect it to real Google and Apple
 accounts. Never paste client secrets or `.p8` keys into chat or commit them.
 

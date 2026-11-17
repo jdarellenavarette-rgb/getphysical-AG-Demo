@@ -3,7 +3,6 @@ import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView } from "rea
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft, ShieldCheck, Users, Plus, CheckCircle, Sparkles } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
-import { useEcosystemStore } from "../../store/ecosystemStore";
 
 interface CoachQuickdashModalProps {
   visible: boolean;
@@ -21,14 +20,14 @@ interface FloorClient {
 export function CoachQuickdashModal({ visible, onClose }: CoachQuickdashModalProps) {
   const insets = useSafeAreaInsets();
   const { colors } = useThemeStore();
-  const { isGuest } = useEcosystemStore();
-  const showSamples = isGuest || __DEV__;
+  // Sample data is a development aid only.
+  const showSamples = __DEV__;
   const [clients, setClients] = useState<FloorClient[]>([]);
 
   const handleSimulateCheckIn = () => {
     const newClient: FloorClient = {
       id: `client_${Date.now()}`,
-      name: "Marco Villanueva",
+      name: "Sample Client",
       station: "Squat Rack 3 • Strength Arena",
       status: "IN_BUILDING",
       feeDeductedPhp: 150,

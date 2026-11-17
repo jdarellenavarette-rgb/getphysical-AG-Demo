@@ -25,6 +25,21 @@
 | Settings     | Switches that did nothing removed. Workspaces appear only for roles the account holds.                                                                                               |
 | Drawer       | QA tools appear only in development builds.                                                                                                                                          |
 
+**Sign-in and empty-first are done.** The app no longer contains a built-in person or sample activity.
+
+| Area          | What changed                                                                                                                                      |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sign-in       | Three ways in: mobile number with a texted code, Google, or guest. Email codes and Apple are no longer offered. Resend has a 60-second cooldown.  |
+| Guest         | Opens the same empty app as a new account. Posting, commenting, liking, following, messaging and buying each ask the guest to sign in.            |
+| Sample person | The built-in profile, its photos, posts, stories, chats, comments, notifications, workouts, run, personal bests and training program are removed. |
+| Profile       | Shows the signed-in person's own name, photo or initials, real counts, their own photos, personal bests and passes, each with an empty state.     |
+| Track         | Starts at zero. Personal bests come from the person's own history.                                                                                |
+| Sign-out      | Clears everything belonging to the previous account.                                                                                              |
+
+Setup steps for text-message codes and for creating the first real account of each type are in `SIGN_IN_AND_PIONEER_ACCOUNTS.md`.
+
+Still built-in sample content, next to be connected to the database: the venues, coaches and clubs on the Venues tab, and the coach, staff and organizer workspaces (visible only to accounts holding those roles).
+
 Not covered by the browser run: confirmation dialogs (discard workout, delete post) and the camera, which need a real device.
 
 ## How this was tested

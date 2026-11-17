@@ -14,7 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { X, MapPin } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
 import { useCrmMessagingStore } from "../../store/crmMessagingStore";
-import { OWN_STORY_ID, SEED_STORIES, type StoryItem } from "../../data/seedStories";
+import { OWN_STORY_ID, type StoryItem } from "../../lib/stories";
 import { formatTimeAgo } from "../../services/messagingService";
 
 interface StoryViewerModalProps {
@@ -39,7 +39,8 @@ export function StoryViewerModal({ visible, initialStoryId, onClose, onTapLocati
   const [sentNote, setSentNote] = useState<string | null>(null);
 
   const stories = useMemo<StoryItem[]>(() => {
-    if (!userStory) return [...SEED_STORIES];
+    // Other people's stories will come from the server; for now the tray holds only your own.
+    if (!userStory) return [];
     const own: StoryItem = {
       id: OWN_STORY_ID,
       shortName: "Your Story",
@@ -49,11 +50,11 @@ export function StoryViewerModal({ visible, initialStoryId, onClose, onTapLocati
       caption: userStory.text ?? "",
       createdAt: userStory.createdAt,
     };
-    return [own, ...SEED_STORIES];
+    return [own];
   }, [userStory, profile.first_name, profile.last_name, profile.avatar_url]);
 
-  const current = stories[activeStoryIdx] ?? stories[0]!;
-  const isOwn = current.id === OWN_STORY_ID;
+  const current = stories[activeStoryIdx] ?? stories[0];
+  const isOwn = current?.id === OWN_STORY_ID;
 
   // Each open starts on the story that was tapped.
   useEffect(() => {
@@ -89,6 +90,7 @@ export function StoryViewerModal({ visible, initialStoryId, onClose, onTapLocati
 
   /** Replies and reactions are real direct messages to the story's author. */
   const sendToAuthor = (text: string) => {
+    if (!current) return;
     const thread = ensureThread({
       id: `thread_${current.id}`,
       name: current.name,
@@ -125,6 +127,8 @@ export function StoryViewerModal({ visible, initialStoryId, onClose, onTapLocati
       setProgress(0);
     }
   };
+
+  if (!current) return null;
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>

@@ -6,34 +6,6 @@ export const authStyles = StyleSheet.create({
   brand: { color: "#E11D48", fontSize: 13, fontWeight: "800", letterSpacing: 1.5 },
   title: { color: "#FFFFFF", fontSize: 26, fontWeight: "800", marginTop: 8 },
   subtitle: { color: "#A1A1AA", fontSize: 14, marginTop: 8, lineHeight: 20 },
-  modeContainer: {
-    flexDirection: "row",
-    backgroundColor: "#18181B",
-    borderRadius: 12,
-    padding: 3,
-    marginTop: 20,
-    borderWidth: 1,
-    borderColor: "#27272A",
-  },
-  modeTab: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 9,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  modeTabActive: {
-    backgroundColor: "#27272A",
-  },
-  modeTabText: {
-    color: "#71717A",
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  modeTabTextActive: {
-    color: "#FFFFFF",
-    fontWeight: "800",
-  },
   field: { marginTop: 20 },
   label: { color: "#D4D4D8", fontSize: 13, fontWeight: "600", marginBottom: 6 },
   input: {
@@ -47,6 +19,18 @@ export const authStyles = StyleSheet.create({
     paddingVertical: 13,
   },
   inputError: { borderColor: "#F87171" },
+  phoneRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  phonePrefix: {
+    backgroundColor: "#18181B",
+    borderWidth: 1,
+    borderColor: "#27272A",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+  },
+  phonePrefixText: { color: "#D4D4D8", fontSize: 16, fontWeight: "700" },
+  phoneInput: { flex: 1 },
+  linkDisabled: { textDecorationLine: "none", color: "#52525B" },
   codeInput: { fontSize: 24, letterSpacing: 8, textAlign: "center", fontWeight: "700" },
   error: { color: "#F87171", fontSize: 12, marginTop: 6 },
   formError: {
@@ -74,8 +58,6 @@ export const authStyles = StyleSheet.create({
     flexDirection: "row",
     gap: 10,
   },
-  socialApple: { backgroundColor: "#FFFFFF" },
-  socialAppleText: { color: "#000000", fontSize: 15, fontWeight: "700" },
   socialGoogle: { backgroundColor: "#FFFFFF" },
   socialGoogleText: { color: "#1F1F1F", fontSize: 15, fontWeight: "700" },
   googleGLogo: {
@@ -91,7 +73,7 @@ export const authStyles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "900",
   },
-  dividerRow: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 8 },
+  dividerRow: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 22 },
   dividerLine: { flex: 1, height: 1, backgroundColor: "#27272A" },
   dividerText: { color: "#71717A", fontSize: 12 },
   guestButton: {
@@ -114,6 +96,7 @@ export const authStyles = StyleSheet.create({
     color: "#71717A",
     fontSize: 12,
     marginTop: 2,
+    textAlign: "center",
   },
   fine: { color: "#71717A", fontSize: 12, marginTop: 18, lineHeight: 17, textAlign: "center" },
 });

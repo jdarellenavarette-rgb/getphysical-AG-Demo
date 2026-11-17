@@ -29,7 +29,7 @@ export function JourneyView() {
     ...moveActivities.map((m) => ({
       id: m.id,
       title: m.title,
-      venue: "Strava GPS • Outdoor Route",
+      venue: "GPS route",
       duration: `${Math.floor(m.durationSeconds / 60)} mins`,
       time: "Recorded GPS",
       cals: `${m.caloriesBurned} kcal`,

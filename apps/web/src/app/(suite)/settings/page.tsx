@@ -22,10 +22,7 @@ export default async function SettingsPage() {
 
   return (
     <>
-      <PageHeader
-        title="Settings"
-        description="Venue details shown to members in the Sodia app, and your account here."
-      />
+      <PageHeader title="Settings" description="Your venue details and prices, and your account here." />
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>

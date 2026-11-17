@@ -86,5 +86,5 @@ export async function updateVenueProfile(_prev: VenueFormState, formData: FormDa
     return { status: "permission_denied", message: "Only the owner or an admin can change venue details." };
   }
   revalidatePath("/", "layout");
-  return { status: "success", message: "Venue details saved. Members see the changes in the Sodia app." };
+  return { status: "success", message: "Venue details saved. New purchases in the Sodia app use these prices." };
 }

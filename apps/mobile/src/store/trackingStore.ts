@@ -163,7 +163,7 @@ const INITIAL_PROGRAMS: TrainingProgram[] = [
 ];
 
 const INITIAL_BIOMETRICS: UserBiometrics = {
-  age: 26,
+  age: 28,
   gender: "male",
   heightCm: 178,
   weightKg: 82,

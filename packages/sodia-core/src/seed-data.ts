@@ -247,6 +247,9 @@ export const SEED_POSTS: readonly SodiaPostRow[] = [
   },
 ];
 
+/** Relative to launch so demo passes are never already expired. */
+const hoursFromNow = (hours: number): string => new Date(Date.now() + hours * 3_600_000).toISOString();
+
 export const SEED_PASSES: readonly PassRow[] = [
   {
     id: "pass_vip_001",
@@ -255,10 +258,10 @@ export const SEED_PASSES: readonly PassRow[] = [
     sku_id: "sku_day_pass",
     pass_type: "Day Pass (All Access)",
     status: "ACTIVE",
-    valid_until: "2026-10-31T23:59:59.000Z",
+    valid_until: hoursFromNow(12),
     gifted_by_user_id: null,
     payment_order_id: null,
-    created_at: "2026-10-31T01:00:00.000Z",
+    created_at: hoursFromNow(-2),
   },
   {
     id: "pass_vip_002",
@@ -267,9 +270,9 @@ export const SEED_PASSES: readonly PassRow[] = [
     sku_id: "sku_court_single",
     pass_type: "Pickleball Court A (1 Hour)",
     status: "ACTIVE",
-    valid_until: "2026-11-01T18:00:00.000Z",
+    valid_until: hoursFromNow(26),
     gifted_by_user_id: null,
     payment_order_id: null,
-    created_at: "2026-10-30T10:00:00.000Z",
+    created_at: hoursFromNow(-20),
   },
 ];

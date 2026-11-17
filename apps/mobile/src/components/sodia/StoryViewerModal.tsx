@@ -41,11 +41,11 @@ export function StoryViewerModal({ visible, onClose, onTapLocationTag }: StoryVi
     },
     {
       id: "story_2",
-      handle: "@alexeala",
-      name: "Alex Eala",
+      handle: "@bea.santiago",
+      name: "Bea Santiago",
       mediaUrl: "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?auto=format&fit=crop&w=900&q=80",
       caption: "Grinding on the clay today! 🔥 Always striving for that next shot.",
-      locationTag: { id: "fac_nexus_club", name: "Nexus Court Club" },
+      locationTag: { id: "fac_nexus_club", name: "Nexus Racket & Court Club" },
     },
   ];
 

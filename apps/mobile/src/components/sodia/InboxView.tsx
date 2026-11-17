@@ -44,7 +44,7 @@ export function InboxView({ onBack, onSelectThread }: InboxViewProps) {
     },
     {
       id: "note_2",
-      name: "Alex",
+      name: "Bea",
       avatar: "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?auto=format&fit=crop&w=200&q=80",
       note: "Clay prep 🎾",
     },

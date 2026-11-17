@@ -92,7 +92,7 @@ export function OrganizerMeetModal({ visible, onClose }: OrganizerMeetModalProps
               <Text style={styles.slotCount}>12 / 16 SLOTS CONFIRMED</Text>
             </View>
             <Text style={[styles.meetTitle, { color: colors.textPrimary }]}>Sunset Doubles Ladder (Court A & B)</Text>
-            <Text style={[styles.venueSub, { color: colors.textMuted }]}>Twins Fitness Court Club • Sat, 4:00 PM</Text>
+            <Text style={[styles.venueSub, { color: colors.textMuted }]}>Nexus Racket & Court Club • Sat, 4:00 PM</Text>
             <View style={[styles.splitLedgerBox, { backgroundColor: colors.bgCardSecondary }]}>
               <Shield size={14} color="#10B981" />
               <Text style={[styles.splitLedgerText, { color: colors.textSecondary }]}>

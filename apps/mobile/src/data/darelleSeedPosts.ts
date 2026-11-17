@@ -47,11 +47,11 @@ export const INITIAL_DARELLE_POSTS: SodiaPostRow[] = [
     likes_count: 198,
     comments_count: 24,
     facility_tag: {
-      id: "fac_solstice_tennis",
-      name: "Pioneer Pickleball & Tennis Hub",
+      id: "fac_nexus_club",
+      name: "Nexus Racket & Court Club",
       registry: "B",
       actionCTA: "Book Court",
-      price: 800,
+      price: 200,
     },
     stamp: {
       type: "workout",
@@ -98,11 +98,11 @@ export const INITIAL_DARELLE_POSTS: SodiaPostRow[] = [
     likes_count: 87,
     comments_count: 9,
     facility_tag: {
-      id: "fac_solstice_tennis",
-      name: "Pioneer Pickleball & Tennis Hub",
+      id: "fac_nexus_club",
+      name: "Nexus Racket & Court Club",
       registry: "B",
       actionCTA: "Book Court",
-      price: 800,
+      price: 200,
     },
     stamp: {
       type: "status",

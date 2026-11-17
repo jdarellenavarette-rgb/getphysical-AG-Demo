@@ -44,7 +44,7 @@ export function CardsHub({ onBrowseVenues }: CardsHubProps) {
       {/* USER GREETING */}
       <View style={styles.userGreetingRow}>
         <View>
-          <Text style={[styles.userName, { color: colors.textPrimary }]}>Hello, {profile.first_name},</Text>
+          <Text style={[styles.userName, { color: colors.textPrimary }]}>Hello, {profile.first_name}</Text>
           <Text style={[styles.userHandle, { color: colors.textMuted }]}>VIP Account</Text>
         </View>
         <TouchableOpacity style={[styles.bellBtn, { backgroundColor: colors.bgCardSecondary }]}>

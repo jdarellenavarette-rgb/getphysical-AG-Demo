@@ -202,9 +202,9 @@ export function DiscoverView({ onCheckoutItem }: DiscoverViewProps) {
                       </View>
                       <View style={[styles.grabFooter, { borderTopColor: colors.borderColor }]}>
                         <Text style={[styles.grabPrice, { color: colors.textPrimary }]}>
-                          {fac.registry === "A"
-                            ? `₱${fac.day_pass_price_php} Pass`
-                            : `₱${fac.court_hourly_price_php}/hr Court`}
+                          {fac.court_hourly_price_php != null && fac.registry !== "A"
+                            ? `₱${fac.court_hourly_price_php.toLocaleString()}/hr Court`
+                            : `₱${(fac.day_pass_price_php ?? 0).toLocaleString()} Pass`}
                         </Text>
                         <TouchableOpacity onPress={() => setSelectedDetailFacility(fac)} style={styles.grabBookCTA}>
                           <Text style={styles.grabBookText}>Passes</Text>

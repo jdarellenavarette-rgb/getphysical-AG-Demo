@@ -227,7 +227,7 @@ export function ProfileHub({ onBack, onOpenMessages }: ProfileHubProps) {
               </View>
               <Text style={[styles.stampMetric, { color: colors.textPrimary }]}>172 KM/H</Text>
               <Text style={[styles.stampSub, { color: colors.textSecondary }]}>
-                Tennis Overhead Smash Peak Velocity • Court Club
+                Tennis Overhead Smash Peak Velocity • Nexus Racket & Court Club
               </Text>
             </View>
           </View>

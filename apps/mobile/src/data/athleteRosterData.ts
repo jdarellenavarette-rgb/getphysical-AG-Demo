@@ -55,9 +55,9 @@ export const ATHLETE_ROSTER: Record<string, AthleteProfileData> = {
       "https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=400&q=80",
     ],
   },
-  "Sofia Valdes": {
+  "Coach Sofia Chen": {
     userId: "u_sofia",
-    name: "Sofia Valdes",
+    name: "Coach Sofia Chen",
     username: "sofia.pilates",
     avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80",
     bio: "Reformer Pilates Master Instructor & Athletic Posture Specialist.",
@@ -65,7 +65,7 @@ export const ATHLETE_ROSTER: Record<string, AthleteProfileData> = {
     isVerified: true,
     followersCount: "6.1k",
     workoutsCount: "440",
-    prStamp: { title: "Core Hold", metric: "5:00", venue: "Solstice Studio" },
+    prStamp: { title: "Core Hold", metric: "5:00", venue: "Aura Reformer & Movement Lab" },
     photos: [
       "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=400&q=80",
       "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=400&q=80",

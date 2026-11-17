@@ -43,7 +43,7 @@ export const SIGNED_OUT_THREADS: DMThread[] = [
     id: "thread_sarah",
     name: "Sarah Jenkins",
     avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80",
-    lastMessage: "Sent you a 1-day pass for Twins Fitness 🎟️",
+    lastMessage: "Sent you a 1-day pass for Metro Core Arena 🎟️",
     timeAgo: "1d ago",
     unreadCount: 0,
     isOnline: false,

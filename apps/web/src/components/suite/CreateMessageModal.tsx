@@ -1,9 +1,14 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
+import React, { useEffect, useRef, useState, useTransition } from "react";
 import { X, Send, CheckCircle } from "lucide-react";
-import { type SuiteMode } from "./HeroPromoCard";
-import { sendCrmBroadcast, type BroadcastSummary } from "../../app/actions/crm";
+import { type SuiteMode } from "../../lib/suite-modes";
+import {
+  loadBroadcastAudiences,
+  sendCrmBroadcast,
+  type BroadcastAudiences,
+  type BroadcastSummary,
+} from "../../app/actions/crm";
 import { useActiveFacility } from "./ActiveFacilityContext";
 
 interface CreateMessageModalProps {
@@ -14,7 +19,9 @@ interface CreateMessageModalProps {
 }
 
 export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSent }: CreateMessageModalProps) {
-  const [audience, setAudience] = useState<"ALL" | "SEGMENT_1" | "SEGMENT_2" | "SEGMENT_3">("ALL");
+  const [audience, setAudience] = useState<"ALL" | "ACTIVE" | "LAPSED" | "SEGMENT_1" | "SEGMENT_2" | "SEGMENT_3">(
+    "ALL",
+  );
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [promoCode, setPromoCode] = useState("");
@@ -25,7 +32,53 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
   const [isPending, startTransition] = useTransition();
   const facility = useActiveFacility();
 
+  const [audiences, setAudiences] = useState<BroadcastAudiences | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  // Real reach for this facility: active members and any segments it has set up.
+  useEffect(() => {
+    if (!visible) return;
+    let cancelled = false;
+    void loadBroadcastAudiences(facility.id).then((result) => {
+      if (!cancelled && result.ok) setAudiences(result.data);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [visible, facility.id]);
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  // Dialog behaviour: focus moves in on open, Escape closes, focus returns on close.
+  useEffect(() => {
+    if (!visible) return;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    dialogRef.current?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onCloseRef.current();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      previouslyFocused?.focus();
+    };
+  }, [visible]);
+
   if (!visible) return null;
+
+  // Members the chosen audience reaches; null when it is a segment (counted by the database on send).
+  const reach =
+    audiences === null
+      ? null
+      : audience === "ALL"
+        ? audiences.all
+        : audience === "ACTIVE"
+          ? audiences.active
+          : audience === "LAPSED"
+            ? audiences.lapsed
+            : null;
 
   const getModalConfig = () => {
     switch (suiteMode) {
@@ -33,58 +86,34 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
         return {
           title: "Facility & Affiliated Club Broadcast",
           sub: "Broadcast court schedule changes and affiliated club notices",
-          segments: [
-            { id: "ALL", label: "All Players (640)" },
-            { id: "SEGMENT_1", label: "Affiliated Clubs (18)" },
-            { id: "SEGMENT_2", label: "Peak Court Bookers" },
-            { id: "SEGMENT_3", label: "Tournament Entrants" },
-          ],
           placeholderTitle: "e.g. Court 3 & 4 Resurfacing Scheduled for Tomorrow 06:00-10:00",
           placeholderBody: "Notice to all affiliated leagues: Alternate slots reserved in Court Alpha.",
-          promoLabel: "Attach Court Booking Credit (Optional)",
+          promoLabel: "Promo code to show in the message (optional)",
         };
       case "COACHDASH":
         return {
           title: "Coach Client CRM & Program Nudge",
           sub: "Send macrocycle updates, recovery reminders, and client nudges",
-          segments: [
-            { id: "ALL", label: "All Clients (32)" },
-            { id: "SEGMENT_1", label: "Hypertrophy Track" },
-            { id: "SEGMENT_2", label: "Hyrox Endurance" },
-            { id: "SEGMENT_3", label: "At-Risk / Missing Logs (4)" },
-          ],
           placeholderTitle: "e.g. Week 4 Deload & 1RM Progression Check",
           placeholderBody: "Ensure your post-workout heart rates and video form checks are logged today.",
-          promoLabel: "Attach Session Pack Bonus (Optional)",
+          promoLabel: "Promo code to show in the message (optional)",
         };
       case "ORGANIZERDASH":
         return {
           title: "Tournament Participant Broadcast",
           sub: "Dispatch bracket updates, check-in calls, and rule packs",
-          segments: [
-            { id: "ALL", label: "All Participants (420)" },
-            { id: "SEGMENT_1", label: "Men / Women Open (128)" },
-            { id: "SEGMENT_2", label: "Mixed Doubles (96)" },
-            { id: "SEGMENT_3", label: "Unverified Waivers (8)" },
-          ],
           placeholderTitle: "e.g. Official Bracket Draw Released & Court Allocation Finalized",
           placeholderBody: "All team captains must check in at Gate B 30 minutes prior to first whistle.",
-          promoLabel: "Attach Spectator Pass Code (Optional)",
+          promoLabel: "Promo code to show in the message (optional)",
         };
       case "GYMDASH":
       default:
         return {
           title: "Manage Messaging & Promos",
           sub: "Send newsletters, promos, and reminders within your gym",
-          segments: [
-            { id: "ALL", label: "All Active (883)" },
-            { id: "SEGMENT_1", label: "At-Risk (42)" },
-            { id: "SEGMENT_2", label: "VIP Pass (210)" },
-            { id: "SEGMENT_3", label: "Class Enrollees (540)" },
-          ],
           placeholderTitle: "e.g. Flash 48-Hour Recovery Clinic & Sauna Access",
           placeholderBody: "Exclusive recovery masterclass with verified PR reviews this Saturday.",
-          promoLabel: "Attach Promo Voucher (Optional)",
+          promoLabel: "Promo code to show in the message (optional)",
         };
     }
   };
@@ -137,7 +166,13 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
       }}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="broadcast-dialog-title"
+        tabIndex={-1}
         style={{
+          outline: "none",
           width: "100%",
           maxWidth: "540px",
           backgroundColor: "#111319",
@@ -165,11 +200,15 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
               <Send size={16} color="#FFFFFF" />
             </div>
             <div>
-              <h3 style={{ fontSize: "17px", fontWeight: 900, color: "#FFFFFF" }}>{cfg.title}</h3>
+              <h3 id="broadcast-dialog-title" style={{ fontSize: "17px", fontWeight: 900, color: "#FFFFFF" }}>
+                {cfg.title}
+              </h3>
               <p style={{ fontSize: "11px", color: "#9CA3AF" }}>{cfg.sub}</p>
             </div>
           </div>
           <button
+            type="button"
+            aria-label="Close"
             onClick={onClose}
             style={{
               width: "32px",
@@ -189,9 +228,11 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
         {isSent ? (
           <div style={{ padding: "40px 20px", textAlign: "center" }}>
             <CheckCircle size={48} color="#10B981" style={{ margin: "0 auto 14px" }} />
-            <h4 style={{ fontSize: "18px", fontWeight: 800, color: "#FFFFFF" }}>Broadcast Dispatched!</h4>
+            <h4 style={{ fontSize: "18px", fontWeight: 800, color: "#FFFFFF" }}>Broadcast sent</h4>
             <p style={{ fontSize: "12px", color: "#9CA3AF", marginTop: "6px" }}>
-              Delivered to {recipientCount} {recipientCount === 1 ? "member" : "members"} of {facility.name}.
+              {recipientCount === 0
+                ? `Nobody in that audience at ${facility.name}, so nothing was delivered.`
+                : `Delivered to ${recipientCount} ${recipientCount === 1 ? "member" : "members"} of ${facility.name}.`}
             </p>
           </div>
         ) : (
@@ -202,27 +243,38 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
                 style={{
                   fontSize: "11px",
                   fontWeight: 800,
-                  color: "#6B7280",
+                  color: "#9CA3AF",
                   textTransform: "uppercase",
                   letterSpacing: "0.5px",
                   display: "block",
                   marginBottom: "6px",
                 }}
               >
-                Audience Segment
+                Audience
               </label>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px" }}>
-                {cfg.segments.map((aud) => (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                {[
+                  { id: "ALL" as const, label: "All members" },
+                  ...(audiences?.usesPasses
+                    ? [
+                        { id: "ACTIVE" as const, label: "Active (valid pass)" },
+                        { id: "LAPSED" as const, label: "Lapsed (win-back)" },
+                      ]
+                    : []),
+                  ...(audiences?.segments ?? []).map((segment) => ({ id: segment.key, label: segment.label })),
+                ].map((aud) => (
                   <button
                     key={aud.id}
-                    onClick={() => setAudience(aud.id as typeof audience)}
+                    type="button"
+                    aria-pressed={audience === aud.id}
+                    onClick={() => setAudience(aud.id)}
                     style={{
-                      padding: "8px 4px",
+                      padding: "8px 12px",
                       borderRadius: "10px",
-                      fontSize: "11px",
+                      fontSize: "12px",
                       fontWeight: 700,
-                      backgroundColor: audience === aud.id ? "#FF5364" : "#181B24",
-                      color: audience === aud.id ? "#FFFFFF" : "#9CA3AF",
+                      backgroundColor: audience === aud.id ? "#E11D48" : "#181B24",
+                      color: audience === aud.id ? "#FFFFFF" : "#D1D5DB",
                       border: "1px solid rgba(255, 255, 255, 0.08)",
                       cursor: "pointer",
                     }}
@@ -231,6 +283,15 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
                   </button>
                 ))}
               </div>
+              <p style={{ fontSize: "12px", color: "#D1D5DB", margin: "8px 0 0" }}>
+                {audiences === null
+                  ? "Checking who this will reach…"
+                  : reach === null
+                    ? "Goes to the members in this segment who haven't muted you."
+                    : reach === 0
+                      ? "Nobody is in this audience right now, so nothing would be delivered."
+                      : `Goes to ${reach} ${reach === 1 ? "member" : "members"} of ${facility.name}. Members who muted your broadcasts are left out.`}
+              </p>
             </div>
 
             {/* Headline */}
@@ -239,7 +300,7 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
                 style={{
                   fontSize: "11px",
                   fontWeight: 800,
-                  color: "#6B7280",
+                  color: "#9CA3AF",
                   textTransform: "uppercase",
                   letterSpacing: "0.5px",
                   display: "block",
@@ -249,6 +310,7 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
                 Broadcast Headline
               </label>
               <input
+                aria-label="Title"
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -272,7 +334,7 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
                 style={{
                   fontSize: "11px",
                   fontWeight: 800,
-                  color: "#6B7280",
+                  color: "#9CA3AF",
                   textTransform: "uppercase",
                   letterSpacing: "0.5px",
                   display: "block",
@@ -282,6 +344,7 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
                 Message Content
               </label>
               <textarea
+                aria-label="Message"
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
                 placeholder={cfg.placeholderBody}
@@ -306,7 +369,7 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
                 style={{
                   fontSize: "11px",
                   fontWeight: 800,
-                  color: "#6B7280",
+                  color: "#9CA3AF",
                   textTransform: "uppercase",
                   letterSpacing: "0.5px",
                   display: "block",
@@ -317,6 +380,7 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
               </label>
               <div style={{ display: "flex", gap: "8px" }}>
                 <input
+                  aria-label="Promo code (optional)"
                   type="text"
                   value={promoCode}
                   onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
@@ -368,7 +432,7 @@ export function CreateMessageModal({ visible, onClose, suiteMode, onBroadcastSen
             {/* Submit Button */}
             <button
               onClick={handleSend}
-              disabled={isPending}
+              disabled={isPending || reach === 0}
               style={{
                 marginTop: "10px",
                 padding: "12px",

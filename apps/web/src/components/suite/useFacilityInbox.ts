@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { MessageRow } from "sodia-core";
+import { describeStanding, memberStandingSchema, type MessageRow } from "sodia-core";
 import { loadFacilityInbox, type InboxThread } from "../../app/actions/crm";
 import { getBrowserSupabase } from "../../lib/supabase/browser";
 
@@ -11,14 +11,14 @@ export interface InboxTicket {
   athleteName: string;
   avatar: string;
   handle: string;
-  channel: "GATE_EXPIRATION" | "AT_RISK" | "FORM_CHECK" | "GENERAL_INQUIRY";
   lastMessage: string;
   time: string;
+  /** The member wrote last, so the thread is waiting on the facility. */
   unread: boolean;
-  status: "OPEN" | "RESOLVED";
+  isActiveMember: boolean;
   tag: string;
   tagColor: string;
-  athleteMeta: { membership: string; lastVisit: string; primary1RM?: string; phone: string };
+  athleteMeta: { membership: string; lastVisit: string };
   messages: { id: string; sender: "athlete" | "business"; text: string; time: string }[];
 }
 
@@ -46,24 +46,24 @@ function initials(name: string): string {
 
 function toTicket(thread: InboxThread): InboxTicket {
   const last = thread.messages[thread.messages.length - 1];
-  const active = thread.membershipStatus === "ACTIVE";
+  const standing = memberStandingSchema.safeParse(thread.membershipStatus);
+  const active = standing.success && standing.data === "ACTIVE";
+  const standingLabel = standing.success ? describeStanding(standing.data).label : "Not a member";
   return {
     id: thread.conversationId,
     athleteId: thread.athleteId,
     athleteName: thread.athleteName,
     avatar: initials(thread.athleteName),
     handle: thread.athleteHandle ?? "",
-    channel: "GENERAL_INQUIRY",
     lastMessage: last?.body ?? "No messages yet",
     time: formatTime(thread.lastMessageAt),
     unread: Boolean(last && !last.fromFacility),
-    status: "OPEN",
-    tag: active ? "Active member" : "Inactive member",
+    isActiveMember: active,
+    tag: standingLabel,
     tagColor: active ? "#059669" : "#9CA3AF",
     athleteMeta: {
-      membership: thread.membershipStatus ?? "—",
+      membership: standingLabel,
       lastVisit: thread.lastVisitAt ? new Date(thread.lastVisitAt).toLocaleString() : "No check-ins yet",
-      phone: "—",
     },
     messages: thread.messages.map((m) => ({
       id: m.id,
@@ -99,17 +99,24 @@ export function useFacilityInbox(facilityId: string) {
   useEffect(() => {
     void reload();
     const supabase = getBrowserSupabase();
-    // postgres_changes is filtered by RLS: staff only receive their facility's rows.
+    // RLS also delivers the operator's own DMs and other facilities they staff, so
+    // messages for threads not in this inbox are ignored; new threads arrive through
+    // the conversations subscription, which is filtered to this facility.
+    const onThreadChange = (payload: { new: unknown }) => {
+      const id = (payload.new as { id?: string }).id;
+      setTickets((current) => {
+        if (id && !current.some((t) => t.id === id)) void reload();
+        return current;
+      });
+    };
+    const threadFilter = { schema: "public", table: "conversations", filter: `facility_id=eq.${facilityId}` };
     const channel = supabase
       .channel(`facility-inbox:${facilityId}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, (payload) => {
         const row = payload.new as MessageRow;
         setTickets((current) => {
           const index = current.findIndex((t) => t.id === row.conversation_id);
-          if (index === -1) {
-            void reload(); // new thread: fetch it with athlete details
-            return current;
-          }
+          if (index === -1) return current;
           const ticket = current[index]!;
           if (ticket.messages.some((m) => m.id === row.id)) return current;
           const fromFacility = row.sender_kind === "FACILITY";
@@ -132,6 +139,8 @@ export function useFacilityInbox(facilityId: string) {
         });
         setStatus("success");
       })
+      .on("postgres_changes", { event: "INSERT", ...threadFilter }, onThreadChange)
+      .on("postgres_changes", { event: "UPDATE", ...threadFilter }, onThreadChange)
       .subscribe();
 
     return () => {

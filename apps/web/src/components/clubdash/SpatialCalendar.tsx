@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Layers, Clock, ShieldCheck, AlertCircle } from "lucide-react";
+import { Layers, ShieldCheck, AlertCircle } from "lucide-react";
 import { useSuiteTheme } from "../suite/theme";
 
 interface SlotBooking {
@@ -94,20 +94,20 @@ export function SpatialCalendar() {
     const hasChildBookings = Object.values(current.childBookings).some((val) => val !== null);
     if (hasChildBookings) {
       setNotice(
-        "Spatial Collision Conflict: Cannot book Full Basketball Court while sub-divided child pickleball courts have active reservations.",
+        "Conflict: the full court can't be booked while one of its pickleball courts is reserved for this time.",
       );
       return;
     }
     setSchedule((prev) =>
       prev.map((s) => (s.timeSlot === selectedSlot ? { ...s, parentBookedBy: "Reserved Corporate Rental" } : s)),
     );
-    setNotice(`Successfully reserved Full Basketball Court for ${selectedSlot} (+ 15m changeover buffer).`);
+    setNotice(`Sample only: full court marked as reserved for ${selectedSlot} on this screen. No booking was created.`);
   };
 
   const bookChildCourt = (courtId: "A" | "B" | "C") => {
     if (current.parentBookedBy) {
       setNotice(
-        `Spatial Collision Conflict: Child Pickleball Court ${courtId} is locked because Full Basketball Court is reserved.`,
+        `Conflict: pickleball court ${courtId} is unavailable because the full court is reserved for this time.`,
       );
       return;
     }
@@ -120,7 +120,9 @@ export function SpatialCalendar() {
         return s;
       }),
     );
-    setNotice(`Pickleball Court ${courtId} confirmed for ${selectedSlot}. Full Parent Court automatically locked.`);
+    setNotice(
+      `Sample only: pickleball court ${courtId} marked as reserved for ${selectedSlot} on this screen. No booking was created.`,
+    );
   };
 
   return (
@@ -142,30 +144,32 @@ export function SpatialCalendar() {
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <Layers size={20} color={theme.accent} />
             <h2 style={{ fontSize: "18px", fontWeight: 900, color: theme.textPrimary, letterSpacing: "-0.3px" }}>
-              Clubdash Facility Booking Allocator
+              Court bookings
             </h2>
           </div>
           <p style={{ fontSize: "12px", color: theme.textMuted, marginTop: "2px", fontWeight: 500 }}>
-            Real-time parent-child spatial mutual exclusion with automated 15-minute changeover buffers
+            A full court and the smaller courts inside it can't be booked for the same time.
           </p>
         </div>
-        <div
+        <button
+          type="button"
+          onClick={() => {
+            setSchedule(INITIAL_SCHEDULE);
+            setNotice(null);
+          }}
           style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "6px",
-            backgroundColor: theme.accentGreenMuted,
-            border: "1px solid rgba(5, 150, 105, 0.25)",
-            padding: "6px 14px",
-            borderRadius: "999px",
-            fontSize: "11px",
-            color: "#059669",
-            fontWeight: 800,
+            backgroundColor: theme.bgCardSecondary,
+            border: `1px solid ${theme.borderColor}`,
+            color: theme.textPrimary,
+            padding: "7px 14px",
+            borderRadius: "8px",
+            fontSize: "12px",
+            fontWeight: 700,
+            cursor: "pointer",
           }}
         >
-          <Clock size={13} />
-          <span>15m Changeover Guard Active</span>
-        </div>
+          Reset sample
+        </button>
       </div>
 
       {notice && (

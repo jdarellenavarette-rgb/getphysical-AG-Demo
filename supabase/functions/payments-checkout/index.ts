@@ -56,7 +56,7 @@ Deno.serve(
     if (!facility || !payout)
       throw new HttpError(422, "FACILITY_PAYOUTS_NOT_CONFIGURED", "Facility cannot accept payments yet");
 
-    const label = `${sku === "MONTHLY" ? "Monthly membership" : "Day pass"} — ${facility.name}`;
+    const label = `${order.product_name ?? (sku === "MONTHLY" ? "Monthly membership" : "Day pass")} — ${facility.name}`;
     const redirectBase = requireEnv("CHECKOUT_REDIRECT_BASE_URL");
 
     const checkout =

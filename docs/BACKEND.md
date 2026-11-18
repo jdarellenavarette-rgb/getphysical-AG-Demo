@@ -112,6 +112,28 @@ Deno; they answer `SERVER_MISCONFIGURED` until their secrets are set (Edge Funct
    Without them the site deploys but every page answers "Supabase is not configured".
 6. Mobile (EAS): set `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, `EXPO_PUBLIC_MAPS_API_KEY`.
 
+### Demo: Maya test payments, connected by the venue itself
+
+For a demo or staging environment, a venue owner can switch on Maya test payments from the Business Suite
+(**Payouts → Connect Maya (test mode)**). No real money moves. One-time setup by an operator:
+
+1. Apply the migrations (`supabase db push`).
+2. Put the platform in test mode (SQL editor, runs as the service role):
+   `select public.admin_set_payments_mode('sandbox');`
+3. Set the Maya sandbox keys as function secrets: `MAYA_PUBLIC_KEY`, `MAYA_SECRET_KEY` (from Maya's
+   published sandbox credentials, or your own from Maya Business Manager), `MAYA_API_BASE_URL`
+   (`https://pg-sandbox.paymaya.com`) and a random `MAYA_WEBHOOK_TOKEN`.
+4. Register the webhook with Maya:
+   `https://<ref>.supabase.co/functions/v1/webhook-maya?token=<MAYA_WEBHOOK_TOKEN>`.
+
+Then in the Business Suite: add a plan (**Plans and prices**), connect test payments (**Payouts**), buy the
+plan in the app with a Maya test card, and the pass, the membership and the ledger entry appear.
+
+Before launch run `select public.admin_set_payments_mode('live');`. Every test-mode connection stops
+selling at once. Real payouts are not self-serve: Maya has no onboarding API, so each venue is verified by
+Maya directly and the back office then records its account in `facility_payout_accounts`. The suite's
+**Request live payouts** button records the request (`live_requested_at`).
+
 ### Payment providers
 
 - **Maya (current test provider):** set `MAYA_PUBLIC_KEY`, `MAYA_SECRET_KEY` (sandbox) and a random

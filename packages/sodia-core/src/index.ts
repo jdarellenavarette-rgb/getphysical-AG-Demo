@@ -11,6 +11,7 @@ export * from "./validation";
 export * from "./seed-data";
 export * from "./supabase";
 export * from "./crm.types";
+export * from "./memberships";
 export * from "./payments";
 export * from "./qr";
 export * from "./qrEncode";

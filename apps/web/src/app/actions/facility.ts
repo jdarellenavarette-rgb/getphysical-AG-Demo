@@ -19,6 +19,14 @@ const createFacilitySchema = z.object({
   address: z.string().trim().max(200).default(""),
 });
 
+// Secure cookies are dropped on plain-http localhost by some browsers, so only require HTTPS in production.
+const activeFacilityCookieOptions = {
+  httpOnly: true,
+  sameSite: "lax",
+  secure: process.env.NODE_ENV === "production",
+  path: "/",
+} as const;
+
 /** Register a new facility (tenant). The caller becomes its OWNER via a DB trigger. */
 export async function createFacility(_prev: FacilityFormState, formData: FormData): Promise<FacilityFormState> {
   const parsed = createFacilitySchema.safeParse({
@@ -51,7 +59,7 @@ export async function createFacility(_prev: FacilityFormState, formData: FormDat
     .single();
   if (error) return { status: "error", message: "We couldn't create the facility. Please retry." };
 
-  (await cookies()).set(ACTIVE_FACILITY_COOKIE, data.id, { httpOnly: true, sameSite: "lax", secure: true, path: "/" });
+  (await cookies()).set(ACTIVE_FACILITY_COOKIE, data.id, activeFacilityCookieOptions);
   revalidatePath("/");
   redirect("/");
 }
@@ -59,18 +67,17 @@ export async function createFacility(_prev: FacilityFormState, formData: FormDat
 /** Switch which facility the suite operates on (must be one the user staffs). */
 export async function selectFacility(facilityId: string): Promise<void> {
   const supabase = await createServerSupabase();
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user) redirect("/login");
+  // Staff can read their co-workers' rows too, so match on the caller as well.
   const { data } = await supabase
     .from("facility_staff")
     .select("facility_id")
     .eq("facility_id", facilityId)
+    .eq("user_id", auth.user.id)
     .maybeSingle();
   if (data) {
-    (await cookies()).set(ACTIVE_FACILITY_COOKIE, facilityId, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: true,
-      path: "/",
-    });
+    (await cookies()).set(ACTIVE_FACILITY_COOKIE, facilityId, activeFacilityCookieOptions);
   }
   revalidatePath("/");
 }

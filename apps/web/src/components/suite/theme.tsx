@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 export interface WebTheme {
   isDark: boolean;
@@ -88,21 +88,34 @@ const ThemeContext = createContext<ThemeContextValue>({
   setThemeMode: () => {},
 });
 
+function readDocumentMode(): "light" | "dark" {
+  const explicit = document.documentElement.dataset.theme;
+  if (explicit === "dark" || explicit === "light") return explicit;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+/** Follows the suite-wide theme (the `data-theme` attribute, or the system setting when none is chosen). */
 export function SuiteThemeProvider({ children }: { children: React.ReactNode }) {
   const [mode, setMode] = useState<"light" | "dark">("light");
 
-  const toggleTheme = () => {
-    setMode((prev) => (prev === "light" ? "dark" : "light"));
-  };
-
-  const setThemeMode = (newMode: "light" | "dark") => {
-    setMode(newMode);
-  };
+  useEffect(() => {
+    const sync = () => setMode(readDocumentMode());
+    sync();
+    const observer = new MutationObserver(sync);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    media.addEventListener("change", sync);
+    return () => {
+      observer.disconnect();
+      media.removeEventListener("change", sync);
+    };
+  }, []);
 
   const currentTheme = mode === "dark" ? darkTheme : lightTheme;
-
   return (
-    <ThemeContext.Provider value={{ theme: currentTheme, isDark: mode === "dark", toggleTheme, setThemeMode }}>
+    <ThemeContext.Provider
+      value={{ theme: currentTheme, isDark: mode === "dark", toggleTheme: () => {}, setThemeMode: () => {} }}
+    >
       {children}
     </ThemeContext.Provider>
   );

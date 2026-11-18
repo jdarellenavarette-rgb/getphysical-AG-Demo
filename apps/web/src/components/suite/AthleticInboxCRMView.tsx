@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
-import { MessageSquare, CheckCircle, Send, Zap, Megaphone } from "lucide-react";
-import { type SuiteMode } from "./HeroPromoCard";
+import { MessageSquare, CheckCircle, Send, Megaphone } from "lucide-react";
+import { type SuiteMode } from "../../lib/suite-modes";
 import { useSuiteTheme } from "./theme";
 import { CreateMessageModal } from "./CreateMessageModal";
 import { sendCrmReply } from "../../app/actions/crm";
@@ -20,17 +20,17 @@ export function AthleticInboxCRMView({ suiteMode }: AthleticInboxCRMViewProps) {
   const [selectedTicketId, setSelectedTicketId] = useState<string>("");
   const [replyError, setReplyError] = useState<string | null>(null);
   const [isSending, startSending] = useTransition();
-  const [filterChannel, setFilterChannel] = useState<
-    "ALL" | "GATE_EXPIRATION" | "FORM_CHECK" | "AT_RISK" | "GENERAL_INQUIRY"
-  >("ALL");
+  const [filterChannel, setFilterChannel] = useState<"ALL" | "WAITING" | "ACTIVE" | "NOT_ACTIVE">("ALL");
   const [replyText, setReplyText] = useState("");
   const [isBroadcastModalOpen, setIsBroadcastModalOpen] = useState(false);
 
   const activeTicket = tickets.find((t) => t.id === selectedTicketId) ?? tickets[0];
 
   const filteredTickets = tickets.filter((t) => {
-    if (filterChannel === "ALL") return true;
-    return t.channel === filterChannel;
+    if (filterChannel === "WAITING") return t.unread;
+    if (filterChannel === "ACTIVE") return t.isActiveMember;
+    if (filterChannel === "NOT_ACTIVE") return !t.isActiveMember;
+    return true;
   });
 
   const sendToActiveThread = (textToSend: string, clearComposer: boolean) => {
@@ -71,7 +71,7 @@ export function AthleticInboxCRMView({ suiteMode }: AthleticInboxCRMViewProps) {
 
   const handleActionRenew = () =>
     sendToActiveThread(
-      `Hi ${activeTicket?.athleteName ?? "there"}, your pass at ${facility.name} has expired. Renew in the Sodia app under Cards → ${facility.name} to get back in.`,
+      `Hi ${activeTicket?.athleteName ?? "there"}, you don't have an active pass at ${facility.name} right now. You can renew in the Sodia app from the ${facility.name} page.`,
       false,
     );
 
@@ -132,12 +132,14 @@ export function AthleticInboxCRMView({ suiteMode }: AthleticInboxCRMViewProps) {
           <div style={{ display: "flex", gap: "6px", overflowX: "auto", paddingBottom: "4px" }}>
             {[
               { id: "ALL", label: "All" },
-              { id: "GATE_EXPIRATION", label: "Turnstile" },
-              { id: "FORM_CHECK", label: "Coach Reviews" },
-              { id: "AT_RISK", label: "At-Risk CRM" },
+              { id: "WAITING", label: "Waiting for reply" },
+              { id: "ACTIVE", label: "Active members" },
+              { id: "NOT_ACTIVE", label: "Not active" },
             ].map((f) => (
               <button
                 key={f.id}
+                type="button"
+                aria-pressed={filterChannel === f.id}
                 onClick={() => setFilterChannel(f.id as typeof filterChannel)}
                 style={{
                   padding: "6px 12px",
@@ -224,6 +226,27 @@ export function AthleticInboxCRMView({ suiteMode }: AthleticInboxCRMViewProps) {
               )}
             </div>
           )}
+          {inboxStatus === "success" && filteredTickets.length === 0 && (
+            <div style={{ padding: "32px 20px", textAlign: "center", color: theme.textSecondary, fontSize: "13px" }}>
+              No conversations match this filter.
+              <button
+                type="button"
+                onClick={() => setFilterChannel("ALL")}
+                style={{
+                  display: "block",
+                  margin: "12px auto 0",
+                  background: "none",
+                  border: "none",
+                  color: theme.textPrimary,
+                  fontWeight: 700,
+                  textDecoration: "underline",
+                  cursor: "pointer",
+                }}
+              >
+                Show all conversations
+              </button>
+            </div>
+          )}
           {filteredTickets.map((t) => {
             const isSelected = t.id === activeTicket?.id;
             return (
@@ -263,15 +286,7 @@ export function AthleticInboxCRMView({ suiteMode }: AthleticInboxCRMViewProps) {
                         overflow: "hidden",
                       }}
                     >
-                      {t.id === "t_darelle" ? (
-                        <img
-                          src="/profiles/darelle/avatar.png"
-                          alt="Darelle"
-                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                        />
-                      ) : (
-                        t.avatar
-                      )}
+                      {t.avatar}
                     </div>
                     <div>
                       <div style={{ fontSize: "13px", fontWeight: 800, color: theme.textPrimary }}>{t.athleteName}</div>
@@ -334,27 +349,11 @@ export function AthleticInboxCRMView({ suiteMode }: AthleticInboxCRMViewProps) {
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              {activeTicket.id === "t_darelle" && (
-                <img
-                  src="/profiles/darelle/avatar.png"
-                  alt="Darelle Navarette"
-                  style={{
-                    width: "38px",
-                    height: "38px",
-                    borderRadius: "19px",
-                    objectFit: "cover",
-                    border: "2px solid #E11D48",
-                  }}
-                />
-              )}
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   <h4 style={{ fontSize: "15px", fontWeight: 900, color: theme.textPrimary }}>
                     {activeTicket.athleteName}
                   </h4>
-                  <span style={{ fontSize: "11px", color: theme.textMuted, fontWeight: 600 }}>
-                    {activeTicket.athleteMeta.phone}
-                  </span>
                   <span
                     style={{
                       fontSize: "10px",
@@ -376,13 +375,15 @@ export function AthleticInboxCRMView({ suiteMode }: AthleticInboxCRMViewProps) {
 
             {/* Quick Automation Actions */}
             <div style={{ display: "flex", gap: "8px" }}>
-              {activeTicket.channel === "GATE_EXPIRATION" && (
+              {!activeTicket.isActiveMember && (
                 <button
+                  type="button"
                   onClick={handleActionRenew}
+                  disabled={isSending}
                   style={{
-                    backgroundColor: "#059669",
+                    backgroundColor: "#047857",
                     color: "#FFFFFF",
-                    fontSize: "11px",
+                    fontSize: "12px",
                     fontWeight: 800,
                     padding: "7px 14px",
                     borderRadius: "8px",
@@ -391,32 +392,10 @@ export function AthleticInboxCRMView({ suiteMode }: AthleticInboxCRMViewProps) {
                     gap: "5px",
                     cursor: "pointer",
                     border: "none",
-                    boxShadow: "0 4px 10px rgba(5, 150, 105, 0.25)",
                   }}
                 >
-                  <CheckCircle size={14} strokeWidth={2.5} />
-                  <span>1-Click Approve Pass</span>
-                </button>
-              )}
-              {activeTicket.channel === "FORM_CHECK" && (
-                <button
-                  style={{
-                    backgroundColor: "#0284C7",
-                    color: "#FFFFFF",
-                    fontSize: "11px",
-                    fontWeight: 800,
-                    padding: "7px 14px",
-                    borderRadius: "8px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "5px",
-                    cursor: "pointer",
-                    border: "none",
-                    boxShadow: "0 4px 10px rgba(2, 132, 199, 0.25)",
-                  }}
-                >
-                  <Zap size={14} strokeWidth={2.5} />
-                  <span>Verify 1RM Stamp</span>
+                  <CheckCircle size={14} strokeWidth={2.5} aria-hidden />
+                  <span>Send renewal reminder</span>
                 </button>
               )}
             </div>

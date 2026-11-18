@@ -2,8 +2,12 @@ import { z } from "zod";
 
 export type CrmSuiteMode = "GYMDASH" | "CLUBDASH" | "COACHDASH" | "ORGANIZERDASH";
 
-/** UI audience picker values. SEGMENT_n maps to facility_segments.key. */
-export type CrmAudience = "ALL" | "SEGMENT_1" | "SEGMENT_2" | "SEGMENT_3";
+/**
+ * UI audience picker values. ALL is every member whose membership has not been
+ * cancelled; ACTIVE and LAPSED follow member standing (see memberships.ts);
+ * SEGMENT_n maps to facility_segments.key.
+ */
+export type CrmAudience = "ALL" | "ACTIVE" | "LAPSED" | "SEGMENT_1" | "SEGMENT_2" | "SEGMENT_3";
 
 /** View-model for a broadcast as rendered in the apps (sender comes from the facility row). */
 export interface CrmBroadcast {
@@ -51,7 +55,7 @@ export const crmBroadcastInputSchema = z
   .object({
     facilityId: z.string().trim().min(1).max(64),
     suiteMode: crmSuiteModeSchema,
-    audience: z.enum(["ALL", "SEGMENT_1", "SEGMENT_2", "SEGMENT_3", "USER"]),
+    audience: z.enum(["ALL", "ACTIVE", "LAPSED", "SEGMENT_1", "SEGMENT_2", "SEGMENT_3", "USER"]),
     targetUserId: z.string().uuid().optional(),
     title: z.string().trim().min(1, "Title is required").max(120, "Title cannot exceed 120 characters"),
     body: z.string().trim().min(1, "Message is required").max(2000, "Message cannot exceed 2000 characters"),
@@ -78,9 +82,11 @@ export type CrmReplyInput = z.input<typeof crmReplyInputSchema>;
 
 /** Maps the UI audience picker to the database's (audience, segment_key) pair. */
 export function toDbAudience(audience: CrmBroadcastInput["audience"]): {
-  audience: "ALL" | "SEGMENT" | "USER";
+  audience: "ALL" | "ACTIVE" | "LAPSED" | "SEGMENT" | "USER";
   segmentKey: string | null;
 } {
-  if (audience === "ALL" || audience === "USER") return { audience, segmentKey: null };
+  if (audience === "ALL" || audience === "ACTIVE" || audience === "LAPSED" || audience === "USER") {
+    return { audience, segmentKey: null };
+  }
   return { audience: "SEGMENT", segmentKey: audience };
 }

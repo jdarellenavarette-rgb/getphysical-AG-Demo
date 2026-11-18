@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Image, TouchableOpacity, StyleSheet } from "react-native";
 import { Menu, MessageSquare, Bell, Settings } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import { useCrmMessagingStore } from "../../store/crmMessagingStore";
@@ -40,10 +40,18 @@ export function HeaderBar({
           <Menu size={22} color={colors.textPrimary} strokeWidth={2.2} />
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={onPressLogo} style={styles.logoTouch}>
-          <Text style={[styles.brandTitle, { color: colors.textPrimary }]}>
-            getphysical<Text style={styles.brandDot}>.</Text>
-          </Text>
+        <TouchableOpacity
+          onPress={onPressLogo}
+          style={styles.logoTouch}
+          accessibilityRole="button"
+          accessibilityLabel="GetPhysical, go to feed"
+        >
+          {/* One white-on-clear file, tinted to suit the light or dark header. */}
+          <Image
+            source={require("../../../assets/brand/gp_wordmark.png")}
+            style={[styles.wordmark, { tintColor: colors.textPrimary }]}
+            resizeMode="contain"
+          />
         </TouchableOpacity>
       </View>
 
@@ -97,9 +105,8 @@ const styles = StyleSheet.create({
   },
   leftGroup: { flexDirection: "row", alignItems: "center", gap: 10 },
   menuIconBtn: { minWidth: 40, minHeight: 40, alignItems: "center", justifyContent: "center" },
-  logoTouch: { paddingVertical: 4 },
-  brandTitle: { fontSize: 21, fontWeight: "900", letterSpacing: -0.6 },
-  brandDot: { color: "#E11D48" },
+  logoTouch: { paddingVertical: 9 },
+  wordmark: { width: 135, height: 22 },
   rightGroup: { flexDirection: "row", alignItems: "center", gap: 4 },
   iconCircle: {
     width: 38,

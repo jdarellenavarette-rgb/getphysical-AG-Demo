@@ -3,14 +3,15 @@
     "name": "Sodia - GetPhysical",
     "slug": "getphysical-sodia",
     "version": "1.0.0",
+    "icon": "./assets/brand/icon.png",
     "orientation": "portrait",
     "scheme": "sodia",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/gp_splash_native.png",
+      "image": "./assets/brand/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#151517"
+      "backgroundColor": "#000000"
     },
     "ios": {
       "supportsTablet": true,
@@ -26,7 +27,11 @@
     "android": {
       "package": "com.getphysical.sodia",
       "permissions": ["CAMERA", "RECORD_AUDIO", "ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"],
-      "blockedPermissions": ["android.permission.READ_EXTERNAL_STORAGE", "android.permission.WRITE_EXTERNAL_STORAGE"]
+      "blockedPermissions": ["android.permission.READ_EXTERNAL_STORAGE", "android.permission.WRITE_EXTERNAL_STORAGE"],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/brand/adaptive_icon_foreground.png",
+        "backgroundColor": "#000000"
+      }
     },
     "plugins": [
       "expo-router",

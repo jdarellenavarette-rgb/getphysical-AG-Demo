@@ -4,6 +4,10 @@ export const authStyles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#09090B" },
   content: { flexGrow: 1, justifyContent: "center", paddingHorizontal: 24, paddingVertical: 48 },
   brand: { color: "#E11D48", fontSize: 13, fontWeight: "800", letterSpacing: 1.5 },
+  // The brand leads the screen: centred, and about two thirds of the content width
+  // (240 x 39 keeps the logo's own 6.15 : 1 proportions).
+  logo: { width: 240, height: 39, alignSelf: "center", marginBottom: 32 },
+  centered: { textAlign: "center" },
   title: { color: "#FFFFFF", fontSize: 26, fontWeight: "800", marginTop: 8 },
   subtitle: { color: "#A1A1AA", fontSize: 14, marginTop: 8, lineHeight: 20 },
   field: { marginTop: 20 },

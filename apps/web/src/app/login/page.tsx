@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { MessageSquare, ScanLine, Users } from "lucide-react";
+import { CalendarDays, ClipboardList, Dumbbell, Trophy } from "lucide-react";
 import { BrandMark } from "../../components/shell/BrandMark";
 import { Notice } from "../../components/ui/states";
 import { createServerSupabase } from "../../lib/supabase/server";
@@ -8,10 +8,11 @@ import { LoginForm } from "./LoginForm";
 export const metadata = { title: "Sign in" };
 export const dynamic = "force-dynamic";
 
-const POINTS = [
-  { icon: Users, title: "Know every member", text: "Who is active, who has lapsed, and who to win back." },
-  { icon: ScanLine, title: "Check in at the door", text: "Scan the card in the Sodia app. Each code works once." },
-  { icon: MessageSquare, title: "Talk to your members", text: "One inbox, and broadcasts to exactly the right group." },
+const WORKSPACES = [
+  { icon: Dumbbell, title: "GymDash", text: "Members, check-in at the door, plans and sales." },
+  { icon: CalendarDays, title: "Clubdash", text: "Courts, bookings, players and open play." },
+  { icon: ClipboardList, title: "CoachDash", text: "Your clients and who needs a check-in today." },
+  { icon: Trophy, title: "Organizer Pro", text: "Events, sign-ups and arrivals on the day." },
 ];
 
 export default async function LoginPage({
@@ -26,38 +27,52 @@ export default async function LoginPage({
 
   return (
     <main className="grid min-h-screen lg:grid-cols-2">
-      <section className="relative hidden overflow-hidden bg-zinc-950 p-12 text-white lg:flex lg:flex-col lg:justify-between">
+      <section className="relative hidden overflow-hidden bg-zinc-950 text-white lg:block">
         <div aria-hidden className="absolute -top-40 -right-40 size-[34rem] rounded-full bg-rose-600/30 blur-3xl" />
         <div aria-hidden className="absolute -bottom-48 -left-32 size-[30rem] rounded-full bg-rose-500/15 blur-3xl" />
-        <BrandMark className="relative [&_.text-muted-foreground]:text-zinc-300" tagline />
-        <div className="relative">
-          <h2 className="max-w-md text-5xl leading-[1.05] font-black tracking-tight">
-            Run your gym or club from one place.
-          </h2>
-          <ul className="mt-10 grid max-w-md gap-6">
-            {POINTS.map(({ icon: Icon, title, text }) => (
-              <li key={title} className="flex gap-4">
-                <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-white/10">
-                  <Icon size={20} aria-hidden />
-                </span>
-                <span>
-                  <span className="block font-semibold">{title}</span>
-                  <span className="block text-sm text-zinc-300">{text}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
+        {/* One centred column with a capped width, so the panel reads the same on a laptop and an ultrawide. */}
+        <div className="relative mx-auto flex h-full w-full max-w-2xl flex-col justify-between gap-12 px-12 py-12 xl:px-16 xl:py-14 min-[1800px]:max-w-3xl min-[1800px]:py-20 min-[2400px]:max-w-5xl min-[2400px]:py-24">
+          <BrandMark size="lg" className="[&_.text-muted-foreground]:text-zinc-300" tagline />
+          <div>
+            <p className="text-sm font-semibold tracking-[0.18em] text-rose-300 uppercase min-[1800px]:text-base">
+              For gyms, clubs, coaches and organizers
+            </p>
+            <h2 className="mt-4 text-5xl leading-[1.05] font-black tracking-tight text-balance xl:text-6xl min-[1800px]:text-7xl min-[2400px]:text-8xl">
+              Run your fitness business from one place.
+            </h2>
+            <ul className="mt-10 grid gap-x-8 gap-y-7 xl:grid-cols-2 min-[1800px]:mt-14">
+              {WORKSPACES.map(({ icon: Icon, title, text }) => (
+                <li key={title} className="flex gap-4">
+                  <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-white/10">
+                    <Icon size={22} aria-hidden />
+                  </span>
+                  <span>
+                    <span className="block text-base font-semibold min-[1800px]:text-lg min-[2400px]:text-xl">
+                      {title}
+                    </span>
+                    <span className="mt-0.5 block text-sm text-zinc-300 min-[1800px]:text-base min-[2400px]:text-lg">
+                      {text}
+                    </span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <p className="text-sm text-zinc-400 min-[1800px]:text-base">
+            Connected to the Sodia app your members, players and clients already use.
+          </p>
         </div>
-        <p className="relative text-sm text-zinc-400">Connected to the Sodia app your members already use.</p>
       </section>
 
       <section className="flex items-center justify-center px-5 py-10" aria-labelledby="login-title">
-        <div className="w-full max-w-sm">
-          <BrandMark className="mb-10 lg:hidden" tagline />
-          <h1 id="login-title" className="text-3xl font-bold tracking-tight">
+        <div className="w-full max-w-sm min-[1800px]:max-w-md min-[2400px]:max-w-lg">
+          <BrandMark size="lg" className="mb-10 lg:hidden" tagline />
+          <h1 id="login-title" className="text-3xl font-bold tracking-tight min-[1800px]:text-4xl">
             Sign in
           </h1>
-          <p className="mt-2 mb-7 text-muted-foreground">Use the same account you use in the Sodia app.</p>
+          <p className="mt-2 mb-7 text-muted-foreground min-[1800px]:text-lg">
+            Use the same account you use in the Sodia app.
+          </p>
           {params.error === "link_expired" && (
             <div className="mb-5">
               <Notice tone="danger" role="alert">

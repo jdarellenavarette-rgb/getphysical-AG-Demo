@@ -23,7 +23,7 @@ export default async function WelcomePage({ searchParams }: { searchParams: Prom
   return (
     <main className="flex min-h-screen items-center justify-center px-4 py-10">
       <div className="w-full max-w-xl">
-        <BrandMark tagline className="mb-8" />
+        <BrandMark size="lg" tagline className="mb-8" />
         <section className="rounded-3xl border border-border bg-card p-7 shadow-sm sm:p-9">
           <p className="text-sm font-semibold tracking-wide text-primary uppercase">
             {adding ? "Another business" : "Step 1 of 2"}

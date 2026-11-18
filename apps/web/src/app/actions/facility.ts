@@ -84,3 +84,23 @@ export async function selectFacility(facilityId: string): Promise<void> {
   }
   revalidatePath("/");
 }
+
+/** Test mode only: give the signed-in person a ready-made demo venue and switch to it. */
+export async function openDemoVenue(_prev: FacilityFormState, _formData: FormData): Promise<FacilityFormState> {
+  const supabase = await createServerSupabase();
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user) redirect("/login");
+
+  const { data, error } = await supabase.rpc("create_demo_venue");
+  if (error || !data) {
+    return {
+      status: "error",
+      message: error?.message.includes("DEMO_DISABLED")
+        ? "Demo venues aren't available here."
+        : "We couldn't set up the demo venue. Please retry.",
+    };
+  }
+  (await cookies()).set(ACTIVE_FACILITY_COOKIE, data, activeFacilityCookieOptions);
+  revalidatePath("/", "layout");
+  redirect("/");
+}

@@ -34,6 +34,7 @@ export default async function SuiteLayout({ children }: { children: ReactNode })
             <p className="mt-0.5 text-sm text-muted-foreground">
               {facility.registryType === "COMMUNITY" ? "Clubdash · Community club" : "GymDash · Commercial gym"} ·{" "}
               {facility.plan === "PRO" ? "Pro plan" : "Free plan"}
+              {facility.id.startsWith("demo_") && " · Demo venue with sample data"}
             </p>
           </div>
           <div className="flex items-center gap-3">

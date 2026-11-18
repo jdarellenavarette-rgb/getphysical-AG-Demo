@@ -2034,6 +2034,7 @@ export type Database = {
         Args: { p_conversation_id: string }
         Returns: string
       }
+      create_demo_venue: { Args: never; Returns: string }
       create_payment_order: {
         Args: {
           p_facility_id: string

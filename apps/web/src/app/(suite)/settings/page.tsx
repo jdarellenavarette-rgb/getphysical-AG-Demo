@@ -2,6 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui
 import { PageHeader } from "../../../components/ui/states";
 import { canManageFacility, requireSuiteSession } from "../../../lib/active-facility";
 import { loadVenueProfile } from "../../../lib/data/venue";
+import { createServerSupabase } from "../../../lib/supabase/server";
+import { DemoVenueButton } from "../../welcome/DemoVenueButton";
 import { VenueProfileForm } from "./VenueProfileForm";
 
 export const metadata = { title: "Settings" };
@@ -9,7 +11,11 @@ export const metadata = { title: "Settings" };
 export default async function SettingsPage() {
   const session = await requireSuiteSession();
   const facility = session.active;
-  const venue = await loadVenueProfile(facility.id);
+  const [venue, { data: mode }] = await Promise.all([
+    loadVenueProfile(facility.id),
+    (await createServerSupabase()).rpc("payments_mode"),
+  ]);
+  const isDemo = facility.id.startsWith("demo_");
   const facts = [
     {
       label: "Type",
@@ -51,9 +57,21 @@ export default async function SettingsPage() {
               ))}
             </dl>
             <p className="mt-4 text-sm text-muted-foreground">
-              Facility type and plan can&apos;t be changed here. Staff, payouts and photos aren&apos;t editable in the
-              suite yet.
+              Facility type and plan can&apos;t be changed here. Staff and photos aren&apos;t editable in the suite yet.
             </p>
+            {mode === "sandbox" && !isDemo && (
+              <div className="mt-5 border-t border-border pt-5">
+                <p className="mb-3 text-sm text-muted-foreground">
+                  Want to see the suite with data in it? Open a demo gym with sample members, check-ins and sales.
+                </p>
+                <DemoVenueButton label="Open a demo venue" />
+              </div>
+            )}
+            {isDemo && (
+              <p className="mt-5 border-t border-border pt-5 text-sm text-muted-foreground">
+                This is a demo venue. Its members, check-ins and sales are samples, and payments run in test mode.
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>

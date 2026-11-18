@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireSuiteSession } from "../../lib/active-facility";
 import { createServerSupabase } from "../../lib/supabase/server";
@@ -73,6 +72,5 @@ export async function updateVenueProfile(_prev: VenueFormState, formData: FormDa
   if (data.length === 0) {
     return { status: "permission_denied", message: "Only the owner or an admin can change venue details." };
   }
-  revalidatePath("/", "layout");
   return { status: "success", message: "Venue details saved." };
 }

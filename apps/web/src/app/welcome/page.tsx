@@ -2,7 +2,9 @@ import { redirect } from "next/navigation";
 import { BrandMark } from "../../components/shell/BrandMark";
 import { getSuiteSession } from "../../lib/active-facility";
 import { signOut } from "../actions/auth";
+import { createServerSupabase } from "../../lib/supabase/server";
 import { CreateFacilityForm } from "./CreateFacilityForm";
+import { DemoVenueButton } from "./DemoVenueButton";
 
 export const metadata = { title: "Set up your facility" };
 export const dynamic = "force-dynamic";
@@ -12,6 +14,8 @@ export default async function WelcomePage() {
   const session = await getSuiteSession();
   if (!session) redirect("/login");
   if (session.active) redirect("/");
+  const { data: mode } = await (await createServerSupabase()).rpc("payments_mode");
+  const demoAvailable = mode === "sandbox";
 
   return (
     <main className="flex min-h-screen items-center justify-center px-4 py-10">
@@ -27,6 +31,16 @@ export default async function WelcomePage() {
           </p>
           <CreateFacilityForm />
         </section>
+        {demoAvailable && (
+          <section className="mt-5 rounded-3xl border border-dashed border-border p-6">
+            <h2 className="font-semibold">Just looking around?</h2>
+            <p className="mt-1 mb-4 text-sm text-muted-foreground">
+              Open a demo gym with sample members, plans, check-ins, sales and messages. Nothing in it is real, and
+              payments run in test mode.
+            </p>
+            <DemoVenueButton />
+          </section>
+        )}
         <form action={signOut} className="mt-5 text-center">
           <button
             type="submit"

@@ -2,7 +2,7 @@
 
 Read this before starting work in either app. Update it when a shared change lands.
 
-**Last updated:** 2026-11-18 · **Web branch:** `claude/friendly-keller-69beky` · **Mobile:** merged to `main` at `625ef77`
+**Last updated:** 2026-11-18 · Both apps are on `main`. Demo walkthrough: `docs/DEMO.md`.
 
 ## Lanes
 
@@ -79,16 +79,29 @@ Shared helpers in `sodia-core` (`payments.ts`): `facilityProductSchema`, `produc
 - A venue that has not connected payouts still answers `FACILITY_PAYOUTS_NOT_CONFIGURED` at checkout. Mobile
   should show that as "This venue isn't taking payments yet", not as a generic error.
 
-## What mobile needs to adjust so the two meet
+## Mobile status against these contracts (2026-11-18)
 
-All are reads or single calls against things that already exist. None needs a schema change.
+Built and covered by automated tests with a stand-in backend; not yet run on a phone against staging.
 
-1. **"My venues" list** from `my_memberships()`, labelled with `describeStanding(standing).forMember`, with two controls per venue: **Leave** (`leave_facility`) and **Mute broadcasts** (`set_venue_broadcasts_muted`). This is the member's half of the relationship and does not exist yet.
-2. **Wallet reads `passes` from the backend** (mobile finding B2), including passes with `pass_type = 'COMP_PASS'` granted at the desk; show them as "Pass from <venue>". Until then a granted or purchased pass has no card to show, so the web check-in has nothing real to scan.
-3. **Venue sheet lists the venue's plans** from `facility_products` (active rows, ordered by `sort_order`), hidden by kind when `sells_passes` / `sells_memberships` is false, and sends the chosen product's `id` as `sku` to checkout. This replaces the hard-coded day-pass / monthly choice and fixes mobile finding B1 (wrong product sold).
-   3b. **Venues tab reads `facilities`** instead of sample venues. Until then a venue's name, hours, amenities and prices edited on web are used at checkout but not displayed.
-4. **Show the person's username where they can read it out** (profile or settings), because the front desk adds members by username.
-5. **Scanning a venue code** already works (`redeem_qr_code`). The Business Suite now displays that code as `sodia://q/<token>`.
+| Item                                                                       | State | Where                                                                        |
+| -------------------------------------------------------------------------- | ----- | ---------------------------------------------------------------------------- |
+| Wallet reads `passes`, including desk-granted `COMP_PASS`                  | Done  | `apps/mobile/src/services/memberService.ts`, `components/cards/`             |
+| Venue sheet lists `facility_products` and sends the product id to checkout | Done  | `services/venueService.ts`, `hooks/useVenuePlans.ts`, `hooks/useCheckout.ts` |
+| "My venues" with standing, Leave and Mute                                  | Done  | `components/profile/MyVenuesModal.tsx`                                       |
+| Discover reads `facilities`                                                | Done  | `hooks/useDiscoverVenues.ts`                                                 |
+| Username shown with copy or share                                          | Done  | `components/common/SettingsMemberCard.tsx`                                   |
+| Friendly checkout errors                                                   | Done  | `services/paymentService.ts`                                                 |
+
+Still open on mobile:
+
+- No signal for "payment confirmed": the wallet polls for about three minutes after checkout opens. A realtime subscription on `passes` would be more direct.
+- One-tap copy of the username needs `expo-clipboard`, which is not on the approved list.
+- Sample coaches, clubs and the court grid are hidden when a backend is configured, because nothing behind them can be sold yet.
+- After joining by venue code, "View passes" opens the web link instead of the in-app venue sheet.
+
+## Demo venue
+
+`create_demo_venue()` (test mode only) gives the signed-in person a sample gym they own. The Business Suite offers it on first run. Sample members use `@demo.getphysical.test` addresses and cannot sign in.
 
 ## What web will not do without agreement
 

@@ -96,8 +96,8 @@ export function SignInScreen({ onContinueAsGuest }: SignInScreenProps) {
           accessibilityRole="image"
           accessibilityLabel="GetPhysical"
         />
-        <Text style={s.title}>{email ? "Check your email" : "Sign in or sign up"}</Text>
-        <Text style={s.subtitle}>
+        <Text style={[s.title, s.centered]}>{email ? "Check your email" : "Sign in or sign up"}</Text>
+        <Text style={[s.subtitle, s.centered]}>
           {email
             ? `We sent a code to ${email}. It expires in a few minutes.`
             : "Use your email or Google. New here? We'll create your account."}

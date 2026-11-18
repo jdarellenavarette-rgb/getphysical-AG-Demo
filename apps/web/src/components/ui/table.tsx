@@ -4,7 +4,12 @@ import { cn } from "../../lib/utils";
 /** Scrolls sideways inside its own box on narrow screens instead of breaking the page. */
 export function Table({ className, ...props }: HTMLAttributes<HTMLTableElement>) {
   return (
-    <div className="relative w-full overflow-x-auto">
+    <div
+      className="relative w-full overflow-x-auto"
+      role="region"
+      aria-label="Table, scrolls sideways on small screens"
+      tabIndex={0}
+    >
       <table className={cn("w-full min-w-[560px] border-collapse text-left text-sm", className)} {...props} />
     </div>
   );

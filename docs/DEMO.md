@@ -16,11 +16,13 @@ How to show the Business Suite and the Sodia app working together. Last verified
 
 1. Open the deployed site (Vercel project `getphysical-ag-demo`) and sign in with Google or email.
 2. On the first screen choose **Explore with a demo venue**. You get "Pulse Fitness (Demo)", which you own, with:
-   - 18 sample members: 11 active, 4 lapsed, 2 without a pass, 1 cancelled
+   - 18 sample members: 12 active, 4 lapsed, 1 without a pass, 1 cancelled
    - four plans, test payments connected
-   - a week of check-ins, 16 sales and five conversations
+   - a month of check-ins with morning and evening peaks, 16 sales and five conversations
 3. Walk through, in this order:
-   - **Overview**: today's numbers and the latest scans.
+   - **Overview**: the owner's command centre. Switch the time frame (Today, 7, 30, 90 days) and show:
+     needs-attention queue, member growth (joined − lapsed − cancelled), check-ins chart, busy-hours map with
+     "Create an off-peak plan", door versus sales, at-risk members with "Message lapsed members", and what sold.
    - **Members**: standing for each member; grant a pass to someone with "No pass"; show the venue code.
    - **Inbox**: reply to a member; send a broadcast to **Lapsed (win-back)** and see it reach four people.
    - **Plans and prices**: add a plan; switch one off; turn "We offer memberships" off and on.

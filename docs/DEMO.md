@@ -16,11 +16,13 @@ How to show the Business Suite and the Sodia app working together. Last verified
 
 1. Open the deployed site (Vercel project `getphysical-ag-demo`) and sign in with Google or email.
 2. On the first screen choose **Explore with a demo venue**. You get "Pulse Fitness (Demo)", which you own, with:
-   - 18 sample members: 11 active, 4 lapsed, 2 without a pass, 1 cancelled
+   - 18 sample members: 12 active, 4 lapsed, 1 without a pass, 1 cancelled
    - four plans, test payments connected
-   - a week of check-ins, 16 sales and five conversations
+   - a month of check-ins with morning and evening peaks, 16 sales and five conversations
 3. Walk through, in this order:
-   - **Overview**: today's numbers and the latest scans.
+   - **Overview**: the owner's command centre. Switch the time frame (Today, 7, 30, 90 days) and show:
+     needs-attention queue, member growth (joined − lapsed − cancelled), check-ins chart, busy-hours map with
+     "Create an off-peak plan", door versus sales, at-risk members with "Message lapsed members", and what sold.
    - **Members**: standing for each member; grant a pass to someone with "No pass"; show the venue code.
    - **Inbox**: reply to a member; send a broadcast to **Lapsed (win-back)** and see it reach four people.
    - **Plans and prices**: add a plan; switch one off; turn "We offer memberships" off and on.
@@ -38,6 +40,25 @@ The Vercel project needs these environment variables (Settings → Environment V
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | the project's `anon` key (Supabase → Settings → API) |
 
 If they are missing, every page answers "Supabase is not configured".
+
+### Coach, organizer and club sections
+
+The demo venue shows every section so they can be explored from one place.
+
+- **My clients** (CoachDash): three accepted clients, one request to accept, and a "Check in on today" list of
+  clients who have not logged a workout for three days. Invite a client by username; they join once they accept.
+- **Events** (Organizer): two upcoming events with sign-ups and one finished event with attendance. Publish a new
+  event, open one, and mark people as arrived.
+- **Schedule** (Clubdash): a day view of four courts. "Main Court" divides into "Pickleball A" and "B": booking
+  either layout holds the other, with 15 minutes to change over. Try booking Pickleball A at 5:30 PM to see the refusal.
+- **Settings → Team**: add front-desk staff, coaches or admins by username; remove them.
+- **Members → Import from a spreadsheet**: paste or upload a CSV, match the columns, review and import.
+
+New businesses choose their kind at sign-up (gym, fitness studio, sports club, coaching, event organizer) and see the
+sections that apply.
+
+Not built yet: entry fees and court payments, booking from the app, tournament brackets and live scoring, training
+plans and form-check video for coaches, the cash till and shift float, staff clock-in, and recurring billing.
 
 ## Sodia app (mobile)
 

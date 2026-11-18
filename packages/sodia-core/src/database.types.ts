@@ -177,6 +177,7 @@ export type Database = {
           coach_id: string
           created_at: string | null
           facility_id: string | null
+          invited_by: string | null
           status: Database["public"]["Enums"]["membership_status"]
           updated_at: string | null
         }
@@ -185,6 +186,7 @@ export type Database = {
           coach_id: string
           created_at?: string | null
           facility_id?: string | null
+          invited_by?: string | null
           status?: Database["public"]["Enums"]["membership_status"]
           updated_at?: string | null
         }
@@ -193,6 +195,7 @@ export type Database = {
           coach_id?: string
           created_at?: string | null
           facility_id?: string | null
+          invited_by?: string | null
           status?: Database["public"]["Enums"]["membership_status"]
           updated_at?: string | null
         }
@@ -216,6 +219,13 @@ export type Database = {
             columns: ["facility_id"]
             isOneToOne: false
             referencedRelation: "facilities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coach_clients_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -390,24 +400,37 @@ export type Database = {
       }
       event_registrations: {
         Row: {
+          checked_in_at: string | null
+          checked_in_by: string | null
           event_id: string
           registered_at: string | null
           status: string
           user_id: string
         }
         Insert: {
+          checked_in_at?: string | null
+          checked_in_by?: string | null
           event_id: string
           registered_at?: string | null
           status?: string
           user_id?: string
         }
         Update: {
+          checked_in_at?: string | null
+          checked_in_by?: string | null
           event_id?: string
           registered_at?: string | null
           status?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "event_registrations_checked_in_by_fkey"
+            columns: ["checked_in_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "event_registrations_event_id_fkey"
             columns: ["event_id"]
@@ -624,6 +647,60 @@ export type Database = {
           },
         ]
       }
+      facility_imported_members: {
+        Row: {
+          created_at: string
+          email: string | null
+          expires_on: string | null
+          facility_id: string
+          full_name: string
+          id: string
+          imported_by: string | null
+          notes: string | null
+          phone: string | null
+          plan_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          expires_on?: string | null
+          facility_id: string
+          full_name: string
+          id?: string
+          imported_by?: string | null
+          notes?: string | null
+          phone?: string | null
+          plan_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          expires_on?: string | null
+          facility_id?: string
+          full_name?: string
+          id?: string
+          imported_by?: string | null
+          notes?: string | null
+          phone?: string | null
+          plan_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "facility_imported_members_facility_id_fkey"
+            columns: ["facility_id"]
+            isOneToOne: false
+            referencedRelation: "facilities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "facility_imported_members_imported_by_fkey"
+            columns: ["imported_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       facility_memberships: {
         Row: {
           broadcasts_muted: boolean
@@ -833,6 +910,51 @@ export type Database = {
             columns: ["facility_id"]
             isOneToOne: false
             referencedRelation: "facilities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      facility_spaces: {
+        Row: {
+          created_at: string
+          facility_id: string
+          id: string
+          is_active: boolean
+          name: string
+          parent_id: string | null
+          sport: string | null
+        }
+        Insert: {
+          created_at?: string
+          facility_id: string
+          id?: string
+          is_active?: boolean
+          name: string
+          parent_id?: string | null
+          sport?: string | null
+        }
+        Update: {
+          created_at?: string
+          facility_id?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          parent_id?: string | null
+          sport?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "facility_spaces_facility_id_fkey"
+            columns: ["facility_id"]
+            isOneToOne: false
+            referencedRelation: "facilities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "facility_spaces_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "facility_spaces"
             referencedColumns: ["id"]
           },
         ]
@@ -1715,6 +1837,77 @@ export type Database = {
           },
         ]
       }
+      space_bookings: {
+        Row: {
+          booked_for: string
+          created_at: string
+          created_by: string | null
+          ends_at: string
+          facility_id: string
+          id: string
+          note: string | null
+          space_id: string
+          starts_at: string
+          status: Database["public"]["Enums"]["booking_status"]
+          user_id: string | null
+        }
+        Insert: {
+          booked_for: string
+          created_at?: string
+          created_by?: string | null
+          ends_at: string
+          facility_id: string
+          id?: string
+          note?: string | null
+          space_id: string
+          starts_at: string
+          status?: Database["public"]["Enums"]["booking_status"]
+          user_id?: string | null
+        }
+        Update: {
+          booked_for?: string
+          created_at?: string
+          created_by?: string | null
+          ends_at?: string
+          facility_id?: string
+          id?: string
+          note?: string | null
+          space_id?: string
+          starts_at?: string
+          status?: Database["public"]["Enums"]["booking_status"]
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "space_bookings_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "space_bookings_facility_id_fkey"
+            columns: ["facility_id"]
+            isOneToOne: false
+            referencedRelation: "facilities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "space_bookings_space_id_fkey"
+            columns: ["space_id"]
+            isOneToOne: false
+            referencedRelation: "facility_spaces"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "space_bookings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tournament_matches: {
         Row: {
           court_slot: string | null
@@ -1873,6 +2066,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_facility_staff: {
+        Args: {
+          p_facility_id: string
+          p_role: Database["public"]["Enums"]["facility_role"]
+          p_username: string
+        }
+        Returns: Json
+      }
       admin_assign_staff: {
         Args: {
           p_facility_id: string
@@ -2004,6 +2205,21 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      coach_roster: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          awaiting: string
+          client_id: string
+          last_workout_at: string
+          name: string
+          since: string
+          status: Database["public"]["Enums"]["membership_status"]
+          username: string
+          workouts_28d: number
+          workouts_7d: number
+        }[]
+      }
       connect_sandbox_payouts: {
         Args: { p_facility_id: string }
         Returns: {
@@ -2111,6 +2327,17 @@ export type Database = {
         Args: { p_athlete_id?: string; p_facility_id: string }
         Returns: string
       }
+      event_roster: {
+        Args: { p_event_id: string }
+        Returns: {
+          checked_in_at: string
+          name: string
+          registered_at: string
+          status: string
+          user_id: string
+          username: string
+        }[]
+      }
       facilities_nearby: {
         Args: {
           p_lat: number
@@ -2135,6 +2362,21 @@ export type Database = {
           slug: string
         }[]
       }
+      facility_events: {
+        Args: { p_facility_id: string }
+        Returns: {
+          capacity: number
+          checked_in: number
+          description: string
+          ends_at: string
+          id: string
+          registered: number
+          sport: string
+          starts_at: string
+          status: Database["public"]["Enums"]["event_status"]
+          title: string
+        }[]
+      }
       facility_member_directory: {
         Args: { p_facility_id: string }
         Returns: {
@@ -2148,6 +2390,16 @@ export type Database = {
           pass_valid_until: string
           source: string
           standing: string
+          user_id: string
+          username: string
+        }[]
+      }
+      facility_team: {
+        Args: { p_facility_id: string }
+        Returns: {
+          added_at: string
+          name: string
+          role: Database["public"]["Enums"]["facility_role"]
           user_id: string
           username: string
         }[]
@@ -2208,6 +2460,11 @@ export type Database = {
         }
         Returns: boolean
       }
+      import_facility_members: {
+        Args: { p_facility_id: string; p_rows: Json }
+        Returns: number
+      }
+      invite_coach_client: { Args: { p_username: string }; Returns: Json }
       is_conversation_participant: {
         Args: { p_conversation_id: string }
         Returns: boolean
@@ -2307,8 +2564,16 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      remove_facility_staff: {
+        Args: { p_facility_id: string; p_user_id: string }
+        Returns: undefined
+      }
       request_live_payouts: { Args: { p_facility_id: string }; Returns: string }
       resolve_qr_code: { Args: { p_token: string }; Returns: Json }
+      respond_coach_invite: {
+        Args: { p_accept: boolean; p_coach_id: string }
+        Returns: Database["public"]["Enums"]["membership_status"]
+      }
       rotate_qr_code: {
         Args: {
           p_kind: Database["public"]["Enums"]["qr_kind"]
@@ -2349,6 +2614,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      set_event_attendance: {
+        Args: { p_event_id: string; p_present: boolean; p_user_id: string }
+        Returns: string
       }
       set_venue_broadcasts_muted: {
         Args: { p_facility_id: string; p_muted: boolean }
@@ -2403,6 +2672,7 @@ export type Database = {
       }
     }
     Enums: {
+      booking_status: "CONFIRMED" | "CANCELLED"
       conversation_kind: "DIRECT" | "GROUP" | "FACILITY"
       event_status: "DRAFT" | "PUBLISHED" | "CANCELLED"
       facility_role: "OWNER" | "ADMIN" | "STAFF" | "COACH"
@@ -2547,6 +2817,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      booking_status: ["CONFIRMED", "CANCELLED"],
       conversation_kind: ["DIRECT", "GROUP", "FACILITY"],
       event_status: ["DRAFT", "PUBLISHED", "CANCELLED"],
       facility_role: ["OWNER", "ADMIN", "STAFF", "COACH"],

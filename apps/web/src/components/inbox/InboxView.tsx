@@ -25,14 +25,16 @@ interface InboxViewProps {
   facilityId: string;
   facilityName: string;
   suiteMode: SuiteMode;
+  /** Opens the broadcast dialog straight away with this audience chosen (from an Overview shortcut). */
+  initialAudience?: "ALL" | "ACTIVE" | "LAPSED";
 }
 
 /** Two-pane inbox: thread list and conversation. On narrow screens one pane shows at a time. */
-export function InboxView({ facilityId, facilityName, suiteMode }: InboxViewProps) {
+export function InboxView({ facilityId, facilityName, suiteMode, initialAudience }: InboxViewProps) {
   const { tickets, setTickets, status, errorMessage, reload } = useFacilityInbox(facilityId);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>("ALL");
-  const [broadcastOpen, setBroadcastOpen] = useState(false);
+  const [broadcastOpen, setBroadcastOpen] = useState(Boolean(initialAudience));
   const [replyError, setReplyError] = useState<string | null>(null);
   const [sending, startSending] = useTransition();
   const replyRef = useRef<HTMLInputElement>(null);
@@ -313,6 +315,7 @@ export function InboxView({ facilityId, facilityName, suiteMode }: InboxViewProp
         facilityId={facilityId}
         facilityName={facilityName}
         suiteMode={suiteMode}
+        initialAudience={initialAudience}
       />
     </>
   );

@@ -4,7 +4,7 @@ import { FacilitySwitcher } from "../../components/shell/FacilitySwitcher";
 import { SuiteNav } from "../../components/shell/SuiteNav";
 import { ThemeToggle } from "../../components/shell/ThemeToggle";
 import { Button } from "../../components/ui/button";
-import { requireSuiteSession } from "../../lib/active-facility";
+import { KIND_LABELS, requireSuiteSession } from "../../lib/active-facility";
 import { suiteNavFor } from "../../lib/nav";
 import { signOut } from "../actions/auth";
 
@@ -19,7 +19,7 @@ export default async function SuiteLayout({ children }: { children: ReactNode })
 
   return (
     <div className="flex min-h-screen flex-col lg:h-screen lg:flex-row lg:overflow-hidden">
-      <SuiteNav items={suiteNavFor(facility.role)} />
+      <SuiteNav items={suiteNavFor(facility.role, facility.kind, facility.id.startsWith("demo_"))} />
       <div className="flex min-w-0 flex-1 flex-col lg:overflow-y-auto">
         <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-border bg-card/85 px-4 py-3 backdrop-blur lg:sticky lg:top-0 lg:z-10 lg:px-10">
           <div className="min-w-0">
@@ -32,8 +32,7 @@ export default async function SuiteLayout({ children }: { children: ReactNode })
               <p className="truncate text-base font-bold">{facility.name}</p>
             )}
             <p className="mt-0.5 text-sm text-muted-foreground">
-              {facility.registryType === "COMMUNITY" ? "Clubdash · Community club" : "GymDash · Commercial gym"} ·{" "}
-              {facility.plan === "PRO" ? "Pro plan" : "Free plan"}
+              {KIND_LABELS[facility.kind]} · {facility.plan === "PRO" ? "Pro plan" : "Free plan"}
               {facility.id.startsWith("demo_") && " · Demo venue with sample data"}
             </p>
           </div>

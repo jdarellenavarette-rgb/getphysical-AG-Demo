@@ -28,8 +28,15 @@ function saleStatus(
   return { label: "On sale", tone: "success" };
 }
 
-export default async function PlansPage() {
+export default async function PlansPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ suggest?: string; window?: string }>;
+}) {
   const { active } = await requireSuiteSession();
+  const query = await searchParams;
+  const quietWindow = query.window && /^[\dAPM to]{6,20}$/.test(query.window) ? query.window : null;
+  const offPeak = query.suggest === "offpeak";
   const canEdit = canManageFacility(active.role);
   const [products, settings, payouts] = await Promise.all([
     loadProducts(active.id),
@@ -89,7 +96,25 @@ export default async function PlansPage() {
                 <CardTitle>Add a plan</CardTitle>
               </CardHeader>
               <CardContent>
-                <ProductForm />
+                {offPeak && (
+                  <div className="mb-4">
+                    <Notice tone="warning" role="note">
+                      Suggested from your quiet hours{quietWindow ? ` (${quietWindow})` : ""}. Set a lower price to fill
+                      them. The door doesn&apos;t check the time of day yet, so the hours are on trust.
+                    </Notice>
+                  </div>
+                )}
+                <ProductForm
+                  suggestion={
+                    offPeak
+                      ? {
+                          name: "Off-peak day pass",
+                          description: quietWindow ? `For quiet hours, ${quietWindow}` : "For quiet hours",
+                          durationDays: "1",
+                        }
+                      : undefined
+                  }
+                />
               </CardContent>
             </Card>
           )}

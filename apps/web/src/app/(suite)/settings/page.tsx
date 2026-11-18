@@ -1,9 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { PageHeader } from "../../../components/ui/states";
-import { canManageFacility, requireSuiteSession } from "../../../lib/active-facility";
+import { canManageFacility, KIND_LABELS, requireSuiteSession } from "../../../lib/active-facility";
+import { loadTeam } from "../../../lib/data/team";
 import { loadVenueProfile } from "../../../lib/data/venue";
 import { createServerSupabase } from "../../../lib/supabase/server";
 import { DemoVenueButton } from "../../welcome/DemoVenueButton";
+import { TeamCard } from "./TeamCard";
 import { VenueProfileForm } from "./VenueProfileForm";
 
 export const metadata = { title: "Settings" };
@@ -11,15 +13,16 @@ export const metadata = { title: "Settings" };
 export default async function SettingsPage() {
   const session = await requireSuiteSession();
   const facility = session.active;
-  const [venue, { data: mode }] = await Promise.all([
+  const [venue, team, { data: mode }] = await Promise.all([
     loadVenueProfile(facility.id),
+    loadTeam(facility.id),
     (await createServerSupabase()).rpc("payments_mode"),
   ]);
   const isDemo = facility.id.startsWith("demo_");
   const facts = [
     {
       label: "Type",
-      value: facility.registryType === "COMMUNITY" ? "Community club (Clubdash)" : "Commercial gym (GymDash)",
+      value: KIND_LABELS[facility.kind],
     },
     { label: "Plan", value: facility.plan === "PRO" ? "Pro" : "Free" },
     { label: "Signed in as", value: session.email ?? session.displayName },
@@ -28,21 +31,24 @@ export default async function SettingsPage() {
 
   return (
     <>
-      <PageHeader title="Settings" description="Your venue details and prices, and your account here." />
+      <PageHeader title="Settings" description="Your business details, your team, and your account here." />
       <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Venue profile</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <VenueProfileForm
-              key={facility.id}
-              venue={venue}
-              canEdit={canManageFacility(facility.role)}
-              showCourtPrice={facility.registryType === "COMMUNITY"}
-            />
-          </CardContent>
-        </Card>
+        <div className="grid gap-6 lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Venue profile</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <VenueProfileForm
+                key={facility.id}
+                venue={venue}
+                canEdit={canManageFacility(facility.role)}
+                showCourtPrice={facility.registryType === "COMMUNITY"}
+              />
+            </CardContent>
+          </Card>
+          <TeamCard team={team} canManage={canManageFacility(facility.role)} currentUserId={session.userId} />
+        </div>
         <Card className="self-start">
           <CardHeader>
             <CardTitle>Account</CardTitle>
@@ -57,7 +63,7 @@ export default async function SettingsPage() {
               ))}
             </dl>
             <p className="mt-4 text-sm text-muted-foreground">
-              Facility type and plan can&apos;t be changed here. Staff and photos aren&apos;t editable in the suite yet.
+              Business type and plan can&apos;t be changed here. Photos aren&apos;t editable in the suite yet.
             </p>
             {mode === "sandbox" && !isDemo && (
               <div className="mt-5 border-t border-border pt-5">

@@ -41,6 +41,25 @@ The Vercel project needs these environment variables (Settings → Environment V
 
 If they are missing, every page answers "Supabase is not configured".
 
+### Coach, organizer and club sections
+
+The demo venue shows every section so they can be explored from one place.
+
+- **My clients** (CoachDash): three accepted clients, one request to accept, and a "Check in on today" list of
+  clients who have not logged a workout for three days. Invite a client by username; they join once they accept.
+- **Events** (Organizer): two upcoming events with sign-ups and one finished event with attendance. Publish a new
+  event, open one, and mark people as arrived.
+- **Schedule** (Clubdash): a day view of four courts. "Main Court" divides into "Pickleball A" and "B": booking
+  either layout holds the other, with 15 minutes to change over. Try booking Pickleball A at 5:30 PM to see the refusal.
+- **Settings → Team**: add front-desk staff, coaches or admins by username; remove them.
+- **Members → Import from a spreadsheet**: paste or upload a CSV, match the columns, review and import.
+
+New businesses choose their kind at sign-up (gym, fitness studio, sports club, coaching, event organizer) and see the
+sections that apply.
+
+Not built yet: entry fees and court payments, booking from the app, tournament brackets and live scoring, training
+plans and form-check video for coaches, the cash till and shift float, staff clock-in, and recurring billing.
+
 ## Sodia app (mobile)
 
 Point the app at the same project in `apps/mobile/.env`:

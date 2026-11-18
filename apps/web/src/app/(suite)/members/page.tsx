@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BellOff, SearchX, Users } from "lucide-react";
+import { BellOff, FileSpreadsheet, SearchX, Users } from "lucide-react";
 import { MEMBER_STANDINGS, describeStanding, type MemberStanding } from "sodia-core";
 import { Badge } from "../../../components/ui/badge";
 import { Button, buttonClasses } from "../../../components/ui/button";
@@ -58,6 +58,12 @@ export default async function MembersPage({
           usesPasses
             ? "Everyone connected to your gym. Active means they hold a valid pass today."
             : "Everyone who belongs to your club."
+        }
+        actions={
+          <Link href="/members/import" className={buttonClasses("secondary")}>
+            <FileSpreadsheet size={16} aria-hidden />
+            Import from a spreadsheet
+          </Link>
         }
       />
 

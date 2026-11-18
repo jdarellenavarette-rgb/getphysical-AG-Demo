@@ -1,5 +1,17 @@
 # Brand assets
 
+## GetPhysical
+
+| File                                 | Use                                                                                                     |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| `getphysical-lockup.png`             | Emblem and wordmark, white on transparent. Painted as a CSS mask so it follows the theme (`BrandMark`). |
+| `getphysical-emblem.png`             | Emblem alone, white on transparent.                                                                     |
+| `src/app/icon.png`, `apple-icon.png` | Browser tab and home-screen icons: white emblem on black.                                               |
+
+Made from the artwork supplied by the owner. Replace with vector files when available.
+
+## Other marks
+
 Third-party marks, used unmodified and only to identify the service.
 
 | File           | Mark                                                                                   | Source                                                  |

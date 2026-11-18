@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef } from "react";
-import { Image, StyleSheet, StatusBar, Animated, Text, TouchableWithoutFeedback } from "react-native";
+import { Image, StyleSheet, StatusBar, Animated, TouchableWithoutFeedback } from "react-native";
 
 interface OpeningLoadingScreenProps {
   onFinish: () => void;
@@ -56,9 +56,13 @@ export function OpeningLoadingScreen({ onFinish, durationMs = 2200 }: OpeningLoa
 
         {/* HIGH-DEFINITION BRAND COMPOSITION */}
         <Animated.View style={[styles.centerBrandBlock, { transform: [{ scale: scaleAnim }] }]}>
-          <Image source={require("../../../assets/gp_emblem_hd.png")} style={styles.gpEmblem} resizeMode="contain" />
-          <Text style={styles.brandTitle}>getphysical</Text>
-          <Text style={styles.brandSubtitle}>Welcome to GetPhysical</Text>
+          <Image
+            source={require("../../../assets/brand/gp_wordmark.png")}
+            style={styles.wordmark}
+            resizeMode="contain"
+            accessibilityRole="image"
+            accessibilityLabel="GetPhysical"
+          />
         </Animated.View>
       </Animated.View>
     </TouchableWithoutFeedback>
@@ -72,7 +76,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "#151517",
+    backgroundColor: "#000000",
     zIndex: 9999,
     justifyContent: "center",
     alignItems: "center",
@@ -82,24 +86,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 24,
   },
-  gpEmblem: {
-    width: 180,
-    height: 82,
-    marginBottom: 8,
-  },
-  brandTitle: {
-    color: "#FFFFFF",
-    fontSize: 33,
-    fontWeight: "900",
-    fontStyle: "italic",
-    letterSpacing: -0.6,
-    marginTop: 8,
-  },
-  brandSubtitle: {
-    color: "#9CA3AF",
-    fontSize: 15,
-    fontWeight: "400",
-    letterSpacing: 0.15,
-    marginTop: 6,
-  },
+  // The full logo, sized from its own proportions (about 6.15 : 1).
+  wordmark: { width: 260, height: 42 },
 });

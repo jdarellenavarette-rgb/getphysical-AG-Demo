@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -88,7 +89,13 @@ export function SignInScreen({ onContinueAsGuest }: SignInScreenProps) {
   return (
     <KeyboardAvoidingView style={s.screen} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
-        <Text style={s.brand}>GETPHYSICAL</Text>
+        <Image
+          source={require("../../../assets/brand/gp_wordmark.png")}
+          style={s.logo}
+          resizeMode="contain"
+          accessibilityRole="image"
+          accessibilityLabel="GetPhysical"
+        />
         <Text style={s.title}>{email ? "Check your email" : "Sign in or sign up"}</Text>
         <Text style={s.subtitle}>
           {email

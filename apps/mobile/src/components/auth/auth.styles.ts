@@ -4,6 +4,7 @@ export const authStyles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#09090B" },
   content: { flexGrow: 1, justifyContent: "center", paddingHorizontal: 24, paddingVertical: 48 },
   brand: { color: "#E11D48", fontSize: 13, fontWeight: "800", letterSpacing: 1.5 },
+  logo: { width: 172, height: 28, marginBottom: 20 },
   title: { color: "#FFFFFF", fontSize: 26, fontWeight: "800", marginTop: 8 },
   subtitle: { color: "#A1A1AA", fontSize: 14, marginTop: 8, lineHeight: 20 },
   field: { marginTop: 20 },

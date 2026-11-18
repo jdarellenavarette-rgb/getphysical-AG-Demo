@@ -65,7 +65,7 @@ export function PageHeader({
   return (
     <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
+        <h1 className="text-3xl">{title}</h1>
         {description && <p className="mt-1.5 max-w-2xl text-muted-foreground">{description}</p>}
       </div>
       {actions}
@@ -77,7 +77,7 @@ export function StatCard({ label, value, hint }: { label: string; value: string;
   return (
     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
       <p className="text-sm font-medium text-muted-foreground">{label}</p>
-      <p className="mt-2 text-4xl font-bold tracking-tight tabular-nums">{value}</p>
+      <p className="font-display mt-2 text-4xl tabular-nums">{value}</p>
       {hint && <p className="mt-1 text-sm text-muted-foreground">{hint}</p>}
     </div>
   );

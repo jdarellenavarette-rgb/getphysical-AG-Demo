@@ -28,7 +28,7 @@ export default async function WelcomePage({ searchParams }: { searchParams: Prom
           <p className="text-sm font-semibold tracking-wide text-primary uppercase">
             {adding ? "Another business" : "Step 1 of 2"}
           </p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight">Open your business profile</h1>
+          <h1 className="mt-1 text-3xl">Open your business profile</h1>
           <p className="mt-2 mb-7 text-muted-foreground">
             Signed in as {session.email ?? session.displayName}. Choose what you run. Each kind of business gets its own
             workspace, built around how it works. If your gym or club already uses GetPhysical, its owner needs to give

@@ -37,7 +37,7 @@ export default async function LoginPage({
             <p className="text-sm font-semibold tracking-[0.18em] text-rose-300 uppercase min-[1800px]:text-base">
               For gyms, clubs, coaches and organizers
             </p>
-            <h2 className="mt-4 text-5xl leading-[1.05] font-black tracking-tight text-balance xl:text-6xl min-[1800px]:text-7xl min-[2400px]:text-8xl">
+            <h2 className="font-display mt-4 text-5xl leading-[1.02] text-balance xl:text-6xl min-[1800px]:text-7xl min-[2400px]:text-8xl">
               Run your fitness business from one place.
             </h2>
             <ul className="mt-10 grid gap-x-8 gap-y-7 xl:grid-cols-2 min-[1800px]:mt-14">
@@ -67,7 +67,7 @@ export default async function LoginPage({
       <section className="flex items-center justify-center px-5 py-10" aria-labelledby="login-title">
         <div className="w-full max-w-sm min-[1800px]:max-w-md min-[2400px]:max-w-lg">
           <BrandMark size="lg" className="mb-10 lg:hidden" tagline />
-          <h1 id="login-title" className="text-3xl font-bold tracking-tight min-[1800px]:text-4xl">
+          <h1 id="login-title" className="text-3xl min-[1800px]:text-4xl">
             Sign in
           </h1>
           <p className="mt-2 mb-7 text-muted-foreground min-[1800px]:text-lg">

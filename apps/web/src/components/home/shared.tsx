@@ -22,7 +22,7 @@ export function HomeHeader({ name, line, action }: { name: string; line: string;
     <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
       <div>
         <p className="text-sm font-semibold text-muted-foreground">{today.format(new Date())}</p>
-        <h1 className="mt-1 text-3xl font-bold tracking-tight">
+        <h1 className="mt-1 text-3xl">
           {greeting()}, {name.split(/[\s@]/)[0]}
         </h1>
         <p className="mt-1.5 max-w-2xl text-muted-foreground">{line}</p>

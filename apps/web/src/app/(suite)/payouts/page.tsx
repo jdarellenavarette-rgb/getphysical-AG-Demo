@@ -2,7 +2,7 @@ import { Badge } from "../../../components/ui/badge";
 import { MayaMark } from "../../../components/ui/brand";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Notice, PageHeader } from "../../../components/ui/states";
-import { canManageFacility, requireSuiteSession } from "../../../lib/active-facility";
+import { canManageFacility, requireSection } from "../../../lib/active-facility";
 import { loadPayoutStatus, type PayoutState } from "../../../lib/data/payouts";
 import { formatDate } from "../../../lib/format";
 import { PayoutControls } from "./PayoutControls";
@@ -28,7 +28,7 @@ const STATE_COPY: Record<PayoutState, { label: string; tone: "success" | "warnin
 };
 
 export default async function PayoutsPage() {
-  const { active } = await requireSuiteSession();
+  const { active } = await requireSection("payouts");
   const canManage = canManageFacility(active.role);
   if (!canManage) {
     return (

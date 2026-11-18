@@ -15,3 +15,4 @@ export * from "./memberships";
 export * from "./payments";
 export * from "./qr";
 export * from "./qrEncode";
+export * from "./workspaces";

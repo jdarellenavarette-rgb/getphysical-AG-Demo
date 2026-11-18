@@ -1,6 +1,8 @@
+import Link from "next/link";
+import { WORKSPACES } from "sodia-core";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { PageHeader } from "../../../components/ui/states";
-import { canManageFacility, KIND_LABELS, requireSuiteSession } from "../../../lib/active-facility";
+import { canManageFacility, requireSection } from "../../../lib/active-facility";
 import { loadTeam } from "../../../lib/data/team";
 import { loadVenueProfile } from "../../../lib/data/venue";
 import { createServerSupabase } from "../../../lib/supabase/server";
@@ -11,7 +13,7 @@ import { VenueProfileForm } from "./VenueProfileForm";
 export const metadata = { title: "Settings" };
 
 export default async function SettingsPage() {
-  const session = await requireSuiteSession();
+  const session = await requireSection("settings");
   const facility = session.active;
   const [venue, team, { data: mode }] = await Promise.all([
     loadVenueProfile(facility.id),
@@ -22,7 +24,7 @@ export default async function SettingsPage() {
   const facts = [
     {
       label: "Type",
-      value: KIND_LABELS[facility.kind],
+      value: `${WORKSPACES[facility.kind].product} · ${WORKSPACES[facility.kind].category}`,
     },
     { label: "Plan", value: facility.plan === "PRO" ? "Pro" : "Free" },
     { label: "Signed in as", value: session.email ?? session.displayName },
@@ -36,7 +38,7 @@ export default async function SettingsPage() {
         <div className="grid gap-6 lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle>Venue profile</CardTitle>
+              <CardTitle>Business profile</CardTitle>
             </CardHeader>
             <CardContent>
               <VenueProfileForm
@@ -65,6 +67,15 @@ export default async function SettingsPage() {
             <p className="mt-4 text-sm text-muted-foreground">
               Business type and plan can&apos;t be changed here. Photos aren&apos;t editable in the suite yet.
             </p>
+            <p className="mt-4 text-sm">
+              <Link href="/welcome?new=1" className="font-semibold underline underline-offset-4">
+                Open another business
+              </Link>
+              <span className="text-muted-foreground">
+                {" "}
+                — a second location, or a different kind of business. Each one has its own workspace.
+              </span>
+            </p>
             {mode === "sandbox" && !isDemo && (
               <div className="mt-5 border-t border-border pt-5">
                 <p className="mb-3 text-sm text-muted-foreground">
@@ -75,7 +86,8 @@ export default async function SettingsPage() {
             )}
             {isDemo && (
               <p className="mt-5 border-t border-border pt-5 text-sm text-muted-foreground">
-                This is a demo venue. Its members, check-ins and sales are samples, and payments run in test mode.
+                This is a demo business. Everything in it is sample data, and payments run in test mode. Switch between
+                the four demo workspaces at the top of the page.
               </p>
             )}
           </CardContent>

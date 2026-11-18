@@ -3,7 +3,7 @@ import { Badge } from "../../../components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { EmptyState, PageHeader, StatCard } from "../../../components/ui/states";
 import { Table, Td, Th } from "../../../components/ui/table";
-import { requireSuiteSession } from "../../../lib/active-facility";
+import { requireSection } from "../../../lib/active-facility";
 import { loadAttendanceSummary, loadRecentScans } from "../../../lib/data/attendance";
 import { formatDateTime } from "../../../lib/format";
 import { LiveScanFeed } from "./LiveScanFeed";
@@ -12,7 +12,7 @@ import { ScannerForm } from "./ScannerForm";
 export const metadata = { title: "Check-in" };
 
 export default async function CheckInPage() {
-  const { active } = await requireSuiteSession();
+  const { active } = await requireSection("checkin");
   const [summary, scans] = await Promise.all([loadAttendanceSummary(active.id), loadRecentScans(active.id)]);
 
   return (

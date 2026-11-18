@@ -93,6 +93,16 @@ Migration `20261118000006`. Web uses all of these; mobile uses none yet.
 | `add_facility_staff`                         | Owners add staff; grants the `staff` or `coach` account role.                                                                                                                                                    | None: the app already reads the account role.                                                                                                                                                  |
 | Business kinds                               | `facilities.category` may now be `Coaching` or `Event organizer` (both `COMMUNITY`).                                                                                                                             | Discover may want to hide or label these; they are not venues to visit.                                                                                                                        |
 
+## Business kinds and workspaces (added 2026-11-18)
+
+Migration `20261118000008`. `packages/sodia-core/src/workspaces.ts` is the single description of the four products
+(GymDash, Clubdash, CoachDash, Organizer Pro): sections, wording, registry and whether the business is a venue.
+
+| Contract                   | What it does                                                                                                                                                                          | Mobile                                                                                                                                                                       |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `facilities.business_kind` | `GYM`, `STUDIO`, `CLUB`, `COACH`, `ORGANIZER`. Required; filled from registry and category when a client does not send it. Must match the registry (`GYM`/`STUDIO` are `COMMERCIAL`). | Role portals (staff scanner, CoachDash, Organizer Pro) should follow `WORKSPACES`.                                                                                           |
+| Discover                   | `facilities_nearby` returns venues only.                                                                                                                                              | **Changed in the mobile lane:** `venueService.loadVenues` selects `business_kind` and lists `GYM`, `STUDIO`, `CLUB` only. Sample rows and one test fixture gained the field. |
+
 ## Mobile status against these contracts (2026-11-18)
 
 Built and covered by automated tests with a stand-in backend; not yet run on a phone against staging.

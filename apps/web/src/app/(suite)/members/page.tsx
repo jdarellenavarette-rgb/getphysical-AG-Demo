@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { BellOff, FileSpreadsheet, SearchX, Users } from "lucide-react";
-import { MEMBER_STANDINGS, describeStanding, type MemberStanding } from "sodia-core";
+import { MEMBER_STANDINGS, WORKSPACES, describeStanding, type MemberStanding } from "sodia-core";
 import { Badge } from "../../../components/ui/badge";
 import { Button, buttonClasses } from "../../../components/ui/button";
 import { Card, CardContent } from "../../../components/ui/card";
 import { Input, Label, Select } from "../../../components/ui/input";
 import { EmptyState, PageHeader, StatCard } from "../../../components/ui/states";
 import { Table, Td, Th } from "../../../components/ui/table";
-import { canManageFacility, requireSuiteSession } from "../../../lib/active-facility";
+import { canManageFacility, requireSection } from "../../../lib/active-facility";
 import { loadJoinCode } from "../../../lib/data/join-code";
 import { loadMembers, type MemberRow } from "../../../lib/data/members";
 import { formatDate, formatDateTime } from "../../../lib/format";
@@ -36,7 +36,7 @@ export default async function MembersPage({
 }: {
   searchParams: Promise<{ q?: string; standing?: string }>;
 }) {
-  const { active } = await requireSuiteSession();
+  const { active } = await requireSection("members");
   const params = await searchParams;
   const standing = MEMBER_STANDINGS.find((s) => s === params.standing) ?? "ALL";
   const [{ members, total, counts }, joinCode] = await Promise.all([
@@ -45,6 +45,8 @@ export default async function MembersPage({
   ]);
   const usesPasses = active.registryType === "COMMERCIAL";
   const canManage = canManageFacility(active.role);
+  const workspace = WORKSPACES[active.kind];
+  const people = workspace.people.many;
   const filtered = Boolean(params.q) || standing !== "ALL";
   const filterOptions: MemberStanding[] = usesPasses
     ? ["ACTIVE", "LAPSED", "NO_PASS", "CANCELLED"]
@@ -53,11 +55,13 @@ export default async function MembersPage({
   return (
     <>
       <PageHeader
-        title="Members"
+        title={people.charAt(0).toUpperCase() + people.slice(1)}
         description={
           usesPasses
-            ? "Everyone connected to your gym. Active means they hold a valid pass today."
-            : "Everyone who belongs to your club."
+            ? `Everyone connected to your ${workspace.noun}. Active means they hold a valid pass today.`
+            : active.kind === "ORGANIZER"
+              ? "Everyone who follows your events. They join by scanning your code in the Sodia app."
+              : `Everyone who belongs to your ${workspace.noun}.`
         }
         actions={
           <Link href="/members/import" className={buttonClasses("secondary")}>
@@ -71,7 +75,7 @@ export default async function MembersPage({
         <StatCard
           label="Active"
           value={String(counts.ACTIVE)}
-          hint={usesPasses ? "Hold a valid pass" : "Current members"}
+          hint={usesPasses ? "Hold a valid pass" : `Current ${people}`}
         />
         {usesPasses && (
           <StatCard label="Lapsed" value={String(counts.LAPSED)} hint="Pass ended; worth a win-back message" />

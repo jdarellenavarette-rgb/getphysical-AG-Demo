@@ -4,7 +4,7 @@ import { Badge } from "../../../components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { EmptyState, Notice, PageHeader } from "../../../components/ui/states";
 import { Table, Td, Th } from "../../../components/ui/table";
-import { canManageFacility, requireSuiteSession } from "../../../lib/active-facility";
+import { canManageFacility, requireSection } from "../../../lib/active-facility";
 import Link from "next/link";
 import { loadPayoutStatus } from "../../../lib/data/payouts";
 import { loadProducts, loadSellingSettings, type SellingSettings } from "../../../lib/data/products";
@@ -33,7 +33,7 @@ export default async function PlansPage({
 }: {
   searchParams: Promise<{ suggest?: string; window?: string }>;
 }) {
-  const { active } = await requireSuiteSession();
+  const { active } = await requireSection("plans");
   const query = await searchParams;
   const quietWindow = query.window && /^[\dAPM to]{6,20}$/.test(query.window) ? query.window : null;
   const offPeak = query.suggest === "offpeak";

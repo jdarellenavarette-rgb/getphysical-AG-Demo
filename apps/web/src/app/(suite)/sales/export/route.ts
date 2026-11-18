@@ -1,4 +1,4 @@
-import { canManageFacility, requireSuiteSession } from "../../../../lib/active-facility";
+import { canManageFacility, requireSection } from "../../../../lib/active-facility";
 import { loadSales } from "../../../../lib/data/sales";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +12,7 @@ function cell(value: string | number | null): string {
 
 /** Download this venue's orders as CSV. A read-only export, limited to owners and admins. */
 export async function GET() {
-  const { active } = await requireSuiteSession();
+  const { active } = await requireSection("sales");
   if (!canManageFacility(active.role))
     return new Response("Only the owner or an admin can export sales.", { status: 403 });
   const { sales } = await loadSales(active.id, 5000);

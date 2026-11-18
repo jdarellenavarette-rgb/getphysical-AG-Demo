@@ -1,7 +1,6 @@
 "use client";
 
 import { useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { selectFacility } from "../../app/actions/facility";
 import { Select } from "../ui/input";
 
@@ -12,19 +11,20 @@ export function FacilitySwitcher({
   activeId: string;
   facilities: { id: string; name: string }[];
 }) {
-  const router = useRouter();
   const [pending, startTransition] = useTransition();
   return (
     <Select
-      aria-label="Facility"
+      aria-label="Business"
       value={activeId}
       disabled={pending}
-      className="h-10 max-w-64 font-bold"
+      className="h-10 max-w-80 font-bold"
       onChange={(event) => {
         const facilityId = event.target.value;
         startTransition(async () => {
           await selectFacility(facilityId);
-          router.refresh();
+          // Each business has its own workspace, and the page you are on may not exist in the other
+          // one, so load that workspace's home afresh.
+          window.location.assign("/");
         });
       }}
     >

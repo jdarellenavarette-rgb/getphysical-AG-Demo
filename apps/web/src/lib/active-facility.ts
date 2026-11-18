@@ -1,29 +1,17 @@
 import "server-only";
 import { cache } from "react";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import type { FacilityRole, RegistryType } from "sodia-core";
+import { notFound, redirect } from "next/navigation";
+import {
+  workspaceHas,
+  type BusinessKind,
+  type FacilityRole,
+  type RegistryType,
+  type WorkspaceSection,
+} from "sodia-core";
 import { createServerSupabase } from "./supabase/server";
 
 export const ACTIVE_FACILITY_COOKIE = "gp_active_facility";
-
-/** What the business is, which decides the sections it sees. Derived from the category chosen at setup. */
-export type BusinessKind = "GYM" | "STUDIO" | "CLUB" | "COACH" | "ORGANIZER";
-
-const KIND_BY_CATEGORY: Record<string, BusinessKind> = {
-  "Fitness studio": "STUDIO",
-  "Sports club": "CLUB",
-  Coaching: "COACH",
-  "Event organizer": "ORGANIZER",
-};
-
-export const KIND_LABELS: Record<BusinessKind, string> = {
-  GYM: "GymDash · Gym",
-  STUDIO: "GymDash · Fitness studio",
-  CLUB: "Clubdash · Sports club",
-  COACH: "CoachDash · Coaching",
-  ORGANIZER: "Organizer Pro · Events",
-};
 
 export interface ActiveFacility {
   id: string;
@@ -63,7 +51,7 @@ export const getSuiteSession = cache(async (): Promise<SuiteSession | null> => {
       supabase.auth.getUser(),
       supabase
         .from("facility_staff")
-        .select("role, facilities(id, name, registry_type, category, plan, logo_url)")
+        .select("role, facilities(id, name, registry_type, business_kind, plan, logo_url)")
         .eq("user_id", userId),
       supabase.from("profiles").select("name, username, roles").eq("id", userId).maybeSingle(),
     ]);
@@ -79,9 +67,7 @@ export const getSuiteSession = cache(async (): Promise<SuiteSession | null> => {
           {
             id: row.facilities.id,
             name: row.facilities.name,
-            kind:
-              KIND_BY_CATEGORY[row.facilities.category ?? ""] ??
-              (row.facilities.registry_type === "COMMUNITY" ? "CLUB" : "GYM"),
+            kind: row.facilities.business_kind,
             registryType: row.facilities.registry_type,
             plan: row.facilities.plan,
             logoUrl: row.facilities.logo_url,
@@ -112,6 +98,16 @@ export async function requireSuiteSession(): Promise<ActiveSuiteSession> {
   if (!session) redirect("/login");
   if (!session.active) redirect("/welcome");
   return { ...session, active: session.active };
+}
+
+/**
+ * For a page that belongs to one section of a workspace. A coach has no check-in desk and a gym has
+ * no court calendar: outside its workspace the page does not exist, whatever the address bar says.
+ */
+export async function requireSection(section: WorkspaceSection): Promise<ActiveSuiteSession> {
+  const session = await requireSuiteSession();
+  if (!workspaceHas(session.active.kind, session.active.role, section)) notFound();
+  return session;
 }
 
 /** Owners and admins manage the venue; staff and coaches operate it. */

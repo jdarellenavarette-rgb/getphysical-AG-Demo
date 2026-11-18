@@ -1,13 +1,13 @@
 import { InboxView } from "../../../components/inbox/InboxView";
 import { PageHeader } from "../../../components/ui/states";
-import { requireSuiteSession } from "../../../lib/active-facility";
+import { requireSection } from "../../../lib/active-facility";
 
 export const metadata = { title: "Inbox" };
 
 const AUDIENCES = ["ALL", "ACTIVE", "LAPSED"] as const;
 
 export default async function InboxPage({ searchParams }: { searchParams: Promise<{ compose?: string }> }) {
-  const { active } = await requireSuiteSession();
+  const { active } = await requireSection("inbox");
   const { compose } = await searchParams;
   const initialAudience = AUDIENCES.find((a) => a === compose);
   return (

@@ -10,41 +10,41 @@ import { createFacility, type FacilityFormState } from "../actions/facility";
 const initialState: FacilityFormState = { status: "idle" };
 
 type Kind = "GYM" | "STUDIO" | "CLUB" | "COACH" | "ORGANIZER";
-const KINDS: { id: Kind; label: string; text: string; icon: LucideIcon; registryType: "COMMERCIAL" | "COMMUNITY" }[] = [
+const KINDS: { id: Kind; label: string; product: string; text: string; icon: LucideIcon }[] = [
   {
     id: "GYM",
+    product: "GymDash",
     label: "Gym",
     text: "Members buy passes or memberships and scan in at the door.",
     icon: Dumbbell,
-    registryType: "COMMERCIAL",
   },
   {
     id: "STUDIO",
+    product: "GymDash",
     label: "Fitness studio",
     text: "Classes and training, sold as passes or memberships.",
     icon: Building2,
-    registryType: "COMMERCIAL",
   },
   {
     id: "CLUB",
+    product: "Clubdash",
     label: "Sports club",
-    text: "A community club people join. Free for up to 19 members.",
+    text: "Courts, players and open play. Free for up to 19 players.",
     icon: Trophy,
-    registryType: "COMMUNITY",
   },
   {
     id: "COACH",
+    product: "CoachDash",
     label: "Coaching",
     text: "You train clients and follow their progress. Free for up to 3 clients.",
     icon: ClipboardList,
-    registryType: "COMMUNITY",
   },
   {
     id: "ORGANIZER",
+    product: "Organizer Pro",
     label: "Event organizer",
     text: "You run tournaments, races and open-play days people sign up for.",
     icon: Medal,
-    registryType: "COMMUNITY",
   },
 ];
 
@@ -60,14 +60,13 @@ const NAME_LABELS: Record<Kind, string> = {
 export function CreateFacilityForm() {
   const [state, action, pending] = useActionState(createFacility, initialState);
   const [kind, setKind] = useState<Kind>("GYM");
-  const selected = KINDS.find((k) => k.id === kind)!;
 
   return (
     <form action={action} noValidate className="grid gap-5">
       <fieldset>
         <legend className="mb-2 text-sm font-medium">What are you opening?</legend>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {KINDS.map(({ id, label, text, icon: Icon }) => (
+          {KINDS.map(({ id, label, product, text, icon: Icon }) => (
             <label
               key={id}
               className={cn(
@@ -85,13 +84,14 @@ export function CreateFacilityForm() {
               />
               <Icon size={22} aria-hidden className={kind === id ? "text-primary" : "text-muted-foreground"} />
               <span className="mt-2 block font-semibold">{label}</span>
+              <span className="block text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                {product}
+              </span>
               <span className="mt-1 block text-sm text-muted-foreground">{text}</span>
             </label>
           ))}
         </div>
-        <input type="hidden" name="registryType" value={selected.registryType} />
-        <input type="hidden" name="category" value={selected.label} />
-        <FieldError>{state.fieldErrors?.registryType}</FieldError>
+        <FieldError>{state.fieldErrors?.kind}</FieldError>
       </fieldset>
 
       <Label>

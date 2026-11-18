@@ -41,24 +41,29 @@ The Vercel project needs these environment variables (Settings → Environment V
 
 If they are missing, every page answers "Supabase is not configured".
 
-### Coach, organizer and club sections
+### Four workspaces, one per kind of business
 
-The demo venue shows every section so they can be explored from one place.
+"Open a demo venue" now gives you four demo businesses. Switch between them with the selector at the top left.
+Each has its own menu, words and home screen; a page that belongs to another workspace is not found.
 
-- **My clients** (CoachDash): three accepted clients, one request to accept, and a "Check in on today" list of
-  clients who have not logged a workout for three days. Invite a client by username; they join once they accept.
-- **Events** (Organizer): two upcoming events with sign-ups and one finished event with attendance. Publish a new
-  event, open one, and mark people as arrived.
-- **Schedule** (Clubdash): a day view of four courts. "Main Court" divides into "Pickleball A" and "B": booking
-  either layout holds the other, with 15 minutes to change over. Try booking Pickleball A at 5:30 PM to see the refusal.
-- **Settings → Team**: add front-desk staff, coaches or admins by username; remove them.
-- **Members → Import from a spreadsheet**: paste or upload a CSV, match the columns, review and import.
+| Demo business         | Workspace     | Home opens on                          | Sections                                              |
+| --------------------- | ------------- | -------------------------------------- | ----------------------------------------------------- |
+| Pulse Fitness         | GymDash       | The door and the till: command centre  | Members, Check-in, Inbox, Plans, Payouts, Sales       |
+| Baseline Courts       | Clubdash      | The courts: what is on now and next    | Courts, Players, Events, Inbox, Plans, Payouts, Sales |
+| Strong Start Coaching | CoachDash     | People: who went quiet, who is waiting | Clients, Inbox, Packages, Payouts, Sales              |
+| Open Play Events      | Organizer Pro | The next event and how full it is      | Events, Participants, Inbox, Payouts, Sales           |
 
-New businesses choose their kind at sign-up (gym, fitness studio, sports club, coaching, event organizer) and see the
-sections that apply.
+Things to show:
+
+- **Clubdash → Courts**: "Main Court" divides into "Pickleball A" and "B". Booking either layout holds the other,
+  with 15 minutes to change over. Try booking Pickleball A at 5:30 PM to see the refusal.
+- **CoachDash → Today**: accept the waiting request; see the two clients flagged for a check-in.
+- **Organizer Pro → Events**: open an event, mark people as arrived, show the event code.
+- **Settings → Team** and **Open another business**; **Members → Import from a spreadsheet** (GymDash).
 
 Not built yet: entry fees and court payments, booking from the app, tournament brackets and live scoring, training
 plans and form-check video for coaches, the cash till and shift float, staff clock-in, and recurring billing.
+Payments work for gyms only (Maya test mode); clubs, coaches and organizers are routed to Stripe, which is not set up.
 
 ## Sodia app (mobile)
 

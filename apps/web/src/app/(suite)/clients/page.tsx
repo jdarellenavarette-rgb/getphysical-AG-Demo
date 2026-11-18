@@ -7,7 +7,7 @@ import { Input, Label } from "../../../components/ui/input";
 import { QrCode } from "../../../components/ui/qr";
 import { EmptyState, Notice, PageHeader, StatCard } from "../../../components/ui/states";
 import { Table, Td, Th } from "../../../components/ui/table";
-import { requireSuiteSession } from "../../../lib/active-facility";
+import { requireSection } from "../../../lib/active-facility";
 import { FREE_CLIENT_CAP, loadCoachDesk, NUDGE_AFTER_DAYS, type CoachClient } from "../../../lib/data/coach";
 import { loadQrCode } from "../../../lib/data/join-code";
 import { formatDate } from "../../../lib/format";
@@ -39,7 +39,7 @@ function StatusBadge({ client }: { client: CoachClient }) {
 }
 
 export default async function ClientsPage() {
-  const session = await requireSuiteSession();
+  const session = await requireSection("clients");
   const [desk, code] = await Promise.all([loadCoachDesk(session.userId), loadQrCode("COACH", null)]);
   const current = desk.clients.filter((c) => c.status !== "CANCELLED");
   const nudges = desk.clients.filter((c) => c.needsNudge);

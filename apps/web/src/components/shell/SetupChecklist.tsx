@@ -5,7 +5,16 @@ import { cn } from "../../lib/utils";
 import { buttonClasses } from "../ui/button";
 
 /** First-run guide on the Overview. Disappears once every step is done. */
-export function SetupChecklist({ progress, venueName }: { progress: SetupProgress; venueName: string }) {
+export function SetupChecklist({
+  progress,
+  venueName,
+  audience = "members",
+}: {
+  progress: SetupProgress;
+  venueName: string;
+  /** What this business calls the people it serves. */
+  audience?: string;
+}) {
   const next = progress.steps.find((step) => !step.done);
   const percent = Math.round((progress.doneCount / progress.steps.length) * 100);
   return (
@@ -17,7 +26,7 @@ export function SetupChecklist({ progress, venueName }: { progress: SetupProgres
         <div>
           <p className="text-sm font-semibold tracking-wide uppercase opacity-80">Getting started</p>
           <h2 id="setup-title" className="mt-1 text-2xl font-bold tracking-tight">
-            Get {venueName} ready for members
+            Get {venueName} ready for {audience}
           </h2>
         </div>
         <div className="min-w-48">

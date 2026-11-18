@@ -20,6 +20,20 @@ select tests.throws($$select public.add_facility_staff('fac_e2e', 'nobody.here',
   'USER_NOT_FOUND', 'an unknown username is reported');
 select tests.throws($$select public.add_facility_staff('fac_e2e', 'frontdesk', 'OWNER')$$,
   'INVALID_ROLE', 'ownership cannot be handed out');
+select tests.ok(
+  (select business_kind from public.facilities where id = 'fac_e2e') = 'CLUB',
+  'a business created without a kind gets one from its registry and category');
+select tests.throws(
+  $$insert into public.facilities (id, owner_id, name, registry_type, category, business_kind)
+    values ('fac_bad', auth.uid(), 'Mismatch', 'COMMERCIAL', 'Gym', 'COACH')$$,
+  'facilities_kind_matches_registry', 'a kind must match its registry');
+insert into public.facilities (id, owner_id, name, registry_type, category, business_kind, lat, lng)
+values ('fac_coach', auth.uid(), 'Coach Profile', 'COMMUNITY', 'Coaching', 'COACH', 14.55, 121.02);
+update public.facilities set lat = 14.55, lng = 121.02 where id = 'fac_e2e';
+select tests.ok(
+  (select array_agg(id order by id) from public.facilities_nearby(14.55, 121.02, 1) where id in ('fac_e2e', 'fac_coach'))
+  = array['fac_e2e'],
+  'Discover lists the club and leaves the coaching business out');
 select tests.ok((select count(*) from public.facility_team('fac_e2e')) = 2, 'the team lists the owner and the new member');
 select tests.reset_actor();
 

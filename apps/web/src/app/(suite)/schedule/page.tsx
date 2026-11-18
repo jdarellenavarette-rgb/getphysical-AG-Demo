@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui
 import { Input, Label, Select } from "../../../components/ui/input";
 import { EmptyState, PageHeader } from "../../../components/ui/states";
 import { Table, Td, Th } from "../../../components/ui/table";
-import { canManageFacility, requireSuiteSession } from "../../../lib/active-facility";
+import { canManageFacility, requireSection } from "../../../lib/active-facility";
 import { loadDaySchedule, parseDay, shiftDay, todayKey } from "../../../lib/data/schedule";
 import { SUITE_TIME_ZONE } from "../../../lib/format";
 import { cancelBooking, createBooking, createSpace, setSpaceActive } from "../../actions/schedule";
@@ -36,7 +36,7 @@ const DURATIONS = [
 
 export default async function SchedulePage({ searchParams }: { searchParams: Promise<{ date?: string }> }) {
   const { date } = await searchParams;
-  const { active } = await requireSuiteSession();
+  const { active } = await requireSection("schedule");
   const day = parseDay(date);
   const schedule = await loadDaySchedule(active.id, day);
   const canManage = canManageFacility(active.role);

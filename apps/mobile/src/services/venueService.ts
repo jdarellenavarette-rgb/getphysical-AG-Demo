@@ -4,12 +4,15 @@ import { failure, type ServiceResult } from "./serviceResult";
 
 /** Columns the venue list and the venue sheet show (AGENTS.md §4: never `select('*')`). */
 const VENUE_COLUMNS =
-  "id, slug, name, registry, registry_type, plan, category, logo, logo_url, cover_image, cover_url, address, lat, lng, hours, amenities, inside_now_count, max_capacity, is_open, day_pass_price_php, monthly_sub_price_php, court_hourly_price_php, free_member_count, rating, review_count, has_active_challenge, challenge_title, sells_passes, sells_memberships, membership_grace_days, created_at";
+  "id, slug, name, registry, registry_type, business_kind, plan, category, logo, logo_url, cover_image, cover_url, address, lat, lng, hours, amenities, inside_now_count, max_capacity, is_open, day_pass_price_php, monthly_sub_price_php, court_hourly_price_php, free_member_count, rating, review_count, has_active_challenge, challenge_title, sells_passes, sells_memberships, membership_grace_days, created_at";
 
 const PRODUCT_COLUMNS =
   "id, facility_id, name, description, kind, price_php, duration_days, is_active, sort_order, legacy_sku";
 
 const NOT_CONFIGURED = { ok: false, reason: "error", message: "Venues are unavailable in this build." } as const;
+
+/** Kinds of business that are places to visit. Coaches and organizers are not listed as venues. */
+const VENUE_KINDS = ["GYM", "STUDIO", "CLUB"] as const;
 
 /** Every venue on GetPhysical, best rated first. Readable signed in or out. */
 export async function loadVenues(): Promise<ServiceResult<FacilityRow[]>> {
@@ -18,6 +21,7 @@ export async function loadVenues(): Promise<ServiceResult<FacilityRow[]>> {
   const { data, error } = await supabase
     .from("facilities")
     .select(VENUE_COLUMNS)
+    .in("business_kind", VENUE_KINDS)
     .order("rating", { ascending: false, nullsFirst: false })
     .order("name", { ascending: true })
     .limit(200);

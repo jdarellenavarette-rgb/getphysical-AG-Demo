@@ -10,7 +10,13 @@ import { saveProduct, type ProductFormState } from "../../actions/products";
 const initialState: ProductFormState = { status: "idle" };
 
 /** Add a plan, or edit one when `product` is given. */
-export function ProductForm({ product }: { product?: FacilityProduct }) {
+interface Suggestion {
+  name: string;
+  description: string;
+  durationDays: string;
+}
+
+export function ProductForm({ product, suggestion }: { product?: FacilityProduct; suggestion?: Suggestion }) {
   const [state, action, pending] = useActionState(saveProduct.bind(null, product?.id ?? null), initialState);
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
@@ -32,7 +38,7 @@ export function ProductForm({ product }: { product?: FacilityProduct }) {
         Name
         <Input
           name="name"
-          defaultValue={product?.name}
+          defaultValue={product?.name ?? suggestion?.name}
           maxLength={80}
           required
           placeholder="Weekly pass"
@@ -73,7 +79,7 @@ export function ProductForm({ product }: { product?: FacilityProduct }) {
         <Input
           name="durationDays"
           inputMode="numeric"
-          defaultValue={product ? String(product.duration_days) : ""}
+          defaultValue={product ? String(product.duration_days) : (suggestion?.durationDays ?? "")}
           readOnly={lengthLocked}
           required
           placeholder="7"
@@ -86,7 +92,7 @@ export function ProductForm({ product }: { product?: FacilityProduct }) {
         Description (optional)
         <Input
           name="description"
-          defaultValue={product?.description}
+          defaultValue={product?.description ?? suggestion?.description}
           maxLength={200}
           placeholder="Shown to members under the name"
           aria-invalid={Boolean(errors.description)}

@@ -4,8 +4,12 @@ import { requireSuiteSession } from "../../../lib/active-facility";
 
 export const metadata = { title: "Inbox" };
 
-export default async function InboxPage() {
+const AUDIENCES = ["ALL", "ACTIVE", "LAPSED"] as const;
+
+export default async function InboxPage({ searchParams }: { searchParams: Promise<{ compose?: string }> }) {
   const { active } = await requireSuiteSession();
+  const { compose } = await searchParams;
+  const initialAudience = AUDIENCES.find((a) => a === compose);
   return (
     <>
       <PageHeader
@@ -16,6 +20,7 @@ export default async function InboxPage() {
         key={active.id}
         facilityId={active.id}
         facilityName={active.name}
+        initialAudience={initialAudience}
         suiteMode={active.registryType === "COMMUNITY" ? "CLUBDASH" : "GYMDASH"}
       />
     </>

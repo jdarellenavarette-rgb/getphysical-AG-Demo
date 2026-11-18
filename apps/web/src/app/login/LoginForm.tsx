@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { GoogleMark } from "../../components/ui/brand";
 import { Button } from "../../components/ui/button";
 import { FieldError, Input, Label } from "../../components/ui/input";
 import { sendMagicLink, signInWithPassword, signInWithProvider, type AuthFormState } from "../actions/auth";
@@ -19,6 +20,7 @@ export function LoginForm({ next }: { next: string }) {
       <form action={signInWithProvider.bind(null, "google")}>
         <input type="hidden" name="next" value={next} />
         <Button type="submit" variant="secondary" size="lg" className="w-full">
+          <GoogleMark />
           Continue with Google
         </Button>
       </form>

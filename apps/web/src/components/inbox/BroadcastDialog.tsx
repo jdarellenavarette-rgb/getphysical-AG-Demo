@@ -16,13 +16,21 @@ interface BroadcastDialogProps {
   facilityId: string;
   facilityName: string;
   suiteMode: SuiteMode;
+  initialAudience?: Audience;
 }
 
 /** Compose a broadcast. A native <dialog> gives focus trapping, Escape to close and a backdrop. */
-export function BroadcastDialog({ open, onClose, facilityId, facilityName, suiteMode }: BroadcastDialogProps) {
+export function BroadcastDialog({
+  open,
+  onClose,
+  facilityId,
+  facilityName,
+  suiteMode,
+  initialAudience,
+}: BroadcastDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [audiences, setAudiences] = useState<BroadcastAudiences | null>(null);
-  const [audience, setAudience] = useState<Audience>("ALL");
+  const [audience, setAudience] = useState<Audience>(initialAudience ?? "ALL");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState<number | null>(null);

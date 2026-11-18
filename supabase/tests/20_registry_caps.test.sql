@@ -66,26 +66,47 @@ select tests.ok(
 select tests.reset_actor();
 
 -- ---------------------------------------------------------------- coach cap
+-- A link starts as an invitation; the cap counts accepted clients.
 select tests.act_as('c0000000-0000-0000-0000-00000000000c');
-insert into public.coach_clients (coach_id, client_id) values
-  (auth.uid(), 'd0000000-0000-0000-0000-000000000001'),
-  (auth.uid(), 'd0000000-0000-0000-0000-000000000002'),
-  (auth.uid(), 'd0000000-0000-0000-0000-000000000003');
 select tests.throws(
   $$insert into public.coach_clients (coach_id, client_id)
-    values (auth.uid(), 'd0000000-0000-0000-0000-000000000004')$$,
-  'COACH_FREE_CLIENT_CAP_REACHED', '4th client rejected for a FREE coach');
+    values (auth.uid(), 'd0000000-0000-0000-0000-000000000001')$$,
+  'COACH_LINK_NEEDS_CONSENT', 'a coach cannot make someone a client without their agreement');
+insert into public.coach_clients (coach_id, client_id, status) values
+  (auth.uid(), 'd0000000-0000-0000-0000-000000000001', 'PENDING'),
+  (auth.uid(), 'd0000000-0000-0000-0000-000000000002', 'PENDING'),
+  (auth.uid(), 'd0000000-0000-0000-0000-000000000003', 'PENDING'),
+  (auth.uid(), 'd0000000-0000-0000-0000-000000000004', 'PENDING');
 select tests.throws(
-  $$insert into public.coach_clients (coach_id, client_id)
-    values ('d0000000-0000-0000-0000-000000000009', 'd0000000-0000-0000-0000-000000000004')$$,
+  $$update public.coach_clients set status = 'ACTIVE' where client_id = 'd0000000-0000-0000-0000-000000000001'$$,
+  'COACH_LINK_NEEDS_CONSENT', 'a coach cannot accept their own invitation');
+select tests.throws(
+  $$insert into public.coach_clients (coach_id, client_id, status)
+    values ('d0000000-0000-0000-0000-000000000009', 'd0000000-0000-0000-0000-000000000004', 'PENDING')$$,
   'row-level security', 'cannot add clients to another coach');
 select tests.reset_actor();
 
+do $$
+begin
+  for i in 1..3 loop
+    perform tests.act_as(('d0000000-0000-0000-0000-' || lpad(i::text, 12, '0'))::uuid);
+    perform public.respond_coach_invite('c0000000-0000-0000-0000-00000000000c', true);
+    perform tests.reset_actor();
+  end loop;
+end;
+$$;
+
+select tests.act_as('d0000000-0000-0000-0000-000000000004');
+select tests.throws(
+  $$select public.respond_coach_invite('c0000000-0000-0000-0000-00000000000c', true)$$,
+  'COACH_FREE_CLIENT_CAP_REACHED', '4th client rejected for a FREE coach');
+select tests.reset_actor();
+
 update public.profiles set coach_plan = 'PRO' where id = 'c0000000-0000-0000-0000-00000000000c';
-select tests.act_as('c0000000-0000-0000-0000-00000000000c');
-insert into public.coach_clients (coach_id, client_id)
-values (auth.uid(), 'd0000000-0000-0000-0000-000000000004');
-select tests.ok(true, 'PRO coach is uncapped');
+select tests.act_as('d0000000-0000-0000-0000-000000000004');
+select tests.ok(
+  public.respond_coach_invite('c0000000-0000-0000-0000-00000000000c', true) = 'ACTIVE',
+  'PRO coach is uncapped');
 select tests.reset_actor();
 
 rollback;

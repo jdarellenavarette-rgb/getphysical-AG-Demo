@@ -1,4 +1,5 @@
 import { Badge } from "../../../components/ui/badge";
+import { MayaMark } from "../../../components/ui/brand";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Notice, PageHeader } from "../../../components/ui/states";
 import { canManageFacility, requireSuiteSession } from "../../../lib/active-facility";
@@ -53,6 +54,9 @@ export default async function PayoutsPage() {
           </CardHeader>
           <CardContent className="grid gap-4">
             <p>{copy.text}</p>
+            <p className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+              Payments are processed by <MayaMark />
+            </p>
             {status.state === "TEST_MODE" && (
               <Notice tone="warning" role="note">
                 To try a purchase, buy a plan in the Sodia app and pay with one of Maya&apos;s published test cards.

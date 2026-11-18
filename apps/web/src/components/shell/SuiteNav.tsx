@@ -3,12 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  CalendarDays,
+  ClipboardList,
   Home,
   MessageSquare,
   ScanLine,
   Settings,
   ShoppingCart,
   Tags,
+  Trophy,
   Wallet,
   Users,
   type LucideIcon,
@@ -26,6 +29,9 @@ const ICONS: Record<SuiteNavItem["icon"], LucideIcon> = {
   payouts: Wallet,
   sales: ShoppingCart,
   settings: Settings,
+  clients: ClipboardList,
+  events: Trophy,
+  schedule: CalendarDays,
 };
 
 /** Section navigation: a side rail on desktop, a scrollable strip on tablets and phones. */

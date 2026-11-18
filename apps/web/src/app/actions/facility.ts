@@ -17,7 +17,7 @@ const createFacilitySchema = z.object({
   name: z.string().trim().min(2, "Name is too short").max(120, "Name is too long"),
   registryType: z.enum(["COMMERCIAL", "COMMUNITY"], { message: "Choose a facility type" }),
   address: z.string().trim().max(200).default(""),
-  category: z.enum(["Gym", "Fitness studio", "Sports club"]).catch("Gym"),
+  category: z.enum(["Gym", "Fitness studio", "Sports club", "Coaching", "Event organizer"]).catch("Gym"),
 });
 
 // Secure cookies are dropped on plain-http localhost by some browsers, so only require HTTPS in production.

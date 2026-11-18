@@ -7,9 +7,28 @@ import { createServerSupabase } from "./supabase/server";
 
 export const ACTIVE_FACILITY_COOKIE = "gp_active_facility";
 
+/** What the business is, which decides the sections it sees. Derived from the category chosen at setup. */
+export type BusinessKind = "GYM" | "STUDIO" | "CLUB" | "COACH" | "ORGANIZER";
+
+const KIND_BY_CATEGORY: Record<string, BusinessKind> = {
+  "Fitness studio": "STUDIO",
+  "Sports club": "CLUB",
+  Coaching: "COACH",
+  "Event organizer": "ORGANIZER",
+};
+
+export const KIND_LABELS: Record<BusinessKind, string> = {
+  GYM: "GymDash · Gym",
+  STUDIO: "GymDash · Fitness studio",
+  CLUB: "Clubdash · Sports club",
+  COACH: "CoachDash · Coaching",
+  ORGANIZER: "Organizer Pro · Events",
+};
+
 export interface ActiveFacility {
   id: string;
   name: string;
+  kind: BusinessKind;
   registryType: RegistryType;
   plan: "FREE" | "PRO";
   logoUrl: string | null;
@@ -44,7 +63,7 @@ export const getSuiteSession = cache(async (): Promise<SuiteSession | null> => {
       supabase.auth.getUser(),
       supabase
         .from("facility_staff")
-        .select("role, facilities(id, name, registry_type, plan, logo_url)")
+        .select("role, facilities(id, name, registry_type, category, plan, logo_url)")
         .eq("user_id", userId),
       supabase.from("profiles").select("name, username, roles").eq("id", userId).maybeSingle(),
     ]);
@@ -60,6 +79,9 @@ export const getSuiteSession = cache(async (): Promise<SuiteSession | null> => {
           {
             id: row.facilities.id,
             name: row.facilities.name,
+            kind:
+              KIND_BY_CATEGORY[row.facilities.category ?? ""] ??
+              (row.facilities.registry_type === "COMMUNITY" ? "CLUB" : "GYM"),
             registryType: row.facilities.registry_type,
             plan: row.facilities.plan,
             logoUrl: row.facilities.logo_url,

@@ -42,3 +42,6 @@ supabase/functions/.env
 
 # Local preview screenshots (shared with the team directly, not versioned)
 app-screenshots/
+
+# Local agent worktrees
+.claude/worktrees/

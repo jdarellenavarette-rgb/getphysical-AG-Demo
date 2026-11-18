@@ -18,10 +18,10 @@ export default async function SuiteLayout({ children }: { children: ReactNode })
   const facility = session.active;
 
   return (
-    <div className="flex min-h-screen flex-col lg:flex-row">
-      <SuiteNav items={suiteNavFor(facility.registryType)} />
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-border bg-card px-4 py-3 lg:px-8">
+    <div className="flex min-h-screen flex-col lg:h-screen lg:flex-row lg:overflow-hidden">
+      <SuiteNav items={suiteNavFor(facility.role)} />
+      <div className="flex min-w-0 flex-1 flex-col lg:overflow-y-auto">
+        <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-border bg-card/85 px-4 py-3 backdrop-blur lg:sticky lg:top-0 lg:z-10 lg:px-10">
           <div className="min-w-0">
             {session.facilities.length > 1 ? (
               <FacilitySwitcher
@@ -50,7 +50,7 @@ export default async function SuiteLayout({ children }: { children: ReactNode })
             </form>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 lg:px-8 lg:py-8">{children}</main>
+        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 lg:px-10 lg:py-10">{children}</main>
       </div>
     </div>
   );

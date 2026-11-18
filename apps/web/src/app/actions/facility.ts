@@ -17,6 +17,7 @@ const createFacilitySchema = z.object({
   name: z.string().trim().min(2, "Name is too short").max(120, "Name is too long"),
   registryType: z.enum(["COMMERCIAL", "COMMUNITY"], { message: "Choose a facility type" }),
   address: z.string().trim().max(200).default(""),
+  category: z.enum(["Gym", "Fitness studio", "Sports club"]).catch("Gym"),
 });
 
 // Secure cookies are dropped on plain-http localhost by some browsers, so only require HTTPS in production.
@@ -33,6 +34,7 @@ export async function createFacility(_prev: FacilityFormState, formData: FormDat
     name: formData.get("name"),
     registryType: formData.get("registryType"),
     address: formData.get("address") ?? "",
+    category: formData.get("category"),
   });
   if (!parsed.success) {
     const fieldErrors: FacilityFormState["fieldErrors"] = {};
@@ -54,6 +56,7 @@ export async function createFacility(_prev: FacilityFormState, formData: FormDat
       name: parsed.data.name,
       registry_type: parsed.data.registryType,
       address: parsed.data.address,
+      category: parsed.data.category,
     })
     .select("id")
     .single();

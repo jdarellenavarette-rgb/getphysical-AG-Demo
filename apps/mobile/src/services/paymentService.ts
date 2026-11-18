@@ -8,8 +8,9 @@ export type CheckoutResult =
 const FRIENDLY: Record<string, string> = {
   AGE_VERIFICATION_REQUIRED: "Add your date of birth in Settings before buying passes.",
   PAYMENT_BLOCKED_UNDER_18: "Purchases require an account holder aged 18 or over.",
-  FACILITY_PAYOUTS_NOT_CONFIGURED: "This facility isn't accepting online payments yet.",
-  SKU_NOT_FOR_SALE: "This pass isn't on sale right now.",
+  FACILITY_PAYOUTS_NOT_CONFIGURED: "This venue isn't taking payments yet.",
+  PRODUCT_NOT_AVAILABLE: "This plan isn't available any more.",
+  SKU_NOT_FOR_SALE: "This plan isn't available any more.",
   SESSION_EXPIRED: "Your session expired. Sign in again.",
   AUTH_REQUIRED: "Sign in to buy passes.",
 };

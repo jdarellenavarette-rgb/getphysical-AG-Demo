@@ -6,6 +6,7 @@ import { useEcosystemStore } from "../../store/ecosystemStore";
 import { useFeedStore } from "../../store/feedStore";
 import { useTrackingStore } from "../../store/trackingStore";
 import { useLiftSessionStore } from "../../store/liftSessionStore";
+import { useMemberStore } from "../../store/memberStore";
 import { OpeningLoadingScreen } from "../common/OpeningLoadingScreen";
 import { ProfileSetupScreen } from "./ProfileSetupScreen";
 import { SignInScreen } from "./SignInScreen";
@@ -39,6 +40,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
     resetSession();
     resetFeed();
     resetTracking();
+    useMemberStore.getState().resetMember();
     useLiftSessionStore.getState().end();
   }, [state, resetSession, resetFeed, resetTracking]);
 

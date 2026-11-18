@@ -5,7 +5,15 @@ import { ArrowLeft, Ticket, FileText } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import type { PassRow } from "sodia-core";
 import { useEcosystemStore } from "../../store/ecosystemStore";
-import { formatPhp, isCourtPass, passCharge, passStatusLabel, passVenueName } from "../../lib/passDisplay";
+import {
+  formatPhp,
+  isCourtPass,
+  passCharge,
+  passChargeLabel,
+  passStatusLabel,
+  passTitle,
+  passVenueName,
+} from "../../lib/passDisplay";
 import { useEdgeSwipeBack } from "../../hooks/useDismissGestures";
 
 interface StatementOfAccountModalProps {
@@ -21,7 +29,7 @@ export function StatementOfAccountModal({ visible, passes, onClose, onSelectPass
   const { colors } = useThemeStore();
   const [filter, setFilter] = useState<"all" | "passes" | "courts">("all");
 
-  const { facilities, purchases } = useEcosystemStore();
+  const { facilities, purchases, venueNames } = useEcosystemStore();
 
   const shown = passes.filter((p) =>
     filter === "all" ? true : filter === "courts" ? isCourtPass(p) : !isCourtPass(p),
@@ -110,15 +118,17 @@ export function StatementOfAccountModal({ visible, passes, onClose, onSelectPass
                     <FileText size={16} color="#E11D48" />
                   </View>
                   <View style={styles.txDetails}>
-                    <Text style={[styles.txTitle, { color: colors.textPrimary }]}>{p.pass_type}</Text>
+                    <Text style={[styles.txTitle, { color: colors.textPrimary }]}>
+                      {passTitle(p, passVenueName(p, facilities, purchases[p.id], venueNames))}
+                    </Text>
                     <Text style={[styles.txDate, { color: colors.textMuted }]}>
                       {p.created_at ? new Date(p.created_at).toLocaleDateString() : ""} •{" "}
-                      {passVenueName(p, facilities, purchases[p.id])}
+                      {passVenueName(p, facilities, purchases[p.id], venueNames)}
                     </Text>
                   </View>
                   <View style={styles.txRight}>
                     <Text style={[styles.txPrice, { color: colors.textPrimary }]}>
-                      {formatPhp(passCharge(purchases[p.id])?.totalChargePhp ?? 0)}
+                      {passChargeLabel(p, purchases[p.id])}
                     </Text>
                     <Text style={styles.txStatus}>{passStatusLabel(p)}</Text>
                   </View>

@@ -17,8 +17,44 @@ export function passVenueName(
   pass: PassRow,
   facilities: readonly FacilityRow[],
   purchase: PassPurchase | undefined,
+  /** Names read with the member's passes, keyed by facility id. */
+  venueNames: Readonly<Record<string, string>> = {},
 ): string {
-  return purchase?.facilityName ?? facilities.find((f) => f.id === pass.facility_id)?.name ?? "Venue";
+  return (
+    purchase?.facilityName ??
+    (pass.facility_id ? venueNames[pass.facility_id] : undefined) ??
+    facilities.find((f) => f.id === pass.facility_id)?.name ??
+    "Venue"
+  );
+}
+
+/** A pass the venue gave at the front desk, without an app purchase. */
+export function isComplimentaryPass(pass: PassRow): boolean {
+  return pass.pass_type === "COMP_PASS" || pass.sku_id === "COMP_PASS";
+}
+
+/** What the pass is called in the wallet: the plan's name, or "Pass from <venue>" when the venue gave it. */
+export function passTitle(pass: PassRow, venueName: string): string {
+  return isComplimentaryPass(pass) ? `Pass from ${venueName}` : pass.pass_type;
+}
+
+/** "Valid until 19 Nov 2026" while the pass works, "Ended 19 Nov 2026" afterwards. */
+export function passExpiryLabel(pass: PassRow, now: number = Date.now()): string {
+  if (!pass.valid_until) return "No end date";
+  const date = new Date(pass.valid_until).toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+  if (pass.status === "ACTIVE") return isPassUsable(pass, now) ? `Valid until ${date}` : `Ended ${date}`;
+  return `Was valid until ${date}`;
+}
+
+/** What the member paid, "Free" for a pass the venue gave, or a dash when the amount isn't known. */
+export function passChargeLabel(pass: PassRow, purchase: PassPurchase | undefined): string {
+  const charge = passCharge(purchase);
+  if (charge) return formatPhp(charge.totalChargePhp);
+  return isComplimentaryPass(pass) ? "Free" : "—";
 }
 
 export function passCharge(purchase: PassPurchase | undefined): FeeBreakdown | null {

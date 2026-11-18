@@ -29,16 +29,26 @@ export interface SuiteSession {
 /** Resolve the signed-in operator and the facility they are acting for. RLS scopes every row. */
 export const getSuiteSession = cache(async (): Promise<SuiteSession | null> => {
   const supabase = await createServerSupabase();
-  const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) return null;
+  // The session cookie gives the user id without a network call. It is only used to filter the
+  // queries below: the auth server still validates the token (getUser), and the database verifies
+  // it again on every query, so a forged cookie yields nothing. Running all three together saves
+  // a round trip on every page.
+  const {
+    data: { session: cookieSession },
+  } = await supabase.auth.getSession();
+  const userId = cookieSession?.user.id;
+  if (!userId) return null;
 
-  const [{ data: staffRows, error: staffError }, { data: profile, error: profileError }] = await Promise.all([
-    supabase
-      .from("facility_staff")
-      .select("role, facilities(id, name, registry_type, plan, logo_url)")
-      .eq("user_id", auth.user.id),
-    supabase.from("profiles").select("name, username, roles").eq("id", auth.user.id).maybeSingle(),
-  ]);
+  const [{ data: auth }, { data: staffRows, error: staffError }, { data: profile, error: profileError }] =
+    await Promise.all([
+      supabase.auth.getUser(),
+      supabase
+        .from("facility_staff")
+        .select("role, facilities(id, name, registry_type, plan, logo_url)")
+        .eq("user_id", userId),
+      supabase.from("profiles").select("name, username, roles").eq("id", userId).maybeSingle(),
+    ]);
+  if (!auth.user || auth.user.id !== userId) return null;
   // A failed lookup must not look like "this person has no facility".
   if (staffError ?? profileError) {
     throw new Error("Could not load your facilities.", { cause: staffError ?? profileError });

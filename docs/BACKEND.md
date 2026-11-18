@@ -13,7 +13,7 @@ supabase/
 │   ├── webhook-xendit/         # Callback-token verified, invoice re-fetched, idempotent settle
 │   ├── webhook-stripe/         # Signature verified, idempotent settle / refund
 │   └── _shared/                # HTTP, auth, provider clients, signature checks, generated DB types
-└── tests/                      # Plain-Postgres harness: 126 assertions over RLS, caps, ledger, gate, payments
+└── tests/                      # Plain-Postgres harness: 296 assertions over RLS, caps, ledger, gate, payments, member standing, catalogue, payouts, demo venue
 ```
 
 ## Security model

@@ -4,7 +4,7 @@ import { ArrowLeft, CheckCircle2 } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import type { PassRow } from "sodia-core";
 import { useEcosystemStore } from "../../store/ecosystemStore";
-import { formatPhp, passCharge, passVenueName } from "../../lib/passDisplay";
+import { formatPhp, isComplimentaryPass, passCharge, passTitle, passVenueName } from "../../lib/passDisplay";
 import { SheetBackdrop, SheetGrabber } from "../common/SheetParts";
 import { useSwipeDownToClose } from "../../hooks/useDismissGestures";
 
@@ -17,12 +17,14 @@ interface ReceiptModalProps {
 export function ReceiptModal({ visible, pass, onClose }: ReceiptModalProps) {
   const { colors } = useThemeStore();
   const swipe = useSwipeDownToClose(() => onClose());
-  const { facilities, purchases } = useEcosystemStore();
+  const { facilities, purchases, venueNames } = useEcosystemStore();
   if (!pass) return null;
 
   const purchase = purchases[pass.id];
   const charge = passCharge(purchase);
   const isRecurring = purchase?.billingKind === "recurring_subscription";
+  const venue = passVenueName(pass, facilities, purchase, venueNames);
+  const isGift = isComplimentaryPass(pass);
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
@@ -54,7 +56,11 @@ export function ReceiptModal({ visible, pass, onClose }: ReceiptModalProps) {
                 {purchase?.isPreview ? "DEMO PASS" : "PASS ISSUED"}
               </Text>
               <Text style={[styles.bannerSub, { color: colors.textMuted }]}>
-                {purchase?.isPreview ? "Preview only. No payment was taken." : "Thank you for your purchase."}
+                {purchase?.isPreview
+                  ? "Preview only. No payment was taken."
+                  : isGift
+                    ? `${venue} gave you this pass. Nothing was charged.`
+                    : "Thank you for your purchase."}
               </Text>
             </View>
 
@@ -64,13 +70,11 @@ export function ReceiptModal({ visible, pass, onClose }: ReceiptModalProps) {
             >
               <View style={styles.row}>
                 <Text style={[styles.label, { color: colors.textMuted }]}>Item / Pass</Text>
-                <Text style={[styles.valueBold, { color: colors.textPrimary }]}>{pass.pass_type}</Text>
+                <Text style={[styles.valueBold, { color: colors.textPrimary }]}>{passTitle(pass, venue)}</Text>
               </View>
               <View style={styles.row}>
                 <Text style={[styles.label, { color: colors.textMuted }]}>Venue</Text>
-                <Text style={[styles.value, { color: colors.textPrimary }]}>
-                  {passVenueName(pass, facilities, purchase)}
-                </Text>
+                <Text style={[styles.value, { color: colors.textPrimary }]}>{venue}</Text>
               </View>
               <View style={styles.row}>
                 <Text style={[styles.label, { color: colors.textMuted }]}>Reference</Text>

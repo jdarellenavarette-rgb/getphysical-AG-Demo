@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { siteUrl } from "../../lib/env";
+import { requestOrigin } from "../../lib/site-url";
 import { createServerSupabase } from "../../lib/supabase/server";
 
 export interface AuthFormState {
@@ -58,7 +58,7 @@ export async function sendMagicLink(_prev: AuthFormState, formData: FormData): P
   const supabase = await createServerSupabase();
   const { error } = await supabase.auth.signInWithOtp({
     email: parsed.data.email,
-    options: { emailRedirectTo: `${siteUrl()}/auth/confirm`, shouldCreateUser: false },
+    options: { emailRedirectTo: `${await requestOrigin()}/auth/confirm`, shouldCreateUser: false },
   });
   // Same response whether or not the account exists (no account enumeration).
   if (error && error.status !== 400 && error.status !== 422) {
@@ -74,7 +74,7 @@ export async function signInWithProvider(provider: "google" | "apple", formData:
   const supabase = await createServerSupabase();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
-    options: { redirectTo: `${siteUrl()}/auth/callback?next=${encodeURIComponent(next)}` },
+    options: { redirectTo: `${await requestOrigin()}/auth/callback?next=${encodeURIComponent(next)}` },
   });
   if (error || !data.url) redirect("/login?error=oauth_failed");
   redirect(data.url);

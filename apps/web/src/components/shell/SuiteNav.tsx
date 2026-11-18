@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  CalendarDays,
   Home,
   MessageSquare,
   ScanLine,
@@ -16,6 +15,7 @@ import {
 } from "lucide-react";
 import type { SuiteNavItem } from "../../lib/nav";
 import { cn } from "../../lib/utils";
+import { BrandMark } from "./BrandMark";
 
 const ICONS: Record<SuiteNavItem["icon"], LucideIcon> = {
   overview: Home,
@@ -24,7 +24,6 @@ const ICONS: Record<SuiteNavItem["icon"], LucideIcon> = {
   inbox: MessageSquare,
   plans: Tags,
   payouts: Wallet,
-  schedule: CalendarDays,
   sales: ShoppingCart,
   settings: Settings,
 };
@@ -35,10 +34,10 @@ export function SuiteNav({ items }: { items: SuiteNavItem[] }) {
   return (
     <nav
       aria-label="Business Suite sections"
-      className="flex gap-1 overflow-x-auto border-b border-border bg-card px-3 py-2 lg:w-60 lg:shrink-0 lg:flex-col lg:overflow-visible lg:border-r lg:border-b-0 lg:px-3 lg:py-5"
+      className="sticky top-0 z-20 flex gap-1 overflow-x-auto border-b border-border bg-card px-3 py-2 lg:static lg:h-screen lg:w-64 lg:shrink-0 lg:flex-col lg:gap-1 lg:overflow-y-auto lg:border-r lg:border-b-0 lg:px-4 lg:py-6"
     >
-      <Link href="/" className="mb-4 hidden px-3 text-xl font-black tracking-tight italic lg:block">
-        GetPhysical
+      <Link href="/" className="mb-6 hidden px-2 lg:block">
+        <BrandMark tagline />
       </Link>
       {items.map((item) => {
         const Icon = ICONS[item.icon];
@@ -49,11 +48,11 @@ export function SuiteNav({ items }: { items: SuiteNavItem[] }) {
             href={item.href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "flex h-11 shrink-0 items-center gap-3 rounded-lg px-3 text-sm font-semibold whitespace-nowrap transition-colors",
-              active ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-muted",
+              "group flex h-11 shrink-0 items-center gap-3 rounded-xl px-3 text-sm font-semibold whitespace-nowrap transition-colors",
+              active ? "bg-foreground text-background" : "text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
           >
-            <Icon size={18} aria-hidden />
+            <Icon size={18} aria-hidden className={cn(active ? "text-primary" : "text-current")} />
             {item.label}
           </Link>
         );

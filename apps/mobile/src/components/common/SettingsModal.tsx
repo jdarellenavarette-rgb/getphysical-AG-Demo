@@ -19,6 +19,7 @@ import { useThemeStore, type ThemePreference } from "../../theme/theme";
 import { haptics } from "../../lib/haptics";
 import { signOut } from "../../services/authService";
 import { useEdgeSwipeBack } from "../../hooks/useDismissGestures";
+import { SettingsMemberCard } from "./SettingsMemberCard";
 
 const THEME_OPTIONS: { value: ThemePreference; label: string; Icon: LucideIcon }[] = [
   { value: "system", label: "System", Icon: Smartphone },
@@ -32,6 +33,7 @@ interface SettingsModalProps {
   onOpenStaffDash?: () => void;
   onOpenCoachDash?: () => void;
   onOpenOrganizer?: () => void;
+  onOpenMyVenues?: () => void;
 }
 
 export function SettingsModal({
@@ -40,6 +42,7 @@ export function SettingsModal({
   onOpenStaffDash,
   onOpenCoachDash,
   onOpenOrganizer,
+  onOpenMyVenues,
 }: SettingsModalProps) {
   const insets = useSafeAreaInsets();
   const edgeBack = useEdgeSwipeBack(() => onClose());
@@ -117,6 +120,14 @@ export function SettingsModal({
               <Text style={[styles.value, { color: colors.textPrimary }]}>@{profile.username}</Text>
             </View>
           </View>
+
+          {/* USERNAME FOR THE FRONT DESK + MY VENUES */}
+          <SettingsMemberCard
+            onOpenMyVenues={() => {
+              onClose();
+              onOpenMyVenues?.();
+            }}
+          />
 
           {/* ACCOUNT & AUTH */}
           <View style={[styles.card, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}>
@@ -261,15 +272,6 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   authActionBtnText: { fontSize: 13, fontWeight: "800" },
-  switchRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-  },
-  switchTitle: { fontSize: 13, fontWeight: "700" },
-  switchSub: { color: "#71717A", fontSize: 11, marginTop: 2 },
   roleSubRow: {
     flexDirection: "row",
     justifyContent: "space-between",

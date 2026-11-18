@@ -11,8 +11,3 @@ export function supabasePublicConfig(): SupabaseConfig {
     supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   });
 }
-
-/** Absolute origin used for auth email redirects. */
-export function siteUrl(): string {
-  return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-}

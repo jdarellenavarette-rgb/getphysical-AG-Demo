@@ -1,25 +1,31 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { describeStanding, memberStandingSchema, type MessageRow } from "sodia-core";
+import { describeStanding, memberStandingSchema, type MessageRow, type StandingLabel } from "sodia-core";
 import { loadFacilityInbox, type InboxThread } from "../../app/actions/crm";
 import { getBrowserSupabase } from "../../lib/supabase/browser";
 
+export interface InboxMessage {
+  id: string;
+  fromVenue: boolean;
+  text: string;
+  time: string;
+}
+
 export interface InboxTicket {
-  id: string; // conversation id
-  athleteId: string;
-  athleteName: string;
-  avatar: string;
+  /** Conversation id. */
+  id: string;
+  memberName: string;
   handle: string;
   lastMessage: string;
   time: string;
-  /** The member wrote last, so the thread is waiting on the facility. */
-  unread: boolean;
+  /** The member wrote last, so the thread is waiting on the venue. */
+  waiting: boolean;
+  /** Null when the person is not on the venue's member list. */
+  standing: StandingLabel | null;
   isActiveMember: boolean;
-  tag: string;
-  tagColor: string;
-  athleteMeta: { membership: string; lastVisit: string };
-  messages: { id: string; sender: "athlete" | "business"; text: string; time: string }[];
+  lastVisit: string;
+  messages: InboxMessage[];
 }
 
 export type InboxStatus = "loading" | "empty" | "success" | "error" | "session_expired" | "permission_denied";
@@ -29,52 +35,33 @@ function formatTime(iso: string | null): string {
   const date = new Date(iso);
   const sameDay = date.toDateString() === new Date().toDateString();
   return sameDay
-    ? date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    ? date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
     : date.toLocaleDateString([], { month: "short", day: "numeric" });
-}
-
-function initials(name: string): string {
-  return (
-    name
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part[0]?.toUpperCase() ?? "")
-      .join("") || "GP"
-  );
 }
 
 function toTicket(thread: InboxThread): InboxTicket {
   const last = thread.messages[thread.messages.length - 1];
   const standing = memberStandingSchema.safeParse(thread.membershipStatus);
-  const active = standing.success && standing.data === "ACTIVE";
-  const standingLabel = standing.success ? describeStanding(standing.data).label : "Not a member";
   return {
     id: thread.conversationId,
-    athleteId: thread.athleteId,
-    athleteName: thread.athleteName,
-    avatar: initials(thread.athleteName),
+    memberName: thread.athleteName,
     handle: thread.athleteHandle ?? "",
     lastMessage: last?.body ?? "No messages yet",
     time: formatTime(thread.lastMessageAt),
-    unread: Boolean(last && !last.fromFacility),
-    isActiveMember: active,
-    tag: standingLabel,
-    tagColor: active ? "#059669" : "#9CA3AF",
-    athleteMeta: {
-      membership: standingLabel,
-      lastVisit: thread.lastVisitAt ? new Date(thread.lastVisitAt).toLocaleString() : "No check-ins yet",
-    },
+    waiting: Boolean(last && !last.fromFacility),
+    standing: standing.success ? describeStanding(standing.data) : null,
+    isActiveMember: standing.success && standing.data === "ACTIVE",
+    lastVisit: thread.lastVisitAt ? formatTime(thread.lastVisitAt) : "never",
     messages: thread.messages.map((m) => ({
       id: m.id,
-      sender: m.fromFacility ? "business" : "athlete",
+      fromVenue: m.fromFacility,
       text: m.body,
       time: formatTime(m.createdAt),
     })),
   };
 }
 
-/** Facility CRM inbox: server-loaded threads + live updates over RLS-scoped Realtime. */
+/** Venue inbox: server-loaded threads plus live updates over RLS-scoped Realtime. */
 export function useFacilityInbox(facilityId: string) {
   const [tickets, setTickets] = useState<InboxTicket[]>([]);
   const [status, setStatus] = useState<InboxStatus>("loading");
@@ -84,11 +71,7 @@ export function useFacilityInbox(facilityId: string) {
     const result = await loadFacilityInbox(facilityId);
     if (!result.ok) {
       setStatus(result.state === "form_validation" ? "error" : result.state);
-      setErrorMessage(
-        result.state === "form_validation"
-          ? "Invalid request"
-          : `${result.message}${result.code ? ` (ref ${result.code})` : ""}`,
-      );
+      setErrorMessage(result.state === "form_validation" ? "Invalid request" : result.message);
       return;
     }
     setTickets(result.data.map(toTicket));
@@ -99,9 +82,9 @@ export function useFacilityInbox(facilityId: string) {
   useEffect(() => {
     void reload();
     const supabase = getBrowserSupabase();
-    // RLS also delivers the operator's own DMs and other facilities they staff, so
-    // messages for threads not in this inbox are ignored; new threads arrive through
-    // the conversations subscription, which is filtered to this facility.
+    // RLS also delivers the operator's own DMs and other venues they staff, so messages for
+    // threads not in this inbox are ignored; new threads arrive through the conversations
+    // subscription, which is filtered to this venue.
     const onThreadChange = (payload: { new: unknown }) => {
       const id = (payload.new as { id?: string }).id;
       setTickets((current) => {
@@ -119,21 +102,13 @@ export function useFacilityInbox(facilityId: string) {
           if (index === -1) return current;
           const ticket = current[index]!;
           if (ticket.messages.some((m) => m.id === row.id)) return current;
-          const fromFacility = row.sender_kind === "FACILITY";
+          const fromVenue = row.sender_kind === "FACILITY";
           const updated: InboxTicket = {
             ...ticket,
-            messages: [
-              ...ticket.messages,
-              {
-                id: row.id,
-                sender: fromFacility ? "business" : "athlete",
-                text: row.body,
-                time: formatTime(row.created_at),
-              },
-            ],
+            messages: [...ticket.messages, { id: row.id, fromVenue, text: row.body, time: formatTime(row.created_at) }],
             lastMessage: row.body,
             time: formatTime(row.created_at),
-            unread: !fromFacility,
+            waiting: !fromVenue,
           };
           return [updated, ...current.filter((_, i) => i !== index)];
         });

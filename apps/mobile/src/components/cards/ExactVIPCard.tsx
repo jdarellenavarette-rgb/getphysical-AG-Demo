@@ -5,6 +5,7 @@ import type { PassRow } from "sodia-core";
 import { usePassTotp } from "../../hooks/usePassTotp";
 import { QrCodeView } from "../common/QrCodeView";
 import { useEcosystemStore } from "../../store/ecosystemStore";
+import { passTitle } from "../../lib/passDisplay";
 
 interface ExactVIPCardProps {
   pass: PassRow;
@@ -50,7 +51,7 @@ export function ExactVIPCard({ pass, facilityName }: ExactVIPCardProps) {
           {/* MIDDLE: FACILITY & PASS */}
           <View style={styles.middleRow}>
             <Text style={styles.facilityName}>{facilityName}</Text>
-            <Text style={styles.passType}>{pass.pass_type.toUpperCase()}</Text>
+            <Text style={styles.passType}>{passTitle(pass, facilityName).toUpperCase()}</Text>
           </View>
 
           {/* BOTTOM ROW: MEMBER CREDENTIALS & FLIP ACTION */}

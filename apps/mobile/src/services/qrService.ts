@@ -8,21 +8,11 @@ import {
   type QrResolveResult,
 } from "sodia-core";
 import { getSessionUserId, getSupabase } from "../lib/supabase";
+import { failure, type ServiceResult } from "./serviceResult";
 
-export type ServiceResult<T> =
-  { ok: true; data: T } | { ok: false; reason: "signed_out" | "forbidden" | "offline" | "error"; message: string };
+export type { ServiceResult } from "./serviceResult";
 
 const SIGNED_OUT = { ok: false, reason: "signed_out", message: "Sign in to use QR codes." } as const;
-
-function failure(error: { message: string; code?: string }): ServiceResult<never> {
-  if (error.code === "42501" || /FORBIDDEN|ROLE_NOT_GRANTED/.test(error.message)) {
-    return { ok: false, reason: "forbidden", message: "You don't have access to this." };
-  }
-  if (/fetch|network/i.test(error.message)) {
-    return { ok: false, reason: "offline", message: "You're offline. Reconnect and retry." };
-  }
-  return { ok: false, reason: "error", message: "Something went wrong. Please retry." };
-}
 
 /** The signed-in user's own code (USER = add-friend; COACH / ORGANIZER need the role). */
 export async function getMyQrToken(

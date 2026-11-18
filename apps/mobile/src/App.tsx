@@ -5,7 +5,7 @@ import { HeaderBar } from "./components/common/HeaderBar";
 import { BottomBar, type MobileTab } from "./components/common/BottomBar";
 import { SodiaFeed } from "./components/sodia/SodiaFeed";
 import { CardsHub } from "./components/cards/CardsHub";
-import { DiscoverView, type CheckoutRequest } from "./components/discover/DiscoverView";
+import { DiscoverView, toCheckoutRequest, type CheckoutRequest } from "./components/discover/DiscoverView";
 import { FacilityDetailSheet } from "./components/discover/FacilityDetailSheet";
 import { UniversalCheckoutModal } from "./components/common/UniversalCheckoutModal";
 import { TrackHub } from "./components/track/TrackHub";
@@ -19,6 +19,7 @@ import { CreatePostModal } from "./components/sodia/CreatePostModal";
 import { InstagramStoryCameraModal } from "./components/sodia/InstagramStoryCameraModal";
 import { MenuDrawerModal } from "./components/common/MenuDrawerModal";
 import { SettingsModal } from "./components/common/SettingsModal";
+import { MyVenuesModal } from "./components/profile/MyVenuesModal";
 import { StaffQuickdashModal } from "./components/business/StaffQuickdashModal";
 import { CoachQuickdashModal } from "./components/business/CoachQuickdashModal";
 import { OrganizerMeetModal } from "./components/profile/OrganizerMeetModal";
@@ -31,6 +32,7 @@ import { useThemeStore } from "./theme/theme";
 import type { FacilityRow } from "sodia-core";
 import { useCheckout } from "./hooks/useCheckout";
 import { useRequireAccount } from "./hooks/useRequireAccount";
+import { useMemberSync } from "./hooks/useMemberSync";
 
 export default function App() {
   const insets = useSafeAreaInsets();
@@ -50,8 +52,9 @@ export default function App() {
   const [isStaffDashOpen, setIsStaffDashOpen] = useState(false);
   const [isCoachDashOpen, setIsCoachDashOpen] = useState(false);
   const [isOrganizerOpen, setIsOrganizerOpen] = useState(false);
+  const [isMyVenuesOpen, setIsMyVenuesOpen] = useState(false);
 
-  const { facilities } = useEcosystemStore();
+  const { facilities, isGuest } = useEcosystemStore();
   const { colors } = useThemeStore();
   const requireAccount = useRequireAccount();
   const { initRealtimeSubscription, threads, ensureThread } = useCrmMessagingStore();
@@ -59,9 +62,19 @@ export default function App() {
   // Subscribes to the user's inbox; the returned teardown removes the Realtime channel.
   useEffect(() => initRealtimeSubscription(), [initRealtimeSubscription]);
 
-  const { confirm: confirmCheckout } = useCheckout(() => {
+  // A signed-in member's passes and venues come from the backend; a guest's wallet stays local.
+  const { expectNewPass } = useMemberSync(!isGuest);
+  const {
+    confirm: confirmCheckout,
+    error: checkoutError,
+    clearError: clearCheckoutError,
+  } = useCheckout(() => {
     requireAccount("buy a pass");
   });
+  const openCheckout = (item: CheckoutRequest | null) => {
+    clearCheckoutError();
+    setActiveCheckoutItem(item);
+  };
   const openComposer = () => {
     if (requireAccount("share a post")) setIsCreatePostOpen(true);
   };
@@ -74,6 +87,8 @@ export default function App() {
 
   const handleCheckoutConfirm = async (item: CheckoutRequest) => {
     if (await confirmCheckout(item)) {
+      // The payment page is open. The pass is issued once the payment is confirmed, so keep checking for it.
+      expectNewPass();
       setActiveCheckoutItem(null);
       setCurrentTab("cards");
     }
@@ -115,7 +130,7 @@ export default function App() {
             onPressAuthor={(userId, name, avatar) => setSelectedAthlete(athleteProfileFromPost(userId, name, avatar))}
           />
         )}
-        {currentTab === "discover" && <DiscoverView onCheckoutItem={(item) => setActiveCheckoutItem(item)} />}
+        {currentTab === "discover" && <DiscoverView onCheckoutItem={openCheckout} />}
         {currentTab === "cards" && <CardsHub onBrowseVenues={() => setCurrentTab("discover")} />}
         {currentTab === "track" && <TrackHub />}
         {currentTab === "profile" && <ProfileHub onBack={() => setCurrentTab("sodia")} onOpenMessages={openInbox} />}
@@ -183,6 +198,15 @@ export default function App() {
         onOpenStaffDash={() => setIsStaffDashOpen(true)}
         onOpenCoachDash={() => setIsCoachDashOpen(true)}
         onOpenOrganizer={() => setIsOrganizerOpen(true)}
+        onOpenMyVenues={() => setIsMyVenuesOpen(true)}
+      />
+      <MyVenuesModal
+        visible={isMyVenuesOpen}
+        onClose={() => setIsMyVenuesOpen(false)}
+        onFindVenue={() => {
+          setIsMyVenuesOpen(false);
+          setCurrentTab("discover");
+        }}
       />
 
       <StaffQuickdashModal visible={isStaffDashOpen} onClose={() => setIsStaffDashOpen(false)} />
@@ -195,16 +219,7 @@ export default function App() {
         onClose={() => setSelectedFacilityForModal(null)}
         onSelectPass={(passOpt, fac) => {
           setSelectedFacilityForModal(null);
-          setActiveCheckoutItem({
-            id: passOpt.id,
-            title: `${passOpt.title} • ${fac.name}`,
-            subtitle: passOpt.subtitle,
-            facilityId: fac.id,
-            facilityName: fac.name,
-            baseAmountPhp: passOpt.pricePhp,
-            billingKind: passOpt.billingKind,
-            splitNote: passOpt.splitNote,
-          });
+          openCheckout(toCheckoutRequest(passOpt, fac));
         }}
       />
 
@@ -232,8 +247,9 @@ export default function App() {
       <UniversalCheckoutModal
         item={activeCheckoutItem}
         visible={!!activeCheckoutItem}
-        onClose={() => setActiveCheckoutItem(null)}
+        onClose={() => openCheckout(null)}
         onConfirm={handleCheckoutConfirm}
+        error={checkoutError}
       />
     </View>
   );

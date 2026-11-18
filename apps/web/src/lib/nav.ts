@@ -1,11 +1,11 @@
-import type { RegistryType } from "sodia-core";
+import type { FacilityRole } from "sodia-core";
 
 export interface SuiteNavItem {
   href: string;
   label: string;
-  icon: "overview" | "members" | "checkin" | "inbox" | "plans" | "payouts" | "schedule" | "sales" | "settings";
-  /** Shown only for community clubs (court bookings). */
-  clubOnly?: boolean;
+  icon: "overview" | "members" | "checkin" | "inbox" | "plans" | "payouts" | "sales" | "settings";
+  /** Money and configuration: owners and admins only. */
+  adminOnly?: boolean;
 }
 
 const ITEMS: SuiteNavItem[] = [
@@ -13,13 +13,14 @@ const ITEMS: SuiteNavItem[] = [
   { href: "/members", label: "Members", icon: "members" },
   { href: "/check-in", label: "Check-in", icon: "checkin" },
   { href: "/inbox", label: "Inbox", icon: "inbox" },
-  { href: "/plans", label: "Plans and prices", icon: "plans" },
-  { href: "/payouts", label: "Payouts", icon: "payouts" },
-  { href: "/schedule", label: "Court schedule", icon: "schedule", clubOnly: true },
-  { href: "/sales", label: "Front desk sales", icon: "sales" },
+  { adminOnly: true, href: "/plans", label: "Plans and prices", icon: "plans" },
+  { adminOnly: true, href: "/payouts", label: "Payouts", icon: "payouts" },
+  { adminOnly: true, href: "/sales", label: "Sales", icon: "sales" },
   { href: "/settings", label: "Settings", icon: "settings" },
 ];
 
-export function suiteNavFor(registryType: RegistryType): SuiteNavItem[] {
-  return ITEMS.filter((item) => !item.clubOnly || registryType === "COMMUNITY");
+/** Sections shown to this staff role. The pages and the database enforce the same rule. */
+export function suiteNavFor(role: FacilityRole): SuiteNavItem[] {
+  const isAdmin = role === "OWNER" || role === "ADMIN";
+  return ITEMS.filter((item) => !item.adminOnly || isAdmin);
 }

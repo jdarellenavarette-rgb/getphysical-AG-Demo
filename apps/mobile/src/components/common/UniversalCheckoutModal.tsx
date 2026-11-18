@@ -13,9 +13,11 @@ interface UniversalCheckoutModalProps {
   visible: boolean;
   onClose: () => void;
   onConfirm: (item: CheckoutRequest) => void | Promise<void>;
+  /** Why the last attempt did not reach the payment page, in words the buyer can act on. */
+  error?: string | null;
 }
 
-export function UniversalCheckoutModal({ item, visible, onClose, onConfirm }: UniversalCheckoutModalProps) {
+export function UniversalCheckoutModal({ item, visible, onClose, onConfirm, error }: UniversalCheckoutModalProps) {
   const { colors } = useThemeStore();
   const swipe = useSwipeDownToClose(() => onClose());
   const { isGuest } = useEcosystemStore();
@@ -97,6 +99,11 @@ export function UniversalCheckoutModal({ item, visible, onClose, onConfirm }: Un
               Sign in or create an account to buy this pass.
             </Text>
           )}
+          {error ? (
+            <Text style={styles.errorNote} accessibilityRole="alert">
+              {error}
+            </Text>
+          ) : null}
           <TouchableOpacity
             onPress={() => void handleConfirm()}
             disabled={submitting}
@@ -123,6 +130,7 @@ export function UniversalCheckoutModal({ item, visible, onClose, onConfirm }: Un
 
 const styles = StyleSheet.create({
   previewNote: { fontSize: 12, textAlign: "center", marginBottom: 10 },
+  errorNote: { color: "#F87171", fontSize: 13, lineHeight: 18, textAlign: "center", marginBottom: 12 },
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" },
   checkoutSheet: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, borderWidth: 1 },
   sheetHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 },

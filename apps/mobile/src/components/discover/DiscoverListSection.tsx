@@ -4,7 +4,8 @@ import { Star } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import type { FacilityRow } from "sodia-core";
 import type { DiscoverCoach, DiscoverCommunityClub } from "../../data/discoverData";
-import { calculateHaversineKm, formatWalkingEta, type UserCoordinates } from "../../services/locationService";
+import type { UserCoordinates } from "../../services/locationService";
+import { venueDistanceLabel, venueOccupancyLabel, venuePriceLabel } from "../../lib/venueDisplay";
 
 interface DiscoverListSectionProps {
   facilities: readonly FacilityRow[];
@@ -48,20 +49,19 @@ export function DiscoverListSection({
     <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
       {/* 1. FACILITIES (GYMS, PILATES, MULTI-SPORT) */}
       {facilities.map((fac) => {
-        const distKm = calculateHaversineKm(
-          userCoords.latitude,
-          userCoords.longitude,
-          fac.lat ?? 14.549,
-          fac.lng ?? 121.05,
-        );
-        const price = fac.day_pass_price_php ?? fac.court_hourly_price_php ?? 250;
+        const occupancy = venueOccupancyLabel(fac);
+        const cover = fac.cover_image ?? fac.cover_url;
         return (
           <TouchableOpacity
             key={fac.id}
             onPress={() => onSelectFacility(fac)}
             style={[styles.card, { backgroundColor: colors.bgCard, borderColor: colors.borderColor }]}
           >
-            <Image source={{ uri: fac.cover_image ?? "" }} style={styles.image} />
+            {cover ? (
+              <Image source={{ uri: cover }} style={styles.image} />
+            ) : (
+              <View style={[styles.image, { backgroundColor: colors.bgCardSecondary }]} />
+            )}
             <View style={styles.body}>
               <Text style={[styles.title, { color: colors.textPrimary }]} numberOfLines={1}>
                 {fac.name}
@@ -69,16 +69,16 @@ export function DiscoverListSection({
               <Text style={[styles.category, { color: colors.textMuted }]} numberOfLines={1}>
                 {fac.category}
               </Text>
-              <Text style={[styles.meta, { color: colors.textSecondary }]}>
-                {distKm} km • {formatWalkingEta(distKm)}
+              <Text style={[styles.meta, { color: colors.textSecondary }]} numberOfLines={1}>
+                {venueDistanceLabel(fac, userCoords) ?? fac.address}
               </Text>
               <View style={styles.bottomRow}>
-                <Text style={styles.price}>
-                  ₱{price} {fac.registry === "A" ? "Day Pass" : "Court/Hr"}
-                </Text>
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>{fac.inside_now_count ?? 20} Inside</Text>
-                </View>
+                <Text style={styles.price}>{venuePriceLabel(fac)}</Text>
+                {occupancy ? (
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>{occupancy} Inside</Text>
+                  </View>
+                ) : null}
               </View>
             </View>
           </TouchableOpacity>

@@ -1,50 +1,97 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
-import { Plus, Wallet, ChevronRight, QrCode } from "lucide-react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, RefreshControl } from "react-native";
+import { Plus, Wallet, QrCode, CloudOff, Clock } from "lucide-react-native";
 import { useEcosystemStore } from "../../store/ecosystemStore";
+import { useMemberStore } from "../../store/memberStore";
 import { ExactVIPCard } from "./ExactVIPCard";
 import { ReceiptModal } from "./ReceiptModal";
 import { StatementOfAccountModal } from "./StatementOfAccountModal";
 import { TurnstileQRModal } from "./TurnstileQRModal";
 import { AddMembershipChoiceModal } from "./AddMembershipChoiceModal";
 import { QrScannerModal } from "./QrScannerModal";
+import { WalletPassList } from "./WalletPassList";
 import { useThemeStore } from "../../theme/theme";
 import { EmptyState } from "../common/EmptyState";
 import { haptics } from "../../lib/haptics";
 import type { PassRow } from "sodia-core";
-import { isPassUsable, passStatusLabel, passVenueName } from "../../lib/passDisplay";
+import { isPassUsable, passVenueName } from "../../lib/passDisplay";
 
 interface CardsHubProps {
   onBrowseVenues?: () => void;
 }
 
 export function CardsHub({ onBrowseVenues }: CardsHubProps) {
-  const { passes, facilities, purchases, setIsGuest } = useEcosystemStore();
+  const { passes, facilities, purchases, venueNames, isGuest, setIsGuest } = useEcosystemStore();
+  const { walletSync, walletError, awaitingPass, refreshWallet } = useMemberStore();
   const { colors } = useThemeStore();
   const [selectedPassForReceipt, setSelectedPassForReceipt] = useState<PassRow | null>(null);
+  const [chosenPassId, setChosenPassId] = useState<string | null>(null);
   const [isSoaOpen, setIsSoaOpen] = useState(false);
   const [isQrOpen, setIsQrOpen] = useState(false);
   const [isAddMembershipChoiceOpen, setIsAddMembershipChoiceOpen] = useState(false);
   const [isClubScannerOpen, setIsClubScannerOpen] = useState(false);
 
-  // The card on top is the first pass that can still open a gate.
-  const activePass = passes.find((p) => isPassUsable(p)) ?? passes[0] ?? null;
-  const activeVenue = activePass ? passVenueName(activePass, facilities, purchases[activePass.id]) : "";
+  // The card on top is the pass the member picked, else the first that can still open a gate.
+  const activePass =
+    passes.find((p) => p.id === chosenPassId) ?? passes.find((p) => isPassUsable(p)) ?? passes[0] ?? null;
+  const activeVenue = activePass ? passVenueName(activePass, facilities, purchases[activePass.id], venueNames) : "";
+  // A signed-in member's wallet comes from the backend; a guest's stays local.
+  const isLoadingFirst = !isGuest && passes.length === 0 && (walletSync === "loading" || walletSync === "idle");
+  const failedFirst = !isGuest && passes.length === 0 && walletSync === "error";
 
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: colors.bgScreen }]}
       contentContainerStyle={styles.contentContainer}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        isGuest ? undefined : (
+          <RefreshControl
+            refreshing={walletSync === "loading" && passes.length > 0}
+            onRefresh={() => void refreshWallet()}
+            tintColor={colors.accent}
+          />
+        )
+      }
     >
       <View style={styles.userGreetingRow}>
-        <View>
-          <Text style={[styles.userName, { color: colors.textPrimary }]}>Wallet</Text>
-          <Text style={[styles.userHandle, { color: colors.textMuted }]}>Your passes and memberships</Text>
-        </View>
+        <Text style={[styles.userName, { color: colors.textPrimary }]}>Wallet</Text>
+        <Text style={[styles.userHandle, { color: colors.textMuted }]}>Your passes and memberships</Text>
       </View>
 
-      {!activePass ? (
+      {awaitingPass ? (
+        <View style={[styles.notice, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}>
+          <Clock size={14} color={colors.accent} />
+          <Text style={[styles.noticeText, { color: colors.textSecondary }]}>
+            Finish paying on the payment page. Your pass appears here once the payment is confirmed.
+          </Text>
+        </View>
+      ) : null}
+      {walletSync === "error" && passes.length > 0 ? (
+        <View style={[styles.notice, { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor }]}>
+          <CloudOff size={14} color="#F59E0B" />
+          <Text style={[styles.noticeText, { color: colors.textSecondary }]}>
+            Couldn't refresh. These are your passes as last loaded. Pull down to retry.
+          </Text>
+        </View>
+      ) : null}
+
+      {isLoadingFirst ? (
+        // Same outline as a loaded wallet, so nothing jumps when the passes arrive.
+        <View accessibilityLabel="Loading your passes" style={styles.cardWrapper}>
+          <View style={[styles.skeletonCard, { backgroundColor: colors.bgCardSecondary }]} />
+          <View style={[styles.skeletonRow, { backgroundColor: colors.bgCardSecondary }]} />
+          <View style={[styles.skeletonRow, { backgroundColor: colors.bgCardSecondary }]} />
+        </View>
+      ) : failedFirst ? (
+        <EmptyState
+          icon={CloudOff}
+          title="Couldn't load your passes"
+          body={walletError ?? "Something went wrong. Please retry."}
+          actionLabel="Retry"
+          onAction={() => void refreshWallet()}
+        />
+      ) : !activePass ? (
         // Nothing to show yet: one clear way forward, plus the scanner for people handed a QR code.
         <>
           <EmptyState
@@ -98,31 +145,16 @@ export function CardsHub({ onBrowseVenues }: CardsHubProps) {
                 <Text style={styles.viewAllText}>Statement</Text>
               </TouchableOpacity>
             </View>
-            <View style={styles.txList}>
-              {passes.map((p) => (
-                <TouchableOpacity
-                  key={p.id}
-                  onPress={() => setSelectedPassForReceipt(p)}
-                  style={[styles.txRow, { backgroundColor: colors.bgCardSecondary }]}
-                  accessibilityRole="button"
-                >
-                  <View style={{ flex: 1 }}>
-                    <Text numberOfLines={1} style={[styles.txName, { color: colors.textPrimary }]}>
-                      {p.pass_type}
-                    </Text>
-                    <Text numberOfLines={1} style={[styles.txTime, { color: colors.textMuted }]}>
-                      {passVenueName(p, facilities, purchases[p.id])}
-                    </Text>
-                  </View>
-                  <View style={styles.txRight}>
-                    <Text style={[styles.txStatus, !isPassUsable(p) && { color: colors.textMuted }]}>
-                      {passStatusLabel(p)}
-                    </Text>
-                    <ChevronRight size={16} color={colors.textMuted} />
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </View>
+            <WalletPassList
+              passes={passes}
+              activePassId={activePass.id}
+              onOpenReceipt={setSelectedPassForReceipt}
+              onShowQr={(pass) => {
+                haptics.tap();
+                setChosenPassId(pass.id);
+                setIsQrOpen(true);
+              }}
+            />
           </View>
         </>
       )}
@@ -167,40 +199,23 @@ const styles = StyleSheet.create({
   scanLinkText: { fontSize: 14, fontWeight: "700" },
   container: { flex: 1 },
   contentContainer: { paddingBottom: 110 },
-  userGreetingRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 14,
-  },
-  bellBtn: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center" },
+  userGreetingRow: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 14 },
   userName: { fontSize: 24, fontWeight: "900", letterSpacing: -0.5 },
   userHandle: { fontSize: 12, marginTop: 2, fontWeight: "600" },
-  cardWrapper: { paddingHorizontal: 16, marginBottom: 12 },
-  emptyCardContainer: { paddingHorizontal: 16, marginBottom: 16 },
-  emptyCardDashed: {
-    borderWidth: 2,
-    borderStyle: "dashed",
-    borderRadius: 20,
-    padding: 28,
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 210,
-  },
-  emptyCardTitle: { fontSize: 18, fontWeight: "800", marginTop: 12 },
-  emptyCardDesc: { fontSize: 12, textAlign: "center", marginTop: 6, lineHeight: 18, maxWidth: 280 },
-  getPassButton: {
+  notice: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#E11D48",
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 999,
-    marginTop: 16,
+    gap: 8,
+    marginHorizontal: 16,
+    marginBottom: 12,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
   },
-  getPassButtonText: { color: "#FFFFFF", fontSize: 12, fontWeight: "800" },
+  noticeText: { flex: 1, fontSize: 12, lineHeight: 17 },
+  cardWrapper: { paddingHorizontal: 16, marginBottom: 12 },
+  skeletonCard: { height: 224, borderRadius: 24, marginVertical: 10, opacity: 0.6 },
+  skeletonRow: { height: 56, borderRadius: 12, marginTop: 8, opacity: 0.6 },
   actionPillsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -231,27 +246,4 @@ const styles = StyleSheet.create({
   historyHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 },
   historyTitle: { fontSize: 17, fontWeight: "900" },
   viewAllText: { color: "#E11D48", fontSize: 12, fontWeight: "700" },
-  emptyLedgerBox: { alignItems: "center", justifyContent: "center", paddingVertical: 32, paddingHorizontal: 20 },
-  emptyLedgerTitle: { fontSize: 14, fontWeight: "800", marginTop: 10 },
-  emptyLedgerSubtitle: { fontSize: 12, textAlign: "center", marginTop: 4, lineHeight: 18, maxWidth: 260 },
-  txList: { gap: 8 },
-  txRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 12, borderRadius: 12 },
-  txName: { fontSize: 14, fontWeight: "800" },
-  txTime: { fontSize: 11, marginTop: 2 },
-  txRight: { flexDirection: "row", alignItems: "center", gap: 6 },
-  txStatus: { fontSize: 11, fontWeight: "800", color: "#10B981" },
-  cardDetailSection: { marginTop: 22, borderTopWidth: 1, paddingTop: 16 },
-  cardDetailHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 },
-  cardDetailTitle: { fontSize: 15, fontWeight: "800" },
-  copyRow: { flexDirection: "row", alignItems: "center", gap: 4 },
-  copyText: { fontSize: 11, fontWeight: "700" },
-  detailRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-  },
-  detailLabel: { fontSize: 12 },
-  detailValMono: { fontSize: 13, fontWeight: "800", letterSpacing: 0.5 },
 });

@@ -1,20 +1,16 @@
 import React, { useState } from "react";
 import { Animated, View, Text, TouchableOpacity, StyleSheet, Modal, Image, ScrollView } from "react-native";
-import { X, MapPin, Star, Sparkles, ChevronRight, Check } from "lucide-react-native";
+import { X, MapPin, Star, Sparkles, ChevronRight } from "lucide-react-native";
 import { useThemeStore } from "../../theme/theme";
 import type { FacilityRow } from "sodia-core";
 import { PickleballBookingGrid } from "./PickleballBookingGrid";
 import { SheetBackdrop, SheetGrabber } from "../common/SheetParts";
 import { useSwipeDownToClose } from "../../hooks/useDismissGestures";
+import { useVenuePlans, type FacilityPassOption } from "../../hooks/useVenuePlans";
+import { VenuePlansSection } from "./VenuePlansSection";
+import { formatPhp } from "../../lib/passDisplay";
 
-export interface FacilityPassOption {
-  id: string;
-  title: string;
-  subtitle: string;
-  pricePhp: number;
-  billingKind: "one_time_pass" | "recurring_subscription";
-  splitNote?: string;
-}
+export type { FacilityPassOption };
 
 interface FacilityDetailSheetProps {
   facility: FacilityRow | null;
@@ -27,62 +23,13 @@ export function FacilityDetailSheet({ facility, visible, onClose, onSelectPass }
   const { colors } = useThemeStore();
   const swipe = useSwipeDownToClose(() => onClose());
   const [selectedPassId, setSelectedPassId] = useState<string>("");
+  const { plans, live, retry } = useVenuePlans(facility, visible);
 
   if (!visible || !facility) return null;
 
   const isGym = facility.registry === "A";
-
-  const passOptions: FacilityPassOption[] = isGym
-    ? [
-        {
-          id: "pass_day",
-          title: "All-Access Day Pass",
-          subtitle: "Entry for one day",
-          pricePhp: facility.day_pass_price_php ?? 250,
-          billingKind: "one_time_pass",
-        },
-        {
-          id: "pass_pack10",
-          title: "10-Session Punch Pack",
-          subtitle: "Valid for 60 days • Save ₱300 vs daily drop-ins",
-          pricePhp: 2200,
-          billingKind: "one_time_pass",
-        },
-        {
-          id: "pass_vip_monthly",
-          title: "VIP Monthly All-Access",
-          subtitle: "Unlimited 24/7 entry • 2 guest passes/month",
-          pricePhp: facility.monthly_sub_price_php ?? 1500,
-          billingKind: "recurring_subscription",
-        },
-      ]
-    : [
-        {
-          id: "court_1hr",
-          title: "1-Hour Court Reservation",
-          subtitle: "Pickleball / Multi-court • Free loaner paddles",
-          pricePhp: facility.court_hourly_price_php ?? 200,
-          billingKind: "one_time_pass",
-          splitNote: "Includes court maintenance fee",
-        },
-        {
-          id: "court_ladder",
-          title: "Open Play Ladder Entry",
-          subtitle: "2 hours rotating King-of-the-court • DUPR rated",
-          pricePhp: 150,
-          billingKind: "one_time_pass",
-        },
-        {
-          id: "court_tournament",
-          title: "Sunset Open Tournament Pass",
-          subtitle: "Official bracket roster entry • Prize pool eligible",
-          pricePhp: 500,
-          billingKind: "one_time_pass",
-          splitNote: "Direct bracket prize pool escrow",
-        },
-      ];
-
-  const activePass = passOptions.find((p) => p.id === selectedPassId) ?? passOptions[0];
+  const options = plans.status === "ready" || plans.status === "preview" ? plans.options : [];
+  const activePass = options.find((p) => p.id === selectedPassId) ?? options[0] ?? null;
 
   // The venue's own amenities and opening hours, not a generic list.
   const amenities: readonly string[] = Array.isArray(facility.amenities)
@@ -123,18 +70,22 @@ export function FacilityDetailSheet({ facility, visible, onClose, onSelectPass }
             <View style={styles.titleSection}>
               <View style={styles.nameRow}>
                 <Text style={[styles.facName, { color: colors.textPrimary }]}>{facility.name}</Text>
-                <View style={styles.ratingBadge}>
-                  <Star size={11} color="#F59E0B" fill="#F59E0B" />
-                  <Text style={styles.ratingText}>
-                    {facility.rating ?? 4.9} ({facility.review_count ?? 148})
-                  </Text>
-                </View>
+                {facility.rating != null && (
+                  <View style={styles.ratingBadge}>
+                    <Star size={11} color="#F59E0B" fill="#F59E0B" />
+                    <Text style={styles.ratingText}>
+                      {facility.rating}
+                      {facility.review_count != null ? ` (${facility.review_count})` : ""}
+                    </Text>
+                  </View>
+                )}
               </View>
 
               <View style={styles.locationRow}>
                 <MapPin size={12} color={colors.textMuted} />
                 <Text style={[styles.addressText, { color: colors.textSecondary }]}>
-                  {facility.address} • {facility.distance}
+                  {facility.address}
+                  {facility.distance ? ` • ${facility.distance}` : ""}
                 </Text>
               </View>
 
@@ -150,9 +101,11 @@ export function FacilityDetailSheet({ facility, visible, onClose, onSelectPass }
                     <View style={styles.greenDot} />
                     <Text style={[styles.occupancyTitle, { color: colors.textPrimary }]}>HOW BUSY</Text>
                   </View>
-                  <Text style={styles.occupancyCounts}>
-                    {inside} / {capacity} people
-                  </Text>
+                  {capacity > 0 && (
+                    <Text style={styles.occupancyCounts}>
+                      {inside} / {capacity} people
+                    </Text>
+                  )}
                 </View>
                 <View style={[styles.meterTrack, { backgroundColor: colors.borderColor }]}>
                   <View
@@ -165,14 +118,15 @@ export function FacilityDetailSheet({ facility, visible, onClose, onSelectPass }
                   />
                 </View>
                 <Text style={[styles.occupancySub, { color: colors.textMuted }]}>
-                  {busyLabel}
-                  {facility.hours ? ` • Open ${facility.hours}` : ""}
+                  {[capacity > 0 ? busyLabel : null, facility.hours ? `Open ${facility.hours}` : null]
+                    .filter(Boolean)
+                    .join(" • ") || "Opening hours not listed"}
                 </Text>
               </View>
             </View>
 
             {/* AMENITIES */}
-            <View style={styles.amenitiesSection}>
+            <View style={[styles.amenitiesSection, amenities.length === 0 && { display: "none" }]}>
               <Text style={[styles.sectionHeader, { color: colors.textMuted }]}>AMENITIES</Text>
               <View style={styles.amenitiesRow}>
                 {amenities.map((item) => (
@@ -190,8 +144,8 @@ export function FacilityDetailSheet({ facility, visible, onClose, onSelectPass }
               </View>
             </View>
 
-            {/* COURT BOOKING GRID (FOR PICKLEBALL / COURT FACILITIES) */}
-            {!isGym && (
+            {/* Court slots are a preview-only sample: the backend has no court bookings to sell yet. */}
+            {!isGym && !live && (
               <PickleballBookingGrid
                 hourlyRate={facility.court_hourly_price_php ?? 200}
                 onConfirmBooking={(slot) => {
@@ -210,43 +164,12 @@ export function FacilityDetailSheet({ facility, visible, onClose, onSelectPass }
               />
             )}
 
-            {/* PASS & PRICING SELECTOR */}
-            <View style={styles.pricingSection}>
-              <Text style={[styles.sectionHeader, { color: colors.textMuted }]}>CHOOSE A PASS</Text>
-              <View style={{ gap: 10 }}>
-                {passOptions.map((opt) => {
-                  const isSelected = opt.id === (activePass?.id ?? "");
-                  return (
-                    <TouchableOpacity
-                      key={opt.id}
-                      onPress={() => setSelectedPassId(opt.id)}
-                      style={[
-                        styles.passCard,
-                        { backgroundColor: colors.bgCardSecondary, borderColor: colors.borderColor },
-                        isSelected && styles.passCardSelected,
-                      ]}
-                    >
-                      <View style={{ flex: 1 }}>
-                        <Text style={[styles.passTitle, { color: colors.textPrimary }]}>{opt.title}</Text>
-                        <Text style={[styles.passSubtitle, { color: colors.textMuted }]}>{opt.subtitle}</Text>
-                      </View>
-                      <View style={styles.passPriceCol}>
-                        <Text style={[styles.passPrice, { color: colors.accentGreen }]}>₱{opt.pricePhp}</Text>
-                        <View
-                          style={[
-                            styles.radioDot,
-                            { borderColor: colors.borderColor },
-                            isSelected && styles.radioDotSelected,
-                          ]}
-                        >
-                          {isSelected && <Check size={10} color="#FFFFFF" strokeWidth={3} />}
-                        </View>
-                      </View>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </View>
+            <VenuePlansSection
+              plans={plans}
+              selectedId={activePass?.id ?? null}
+              onSelect={setSelectedPassId}
+              onRetry={retry}
+            />
           </ScrollView>
 
           {/* CHECKOUT CTA BAR */}
@@ -255,7 +178,7 @@ export function FacilityDetailSheet({ facility, visible, onClose, onSelectPass }
               <View>
                 <Text style={[styles.footerLabel, { color: colors.textMuted }]}>Subtotal</Text>
                 <Text style={[styles.footerPrice, { color: colors.textPrimary }]}>
-                  ₱{activePass.pricePhp.toFixed(2)}
+                  {formatPhp(activePass.pricePhp)}
                 </Text>
               </View>
               <TouchableOpacity
@@ -346,29 +269,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   amenityText: { fontSize: 11, fontWeight: "600" },
-  pricingSection: { marginBottom: 14 },
-  passCard: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderRadius: 14,
-    padding: 14,
-    borderWidth: 1.5,
-  },
-  passCardSelected: { borderColor: "#E11D48", backgroundColor: "rgba(225,29,72,0.06)" },
-  passTitle: { fontSize: 13, fontWeight: "800" },
-  passSubtitle: { fontSize: 11, marginTop: 3 },
-  passPriceCol: { alignItems: "flex-end", gap: 6, marginLeft: 12 },
-  passPrice: { fontSize: 15, fontWeight: "800" },
-  radioDot: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 1.5,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  radioDotSelected: { borderColor: "#E11D48", backgroundColor: "#E11D48" },
   footerBar: {
     flexDirection: "row",
     justifyContent: "space-between",

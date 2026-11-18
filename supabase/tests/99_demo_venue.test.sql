@@ -24,14 +24,23 @@ select tests.ok(
   (select count(*) from public.facility_staff where facility_id = (select id from demo) and user_id = auth.uid() and role = 'OWNER') = 1,
   'the person who asked owns the demo venue');
 select tests.ok(
-  (select count(*) from public.facility_spaces where facility_id = (select id from demo)) = 4
-  and (select count(*) from public.space_bookings where facility_id = (select id from demo)) = 9,
-  'the demo venue has courts and bookings, and asking again does not duplicate them');
+  (select array_agg(business_kind::text || ':' || (id like 'demo\_%')::text order by business_kind)
+     from public.facilities where owner_id = auth.uid())
+  = array['GYM:true', 'CLUB:true', 'COACH:true', 'ORGANIZER:true'],
+  'the demo comes as four businesses, one per workspace, and asking again does not duplicate them');
 select tests.ok(
-  (select array_agg(title || ':' || registered || ':' || checked_in order by starts_at)
-     from public.facility_events((select id from demo)))
-  = array['Members'' Lifting Meet:12:10', 'Saturday Pickleball Open Play:10:0', 'New Year Fun Run 5K:6:0'],
-  'the demo venue has a finished event with attendance and two upcoming ones');
+  (select count(*) from public.facility_spaces s join public.facilities f on f.id = s.facility_id
+    where f.owner_id = auth.uid() and f.business_kind = 'CLUB') = 4
+  and (select count(*) from public.space_bookings b join public.facilities f on f.id = b.facility_id
+        where f.owner_id = auth.uid() and f.business_kind = 'CLUB') = 10
+  and (select count(*) from public.facility_spaces where facility_id = (select id from demo)) = 0,
+  'courts and bookings belong to the demo club, not the gym');
+select tests.ok(
+  (select array_agg(e.title || ':' || e.registered || ':' || e.checked_in order by e.starts_at)
+     from public.facilities f, public.facility_events(f.id) e
+    where f.owner_id = auth.uid() and f.business_kind = 'ORGANIZER')
+  = array['Doubles Ladder Finals:12:10', 'Saturday Pickleball Open Play:10:0', 'New Year Fun Run 5K:6:0'],
+  'the demo organizer has a finished event with attendance and two upcoming ones');
 select tests.ok(
   (select count(*) from public.facility_imported_members where facility_id = (select id from demo)) = 6,
   'the demo venue has imported records');

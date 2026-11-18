@@ -1,5 +1,6 @@
 "use server";
 
+import { BUSINESS_KINDS, WORKSPACES, type BusinessKind } from "sodia-core";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -10,14 +11,13 @@ import { createServerSupabase } from "../../lib/supabase/server";
 export interface FacilityFormState {
   status: "idle" | "form_validation" | "error";
   message?: string;
-  fieldErrors?: Partial<Record<"name" | "registryType" | "address", string>>;
+  fieldErrors?: Partial<Record<"name" | "kind" | "address", string>>;
 }
 
 const createFacilitySchema = z.object({
   name: z.string().trim().min(2, "Name is too short").max(120, "Name is too long"),
-  registryType: z.enum(["COMMERCIAL", "COMMUNITY"], { message: "Choose a facility type" }),
+  kind: z.enum(BUSINESS_KINDS as [BusinessKind, ...BusinessKind[]], { message: "Choose what you are opening" }),
   address: z.string().trim().max(200).default(""),
-  category: z.enum(["Gym", "Fitness studio", "Sports club", "Coaching", "Event organizer"]).catch("Gym"),
 });
 
 // Secure cookies are dropped on plain-http localhost by some browsers, so only require HTTPS in production.
@@ -32,19 +32,19 @@ const activeFacilityCookieOptions = {
 export async function createFacility(_prev: FacilityFormState, formData: FormData): Promise<FacilityFormState> {
   const parsed = createFacilitySchema.safeParse({
     name: formData.get("name"),
-    registryType: formData.get("registryType"),
+    kind: formData.get("kind"),
     address: formData.get("address") ?? "",
-    category: formData.get("category"),
   });
   if (!parsed.success) {
     const fieldErrors: FacilityFormState["fieldErrors"] = {};
     for (const issue of parsed.error.issues) {
       const key = issue.path[0];
-      if (key === "name" || key === "registryType" || key === "address") fieldErrors[key] = issue.message;
+      if (key === "name" || key === "kind" || key === "address") fieldErrors[key] = issue.message;
     }
     return { status: "form_validation", fieldErrors };
   }
 
+  const workspace = WORKSPACES[parsed.data.kind];
   const supabase = await createServerSupabase();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) redirect("/login");
@@ -54,13 +54,15 @@ export async function createFacility(_prev: FacilityFormState, formData: FormDat
     .insert({
       owner_id: auth.user.id,
       name: parsed.data.name,
-      registry_type: parsed.data.registryType,
+      // The workspace decides the registry and the label the app shows; neither is typed in by hand.
+      business_kind: parsed.data.kind,
+      registry_type: workspace.registryType,
       address: parsed.data.address,
-      category: parsed.data.category,
+      category: workspace.category,
     })
     .select("id")
     .single();
-  if (error) return { status: "error", message: "We couldn't create the facility. Please retry." };
+  if (error) return { status: "error", message: "We couldn't create the business. Please retry." };
 
   (await cookies()).set(ACTIVE_FACILITY_COOKIE, data.id, activeFacilityCookieOptions);
   revalidatePath("/");
@@ -82,7 +84,6 @@ export async function selectFacility(facilityId: string): Promise<void> {
   if (data) {
     (await cookies()).set(ACTIVE_FACILITY_COOKIE, facilityId, activeFacilityCookieOptions);
   }
-  revalidatePath("/");
 }
 
 /** Test mode only: give the signed-in person a ready-made demo venue and switch to it. */

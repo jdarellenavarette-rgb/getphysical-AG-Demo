@@ -511,6 +511,7 @@ export type Database = {
         Row: {
           address: string
           amenities: string[] | null
+          business_kind: Database["public"]["Enums"]["business_kind"]
           category: string
           challenge_title: string | null
           coords: Json
@@ -554,6 +555,7 @@ export type Database = {
         Insert: {
           address?: string
           amenities?: string[] | null
+          business_kind: Database["public"]["Enums"]["business_kind"]
           category?: string
           challenge_title?: string | null
           coords?: Json
@@ -597,6 +599,7 @@ export type Database = {
         Update: {
           address?: string
           amenities?: string[] | null
+          business_kind?: Database["public"]["Enums"]["business_kind"]
           category?: string
           challenge_title?: string | null
           coords?: Json
@@ -2315,6 +2318,13 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      derive_business_kind: {
+        Args: {
+          p_category: string
+          p_registry: Database["public"]["Enums"]["registry_type"]
+        }
+        Returns: Database["public"]["Enums"]["business_kind"]
+      }
       disconnect_sandbox_payouts: {
         Args: { p_facility_id: string }
         Returns: undefined
@@ -2673,6 +2683,7 @@ export type Database = {
     }
     Enums: {
       booking_status: "CONFIRMED" | "CANCELLED"
+      business_kind: "GYM" | "STUDIO" | "CLUB" | "COACH" | "ORGANIZER"
       conversation_kind: "DIRECT" | "GROUP" | "FACILITY"
       event_status: "DRAFT" | "PUBLISHED" | "CANCELLED"
       facility_role: "OWNER" | "ADMIN" | "STAFF" | "COACH"
@@ -2818,6 +2829,7 @@ export const Constants = {
   public: {
     Enums: {
       booking_status: ["CONFIRMED", "CANCELLED"],
+      business_kind: ["GYM", "STUDIO", "CLUB", "COACH", "ORGANIZER"],
       conversation_kind: ["DIRECT", "GROUP", "FACILITY"],
       event_status: ["DRAFT", "PUBLISHED", "CANCELLED"],
       facility_role: ["OWNER", "ADMIN", "STAFF", "COACH"],

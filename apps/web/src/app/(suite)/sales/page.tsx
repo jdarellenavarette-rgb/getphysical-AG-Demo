@@ -5,7 +5,7 @@ import { buttonClasses } from "../../../components/ui/button";
 import { Card, CardHeader, CardTitle } from "../../../components/ui/card";
 import { EmptyState, Notice, PageHeader, StatCard } from "../../../components/ui/states";
 import { Table, Td, Th } from "../../../components/ui/table";
-import { canManageFacility, requireSuiteSession } from "../../../lib/active-facility";
+import { canManageFacility, requireSection } from "../../../lib/active-facility";
 import { loadPayoutStatus } from "../../../lib/data/payouts";
 import { loadSales, type OrderStatus } from "../../../lib/data/sales";
 import { formatDateTime, formatPeso } from "../../../lib/format";
@@ -21,7 +21,7 @@ const STATUS: Record<OrderStatus, { label: string; tone: "success" | "warning" |
 };
 
 export default async function SalesPage() {
-  const { active } = await requireSuiteSession();
+  const { active } = await requireSection("sales");
   if (!canManageFacility(active.role)) {
     return (
       <>

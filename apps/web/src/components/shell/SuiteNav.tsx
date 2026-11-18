@@ -21,7 +21,7 @@ import { cn } from "../../lib/utils";
 import { BrandMark } from "./BrandMark";
 
 const ICONS: Record<SuiteNavItem["icon"], LucideIcon> = {
-  overview: Home,
+  home: Home,
   members: Users,
   checkin: ScanLine,
   inbox: MessageSquare,

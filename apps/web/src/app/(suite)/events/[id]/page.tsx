@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../../../components
 import { QrCode } from "../../../../components/ui/qr";
 import { EmptyState, PageHeader, StatCard } from "../../../../components/ui/states";
 import { Table, Td, Th } from "../../../../components/ui/table";
-import { requireSuiteSession } from "../../../../lib/active-facility";
+import { requireSection } from "../../../../lib/active-facility";
 import { loadEventRoster, loadEvents } from "../../../../lib/data/events";
 import { loadQrCode } from "../../../../lib/data/join-code";
 import { formatDateTime } from "../../../../lib/format";
@@ -17,7 +17,7 @@ export const metadata = { title: "Event" };
 
 export default async function EventPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { active } = await requireSuiteSession();
+  const { active } = await requireSection("events");
   // Looked up within the active venue, so an id from another venue is simply not found.
   const event = (await loadEvents(active.id)).find((e) => e.id === id);
   if (!event) notFound();

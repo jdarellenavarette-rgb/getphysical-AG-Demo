@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui
 import { Input, Label } from "../../../components/ui/input";
 import { EmptyState, PageHeader, StatCard } from "../../../components/ui/states";
 import { Table, Td, Th } from "../../../components/ui/table";
-import { requireSuiteSession } from "../../../lib/active-facility";
+import { requireSection } from "../../../lib/active-facility";
 import { loadEvents, type VenueEvent } from "../../../lib/data/events";
 import { formatDateTime } from "../../../lib/format";
 import { createEvent } from "../../actions/events";
@@ -60,7 +60,7 @@ function EventTable({ events, past }: { events: VenueEvent[]; past: boolean }) {
 }
 
 export default async function EventsPage() {
-  const { active } = await requireSuiteSession();
+  const { active } = await requireSection("events");
   const events = await loadEvents(active.id);
   const upcoming = events.filter((e) => !e.isPast && e.status !== "CANCELLED");
   const past = events.filter((e) => e.isPast || e.status === "CANCELLED");

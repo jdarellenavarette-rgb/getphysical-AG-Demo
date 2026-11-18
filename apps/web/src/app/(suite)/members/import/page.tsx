@@ -5,7 +5,7 @@ import { Badge } from "../../../../components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../../components/ui/card";
 import { EmptyState, Notice, PageHeader } from "../../../../components/ui/states";
 import { Table, Td, Th } from "../../../../components/ui/table";
-import { canManageFacility, requireSuiteSession } from "../../../../lib/active-facility";
+import { canManageFacility, requireSection } from "../../../../lib/active-facility";
 import { IMPORT_LIST_LIMIT, loadImportedMembers } from "../../../../lib/data/imports";
 import { formatDate } from "../../../../lib/format";
 import { removeImportedMember } from "../../../actions/imports";
@@ -14,7 +14,7 @@ import { ImportWizard } from "./ImportWizard";
 export const metadata = { title: "Import members" };
 
 export default async function ImportMembersPage() {
-  const { active } = await requireSuiteSession();
+  const { active } = await requireSection("members");
   const canManage = canManageFacility(active.role);
   const { rows, total } = await loadImportedMembers(active.id);
   const today = new Date().toISOString().slice(0, 10);

@@ -12,6 +12,7 @@ import {
   type UserRole,
 } from "sodia-core";
 import type { PassPurchase } from "../lib/passDisplay";
+import { getSupabase } from "../lib/supabase";
 
 export interface MobileEcosystemState {
   currentRole: UserRole;
@@ -21,9 +22,20 @@ export interface MobileEcosystemState {
   /** Clears everything belonging to the previous session (sign-out, or switching account). */
   resetSession: () => void;
   facilities: readonly FacilityRow[];
+  /** True once `facilities` holds venues read from the backend rather than the bundled samples. */
+  venuesLive: boolean;
+  setLiveFacilities: (facilities: readonly FacilityRow[]) => void;
   passes: readonly PassRow[];
   /** Purchase details per pass id, so receipts and statements show real amounts. */
   purchases: Readonly<Record<string, PassPurchase>>;
+  /** Venue name per facility id for the signed-in member's passes. */
+  venueNames: Readonly<Record<string, string>>;
+  /** Replace the wallet with the member's passes as the backend holds them. */
+  setWallet: (wallet: {
+    passes: readonly PassRow[];
+    purchases: Readonly<Record<string, PassPurchase>>;
+    venueNames: Readonly<Record<string, string>>;
+  }) => void;
   posts: readonly SodiaPostRow[];
   challenges: readonly PRChallengeRow[];
   userStory: { image: string; text?: string; createdAt: string } | null;
@@ -105,14 +117,20 @@ export const useEcosystemStore = create<MobileEcosystemState>((set) => ({
       currentRole: "individual",
       passes: [],
       purchases: {},
+      venueNames: {},
       posts: [],
       challenges: [],
       userStory: null,
       activeWorkout: IDLE_WORKOUT,
     }),
-  facilities: SEED_FACILITIES,
+  // Sample venues are for the offline preview only; a build with a backend starts empty and loads real ones.
+  facilities: getSupabase() ? [] : SEED_FACILITIES,
+  venuesLive: false,
+  setLiveFacilities: (facilities) => set({ facilities, venuesLive: true }),
   passes: [],
   purchases: {},
+  venueNames: {},
+  setWallet: ({ passes, purchases, venueNames }) => set({ passes, purchases, venueNames }),
   posts: [],
   challenges: [],
   userStory: null,
@@ -217,6 +235,7 @@ export const useEcosystemStore = create<MobileEcosystemState>((set) => ({
     set({
       passes: SEED_PASSES,
       purchases: SEED_PURCHASES,
+      venueNames: {},
       posts: [...SEED_POSTS],
       challenges: SEED_CHALLENGES,
     }),
@@ -225,6 +244,7 @@ export const useEcosystemStore = create<MobileEcosystemState>((set) => ({
     set({
       passes: [],
       purchases: {},
+      venueNames: {},
       posts: [],
       challenges: [],
       activeWorkout: {

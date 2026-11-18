@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import { describeDeniedScan, describeRedeemResult, parseQrScan, type QrResolveResult } from "sodia-core";
 import { APP_HOSTS } from "../lib/appLinks";
 import { redeemQr, resolveQr, verifyPassScan } from "../services/qrService";
+import { useMemberStore } from "../store/memberStore";
 
 export type ScanState =
   | { phase: "scanning" }
@@ -94,6 +95,8 @@ export function useQrScanner() {
     const good = ["ACCEPTED", "PENDING", "JOINED", "REGISTERED", "ALREADY_MEMBER", "ACTIVE"].includes(
       result.data.status,
     );
+    // Joining a venue changes the member's venues, so "My venues" is reloaded straight away.
+    if (good) void useMemberStore.getState().refreshMemberships();
     setState({
       phase: "result",
       tone: good ? "success" : result.data.status === "PURCHASE_REQUIRED" ? "info" : "error",

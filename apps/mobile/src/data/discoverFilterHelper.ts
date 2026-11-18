@@ -18,6 +18,8 @@ export function filterDiscoverItems(
   allFacilities: FacilityRow[],
   searchQuery: string,
   filters: DiscoverFilterState,
+  /** Sample coaches and clubs are part of the offline preview only. */
+  includeSamples = true,
 ): FilterResult {
   const q = searchQuery.trim().toLowerCase();
   const { category, sport, priceRange, openNowOnly } = filters;
@@ -31,10 +33,12 @@ export function filterDiscoverItems(
     if (category !== "All" && primaryCat !== category) return false;
     if (openNowOnly && !f.is_open) return false;
 
-    const price = f.day_pass_price_php ?? f.court_hourly_price_php ?? 250;
-    if (priceRange === "under_300" && price > 300) return false;
-    if (priceRange === "300_600" && (price < 300 || price > 600)) return false;
-    if (priceRange === "above_600" && price < 600) return false;
+    // A venue without a headline price is only listed when no price range is chosen.
+    const price = f.day_pass_price_php ?? f.court_hourly_price_php;
+    if (priceRange !== "all" && price == null) return false;
+    if (priceRange === "under_300" && price != null && price > 300) return false;
+    if (priceRange === "300_600" && price != null && (price < 300 || price > 600)) return false;
+    if (priceRange === "above_600" && price != null && price < 600) return false;
 
     if (sport !== "All") {
       const textToSearch = `${f.name} ${f.category} ${(f.amenities ?? []).join(" ")}`.toLowerCase();
@@ -46,7 +50,7 @@ export function filterDiscoverItems(
   });
 
   // 2. Filter Coaches
-  const filteredCoaches = EXPANDED_COACHES.filter((c) => {
+  const filteredCoaches = (includeSamples ? EXPANDED_COACHES : []).filter((c) => {
     if (category !== "All" && category !== "Coaches") return false;
     if (priceRange === "under_300") return false;
 
@@ -60,7 +64,7 @@ export function filterDiscoverItems(
   });
 
   // 3. Filter Clubs
-  const filteredClubs = EXPANDED_CLUBS.filter((cl) => {
+  const filteredClubs = (includeSamples ? EXPANDED_CLUBS : []).filter((cl) => {
     if (category !== "All" && category !== "Community Clubs") return false;
     if (priceRange === "300_600" && cl.dropInFeePhp > 600) return false;
     if (priceRange === "above_600" && cl.dropInFeePhp < 600) return false;

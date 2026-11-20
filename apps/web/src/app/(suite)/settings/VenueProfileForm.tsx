@@ -92,6 +92,20 @@ export function VenueProfileForm({
           <FieldError id="venue-capacity-error">{errors.maxCapacity}</FieldError>
         </Label>
         <Label className="sm:col-span-2">
+          About (shown on your profile in the Sodia app)
+          <textarea
+            name="about"
+            defaultValue={venue.about}
+            maxLength={500}
+            rows={3}
+            placeholder="What you offer and who it is for, in a few sentences."
+            aria-invalid={Boolean(errors.about)}
+            aria-describedby="venue-about-error"
+            className="w-full rounded-lg border border-input bg-card px-3 py-2 text-base text-foreground placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-60 aria-[invalid=true]:border-danger"
+          />
+          <FieldError id="venue-about-error">{errors.about}</FieldError>
+        </Label>
+        <Label className="sm:col-span-2">
           Amenities, separated by commas
           <Input
             name="amenities"

@@ -10,7 +10,7 @@ export interface VenueFormState {
   fieldErrors?: Partial<Record<VenueField, string>>;
 }
 
-type VenueField = "name" | "address" | "hours" | "maxCapacity" | "courtHourlyPricePhp" | "amenities";
+type VenueField = "name" | "address" | "hours" | "about" | "maxCapacity" | "courtHourlyPricePhp" | "amenities";
 
 const optionalNumber = (max: number, label: string) =>
   z.preprocess(
@@ -26,6 +26,7 @@ const venueSchema = z.object({
   name: z.string().trim().min(2, "Name is too short").max(120, "Name is too long"),
   address: z.string().trim().max(200, "Address is too long"),
   hours: z.string().trim().max(200, "Opening hours are too long"),
+  about: z.string().trim().max(500, "Keep the description to 500 characters"),
   maxCapacity: optionalNumber(100_000, "Capacity").pipe(z.number().int("Capacity must be a whole number").nullable()),
   courtHourlyPricePhp: optionalNumber(1_000_000, "Court price"),
   amenities: z
@@ -61,6 +62,7 @@ export async function updateVenueProfile(_prev: VenueFormState, formData: FormDa
       name: parsed.data.name,
       address: parsed.data.address,
       hours: parsed.data.hours,
+      about: parsed.data.about || null,
       max_capacity: parsed.data.maxCapacity,
       court_hourly_price_php: parsed.data.courtHourlyPricePhp,
       amenities: parsed.data.amenities,

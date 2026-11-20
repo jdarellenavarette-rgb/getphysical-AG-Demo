@@ -115,6 +115,21 @@ Migration `20261118000009`. Web only; nothing changes for the app.
 | `facility_people(p_facility_id)`                  | One row per person for staff: members, contacts, event sign-ups, people with bookings.                                                                                                            | None.                                                                    |
 | `business_coach_roster(p_facility_id)`            | A coaching business's clients across its coaches. Training figures are returned only to the coach the client accepted.                                                                            | None.                                                                    |
 
+## Business profiles, follows and posts (added 2026-11-20)
+
+Migration `20261118000010`. The suite writes posts today; **the app needs to read them** for the loop to close.
+
+| Contract                           | What it does                                                                                                                            | What mobile needs to build                                                    |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `business_profile(p_facility_id)`  | Public profile: name, kind, about, hours, amenities, follower count, `is_following`, `is_member`, live post count. Callable signed out. | A business profile screen, reached from Discover, a scanned code, or a post.  |
+| `business_follows`                 | Insert `{ facility_id }` to follow, delete own row to unfollow.                                                                         | Follow / Following button on the profile.                                     |
+| `business_feed(p_limit, p_before)` | Live posts from businesses the person follows or is an active member of, newest first, with the linked event or plan.                   | Show these in the Sodia feed, with a button to sign up (event) or buy (plan). |
+| `business_posts`                   | Readable by anyone when live (`PUBLISHED`, or `SCHEDULED` with `publish_at` in the past).                                               | Profile's post list: select by `facility_id`.                                 |
+| `facilities.about`                 | Short description, edited in the suite. `venueService` now selects it.                                                                  | Show on the profile.                                                          |
+| `transfer_facility_ownership`      | Owner hands a business to a teammate.                                                                                                   | None.                                                                         |
+
+Until the app reads the feed, a post can also be sent as an inbox broadcast from the composer, which the app already shows.
+
 ## Mobile status against these contracts (2026-11-18)
 
 Built and covered by automated tests with a stand-in backend; not yet run on a phone against staging.

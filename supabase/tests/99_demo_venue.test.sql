@@ -42,6 +42,12 @@ select tests.ok(
     where f.owner_id = auth.uid() and f.business_kind = 'CLUB'),
   'the demo club lists three walk-ins and two members with court bookings');
 select tests.ok(
+  (select count(*) from public.business_posts p join public.facilities f on f.id = p.facility_id
+    where f.owner_id = auth.uid()) = 8
+  and (select bool_and(a.followers = 9) from public.facilities f, public.business_audience(f.id) a
+        where f.owner_id = auth.uid()),
+  'each demo business has followers and posts, some scheduled');
+select tests.ok(
   (select array_agg(e.title || ':' || e.registered || ':' || e.checked_in order by e.starts_at)
      from public.facilities f, public.facility_events(f.id) e
     where f.owner_id = auth.uid() and f.business_kind = 'ORGANIZER')

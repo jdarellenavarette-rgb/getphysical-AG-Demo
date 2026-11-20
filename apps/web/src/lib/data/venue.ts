@@ -8,13 +8,14 @@ export interface VenueProfile {
   maxCapacity: number | null;
   courtHourlyPricePhp: number | null;
   amenities: string[];
+  about: string;
 }
 
 export async function loadVenueProfile(facilityId: string): Promise<VenueProfile> {
   const supabase = await createServerSupabase();
   const { data, error } = await supabase
     .from("facilities")
-    .select("name, address, hours, max_capacity, court_hourly_price_php, amenities")
+    .select("name, address, hours, about, max_capacity, court_hourly_price_php, amenities")
     .eq("id", facilityId)
     .single();
   if (error) throw new Error("Could not load the venue profile.", { cause: error });
@@ -25,5 +26,6 @@ export async function loadVenueProfile(facilityId: string): Promise<VenueProfile
     maxCapacity: data.max_capacity,
     courtHourlyPricePhp: data.court_hourly_price_php,
     amenities: data.amenities ?? [],
+    about: data.about ?? "",
   };
 }

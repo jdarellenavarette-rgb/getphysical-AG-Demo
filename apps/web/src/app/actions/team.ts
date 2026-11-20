@@ -56,3 +56,26 @@ export async function removeTeamMember(userId: string): Promise<ActionResult> {
     return { ok: false, message: describeDbError(error, KNOWN, "We couldn't remove that person. Please retry.") };
   return { ok: true, message: "Removed from the team." };
 }
+
+/** Hand the business to someone already on the team. The previous owner stays on as an admin. Owner only. */
+export async function makeOwner(userId: string): Promise<ActionResult> {
+  const parsed = z.string().uuid().safeParse(userId);
+  if (!parsed.success) return { ok: false, message: "That person could not be found." };
+  const { active } = await requireSuiteSession();
+  const supabase = await createServerSupabase();
+  const { error } = await supabase.rpc("transfer_facility_ownership", {
+    p_facility_id: active.id,
+    p_new_owner: parsed.data,
+  });
+  if (error) {
+    return {
+      ok: false,
+      message: describeDbError(
+        error,
+        { ...KNOWN, FORBIDDEN: "Only the owner can hand the business over." },
+        "We couldn't hand the business over. Please retry.",
+      ),
+    };
+  }
+  return { ok: true, message: "Ownership handed over." };
+}

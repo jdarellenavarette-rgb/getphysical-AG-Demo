@@ -4,7 +4,7 @@ import { failure, type ServiceResult } from "./serviceResult";
 
 /** Columns the venue list and the venue sheet show (AGENTS.md §4: never `select('*')`). */
 const VENUE_COLUMNS =
-  "id, slug, name, registry, registry_type, business_kind, plan, category, logo, logo_url, cover_image, cover_url, address, lat, lng, hours, amenities, inside_now_count, max_capacity, is_open, day_pass_price_php, monthly_sub_price_php, court_hourly_price_php, free_member_count, rating, review_count, has_active_challenge, challenge_title, sells_passes, sells_memberships, membership_grace_days, created_at";
+  "id, slug, name, registry, registry_type, business_kind, about, plan, category, logo, logo_url, cover_image, cover_url, address, lat, lng, hours, amenities, inside_now_count, max_capacity, is_open, day_pass_price_php, monthly_sub_price_php, court_hourly_price_php, free_member_count, rating, review_count, has_active_challenge, challenge_title, sells_passes, sells_memberships, membership_grace_days, created_at";
 
 const PRODUCT_COLUMNS =
   "id, facility_id, name, description, kind, price_php, duration_days, is_active, sort_order, legacy_sku";

@@ -1,7 +1,7 @@
 "use client";
 
+import { useRefreshAfterAction } from "../../lib/use-server-form";
 import { useState, useTransition, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
 import type { ActionResult } from "../../lib/form-state";
 import { Button, type ButtonProps } from "./button";
 
@@ -26,7 +26,7 @@ export function ActionButton({
   confirm,
   ...rest
 }: ActionButtonProps) {
-  const router = useRouter();
+  const refresh = useRefreshAfterAction();
   const [pending, startTransition] = useTransition();
   const [asking, setAsking] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
@@ -36,7 +36,7 @@ export function ActionButton({
       const outcome = await action();
       setAsking(false);
       setFailure(outcome.ok ? null : outcome.message);
-      if (outcome.ok) router.refresh();
+      if (outcome.ok) refresh();
     });
 
   return (

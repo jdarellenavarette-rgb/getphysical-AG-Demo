@@ -103,6 +103,18 @@ Migration `20261118000008`. `packages/sodia-core/src/workspaces.ts` is the singl
 | `facilities.business_kind` | `GYM`, `STUDIO`, `CLUB`, `COACH`, `ORGANIZER`. Required; filled from registry and category when a client does not send it. Must match the registry (`GYM`/`STUDIO` are `COMMERCIAL`). | Role portals (staff scanner, CoachDash, Organizer Pro) should follow `WORKSPACES`.                                                                                           |
 | Discover                   | `facilities_nearby` returns venues only.                                                                                                                                              | **Changed in the mobile lane:** `venueService.loadVenues` selects `business_kind` and lists `GYM`, `STUDIO`, `CLUB` only. Sample rows and one test fixture gained the field. |
 
+## Contacts (added 2026-11-20)
+
+Migration `20261118000009`. Web only; nothing changes for the app.
+
+| Contract                                          | What it does                                                                                                                                                                                      | Mobile                                                                   |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `facility_imported_members` is the contacts table | A person a business knows who may have no account: imported, or added at the desk (`source`). `user_id` is set once matched.                                                                      | None.                                                                    |
+| Automatic matching                                | When someone joins a business or signs up to its event, a contact there with the same **confirmed** email is linked to their account. Nothing is matched for a business the person has no tie to. | None. A future "is this you?" claim screen could replace email matching. |
+| `space_bookings.contact_id`                       | A desk booking can point at an account, a contact, or just a name.                                                                                                                                | None.                                                                    |
+| `facility_people(p_facility_id)`                  | One row per person for staff: members, contacts, event sign-ups, people with bookings.                                                                                                            | None.                                                                    |
+| `business_coach_roster(p_facility_id)`            | A coaching business's clients across its coaches. Training figures are returned only to the coach the client accepted.                                                                            | None.                                                                    |
+
 ## Mobile status against these contracts (2026-11-18)
 
 Built and covered by automated tests with a stand-in backend; not yet run on a phone against staging.

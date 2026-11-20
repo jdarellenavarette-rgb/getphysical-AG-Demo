@@ -1,7 +1,6 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useServerForm } from "../../../lib/use-server-form";
 import { Button } from "../../../components/ui/button";
 import { FieldError, Input, Label } from "../../../components/ui/input";
 import { Notice } from "../../../components/ui/states";
@@ -19,12 +18,7 @@ export function VenueProfileForm({
   canEdit: boolean;
   showCourtPrice: boolean;
 }) {
-  const [state, action, pending] = useActionState(updateVenueProfile, initialState);
-  const router = useRouter();
-  // Reload the header and other server-rendered parts that show the venue name.
-  useEffect(() => {
-    if (state.status === "success") router.refresh();
-  }, [state, router]);
+  const [state, action, pending] = useServerForm(updateVenueProfile, initialState, { id: "venue-profile" });
   const errors = state.fieldErrors ?? {};
   const price = (value: number | null) => (value == null ? "" : String(value));
 

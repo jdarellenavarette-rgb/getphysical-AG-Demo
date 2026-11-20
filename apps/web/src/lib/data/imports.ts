@@ -8,6 +8,9 @@ export interface ImportedMember {
   phone: string | null;
   planName: string | null;
   expiresOn: string | null;
+  /** Matched to a Sodia account. */
+  onApp: boolean;
+  source: string;
 }
 
 export const IMPORT_LIST_LIMIT = 200;
@@ -17,7 +20,7 @@ export async function loadImportedMembers(facilityId: string): Promise<{ rows: I
   const supabase = await createServerSupabase();
   const { data, count, error } = await supabase
     .from("facility_imported_members")
-    .select("id, full_name, email, phone, plan_name, expires_on", { count: "exact" })
+    .select("id, full_name, email, phone, plan_name, expires_on, user_id, source", { count: "exact" })
     .eq("facility_id", facilityId)
     .order("created_at", { ascending: false })
     .order("full_name")
@@ -32,6 +35,8 @@ export async function loadImportedMembers(facilityId: string): Promise<{ rows: I
       phone: row.phone,
       planName: row.plan_name,
       expiresOn: row.expires_on,
+      onApp: row.user_id !== null,
+      source: row.source,
     })),
   };
 }

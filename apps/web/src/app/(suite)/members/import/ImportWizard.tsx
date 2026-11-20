@@ -1,7 +1,7 @@
 "use client";
 
+import { useRefreshAfterAction } from "../../../../lib/use-server-form";
 import { useMemo, useState, useTransition, type ChangeEvent } from "react";
-import { useRouter } from "next/navigation";
 import { FileUp, Upload } from "lucide-react";
 import { Badge } from "../../../../components/ui/badge";
 import { Button } from "../../../../components/ui/button";
@@ -60,7 +60,7 @@ function review(body: string[][], mapping: Record<Field, number>): Reviewed {
 
 /** Three steps: bring in a spreadsheet, say which column is which, check the result, import. */
 export function ImportWizard() {
-  const router = useRouter();
+  const refresh = useRefreshAfterAction();
   const [text, setText] = useState("");
   const [table, setTable] = useState<string[][] | null>(null);
   const [mapping, setMapping] = useState<Record<Field, number> | null>(null);
@@ -117,7 +117,7 @@ export function ImportWizard() {
       setNotice(outcome);
       if (outcome.ok) {
         startOver();
-        router.refresh();
+        refresh();
       }
     });
   };

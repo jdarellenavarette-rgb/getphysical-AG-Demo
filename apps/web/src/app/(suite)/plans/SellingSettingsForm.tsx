@@ -1,7 +1,6 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useServerForm } from "../../../lib/use-server-form";
 import { Button } from "../../../components/ui/button";
 import { FieldError, Input, Label } from "../../../components/ui/input";
 import type { SellingSettings } from "../../../lib/data/products";
@@ -11,11 +10,7 @@ const initialState: ProductFormState = { status: "idle" };
 
 /** Venue-wide switches. Not every gym sells memberships; some only take walk-ins. */
 export function SellingSettingsForm({ settings, canEdit }: { settings: SellingSettings; canEdit: boolean }) {
-  const [state, action, pending] = useActionState(updateSellingSettings, initialState);
-  const router = useRouter();
-  useEffect(() => {
-    if (state.status === "success") router.refresh();
-  }, [state, router]);
+  const [state, action, pending] = useServerForm(updateSellingSettings, initialState, { id: "selling-settings" });
   const failed = state.status !== "success" && state.status !== "idle";
 
   return (

@@ -35,8 +35,9 @@ export default async function ImportMembersPage() {
 
       <div className="mb-6">
         <Notice tone="warning" role="note">
-          Imported records are for your reference. They are not Sodia accounts: they can&apos;t check in at the door or
-          receive messages until the person joins in the app, and they are not linked to an account automatically yet.
+          Imported records are not Sodia accounts: they can&apos;t check in at the door or receive messages until the
+          person joins in the app. When someone joins with the same confirmed email, their record is matched to their
+          account automatically and appears on their row in your list.
         </Notice>
       </div>
 
@@ -55,7 +56,7 @@ export default async function ImportMembersPage() {
 
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle>Imported records</CardTitle>
+          <CardTitle>Records</CardTitle>
           <Badge>{total} in all</Badge>
         </CardHeader>
         <CardContent className="px-0 pb-0">
@@ -79,7 +80,13 @@ export default async function ImportMembersPage() {
               <tbody>
                 {rows.map((row) => (
                   <tr key={row.id}>
-                    <Td className="font-semibold">{row.fullName}</Td>
+                    <Td>
+                      <p className="font-semibold">{row.fullName}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {row.source === "DESK" ? "Added at the desk" : "Imported"}
+                        {row.onApp ? " · now on the app" : ""}
+                      </p>
+                    </Td>
                     <Td>
                       {row.email ?? row.phone ?? "—"}
                       {row.email && row.phone && <p className="text-sm text-muted-foreground">{row.phone}</p>}

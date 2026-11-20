@@ -15,12 +15,12 @@ import { HomeHeader, SeeAll } from "./shared";
 /** CoachDash home: a coach's day is about individual people, so it opens on who needs them today. */
 export async function CoachHome({ session }: { session: ActiveSuiteSession }) {
   const [desk, setup] = await Promise.all([
-    loadCoachDesk(session.userId),
+    loadCoachDesk(session.userId, session.active),
     loadSetupProgress(session.active.id, "COACH", session.userId),
   ]);
   const nudges = desk.clients.filter((c) => c.needsNudge);
-  const requests = desk.clients.filter((c) => c.awaiting === "COACH");
-  const invited = desk.clients.filter((c) => c.awaiting === "CLIENT");
+  const requests = desk.clients.filter((c) => c.isMine && c.awaiting === "COACH");
+  const invited = desk.clients.filter((c) => c.isMine && c.awaiting === "CLIENT");
   const onTrack = desk.activeCount - nudges.length;
   const trainedThisWeek = desk.clients.reduce((sum, c) => sum + c.workouts7d, 0);
 

@@ -36,6 +36,12 @@ select tests.ok(
   and (select count(*) from public.facility_spaces where facility_id = (select id from demo)) = 0,
   'courts and bookings belong to the demo club, not the gym');
 select tests.ok(
+  (select count(*) filter (where not p.on_app and p.bookings_count > 0) = 3
+          and count(*) filter (where p.on_app and p.bookings_count > 0) = 2
+     from public.facilities f, public.facility_people(f.id) p
+    where f.owner_id = auth.uid() and f.business_kind = 'CLUB'),
+  'the demo club lists three walk-ins and two members with court bookings');
+select tests.ok(
   (select array_agg(e.title || ':' || e.registered || ':' || e.checked_in order by e.starts_at)
      from public.facilities f, public.facility_events(f.id) e
     where f.owner_id = auth.uid() and f.business_kind = 'ORGANIZER')

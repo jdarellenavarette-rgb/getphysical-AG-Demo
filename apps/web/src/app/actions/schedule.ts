@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { requireSuiteSession } from "../../lib/active-facility";
+import { findPerson } from "../../lib/data/people";
 import { describeDbError, type ActionResult, type FormState } from "../../lib/form-state";
 import { createServerSupabase } from "../../lib/supabase/server";
 
@@ -70,7 +71,8 @@ export async function setSpaceActive(spaceId: string, isActive: boolean): Promis
 const bookingSchema = z
   .object({
     spaceId: z.string().uuid("Choose a court"),
-    bookedFor: z.string().trim().min(1, "Say who the booking is for").max(120, "That name is too long"),
+    person: z.union([z.literal(""), z.string().regex(/^[uc]:[0-9a-f-]{36}$/)]),
+    bookedFor: z.string().trim().max(120, "That name is too long"),
     date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Choose a date"),
     start: z.string().regex(/^\d{2}:\d{2}$/, "Choose a start time"),
     minutes: z.coerce.number().int().min(30).max(720),
@@ -84,6 +86,9 @@ const bookingSchema = z
     // Entered in Manila time, like every other time in the suite.
     const startsAt = new Date(`${value.date}T${value.start}:00+08:00`);
     if (Number.isNaN(startsAt.getTime())) ctx.addIssue({ code: "custom", message: "Choose a valid date and time" });
+    if (!value.person && !value.bookedFor) {
+      ctx.addIssue({ code: "custom", message: "Choose who the booking is for, or type a name" });
+    }
     return { ...value, startsAt, endsAt: new Date(startsAt.getTime() + value.minutes * 60_000) };
   });
 
@@ -91,6 +96,7 @@ const bookingSchema = z
 export async function createBooking(_prev: FormState, formData: FormData): Promise<FormState> {
   const parsed = bookingSchema.safeParse({
     spaceId: formData.get("spaceId") ?? "",
+    person: formData.get("person") ?? "",
     bookedFor: formData.get("bookedFor") ?? "",
     date: formData.get("date") ?? "",
     start: formData.get("start") ?? "",
@@ -99,11 +105,19 @@ export async function createBooking(_prev: FormState, formData: FormData): Promi
   });
   if (!parsed.success) return { status: "form_validation", message: parsed.error.issues[0]?.message };
   const { active } = await requireSuiteSession();
+  // A booking for someone on the list is tied to their record, so it shows up next to them.
+  const person = parsed.data.person ? await findPerson(active.id, parsed.data.person) : null;
+  if (parsed.data.person && !person) {
+    return { status: "form_validation", message: "That person is no longer on your list. Choose again." };
+  }
+  const bookedFor = parsed.data.bookedFor || person?.name || "Booking";
   const supabase = await createServerSupabase();
   const { error } = await supabase.from("space_bookings").insert({
     facility_id: active.id,
     space_id: parsed.data.spaceId,
-    booked_for: parsed.data.bookedFor,
+    booked_for: bookedFor,
+    user_id: person?.userId ?? null,
+    contact_id: person?.contactId ?? null,
     note: parsed.data.note,
     starts_at: parsed.data.startsAt.toISOString(),
     ends_at: parsed.data.endsAt.toISOString(),
@@ -115,7 +129,7 @@ export async function createBooking(_prev: FormState, formData: FormData): Promi
       message: describeDbError(error, KNOWN, "We couldn't save the booking. Please retry."),
     };
   }
-  return { status: "success", message: `Booked for ${parsed.data.bookedFor}.` };
+  return { status: "success", message: `Booked for ${bookedFor}.` };
 }
 
 /** Cancel a booking and free the slot. The record is kept. */

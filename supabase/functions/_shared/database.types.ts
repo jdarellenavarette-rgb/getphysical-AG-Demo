@@ -659,9 +659,12 @@ export type Database = {
           full_name: string
           id: string
           imported_by: string | null
+          linked_at: string | null
           notes: string | null
           phone: string | null
           plan_name: string | null
+          source: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -671,9 +674,12 @@ export type Database = {
           full_name: string
           id?: string
           imported_by?: string | null
+          linked_at?: string | null
           notes?: string | null
           phone?: string | null
           plan_name?: string | null
+          source?: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -683,9 +689,12 @@ export type Database = {
           full_name?: string
           id?: string
           imported_by?: string | null
+          linked_at?: string | null
           notes?: string | null
           phone?: string | null
           plan_name?: string | null
+          source?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -698,6 +707,13 @@ export type Database = {
           {
             foreignKeyName: "facility_imported_members_imported_by_fkey"
             columns: ["imported_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "facility_imported_members_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -1843,6 +1859,7 @@ export type Database = {
       space_bookings: {
         Row: {
           booked_for: string
+          contact_id: string | null
           created_at: string
           created_by: string | null
           ends_at: string
@@ -1856,6 +1873,7 @@ export type Database = {
         }
         Insert: {
           booked_for: string
+          contact_id?: string | null
           created_at?: string
           created_by?: string | null
           ends_at: string
@@ -1869,6 +1887,7 @@ export type Database = {
         }
         Update: {
           booked_for?: string
+          contact_id?: string | null
           created_at?: string
           created_by?: string | null
           ends_at?: string
@@ -1881,6 +1900,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "space_bookings_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "facility_imported_members"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "space_bookings_created_by_fkey"
             columns: ["created_by"]
@@ -2161,6 +2187,23 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      business_coach_roster: {
+        Args: { p_facility_id: string }
+        Returns: {
+          awaiting: string
+          client_id: string
+          coach_id: string
+          coach_name: string
+          is_mine: boolean
+          last_workout_at: string
+          name: string
+          since: string
+          status: Database["public"]["Enums"]["membership_status"]
+          username: string
+          workouts_28d: number
+          workouts_7d: number
+        }[]
+      }
       calculate_service_fee: {
         Args: { p_base: number; p_billing_kind: string }
         Returns: number
@@ -2399,6 +2442,28 @@ export type Database = {
           name: string
           pass_valid_until: string
           source: string
+          standing: string
+          user_id: string
+          username: string
+        }[]
+      }
+      facility_people: {
+        Args: { p_facility_id: string }
+        Returns: {
+          bookings_count: number
+          contact_id: string
+          contact_source: string
+          email: string
+          events_count: number
+          first_seen_at: string
+          last_event_at: string
+          name: string
+          next_booking_at: string
+          on_app: boolean
+          person_key: string
+          phone: string
+          plan_expires_on: string
+          plan_name: string
           standing: string
           user_id: string
           username: string

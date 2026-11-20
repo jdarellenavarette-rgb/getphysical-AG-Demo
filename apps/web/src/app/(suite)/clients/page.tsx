@@ -40,10 +40,11 @@ function StatusBadge({ client }: { client: CoachClient }) {
 
 export default async function ClientsPage() {
   const session = await requireSection("clients");
-  const [desk, code] = await Promise.all([loadCoachDesk(session.userId), loadQrCode("COACH", null)]);
+  const [desk, code] = await Promise.all([loadCoachDesk(session.userId, session.active), loadQrCode("COACH", null)]);
   const current = desk.clients.filter((c) => c.status !== "CANCELLED");
   const nudges = desk.clients.filter((c) => c.needsNudge);
-  const waiting = desk.clients.filter((c) => c.status === "PENDING");
+  const waiting = desk.clients.filter((c) => c.isMine && c.status === "PENDING");
+  const hasTeam = desk.clients.some((c) => !c.isMine);
   const atCap = desk.plan === "FREE" && desk.activeCount >= FREE_CLIENT_CAP;
 
   return (
@@ -178,16 +179,21 @@ export default async function ClientsPage() {
                     <Td>
                       <p className="font-semibold">{client.name}</p>
                       {client.username && <p className="text-sm text-muted-foreground">@{client.username}</p>}
+                      {client.coachName && (
+                        <p className="text-sm text-muted-foreground">Coached by {client.coachName}</p>
+                      )}
                     </Td>
-                    <Td>
-                      <StatusBadge client={client} />
+                    <Td>{client.isMine ? <StatusBadge client={client} /> : <Badge>Team client</Badge>}</Td>
+                    <Td>{client.isMine ? lastTrained(client) : "—"}</Td>
+                    <Td className="text-right tabular-nums">
+                      {client.isMine && client.status === "ACTIVE" ? client.workouts7d : "—"}
                     </Td>
-                    <Td>{lastTrained(client)}</Td>
-                    <Td className="text-right tabular-nums">{client.status === "ACTIVE" ? client.workouts7d : "—"}</Td>
-                    <Td className="text-right tabular-nums">{client.status === "ACTIVE" ? client.workouts28d : "—"}</Td>
+                    <Td className="text-right tabular-nums">
+                      {client.isMine && client.status === "ACTIVE" ? client.workouts28d : "—"}
+                    </Td>
                     <Td>{formatDate(client.since)}</Td>
                     <Td className="text-right">
-                      <span className="inline-flex flex-wrap justify-end gap-2">
+                      <span className={client.isMine ? "inline-flex flex-wrap justify-end gap-2" : "hidden"}>
                         {client.awaiting === "COACH" && (
                           <ActionButton
                             action={acceptClient.bind(null, client.id)}
@@ -216,6 +222,8 @@ export default async function ClientsPage() {
         </CardContent>
       </Card>
       <p className="mt-4 text-sm text-muted-foreground">
+        {hasTeam &&
+          "You see who your teammates coach, but a client's training is visible only to the coach they agreed to. "}
         Clients are flagged from the workouts they log. Comparing against a planned programme needs training plans,
         which are not in the suite yet.
       </p>

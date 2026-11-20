@@ -10,6 +10,7 @@ import { Input, Label, Select } from "../../../components/ui/input";
 import { EmptyState, PageHeader } from "../../../components/ui/states";
 import { Table, Td, Th } from "../../../components/ui/table";
 import { canManageFacility, requireSection } from "../../../lib/active-facility";
+import { loadPeople } from "../../../lib/data/people";
 import { loadDaySchedule, parseDay, shiftDay, todayKey } from "../../../lib/data/schedule";
 import { SUITE_TIME_ZONE } from "../../../lib/format";
 import { cancelBooking, createBooking, createSpace, setSpaceActive } from "../../actions/schedule";
@@ -38,7 +39,7 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
   const { date } = await searchParams;
   const { active } = await requireSection("schedule");
   const day = parseDay(date);
-  const schedule = await loadDaySchedule(active.id, day);
+  const [schedule, people] = await Promise.all([loadDaySchedule(active.id, day), loadPeople(active.id)]);
   const canManage = canManageFacility(active.role);
   const inUse = schedule.spaces.filter((space) => space.isActive);
   const wholeCourts = schedule.spaces.filter((space) => !space.parentId);
@@ -128,9 +129,23 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
                       ))}
                     </Select>
                   </Label>
+                  {people.all.length > 0 && (
+                    <Label>
+                      Who is it for
+                      <Select name="person" defaultValue="">
+                        <option value="">Someone not on your list</option>
+                        {people.all.map((person) => (
+                          <option key={person.key} value={person.key}>
+                            {person.name}
+                            {person.onApp ? "" : " (not on the app)"}
+                          </option>
+                        ))}
+                      </Select>
+                    </Label>
+                  )}
                   <Label>
-                    Booked for
-                    <Input name="bookedFor" required maxLength={120} placeholder="Name or group" />
+                    {people.all.length > 0 ? "Name or group (optional if chosen above)" : "Booked for"}
+                    <Input name="bookedFor" maxLength={120} placeholder="Name or group" />
                   </Label>
                   <Label>
                     Date

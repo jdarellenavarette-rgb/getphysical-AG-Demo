@@ -54,7 +54,7 @@ export function Kpi({ label, value, children }: { label: string; value: string; 
   return (
     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
       <p className="text-sm font-medium text-muted-foreground">{label}</p>
-      <p className="mt-2 text-4xl font-bold tracking-tight tabular-nums">{value}</p>
+      <p className="font-display mt-2 text-4xl tabular-nums">{value}</p>
       {children && <div className="mt-2">{children}</div>}
     </div>
   );
@@ -122,7 +122,7 @@ export function GrowthEquation({
         <div className="flex flex-wrap items-end gap-x-5 gap-y-4">
           {terms.map((term) => (
             <div key={term.label}>
-              <p className={cn("text-3xl font-bold tabular-nums", term.tone)}>
+              <p className={cn("font-display text-3xl tabular-nums", term.tone)}>
                 {term.sign}
                 {term.value}
               </p>
@@ -133,7 +133,7 @@ export function GrowthEquation({
             =
           </p>
           <div className="rounded-xl bg-muted px-4 py-2">
-            <p className="text-4xl font-bold tracking-tight tabular-nums">
+            <p className="font-display text-4xl tabular-nums">
               {growth.net > 0 ? "+" : growth.net < 0 ? "−" : ""}
               {Math.abs(growth.net)}
             </p>

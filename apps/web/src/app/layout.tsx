@@ -13,6 +13,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const theme = stored === "dark" || stored === "light" ? stored : undefined;
   return (
     <html lang="en" data-theme={theme}>
+      <head>
+        {/* The two faces every page needs, fetched early so text does not change face after it appears. */}
+        <link rel="preload" href="/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossOrigin="" />
+        <link
+          rel="preload"
+          href="/fonts/archivo-latin-standard-normal.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin=""
+        />
+      </head>
       <body className="min-h-screen">{children}</body>
     </html>
   );

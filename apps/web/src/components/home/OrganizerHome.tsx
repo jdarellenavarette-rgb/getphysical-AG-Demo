@@ -68,7 +68,7 @@ export async function OrganizerHome({ session }: { session: ActiveSuiteSession }
             {next ? (
               <div className="grid gap-4">
                 <div>
-                  <p className="text-2xl font-bold tracking-tight">{next.title}</p>
+                  <p className="font-display text-2xl">{next.title}</p>
                   <p className="mt-1 text-muted-foreground">
                     {[next.sport, formatDateTime(next.startsAt)].filter(Boolean).join(" · ")}
                   </p>

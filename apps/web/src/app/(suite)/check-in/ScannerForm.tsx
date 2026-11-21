@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useSyncExternalStore } from "react";
-import { useRouter } from "next/navigation";
+import { useServerForm } from "../../../lib/use-server-form";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { CircleCheck, CircleX, ScanLine, WifiOff } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { Input, Label } from "../../../components/ui/input";
@@ -19,12 +19,15 @@ function subscribeOnline(callback: () => void) {
   };
 }
 
+/** Every scan, allowed or refused, changes the scan list and counters, so the page reloads after each one. */
+const refreshAfterScan = (state: ScanResultState) => state.status !== "idle";
+
 /**
  * Front-desk scanner. A handheld scanner types the code and presses Enter, so
  * the field keeps focus and clears itself after every scan.
  */
 export function ScannerForm() {
-  const [state, action, pending] = useActionState(verifyScan, initialState);
+  const [state, action, pending] = useServerForm(verifyScan, initialState, { shouldRefresh: refreshAfterScan });
   const inputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const online = useSyncExternalStore(
@@ -33,15 +36,12 @@ export function ScannerForm() {
     () => true,
   );
 
-  const router = useRouter();
   useEffect(() => {
     if (state.status !== "idle") {
       formRef.current?.reset();
-      // Reload the scan list and counters; the live feed also does this when realtime is connected.
-      router.refresh();
     }
     inputRef.current?.focus();
-  }, [state, router]);
+  }, [state]);
 
   const granted = state.status === "granted";
   return (

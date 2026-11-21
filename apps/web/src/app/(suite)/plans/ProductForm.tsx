@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useServerForm } from "../../../lib/use-server-form";
+import { useEffect, useRef } from "react";
 import type { FacilityProduct } from "sodia-core";
 import { Button } from "../../../components/ui/button";
 import { FieldError, Input, Label, Select } from "../../../components/ui/input";
@@ -17,14 +17,14 @@ interface Suggestion {
 }
 
 export function ProductForm({ product, suggestion }: { product?: FacilityProduct; suggestion?: Suggestion }) {
-  const [state, action, pending] = useActionState(saveProduct.bind(null, product?.id ?? null), initialState);
-  const router = useRouter();
+  const [state, action, pending] = useServerForm(saveProduct.bind(null, product?.id ?? null), initialState, {
+    id: `plan-${product?.id ?? "new"}`,
+  });
   const formRef = useRef<HTMLFormElement>(null);
   useEffect(() => {
     if (state.status !== "success") return;
     if (!product) formRef.current?.reset();
-    router.refresh();
-  }, [state, router, product]);
+  }, [state, product]);
 
   const errors = state.fieldErrors ?? {};
   const failed = state.status !== "success" && state.status !== "idle";

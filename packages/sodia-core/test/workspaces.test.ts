@@ -28,6 +28,10 @@ describe("workspaces", () => {
     expect(workspaceHas("ORGANIZER", "OWNER", "clients")).toBe(false);
   });
 
+  it("gives every workspace a way to post to the people who follow it", () => {
+    for (const kind of BUSINESS_KINDS) expect(workspaceHas(kind, "STAFF", "posts")).toBe(true);
+  });
+
   it("hides money and configuration from staff", () => {
     for (const kind of BUSINESS_KINDS) {
       for (const section of ["plans", "payouts", "sales"] as const) {

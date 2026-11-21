@@ -5,7 +5,7 @@ import { Badge } from "../../../components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Input, Label, Select } from "../../../components/ui/input";
 import type { TeamMember } from "../../../lib/data/team";
-import { addTeamMember, removeTeamMember } from "../../actions/team";
+import { addTeamMember, makeOwner, removeTeamMember } from "../../actions/team";
 
 const ROLE_LABELS = { OWNER: "Owner", ADMIN: "Admin", STAFF: "Front desk", COACH: "Coach" } as const;
 
@@ -13,10 +13,13 @@ const ROLE_LABELS = { OWNER: "Owner", ADMIN: "Admin", STAFF: "Front desk", COACH
 export function TeamCard({
   team,
   canManage,
+  isOwner,
   currentUserId,
 }: {
   team: TeamMember[];
   canManage: boolean;
+  /** Only the owner can hand the business to someone else. */
+  isOwner: boolean;
   currentUserId: string;
 }) {
   return (
@@ -43,6 +46,20 @@ export function TeamCard({
               </span>
               <span className="flex items-center gap-3">
                 <Badge tone={member.role === "OWNER" ? "success" : "neutral"}>{ROLE_LABELS[member.role]}</Badge>
+                {isOwner && member.role !== "OWNER" && (
+                  <ActionButton
+                    action={makeOwner.bind(null, member.userId)}
+                    pendingLabel="Handing over…"
+                    variant="ghost"
+                    aria-label={`Make ${member.name} the owner`}
+                    confirm={{
+                      question: `Hand the business to ${member.name}? You stay on as an admin.`,
+                      yes: "Yes, hand over",
+                    }}
+                  >
+                    Make owner
+                  </ActionButton>
+                )}
                 {canManage && member.role !== "OWNER" && member.userId !== currentUserId && (
                   <ActionButton
                     action={removeTeamMember.bind(null, member.userId)}

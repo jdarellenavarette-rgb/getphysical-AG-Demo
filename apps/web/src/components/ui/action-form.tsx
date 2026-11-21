@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState, useEffect, useId, useRef, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { useServerForm } from "../../lib/use-server-form";
+import { useEffect, useId, useRef, type ReactNode } from "react";
 import { idleFormState, type FormState } from "../../lib/form-state";
 import { cn } from "../../lib/utils";
 import { Button } from "./button";
@@ -15,6 +15,8 @@ interface ActionFormProps {
   className?: string;
   /** Keep what was typed after a successful save (settings-style forms). */
   keepValues?: boolean;
+  /** Names the form on its page when the button label can change. Defaults to the label. */
+  id?: string;
 }
 
 /**
@@ -29,16 +31,15 @@ export function ActionForm({
   icon,
   className,
   keepValues = false,
+  id,
 }: ActionFormProps) {
-  const [state, formAction, pending] = useActionState(action, idleFormState);
+  const [state, formAction, pending] = useServerForm(action, idleFormState, { id: id ?? submitLabel });
   const formRef = useRef<HTMLFormElement>(null);
-  const router = useRouter();
   const resultId = useId();
+  // The form clears itself after a save unless it shows settings that should stay on screen.
   useEffect(() => {
-    if (state.status !== "success") return;
-    if (!keepValues) formRef.current?.reset();
-    router.refresh();
-  }, [state, router, keepValues]);
+    if (state.status === "success" && !keepValues) formRef.current?.reset();
+  }, [state, keepValues]);
   const failed = state.status === "form_validation" || state.status === "error";
 
   return (

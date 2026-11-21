@@ -1,7 +1,7 @@
 "use client";
 
+import { useRefreshAfterAction } from "../../../lib/use-server-form";
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "../../../components/ui/button";
 import { setProductActive } from "../../actions/products";
 
@@ -14,7 +14,7 @@ export function ProductToggle({
   productName: string;
   isActive: boolean;
 }) {
-  const router = useRouter();
+  const refresh = useRefreshAfterAction();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   return (
@@ -29,7 +29,7 @@ export function ProductToggle({
             const result = await setProductActive(productId, !isActive);
             if (result.status === "success") {
               setError(null);
-              router.refresh();
+              refresh();
             } else setError(result.message ?? "We couldn't change that.");
           })
         }

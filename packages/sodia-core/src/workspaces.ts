@@ -17,6 +17,7 @@ export type WorkspaceSection =
   | "events"
   | "clients"
   | "inbox"
+  | "posts"
   | "plans"
   | "payouts"
   | "sales"
@@ -57,6 +58,7 @@ const GYMDASH_SECTIONS: WorkspaceSectionEntry[] = [
   { id: "members", label: "Members" },
   { id: "checkin", label: "Check-in" },
   { id: "inbox", label: "Inbox" },
+  { id: "posts", label: "Posts" },
   { id: "plans", label: "Plans and prices", adminOnly: true },
   ...MONEY,
   SETTINGS,
@@ -97,6 +99,7 @@ export const WORKSPACES: Record<BusinessKind, Workspace> = {
       { id: "members", label: "Players" },
       { id: "events", label: "Events" },
       { id: "inbox", label: "Inbox" },
+      { id: "posts", label: "Posts" },
       { id: "plans", label: "Plans and prices", adminOnly: true },
       ...MONEY,
       SETTINGS,
@@ -114,6 +117,7 @@ export const WORKSPACES: Record<BusinessKind, Workspace> = {
       { id: "home", label: "Today" },
       { id: "clients", label: "Clients" },
       { id: "inbox", label: "Inbox" },
+      { id: "posts", label: "Posts" },
       { id: "plans", label: "Packages and prices", adminOnly: true },
       ...MONEY,
       SETTINGS,
@@ -132,6 +136,7 @@ export const WORKSPACES: Record<BusinessKind, Workspace> = {
       { id: "events", label: "Events" },
       { id: "members", label: "Participants" },
       { id: "inbox", label: "Inbox" },
+      { id: "posts", label: "Posts" },
       ...MONEY,
       SETTINGS,
     ],

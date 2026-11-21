@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useServerForm } from "../../../lib/use-server-form";
+import { useEffect, useRef } from "react";
 import { UserPlus } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { Input, Label } from "../../../components/ui/input";
@@ -10,15 +10,12 @@ import { addMember, type MemberFormState } from "../../actions/members";
 const initialState: MemberFormState = { status: "idle" };
 
 export function AddMemberForm() {
-  const [state, action, pending] = useActionState(addMember, initialState);
+  const [state, action, pending] = useServerForm(addMember, initialState, { id: "add-member" });
   const formRef = useRef<HTMLFormElement>(null);
-  const router = useRouter();
-  // On success: clear the field and reload the server-rendered list below.
+  // On success: clear the field. The list below reloads with the save.
   useEffect(() => {
-    if (state.status !== "success") return;
-    formRef.current?.reset();
-    router.refresh();
-  }, [state, router]);
+    if (state.status === "success") formRef.current?.reset();
+  }, [state]);
   const failed = state.status === "form_validation" || state.status === "error";
 
   return (

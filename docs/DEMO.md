@@ -59,6 +59,16 @@ Things to show:
   with 15 minutes to change over. Try booking Pickleball A at 5:30 PM to see the refusal.
 - **CoachDash → Today**: accept the waiting request; see the two clients flagged for a check-in.
 - **Organizer Pro → Events**: open an event, mark people as arrived, show the event code.
+- **One list of people.** Members, Players and Participants now show everyone the business knows: members,
+  people who are not on the app yet (imported or added at the desk), and guests who signed up to an event or hold
+  a booking. In Clubdash → Players, three walk-ins appear with their court bookings; in Organizer Pro →
+  Participants, everyone who signed up; in GymDash → Members, the six imported records.
+- **Add someone who is not on the app** on that page, then book a court for them under Courts ("Who is it for").
+  If they later join with the same confirmed email, their record is matched to their account automatically.
+- **Posts** (every workspace): write as the business, point the post at an event or a plan, post now or schedule
+  it. Each demo business has followers, a live post and a scheduled one. Tick "Also send to members' inboxes" to
+  deliver it in the app today; the profile and feed in the app arrive with the app's next update.
+- **Settings → Team → Make owner** hands the business to a teammate; the previous owner stays as admin.
 - **Settings → Team** and **Open another business**; **Members → Import from a spreadsheet** (GymDash).
 
 Not built yet: entry fees and court payments, booking from the app, tournament brackets and live scoring, training

@@ -123,6 +123,107 @@ export type Database = {
           },
         ]
       }
+      business_follows: {
+        Row: {
+          created_at: string
+          facility_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          facility_id: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          facility_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_follows_facility_id_fkey"
+            columns: ["facility_id"]
+            isOneToOne: false
+            referencedRelation: "facilities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_follows_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_posts: {
+        Row: {
+          author_id: string | null
+          body: string
+          created_at: string
+          event_id: string | null
+          facility_id: string
+          id: string
+          product_id: string | null
+          publish_at: string
+          status: Database["public"]["Enums"]["business_post_status"]
+          updated_at: string
+        }
+        Insert: {
+          author_id?: string | null
+          body: string
+          created_at?: string
+          event_id?: string | null
+          facility_id: string
+          id?: string
+          product_id?: string | null
+          publish_at?: string
+          status?: Database["public"]["Enums"]["business_post_status"]
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string | null
+          body?: string
+          created_at?: string
+          event_id?: string | null
+          facility_id?: string
+          id?: string
+          product_id?: string | null
+          publish_at?: string
+          status?: Database["public"]["Enums"]["business_post_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_posts_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_posts_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_posts_facility_id_fkey"
+            columns: ["facility_id"]
+            isOneToOne: false
+            referencedRelation: "facilities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_posts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "facility_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       challenge_entries: {
         Row: {
           challenge_id: string | null
@@ -509,6 +610,7 @@ export type Database = {
       }
       facilities: {
         Row: {
+          about: string | null
           address: string
           amenities: string[] | null
           business_kind: Database["public"]["Enums"]["business_kind"]
@@ -553,6 +655,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          about?: string | null
           address?: string
           amenities?: string[] | null
           business_kind: Database["public"]["Enums"]["business_kind"]
@@ -597,6 +700,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          about?: string | null
           address?: string
           amenities?: string[] | null
           business_kind?: Database["public"]["Enums"]["business_kind"]
@@ -659,9 +763,12 @@ export type Database = {
           full_name: string
           id: string
           imported_by: string | null
+          linked_at: string | null
           notes: string | null
           phone: string | null
           plan_name: string | null
+          source: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -671,9 +778,12 @@ export type Database = {
           full_name: string
           id?: string
           imported_by?: string | null
+          linked_at?: string | null
           notes?: string | null
           phone?: string | null
           plan_name?: string | null
+          source?: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -683,9 +793,12 @@ export type Database = {
           full_name?: string
           id?: string
           imported_by?: string | null
+          linked_at?: string | null
           notes?: string | null
           phone?: string | null
           plan_name?: string | null
+          source?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -698,6 +811,13 @@ export type Database = {
           {
             foreignKeyName: "facility_imported_members_imported_by_fkey"
             columns: ["imported_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "facility_imported_members_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -1843,6 +1963,7 @@ export type Database = {
       space_bookings: {
         Row: {
           booked_for: string
+          contact_id: string | null
           created_at: string
           created_by: string | null
           ends_at: string
@@ -1856,6 +1977,7 @@ export type Database = {
         }
         Insert: {
           booked_for: string
+          contact_id?: string | null
           created_at?: string
           created_by?: string | null
           ends_at: string
@@ -1869,6 +1991,7 @@ export type Database = {
         }
         Update: {
           booked_for?: string
+          contact_id?: string | null
           created_at?: string
           created_by?: string | null
           ends_at?: string
@@ -1881,6 +2004,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "space_bookings_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "facility_imported_members"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "space_bookings_created_by_fkey"
             columns: ["created_by"]
@@ -2161,6 +2291,50 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      business_audience: {
+        Args: { p_facility_id: string }
+        Returns: {
+          followers: number
+          members: number
+          reach: number
+        }[]
+      }
+      business_coach_roster: {
+        Args: { p_facility_id: string }
+        Returns: {
+          awaiting: string
+          client_id: string
+          coach_id: string
+          coach_name: string
+          is_mine: boolean
+          last_workout_at: string
+          name: string
+          since: string
+          status: Database["public"]["Enums"]["membership_status"]
+          username: string
+          workouts_28d: number
+          workouts_7d: number
+        }[]
+      }
+      business_feed: {
+        Args: { p_before?: string; p_limit?: number }
+        Returns: {
+          body: string
+          business_kind: Database["public"]["Enums"]["business_kind"]
+          business_name: string
+          event_id: string
+          event_starts_at: string
+          event_title: string
+          facility_id: string
+          logo_url: string
+          post_id: string
+          product_id: string
+          product_name: string
+          product_price_php: number
+          published_at: string
+        }[]
+      }
+      business_profile: { Args: { p_facility_id: string }; Returns: Json }
       calculate_service_fee: {
         Args: { p_base: number; p_billing_kind: string }
         Returns: number
@@ -2399,6 +2573,28 @@ export type Database = {
           name: string
           pass_valid_until: string
           source: string
+          standing: string
+          user_id: string
+          username: string
+        }[]
+      }
+      facility_people: {
+        Args: { p_facility_id: string }
+        Returns: {
+          bookings_count: number
+          contact_id: string
+          contact_source: string
+          email: string
+          events_count: number
+          first_seen_at: string
+          last_event_at: string
+          name: string
+          next_booking_at: string
+          on_app: boolean
+          person_key: string
+          phone: string
+          plan_expires_on: string
+          plan_name: string
           standing: string
           user_id: string
           username: string
@@ -2676,6 +2872,10 @@ export type Database = {
         Args: { p_counter: number; p_secret: string }
         Returns: string
       }
+      transfer_facility_ownership: {
+        Args: { p_facility_id: string; p_new_owner: string }
+        Returns: undefined
+      }
       verify_pass_code: {
         Args: { p_at?: string; p_code: string; p_pass_id: string }
         Returns: Json
@@ -2684,6 +2884,7 @@ export type Database = {
     Enums: {
       booking_status: "CONFIRMED" | "CANCELLED"
       business_kind: "GYM" | "STUDIO" | "CLUB" | "COACH" | "ORGANIZER"
+      business_post_status: "SCHEDULED" | "PUBLISHED" | "ARCHIVED"
       conversation_kind: "DIRECT" | "GROUP" | "FACILITY"
       event_status: "DRAFT" | "PUBLISHED" | "CANCELLED"
       facility_role: "OWNER" | "ADMIN" | "STAFF" | "COACH"
@@ -2830,6 +3031,7 @@ export const Constants = {
     Enums: {
       booking_status: ["CONFIRMED", "CANCELLED"],
       business_kind: ["GYM", "STUDIO", "CLUB", "COACH", "ORGANIZER"],
+      business_post_status: ["SCHEDULED", "PUBLISHED", "ARCHIVED"],
       conversation_kind: ["DIRECT", "GROUP", "FACILITY"],
       event_status: ["DRAFT", "PUBLISHED", "CANCELLED"],
       facility_role: ["OWNER", "ADMIN", "STAFF", "COACH"],

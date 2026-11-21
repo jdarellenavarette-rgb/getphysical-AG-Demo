@@ -49,7 +49,12 @@ export default async function SettingsPage() {
               />
             </CardContent>
           </Card>
-          <TeamCard team={team} canManage={canManageFacility(facility.role)} currentUserId={session.userId} />
+          <TeamCard
+            team={team}
+            canManage={canManageFacility(facility.role)}
+            isOwner={facility.role === "OWNER"}
+            currentUserId={session.userId}
+          />
         </div>
         <Card className="self-start">
           <CardHeader>

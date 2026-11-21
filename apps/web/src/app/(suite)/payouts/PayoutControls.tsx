@@ -1,7 +1,7 @@
 "use client";
 
+import { useRefreshAfterAction } from "../../../lib/use-server-form";
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "../../../components/ui/button";
 import type { PayoutState } from "../../../lib/data/payouts";
 import {
@@ -18,14 +18,14 @@ interface PayoutControlsProps {
 }
 
 export function PayoutControls({ state, sandboxAvailable, liveRequested }: PayoutControlsProps) {
-  const router = useRouter();
+  const refresh = useRefreshAfterAction();
   const [pending, startTransition] = useTransition();
   const [result, setResult] = useState<PayoutActionResult | null>(null);
   const run = (action: () => Promise<PayoutActionResult>) =>
     startTransition(async () => {
       const outcome = await action();
       setResult(outcome);
-      if (outcome.ok) router.refresh();
+      if (outcome.ok) refresh();
     });
 
   return (

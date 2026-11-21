@@ -1,7 +1,7 @@
 "use client";
 
+import { useRefreshAfterAction } from "../../../lib/use-server-form";
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import type { MemberStanding } from "sodia-core";
 import { Button } from "../../../components/ui/button";
 import { Select } from "../../../components/ui/input";
@@ -17,7 +17,7 @@ interface MemberActionsProps {
 
 /** Owner/admin actions on one member. Ending a membership asks for confirmation because it revokes door access. */
 export function MemberActions({ userId, memberName, standing, usesPasses }: MemberActionsProps) {
-  const router = useRouter();
+  const refresh = useRefreshAfterAction();
   const [pending, startTransition] = useTransition();
   const [confirmingEnd, setConfirmingEnd] = useState(false);
   const [days, setDays] = useState(30);
@@ -28,7 +28,7 @@ export function MemberActions({ userId, memberName, standing, usesPasses }: Memb
       const outcome = await action();
       setResult(outcome);
       setConfirmingEnd(false);
-      if (outcome.ok) router.refresh();
+      if (outcome.ok) refresh();
     });
 
   return (

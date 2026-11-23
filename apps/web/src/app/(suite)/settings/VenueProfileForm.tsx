@@ -1,6 +1,6 @@
 "use client";
 
-import { useServerForm } from "../../../lib/use-server-form";
+import { submitWith, useServerForm } from "../../../lib/use-server-form";
 import { Button } from "../../../components/ui/button";
 import { FieldError, Input, Label } from "../../../components/ui/input";
 import { Notice } from "../../../components/ui/states";
@@ -23,7 +23,7 @@ export function VenueProfileForm({
   const price = (value: number | null) => (value == null ? "" : String(value));
 
   return (
-    <form action={action} noValidate className="grid gap-4">
+    <form onSubmit={submitWith(action)} noValidate className="grid gap-4">
       {!canEdit && (
         <Notice tone="warning" role="note">
           Only the owner or an admin can change venue details. You can view them here.

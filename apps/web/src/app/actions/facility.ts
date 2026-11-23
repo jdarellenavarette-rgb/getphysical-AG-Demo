@@ -1,6 +1,7 @@
 "use server";
 
 import { BUSINESS_KINDS, WORKSPACES, type BusinessKind } from "sodia-core";
+import { LEGAL_VERSION } from "../../lib/legal/documents";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -11,13 +12,17 @@ import { createServerSupabase } from "../../lib/supabase/server";
 export interface FacilityFormState {
   status: "idle" | "form_validation" | "error";
   message?: string;
-  fieldErrors?: Partial<Record<"name" | "kind" | "address", string>>;
+  fieldErrors?: Partial<Record<"name" | "kind" | "address" | "acceptTerms", string>>;
 }
 
 const createFacilitySchema = z.object({
   name: z.string().trim().min(2, "Name is too short").max(120, "Name is too long"),
   kind: z.enum(BUSINESS_KINDS as [BusinessKind, ...BusinessKind[]], { message: "Choose what you are opening" }),
   address: z.string().trim().max(200).default(""),
+  acceptTerms: z.preprocess(
+    (value) => value === "on",
+    z.boolean().refine((accepted) => accepted, "Agree to the Business Terms to open a business"),
+  ),
 });
 
 // Secure cookies are dropped on plain-http localhost by some browsers, so only require HTTPS in production.
@@ -34,12 +39,14 @@ export async function createFacility(_prev: FacilityFormState, formData: FormDat
     name: formData.get("name"),
     kind: formData.get("kind"),
     address: formData.get("address") ?? "",
+    acceptTerms: formData.get("acceptTerms"),
   });
   if (!parsed.success) {
     const fieldErrors: FacilityFormState["fieldErrors"] = {};
     for (const issue of parsed.error.issues) {
       const key = issue.path[0];
-      if (key === "name" || key === "kind" || key === "address") fieldErrors[key] = issue.message;
+      if (key === "name" || key === "kind" || key === "address" || key === "acceptTerms")
+        fieldErrors[key] = issue.message;
     }
     return { status: "form_validation", fieldErrors };
   }
@@ -59,6 +66,8 @@ export async function createFacility(_prev: FacilityFormState, formData: FormDat
       registry_type: workspace.registryType,
       address: parsed.data.address,
       category: workspace.category,
+      // Which version of the Business Terms was accepted; the database stamps the time.
+      terms_version: LEGAL_VERSION,
     })
     .select("id")
     .single();

@@ -1,7 +1,9 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import Link from "next/link";
+import { useState } from "react";
 import { Building2, ClipboardList, Dumbbell, Medal, Trophy, type LucideIcon } from "lucide-react";
+import { submitWith, useServerForm } from "../../lib/use-server-form";
 import { Button } from "../../components/ui/button";
 import { FieldError, Input, Label } from "../../components/ui/input";
 import { cn } from "../../lib/utils";
@@ -58,11 +60,11 @@ const NAME_LABELS: Record<Kind, string> = {
 
 /** First step of setting up a business: what kind of venue it is and what it is called. */
 export function CreateFacilityForm() {
-  const [state, action, pending] = useActionState(createFacility, initialState);
+  const [state, action, pending] = useServerForm(createFacility, initialState);
   const [kind, setKind] = useState<Kind>("GYM");
 
   return (
-    <form action={action} noValidate className="grid gap-5">
+    <form onSubmit={submitWith(action)} noValidate className="grid gap-5">
       <fieldset>
         <legend className="mb-2 text-sm font-medium">What are you opening?</legend>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -109,6 +111,30 @@ export function CreateFacilityForm() {
         Address (you can add this later)
         <Input name="address" maxLength={200} />
       </Label>
+      <div className="grid gap-1">
+        <label className="flex items-start gap-2.5 text-sm">
+          <input
+            type="checkbox"
+            name="acceptTerms"
+            required
+            aria-invalid={Boolean(state.fieldErrors?.acceptTerms)}
+            aria-describedby="accept-terms-error"
+            className="mt-0.5 size-4 accent-[var(--primary)]"
+          />
+          <span>
+            I have authority to act for this business, and I agree to the{" "}
+            <Link href="/legal/business-terms" target="_blank" className="font-semibold underline underline-offset-4">
+              Business Terms
+            </Link>
+            , including the{" "}
+            <Link href="/legal/refunds" target="_blank" className="font-semibold underline underline-offset-4">
+              Refund and Cancellation Policy
+            </Link>
+            .
+          </span>
+        </label>
+        <FieldError id="accept-terms-error">{state.fieldErrors?.acceptTerms}</FieldError>
+      </div>
       {state.message && (
         <p role="alert" className="text-sm text-danger">
           {state.message}

@@ -29,29 +29,50 @@ Shared foundations: sign-in, roles enforced in the database, append-only sales a
 
 ## 2. Launch strategy
 
-**Launch one product first: GymDash with the Sodia member app, to a small number of pilot gyms.** It is the only workspace where the whole loop exists (join → buy → pay → check in → message), and the only one with a payment path. Clubdash, CoachDash and Organizer Pro stay available as free tools without payments, labelled as early access, and get payments in a later phase.
+**All four workspaces launch together** (decision 4). GymDash is the furthest along: it is the only one where the whole loop exists (join → buy → pay → check in → message). The other three need their core tool finished and payments connected before they are at the same level, so those items move onto the launch path.
 
 Two gates:
 
-- **Pilot launch:** two or three gyms you know personally, real money, you on call. Needs Phases A, B and C.
+- **Pilot launch:** a few businesses of each kind that you know personally, real money, you on call. Needs Phases A, B and C, plus the launch-path items of Phase F marked below.
 - **Public launch:** anyone can sign up. Adds Phases D and E, and a support process.
 
-Everything else improves the product but does not block either gate.
+The alternative, launching GymDash alone first, would reach real money sooner; it remains available if the provider's approval or the mobile work runs long.
 
 ---
 
-## 3. Decisions only you can make
+## 3. Decisions
 
-These block Phase B. Nothing else in the plan should wait on them, so they are listed first.
+Recorded on 2026-11-23.
 
-| #   | Decision                                 | Why it matters                                                                                                                                                                                             | Options                                                                                                                                                                                                                                                                                             |
-| --- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | **Who receives the member's money?**     | Today every payment would land in one Maya account: yours. That makes GetPhysical the merchant of record, which the spec says it must never be, and it means you hold and forward other businesses' money. | (a) A split-payment provider where each gym is a sub-merchant (the spec names Xendit xenPlatform; the code path exists but is untested). (b) Maya with each gym onboarded as its own merchant. (c) Accept being merchant of record for the pilot only, with a written agreement and manual payouts. |
-| 2   | **Which payment provider for the pilot** | Each needs a business account, documents and approval, which takes calendar time outside our control. Start this first.                                                                                    | Maya (already integrated in test mode), Xendit, or both.                                                                                                                                                                                                                                            |
-| 3   | **How GetPhysical earns**                | The fee rules are coded (₱15 per pass, 5% on memberships) and the Free / Pro plans exist as caps (19 club members, 3 coach clients), but there is no way to buy Pro.                                       | Fees only for the pilot; add Pro billing before public launch.                                                                                                                                                                                                                                      |
-| 4   | **Launch scope**                         | Confirms section 2.                                                                                                                                                                                        | GymDash first (recommended), or wait for all four.                                                                                                                                                                                                                                                  |
-| 5   | **Legal entity and documents**           | Terms, privacy notice and a merchant agreement must name a registered entity. Member data falls under the Philippine Data Privacy Act.                                                                     | Engage a lawyer now; it runs in parallel.                                                                                                                                                                                                                                                           |
-| 6   | **Production domain**                    | Sign-in emails, the suite address and app links all use it. `getphysical.fitness` is already used for email.                                                                                               | Confirm the suite's address (for example `business.getphysical.fitness`).                                                                                                                                                                                                                           |
+| #   | Decision                          | Answer                                                                                                                                                                                                                                                             |
+| --- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | Who receives the customer's money | **Split payments.** Each business is paid into its own account with the provider at the moment of payment; GetPhysical receives only its fee and is never the merchant of record.                                                                                  |
+| 2   | Payment provider                  | **Not chosen yet.** Until it is, payments are shown as "under construction" in every workspace. Test mode stays available for demos.                                                                                                                               |
+| 3   | How GetPhysical earns             | See section 3a. To be confirmed after the pilot.                                                                                                                                                                                                                   |
+| 4   | Launch scope                      | **All four workspaces together**, not GymDash first. This makes Phase F (depth per trade) and payments for every kind part of the launch path; see section 5.                                                                                                      |
+| 5   | Legal documents                   | **Drafts are in the product** at `/legal` (terms, privacy notice, business terms, refunds, community rules), marked as drafts. A business accepts the Business Terms when it is opened and the version is recorded. A lawyer must review them before launch.       |
+| 6   | The suite's production address    | **Open.** The web address businesses will type to reach the suite, for example `business.getphysical.fitness`. Sign-in emails, Google sign-in and the links inside the app all have to be set to it, so it should be fixed before production accounts are created. |
+
+### 3a. Pricing recommendation
+
+What comparable products charge (figures are from vendor and comparison pages checked on 2026-11-23; confirm each with the vendor before relying on it):
+
+| Kind of product                       | How they charge                                                                                                                                                                                                                                                                                  |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Gym management software               | A monthly subscription, most between US$50 and US$300. Gymdesk prices by member count (US$75 up to 50 members, US$200 up to 250). PushPress has a free tier, then US$159 and US$229. Mindbody starts around US$79 per location and is quote-based. Card processing is charged to the gym on top. |
+| Court booking marketplaces            | Playtomic takes a percentage of each online booking, deducted before the club is paid, and on some bookings also charges the player a service fee. Its rate is set per contract; a competitor quotes 4%, which is unverified.                                                                    |
+| Coaching apps                         | A monthly subscription in steps by number of active clients: TrueCoach around US$20–30 for 5 clients, US$64–70 for 20, US$107–165 for 50.                                                                                                                                                        |
+| Payment processing in the Philippines | Roughly 3.5% + ₱10–15 for cards, 2.2–2.5% for GCash, 1.5% for QR Ph and Maya QR, before VAT. Xendit does not publish its rates. Nothing was found on what a provider charges for the split itself.                                                                                               |
+
+Recommendation: **free to start, a small fee on each online sale, and a paid plan for businesses that outgrow the free limits.** This is how PushPress (free tier plus fees) and Playtomic (percentage per booking) lower the barrier for small businesses, and it suits owners who will not pay a subscription before they have seen a sale.
+
+1. **Keep the customer-paid service fee, but make it a percentage with a floor and a cap** in place of ₱15 on passes and 5% on memberships. Today ₱15 on a ₱100 day pass is 15%, and 5% on a ₱3,000 membership is ₱150; both ends look wrong to the person paying. A starting point to test: 5%, never less than ₱10, never more than ₱75.
+2. **The business pays the payment provider's processing cost out of its share**, as gyms do with every product in the table. This matters: a card payment on a ₱150 pass costs about ₱20 to process, which is more than GetPhysical's whole fee. If GetPhysical absorbed processing it would lose money on every small sale.
+3. **Steer customers to the cheaper ways to pay** (QR Ph and e-wallets at 1.5–2.5%) by listing them first at checkout.
+4. **Pro plans by workspace, priced for the Philippine market rather than converted from US prices.** Hypotheses to test in the pilot: Coach Pro for more than 3 clients; Club Pro for more than 19 players; a gym plan for more than one location or team seats; organizers pay per event entry only. The amounts should come from pilot conversations, not from this document.
+5. **No fee when no money moves through the app.** Desk sales, free events and free bookings stay free.
+
+Nothing in the code changes until this is confirmed; the fees are in one place (`packages/sodia-core/src/payments.ts` and the checkout function).
 
 ---
 
@@ -127,7 +148,7 @@ The suite side of each exists. Until the app does these, the feature is half a f
 | E4  | Role portals follow the four workspaces (`WORKSPACES` in `sodia-core`)                            | Mobile         | M    |
 | E5  | "Is this you?" for a contact record, replacing email-only matching                                | Mobile + Suite | M    |
 
-### Phase F — Depth per trade · after pilot, ordered by demand
+### Phase F — Depth per trade · F6, F7 and F8 are on the launch path now that all four launch together
 
 | #   | Work                                                                                              | For           | Size |
 | --- | ------------------------------------------------------------------------------------------------- | ------------- | ---- |

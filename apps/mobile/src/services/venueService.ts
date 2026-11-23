@@ -41,6 +41,8 @@ export async function loadVenues(): Promise<ServiceResult<FacilityRow[]>> {
       owner_id: null,
       spatial_assets: null,
       updated_at: null,
+      terms_version: null,
+      terms_accepted_at: null,
     })),
   };
 }

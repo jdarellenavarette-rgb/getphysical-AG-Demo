@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { reloadKeepingPlace, takeFlash } from "./reload";
 
@@ -61,4 +61,17 @@ export function useServerForm<S extends { status: string }>(
     [action, id, router, shouldRefresh, state],
   );
   return [state, formAction, pending || reloading];
+}
+
+/**
+ * Submit handler for a form that uses `useServerForm`. Passing the action to the form's `action`
+ * prop makes React clear every field once the action returns, including when it returned a
+ * validation error, so one mistake wiped everything the person had typed. Submitting this way
+ * leaves the fields alone; forms clear themselves only after a successful save.
+ */
+export function submitWith(formAction: (formData: FormData) => void) {
+  return (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    formAction(new FormData(event.currentTarget));
+  };
 }

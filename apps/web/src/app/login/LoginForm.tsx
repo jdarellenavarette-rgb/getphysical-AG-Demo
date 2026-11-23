@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
+import { submitWith, useServerForm } from "../../lib/use-server-form";
 import { GoogleMark } from "../../components/ui/brand";
 import { Button } from "../../components/ui/button";
 import { FieldError, Input, Label } from "../../components/ui/input";
@@ -10,8 +11,8 @@ const initialState: AuthFormState = { status: "idle" };
 
 export function LoginForm({ next }: { next: string }) {
   const [mode, setMode] = useState<"password" | "magic">("password");
-  const [passwordState, passwordAction, passwordPending] = useActionState(signInWithPassword, initialState);
-  const [magicState, magicAction, magicPending] = useActionState(sendMagicLink, initialState);
+  const [passwordState, passwordAction, passwordPending] = useServerForm(signInWithPassword, initialState);
+  const [magicState, magicAction, magicPending] = useServerForm(sendMagicLink, initialState);
   const state = mode === "password" ? passwordState : magicState;
   const pending = mode === "password" ? passwordPending : magicPending;
 
@@ -31,7 +32,7 @@ export function LoginForm({ next }: { next: string }) {
         <span className="h-px flex-1 bg-border" />
       </div>
 
-      <form action={mode === "password" ? passwordAction : magicAction} noValidate className="grid gap-3">
+      <form onSubmit={submitWith(mode === "password" ? passwordAction : magicAction)} noValidate className="grid gap-3">
         <input type="hidden" name="next" value={next} />
         <Label>
           Email

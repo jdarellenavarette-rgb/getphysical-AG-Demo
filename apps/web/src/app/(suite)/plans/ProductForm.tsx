@@ -1,6 +1,6 @@
 "use client";
 
-import { useServerForm } from "../../../lib/use-server-form";
+import { submitWith, useServerForm } from "../../../lib/use-server-form";
 import { useEffect, useRef } from "react";
 import type { FacilityProduct } from "sodia-core";
 import { Button } from "../../../components/ui/button";
@@ -33,7 +33,7 @@ export function ProductForm({ product, suggestion }: { product?: FacilityProduct
   const lengthLocked = product?.legacy_sku === "DAY_PASS";
 
   return (
-    <form ref={formRef} action={action} noValidate className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <form ref={formRef} onSubmit={submitWith(action)} noValidate className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <Label className="sm:col-span-2">
         Name
         <Input

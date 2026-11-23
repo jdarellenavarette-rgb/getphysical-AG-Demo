@@ -68,6 +68,10 @@ Things to show:
 - **Posts** (every workspace): write as the business, point the post at an event or a plan, post now or schedule
   it. Each demo business has followers, a live post and a scheduled one. Tick "Also send to members' inboxes" to
   deliver it in the app today; the profile and feed in the app arrive with the app's next update.
+- **Payouts**: in the demo gym, test payments are connected. In the other three demo businesses the page shows
+  "Under construction" with how split payments will work and a "Tell me when payments are ready" button.
+- **Terms and policies** at `/legal`, linked from sign-in and Settings. They are drafts. Opening a business requires
+  agreeing to the Business Terms; the accepted version is recorded.
 - **Settings → Team → Make owner** hands the business to a teammate; the previous owner stays as admin.
 - **Settings → Team** and **Open another business**; **Members → Import from a spreadsheet** (GymDash).
 

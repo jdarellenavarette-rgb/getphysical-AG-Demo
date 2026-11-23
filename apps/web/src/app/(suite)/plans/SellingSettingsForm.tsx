@@ -1,6 +1,6 @@
 "use client";
 
-import { useServerForm } from "../../../lib/use-server-form";
+import { submitWith, useServerForm } from "../../../lib/use-server-form";
 import { Button } from "../../../components/ui/button";
 import { FieldError, Input, Label } from "../../../components/ui/input";
 import type { SellingSettings } from "../../../lib/data/products";
@@ -14,7 +14,7 @@ export function SellingSettingsForm({ settings, canEdit }: { settings: SellingSe
   const failed = state.status !== "success" && state.status !== "idle";
 
   return (
-    <form action={action} noValidate className="grid gap-4">
+    <form onSubmit={submitWith(action)} noValidate className="grid gap-4">
       <fieldset disabled={!canEdit || pending} className="grid gap-4">
         <label className="flex items-start gap-3">
           <input

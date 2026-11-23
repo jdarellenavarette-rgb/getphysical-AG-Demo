@@ -38,6 +38,7 @@ export default async function PlansPage({
   const quietWindow = query.window && /^[\dAPM to]{6,20}$/.test(query.window) ? query.window : null;
   const offPeak = query.suggest === "offpeak";
   const canEdit = canManageFacility(active.role);
+  const planWord = active.kind === "COACH" ? "package" : "plan";
   const [products, settings, payouts] = await Promise.all([
     loadProducts(active.id),
     loadSellingSettings(active.id),
@@ -53,9 +54,10 @@ export default async function PlansPage({
       {payouts?.state === "NOT_SET_UP" && (
         <div className="mb-6">
           <Notice tone="warning" role="note">
-            Members can&apos;t buy these plans yet because payouts aren&apos;t set up.{" "}
+            Online payments are under construction. Your {planWord}s are saved and people can see them, but nobody can
+            pay in the app yet; take payment as you do today.{" "}
             <Link href="/payouts" className="font-semibold underline">
-              Set up payouts
+              How payments will work
             </Link>
           </Notice>
         </div>
@@ -63,7 +65,7 @@ export default async function PlansPage({
       {payouts?.state === "TEST_MODE" && (
         <div className="mb-6">
           <Notice tone="warning" role="note">
-            Payments are in test mode: purchases use Maya&apos;s test system and no real money moves.
+            Payments are in test mode: purchases use the payment provider&apos;s test system and no real money moves.
           </Notice>
         </div>
       )}

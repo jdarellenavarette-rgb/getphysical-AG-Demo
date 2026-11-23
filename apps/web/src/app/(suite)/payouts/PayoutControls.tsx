@@ -33,7 +33,7 @@ export function PayoutControls({ state, sandboxAvailable, liveRequested }: Payou
       <div className="flex flex-wrap gap-3">
         {state === "NOT_SET_UP" && sandboxAvailable && (
           <Button disabled={pending} onClick={() => run(connectTestPayouts)}>
-            {pending ? "Connecting…" : "Connect Maya (test mode)"}
+            {pending ? "Connecting…" : "Try it in test mode"}
           </Button>
         )}
         {state === "TEST_MODE" && (
@@ -43,7 +43,7 @@ export function PayoutControls({ state, sandboxAvailable, liveRequested }: Payou
         )}
         {state !== "LIVE" && !liveRequested && (
           <Button variant="secondary" disabled={pending} onClick={() => run(requestLivePayouts)}>
-            Request live payouts
+            Tell me when payments are ready
           </Button>
         )}
       </div>

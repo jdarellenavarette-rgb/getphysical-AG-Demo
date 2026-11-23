@@ -12,6 +12,13 @@ select tests.act_as('bb000000-0000-0000-0000-0000000000a1');
 insert into public.facilities (id, owner_id, name, registry_type, category, business_kind)
 values ('fac_posts', auth.uid(), 'Post Gym', 'COMMERCIAL', 'Gym', 'GYM'),
        ('fac_posts_2', auth.uid(), 'Second Gym', 'COMMERCIAL', 'Gym', 'GYM');
+insert into public.facilities (id, owner_id, name, registry_type, category, business_kind, terms_version, terms_accepted_at)
+values ('fac_terms', auth.uid(), 'Terms Gym', 'COMMERCIAL', 'Gym', 'GYM', 'draft-0.1', '2001-01-01');
+select tests.ok(
+  (select terms_version = 'draft-0.1' and terms_accepted_at > now() - interval '1 minute'
+     from public.facilities where id = 'fac_terms')
+  and (select terms_accepted_at is null from public.facilities where id = 'fac_posts'),
+  'accepting the terms is stamped with the server''s time, and only when a version was accepted');
 select public.add_facility_staff('fac_posts', 'trusted.admin', 'ADMIN');
 update public.facilities set about = 'Open early, lift heavy.' where id = 'fac_posts';
 select tests.reset_actor();

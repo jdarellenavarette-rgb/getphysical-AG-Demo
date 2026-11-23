@@ -130,6 +130,14 @@ Migration `20261118000010`. The suite writes posts today; **the app needs to rea
 
 Until the app reads the feed, a post can also be sent as an inbox broadcast from the composer, which the app already shows.
 
+## Legal documents (added 2026-11-23)
+
+The drafts live in the web app at `/legal` (`/legal/terms`, `/legal/privacy`, `/legal/refunds`, `/legal/community`,
+`/legal/business-terms`) and are readable signed out. The app should link to these same pages from sign-up and
+Settings so there is one copy. The text is in `apps/web/src/lib/legal/documents.ts`. Two statements in the drafts
+depend on the app and need confirming: that an account can be deleted in Settings, and that a post, message or
+account can be reported from its menu.
+
 ## Mobile status against these contracts (2026-11-18)
 
 Built and covered by automated tests with a stand-in backend; not yet run on a phone against staging.

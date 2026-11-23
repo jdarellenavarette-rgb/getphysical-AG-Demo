@@ -1,6 +1,6 @@
 "use client";
 
-import { useServerForm } from "../../lib/use-server-form";
+import { submitWith, useServerForm } from "../../lib/use-server-form";
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { idleFormState, type FormState } from "../../lib/form-state";
 import { cn } from "../../lib/utils";
@@ -43,7 +43,7 @@ export function ActionForm({
   const failed = state.status === "form_validation" || state.status === "error";
 
   return (
-    <form ref={formRef} action={formAction} noValidate aria-describedby={resultId} className="grid gap-2">
+    <form ref={formRef} onSubmit={submitWith(formAction)} noValidate aria-describedby={resultId} className="grid gap-2">
       <div className={cn("flex flex-wrap items-end gap-3", className)}>
         {children}
         <Button type="submit" disabled={pending}>

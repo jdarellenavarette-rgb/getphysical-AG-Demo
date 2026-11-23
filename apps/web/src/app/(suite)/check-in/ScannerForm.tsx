@@ -1,6 +1,6 @@
 "use client";
 
-import { useServerForm } from "../../../lib/use-server-form";
+import { submitWith, useServerForm } from "../../../lib/use-server-form";
 import { useEffect, useRef, useSyncExternalStore } from "react";
 import { CircleCheck, CircleX, ScanLine, WifiOff } from "lucide-react";
 import { Button } from "../../../components/ui/button";
@@ -52,7 +52,7 @@ export function ScannerForm() {
           You&apos;re offline. Cards can&apos;t be checked until the connection returns.
         </Notice>
       )}
-      <form ref={formRef} action={action} className="flex flex-wrap items-end gap-3">
+      <form ref={formRef} onSubmit={submitWith(action)} className="flex flex-wrap items-end gap-3">
         <Label className="min-w-64 flex-1">
           Scan or type the code on the member&apos;s card
           <Input

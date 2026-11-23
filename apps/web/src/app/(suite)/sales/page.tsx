@@ -47,10 +47,20 @@ export default async function SalesPage() {
           )
         }
       />
+      {payouts.state === "NOT_SET_UP" && (
+        <div className="mb-6">
+          <Notice tone="warning" role="note">
+            Online payments are under construction, so there are no app sales to show yet.{" "}
+            <Link href="/payouts" className="font-semibold underline">
+              How payments will work
+            </Link>
+          </Notice>
+        </div>
+      )}
       {payouts.state === "TEST_MODE" && (
         <div className="mb-6">
           <Notice tone="warning" role="note">
-            Payments are in test mode. These orders used Maya&apos;s test system; no real money moved.
+            Payments are in test mode. These orders used the payment provider&apos;s test system; no real money moved.
           </Notice>
         </div>
       )}

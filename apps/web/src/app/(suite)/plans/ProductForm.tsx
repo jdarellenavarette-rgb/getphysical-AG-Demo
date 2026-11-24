@@ -17,9 +17,7 @@ interface Suggestion {
 }
 
 export function ProductForm({ product, suggestion }: { product?: FacilityProduct; suggestion?: Suggestion }) {
-  const [state, action, pending] = useServerForm(saveProduct.bind(null, product?.id ?? null), initialState, {
-    id: `plan-${product?.id ?? "new"}`,
-  });
+  const [state, action, pending] = useServerForm(saveProduct.bind(null, product?.id ?? null), initialState);
   const formRef = useRef<HTMLFormElement>(null);
   useEffect(() => {
     if (state.status !== "success") return;

@@ -15,8 +15,6 @@ interface ActionFormProps {
   className?: string;
   /** Keep what was typed after a successful save (settings-style forms). */
   keepValues?: boolean;
-  /** Names the form on its page when the button label can change. Defaults to the label. */
-  id?: string;
 }
 
 /**
@@ -31,9 +29,8 @@ export function ActionForm({
   icon,
   className,
   keepValues = false,
-  id,
 }: ActionFormProps) {
-  const [state, formAction, pending] = useServerForm(action, idleFormState, { id: id ?? submitLabel });
+  const [state, formAction, pending] = useServerForm(action, idleFormState);
   const formRef = useRef<HTMLFormElement>(null);
   const resultId = useId();
   // The form clears itself after a save unless it shows settings that should stay on screen.

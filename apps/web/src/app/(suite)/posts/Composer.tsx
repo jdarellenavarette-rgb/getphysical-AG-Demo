@@ -23,7 +23,6 @@ export function Composer({ events, plans, planWord, hasMembers }: ComposerProps)
   return (
     <ActionForm
       action={createPost}
-      id="new-post"
       submitLabel={when === "now" ? "Post now" : "Schedule post"}
       pendingLabel={when === "now" ? "Posting…" : "Scheduling…"}
       icon={<Send size={16} aria-hidden />}

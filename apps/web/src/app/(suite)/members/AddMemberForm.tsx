@@ -10,7 +10,7 @@ import { addMember, type MemberFormState } from "../../actions/members";
 const initialState: MemberFormState = { status: "idle" };
 
 export function AddMemberForm() {
-  const [state, action, pending] = useServerForm(addMember, initialState, { id: "add-member" });
+  const [state, action, pending] = useServerForm(addMember, initialState);
   const formRef = useRef<HTMLFormElement>(null);
   // On success: clear the field. The list below reloads with the save.
   useEffect(() => {

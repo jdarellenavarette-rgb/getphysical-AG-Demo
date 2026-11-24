@@ -144,7 +144,6 @@ export default async function SchedulePage({
               <CardContent>
                 <ActionForm
                   key={`${day}-${editing?.id ?? "new"}`}
-                  id="booking"
                   action={createBooking}
                   submitLabel={editing ? "Move booking" : "Book court"}
                   pendingLabel={editing ? "Moving…" : "Booking…"}

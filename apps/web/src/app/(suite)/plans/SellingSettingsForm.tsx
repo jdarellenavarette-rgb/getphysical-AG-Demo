@@ -10,7 +10,7 @@ const initialState: ProductFormState = { status: "idle" };
 
 /** Venue-wide switches. Not every gym sells memberships; some only take walk-ins. */
 export function SellingSettingsForm({ settings, canEdit }: { settings: SellingSettings; canEdit: boolean }) {
-  const [state, action, pending] = useServerForm(updateSellingSettings, initialState, { id: "selling-settings" });
+  const [state, action, pending] = useServerForm(updateSellingSettings, initialState);
   const failed = state.status !== "success" && state.status !== "idle";
 
   return (

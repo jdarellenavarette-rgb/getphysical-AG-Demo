@@ -162,7 +162,6 @@ export default async function ClassPage({ params }: { params: Promise<{ id: stri
               <CardContent>
                 <ActionForm
                   action={addToClass.bind(null, session.id)}
-                  id="add-to-class"
                   submitLabel={session.booked >= session.capacity ? "Add to waitlist" : "Give a place"}
                   pendingLabel="Adding…"
                   icon={<UserPlus size={16} aria-hidden />}

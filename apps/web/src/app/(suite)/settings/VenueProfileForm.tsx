@@ -18,7 +18,7 @@ export function VenueProfileForm({
   canEdit: boolean;
   showCourtPrice: boolean;
 }) {
-  const [state, action, pending] = useServerForm(updateVenueProfile, initialState, { id: "venue-profile" });
+  const [state, action, pending] = useServerForm(updateVenueProfile, initialState);
   const errors = state.fieldErrors ?? {};
   const price = (value: number | null) => (value == null ? "" : String(value));
 

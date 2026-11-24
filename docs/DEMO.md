@@ -68,6 +68,15 @@ Things to show:
 - **Posts** (every workspace): write as the business, point the post at an event or a plan, post now or schedule
   it. Each demo business has followers, a live post and a scheduled one. Tick "Also send to members' inboxes" to
   deliver it in the app today; the profile and feed in the app arrive with the app's next update.
+- **Classes** (GymDash): a week of classes with places taken. Open one with a waitlist, remove someone, and watch
+  the first person waiting move up. Add a class and repeat it weekly.
+- **Courts → Prices** (Clubdash): hourly and peak rates per court. A new booking is priced automatically; "Record
+  payment" marks it paid; "Move" changes its time or court and reprices it.
+- **Events** (Organizer Pro): an entry fee and categories; each entrant shows their category and whether they have
+  paid; "Edit event" changes the details.
+- **Clients → Session packs** (CoachDash): a client part-way through a 10-session pack. "Log session" counts one
+  down; "Undo last" takes it back.
+- **Sales → Taken at the desk** (every workspace): the money recorded in person, by kind, with "Reverse" for mistakes.
 - **Payouts**: in the demo gym, test payments are connected. In the other three demo businesses the page shows
   "Under construction" with how split payments will work and a "Tell me when payments are ready" button.
 - **Terms and policies** at `/legal`, linked from sign-in and Settings. They are drafts. Opening a business requires
@@ -75,8 +84,12 @@ Things to show:
 - **Settings → Team → Make owner** hands the business to a teammate; the previous owner stays as admin.
 - **Settings → Team** and **Open another business**; **Members → Import from a spreadsheet** (GymDash).
 
-Not built yet: entry fees and court payments, booking from the app, tournament brackets and live scoring, training
-plans and form-check video for coaches, the cash till and shift float, staff clock-in, and recurring billing.
+The demo's sample bookings and events were dated when the demo was created, so on a later day the court calendar
+for "today" can be empty and an event may have passed. Use the day arrows, or add new ones.
+
+Not built yet: collecting money online for anything but gym plans, booking from the app, tournament brackets and
+live scoring, training plans and form-check video for coaches, shifts and cash float, staff clock-in, and recurring
+billing.
 Payments work for gyms only (Maya test mode); clubs, coaches and organizers are routed to Stripe, which is not set up.
 
 ## Sodia app (mobile)

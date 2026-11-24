@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import {
   CalendarDays,
@@ -38,6 +38,24 @@ const ICONS: Record<SuiteNavItem["icon"], LucideIcon> = {
   classes: CalendarRange,
 };
 
+/**
+ * Shown on a menu item while its page is being fetched. The suite has no route-level loading
+ * placeholder (it made in-place updates hang; see lib/use-server-form), so this is how a slow page
+ * change is acknowledged.
+ */
+function PendingMark() {
+  const { pending } = useLinkStatus();
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "ml-auto size-2 shrink-0 rounded-full bg-primary transition-opacity",
+        pending ? "animate-pulse opacity-100" : "opacity-0",
+      )}
+    />
+  );
+}
+
 /** Section navigation: a side rail on desktop, a scrollable strip on tablets and phones. */
 export function SuiteNav({ items }: { items: SuiteNavItem[] }) {
   const pathname = usePathname();
@@ -64,6 +82,7 @@ export function SuiteNav({ items }: { items: SuiteNavItem[] }) {
           >
             <Icon size={18} aria-hidden className={cn(active ? "text-primary" : "text-current")} />
             {item.label}
+            <PendingMark />
           </Link>
         );
       })}

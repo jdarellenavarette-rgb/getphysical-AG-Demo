@@ -82,18 +82,18 @@ Nothing in the code changes until this is confirmed; the fees are in one place (
 
 Make it safe to run with real data.
 
-| #   | Work                                                                                                                    | Owner                            | Size |
-| --- | ----------------------------------------------------------------------------------------------------------------------- | -------------------------------- | ---- |
-| A1  | Production Supabase project, separate from staging; migrations applied by CI on merge, never by hand                    | Suite + You (create the project) | M    |
-| A2  | Secrets and environment variables per environment; rotate the Maya test key that appeared in a screenshot               | You + Suite                      | S    |
-| A3  | Error monitoring and alerts on the suite and the server functions                                                       | Suite + You (account)            | S    |
-| A4  | Automated browser tests for each workspace's main path, run in CI                                                       | Suite                            | M    |
-| A5  | Move the gym Overview totals into the database (today a venue with over 1,000 scans in the period gets wrong numbers)   | Suite                            | S    |
-| A6  | Rate limits on username lookups and sign-in; an audit log of staff actions                                              | Suite                            | M    |
-| A7  | Invite staff by email (today they must already have an account and tell you their username)                             | Suite                            | S    |
-| A8  | Production sign-in: Google and Apple configured for the production domain; email sending plan raised from the free tier | You + Suite                      | S    |
-| A9  | Database backups and a tested restore                                                                                   | You + Suite                      | S    |
-| A10 | Find the cause of in-place page updates failing after a save, or confirm the reload approach on production              | Suite                            | S    |
+| #   | Work                                                                                                                                                                                                | Owner                            | Size |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- | ---- |
+| A1  | Production Supabase project, separate from staging; migrations applied by CI on merge, never by hand                                                                                                | Suite + You (create the project) | M    |
+| A2  | Secrets and environment variables per environment; rotate the Maya test key that appeared in a screenshot                                                                                           | You + Suite                      | S    |
+| A3  | Error monitoring and alerts on the suite and the server functions                                                                                                                                   | Suite + You (account)            | S    |
+| A4  | Automated browser tests for each workspace's main path, run in CI                                                                                                                                   | Suite                            | M    |
+| A5  | Move the gym Overview totals into the database (today a venue with over 1,000 scans in the period gets wrong numbers)                                                                               | Suite                            | S    |
+| A6  | Rate limits on username lookups and sign-in; an audit log of staff actions                                                                                                                          | Suite                            | M    |
+| A7  | Invite staff by email (today they must already have an account and tell you their username)                                                                                                         | Suite                            | S    |
+| A8  | Production sign-in: Google and Apple configured for the production domain; email sending plan raised from the free tier                                                                             | You + Suite                      | S    |
+| A9  | Database backups and a tested restore                                                                                                                                                               | You + Suite                      | S    |
+| A10 | ~~Find the cause of in-place page updates failing after a save~~ **Done 2026-11-24:** a route-level loading placeholder was the cause; it is removed and saves and navigation update in place again | Suite                            | S    |
 
 **Done when:** a merge deploys code and database together, a thrown error pages someone, and CI fails if a workspace's main path breaks.
 
@@ -161,6 +161,14 @@ The suite side of each exists. Until the app does these, the feature is half a f
 | F7  | Session packs, session calendar, training plans                                                   | Coaches       | L    |
 | F8  | Entry fees, categories, refunds; brackets and live scoring                                        | Organizers    | L    |
 | F9  | Reviews, referrals                                                                                | All           | M    |
+
+**Built on 2026-11-24** (suite side; money is recorded at the desk, not collected online):
+
+- F1 class timetable with capacity and a waitlist. Booking from the app is a mobile item.
+- F6 court prices with a peak rate, and moving a booking. Recurring bookings and app booking are still to do.
+- F7 session packs. The session calendar and training plans are still to do.
+- F8 entry fees and categories, and editing an event. Brackets, live scoring and refunds are still to do.
+- Part of F3: desk payments with reversals, for every workspace. Shifts and the blind cash count are still to do.
 
 ### Phase G — The ecosystem · after the workspaces have payments
 

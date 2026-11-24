@@ -200,7 +200,6 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
           <CardContent>
             <ActionForm
               action={updateEvent.bind(null, event.id)}
-              id="edit-event"
               submitLabel="Save changes"
               pendingLabel="Saving…"
               keepValues

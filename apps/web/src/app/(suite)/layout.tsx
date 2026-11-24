@@ -2,13 +2,11 @@ import type { ReactNode } from "react";
 import { LogOut } from "lucide-react";
 import { WORKSPACES } from "sodia-core";
 import { FacilitySwitcher } from "../../components/shell/FacilitySwitcher";
-import { RestorePlace } from "../../components/shell/RestorePlace";
 import { SuiteNav } from "../../components/shell/SuiteNav";
 import { ThemeToggle } from "../../components/shell/ThemeToggle";
 import { Button } from "../../components/ui/button";
 import { requireSuiteSession } from "../../lib/active-facility";
 import { suiteNavFor } from "../../lib/nav";
-import { SUITE_SCROLLER_ID } from "../../lib/reload";
 import { signOut } from "../actions/auth";
 
 export const dynamic = "force-dynamic";
@@ -22,9 +20,8 @@ export default async function SuiteLayout({ children }: { children: ReactNode })
 
   return (
     <div className="flex min-h-screen flex-col lg:h-screen lg:flex-row lg:overflow-hidden">
-      <RestorePlace />
       <SuiteNav items={suiteNavFor(facility.role, facility.kind)} />
-      <div id={SUITE_SCROLLER_ID} className="flex min-w-0 flex-1 flex-col lg:overflow-y-auto">
+      <div className="flex min-w-0 flex-1 flex-col lg:overflow-y-auto">
         <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-border bg-card/85 px-4 py-3 backdrop-blur lg:sticky lg:top-0 lg:z-10 lg:px-10">
           <div className="min-w-0">
             {session.facilities.length > 1 ? (

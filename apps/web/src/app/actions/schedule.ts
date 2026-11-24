@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { requireSuiteSession } from "../../lib/active-facility";
 import { findPerson } from "../../lib/data/people";
+import { formatDate } from "../../lib/format";
 import { describeDbError, type ActionResult, type FormState } from "../../lib/form-state";
 import { createServerSupabase } from "../../lib/supabase/server";
 
@@ -77,6 +78,7 @@ const bookingSchema = z
     date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Choose a date"),
     start: z.string().regex(/^\d{2}:\d{2}$/, "Choose a start time"),
     minutes: z.coerce.number().int().min(30).max(720),
+    weeks: z.coerce.number().int().min(1).max(12).catch(1),
     note: z
       .string()
       .trim()
@@ -103,6 +105,7 @@ export async function createBooking(_prev: FormState, formData: FormData): Promi
     date: formData.get("date") ?? "",
     start: formData.get("start") ?? "",
     minutes: formData.get("minutes") ?? "",
+    weeks: formData.get("weeks") ?? "1",
     note: formData.get("note") ?? "",
   });
   if (!parsed.success) return { status: "form_validation", message: parsed.error.issues[0]?.message };
@@ -115,30 +118,54 @@ export async function createBooking(_prev: FormState, formData: FormData): Promi
   const bookedFor = parsed.data.bookedFor || person?.name || "Booking";
   const supabase = await createServerSupabase();
   const when = { starts_at: parsed.data.startsAt.toISOString(), ends_at: parsed.data.endsAt.toISOString() };
+  const row = {
+    facility_id: active.id,
+    space_id: parsed.data.spaceId,
+    booked_for: bookedFor,
+    user_id: person?.userId ?? null,
+    contact_id: person?.contactId ?? null,
+    note: parsed.data.note,
+  };
+  const describe = (error: { code?: string; message: string }): FormState => ({
+    status: error.message.includes("SPACE_") ? "form_validation" : "error",
+    message: describeDbError(error, KNOWN, "We couldn't save the booking. Please retry."),
+  });
+
   // Moving a booking keeps who it is for and what was paid; the price is worked out again.
-  const { error } = parsed.data.bookingId
-    ? await supabase
-        .from("space_bookings")
-        .update({ space_id: parsed.data.spaceId, note: parsed.data.note, ...when })
-        .eq("id", parsed.data.bookingId)
-        .eq("facility_id", active.id)
-    : await supabase.from("space_bookings").insert({
-        facility_id: active.id,
-        space_id: parsed.data.spaceId,
-        booked_for: bookedFor,
-        user_id: person?.userId ?? null,
-        contact_id: person?.contactId ?? null,
-        note: parsed.data.note,
-        ...when,
-      });
-  if (error) {
-    const clash = error.message.includes("SPACE_");
-    return {
-      status: clash ? "form_validation" : "error",
-      message: describeDbError(error, KNOWN, "We couldn't save the booking. Please retry."),
-    };
+  if (parsed.data.bookingId) {
+    const { error } = await supabase
+      .from("space_bookings")
+      .update({ space_id: parsed.data.spaceId, note: parsed.data.note, ...when })
+      .eq("id", parsed.data.bookingId)
+      .eq("facility_id", active.id);
+    return error ? describe(error) : { status: "success", message: "Booking moved." };
   }
-  return { status: "success", message: parsed.data.bookingId ? "Booking moved." : `Booked for ${bookedFor}.` };
+
+  const first = await supabase.from("space_bookings").insert({ ...row, ...when });
+  if (first.error) return describe(first.error);
+  if (parsed.data.weeks === 1) return { status: "success", message: `Booked for ${bookedFor}.` };
+
+  // A weekly booking: the same slot on the following weeks. A week that clashes is skipped and
+  // reported, so one busy week does not stop the rest.
+  const skipped: string[] = [];
+  for (let week = 1; week < parsed.data.weeks; week += 1) {
+    const shift = week * 7 * 86_400_000;
+    const startsAt = new Date(parsed.data.startsAt.getTime() + shift);
+    const { error } = await supabase.from("space_bookings").insert({
+      ...row,
+      starts_at: startsAt.toISOString(),
+      ends_at: new Date(parsed.data.endsAt.getTime() + shift).toISOString(),
+    });
+    if (error?.message.includes("SPACE_")) skipped.push(formatDate(startsAt.toISOString()));
+    else if (error) return describe(error);
+  }
+  const made = parsed.data.weeks - skipped.length;
+  return {
+    status: "success",
+    message:
+      `Booked for ${bookedFor} on ${made} ${made === 1 ? "week" : "weeks"}.` +
+      (skipped.length > 0 ? ` Skipped ${skipped.join(", ")}: the court is already taken then.` : ""),
+  };
 }
 
 /** Cancel a booking and free the slot. The record is kept. */

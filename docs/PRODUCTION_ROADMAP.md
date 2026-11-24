@@ -165,10 +165,16 @@ The suite side of each exists. Until the app does these, the feature is half a f
 **Built on 2026-11-24** (suite side; money is recorded at the desk, not collected online):
 
 - F1 class timetable with capacity and a waitlist. Booking from the app is a mobile item.
-- F6 court prices with a peak rate, and moving a booking. Recurring bookings and app booking are still to do.
-- F7 session packs. The session calendar and training plans are still to do.
-- F8 entry fees and categories, and editing an event. Brackets, live scoring and refunds are still to do.
-- Part of F3: desk payments with reversals, for every workspace. Shifts and the blind cash count are still to do.
+- F6 court prices with a peak rate, moving a booking, and weekly repeat bookings. App booking is still to do.
+- F7 session packs, sessions booked ahead, and training plans compared with logged workouts.
+- F8 entry fees and categories, editing an event, single-elimination brackets with scoring. Refunds are still to do.
+- F3 desk payments with reversals, shifts, and a blind cash count with variance, for every workspace.
+- D4 automations (welcome, pass ending, win-back, event and class reminders, quiet client) and messaging the people on
+  a list. Date-based ones are checked when a team member opens Home. For production, schedule
+  `public.run_all_automations()` (service role) hourly so they do not depend on someone opening the suite.
+
+Still open in phase A: A3 error monitoring needs an account with a monitoring service, and A4 browser tests in CI
+need `@playwright/test` added as a development dependency. Both wait on the owner's approval.
 
 ### Phase G — The ecosystem · after the workspaces have payments
 

@@ -6,6 +6,7 @@ import { ActionForm } from "../../../../components/ui/action-form";
 import { Badge } from "../../../../components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../../components/ui/card";
 import { Input, Label, Select } from "../../../../components/ui/input";
+import { MessagePeople } from "../../../../components/ui/message-people";
 import { PayButton } from "../../../../components/ui/pay-button";
 import { EmptyState, PageHeader, StatCard } from "../../../../components/ui/states";
 import { Table, Td, Th } from "../../../../components/ui/table";
@@ -83,6 +84,11 @@ export default async function ClassPage({ params }: { params: Promise<{ id: stri
         <Card className="self-start lg:col-span-2">
           <CardHeader>
             <CardTitle>Booked</CardTitle>
+            <MessagePeople
+              userIds={booked.flatMap((booking) => (booking.userId ? [booking.userId] : []))}
+              audience="everyone booked"
+              placeholder="A change of room, what to bring, a late start…"
+            />
           </CardHeader>
           <CardContent className="px-0 pb-0">
             {booked.length === 0 ? (

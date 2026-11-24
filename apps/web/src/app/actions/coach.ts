@@ -1,5 +1,6 @@
 "use server";
 
+import { coachPlanDaysSchema } from "sodia-core";
 import { z } from "zod";
 import { describeDbError, type ActionResult, type FormState } from "../../lib/form-state";
 import { requireSuiteSession } from "../../lib/active-facility";
@@ -135,6 +136,7 @@ export async function undoSession(packId: string): Promise<ActionResult> {
     .from("coach_sessions")
     .select("id")
     .eq("pack_id", parsed.data)
+    .lte("held_at", new Date().toISOString())
     .order("held_at", { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -143,4 +145,132 @@ export async function undoSession(packId: string): Promise<ActionResult> {
   const { error } = await supabase.from("coach_sessions").delete().eq("id", last.id);
   if (error) return { ok: false, message: describeDbError(error, {}, "We couldn't undo that. Please retry.") };
   return { ok: true, message: "Last session removed." };
+}
+
+const scheduleSchema = z
+  .object({
+    packId: z.string().uuid("Choose a pack"),
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Choose a date"),
+    time: z.string().regex(/^\d{2}:\d{2}$/, "Choose a time"),
+    note: z.string().trim().max(300, "Keep the note under 300 characters"),
+  })
+  .transform((value, ctx) => {
+    // Times are entered in Manila time, like every other time in the suite.
+    const at = new Date(`${value.date}T${value.time}:00+08:00`);
+    if (Number.isNaN(at.getTime())) ctx.addIssue({ code: "custom", message: "Choose a valid date and time" });
+    else if (at.getTime() <= Date.now())
+      ctx.addIssue({
+        code: "custom",
+        message: "Choose a time in the future. For a session already held, use Log session.",
+      });
+    return { ...value, at };
+  });
+
+/** Book a session for later. It takes one place in the pack straight away. */
+export async function scheduleSession(_prev: FormState, formData: FormData): Promise<FormState> {
+  const parsed = scheduleSchema.safeParse({
+    packId: formData.get("packId") ?? "",
+    date: formData.get("date") ?? "",
+    time: formData.get("time") ?? "",
+    note: formData.get("note") ?? "",
+  });
+  if (!parsed.success) return { status: "form_validation", message: parsed.error.issues[0]?.message };
+  await requireSuiteSession();
+  const supabase = await createServerSupabase();
+  const { error } = await supabase
+    .from("coach_sessions")
+    .insert({ pack_id: parsed.data.packId, held_at: parsed.data.at.toISOString(), note: parsed.data.note || null });
+  if (error) {
+    return {
+      status: "error",
+      message: describeDbError(
+        error,
+        { PACK_USED_UP: "That pack has no sessions left. Sell a new one." },
+        "We couldn't book the session. Please retry.",
+      ),
+    };
+  }
+  return { status: "success", message: "Session booked." };
+}
+
+/** Cancel a session that has not happened yet. Its place goes back to the pack. */
+export async function cancelSession(sessionId: string): Promise<ActionResult> {
+  const parsed = clientIdSchema.safeParse(sessionId);
+  if (!parsed.success) return { ok: false, message: "That session could not be found." };
+  await requireSuiteSession();
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase
+    .from("coach_sessions")
+    .delete()
+    .eq("id", parsed.data)
+    .gt("held_at", new Date().toISOString())
+    .select("id");
+  if (error) return { ok: false, message: describeDbError(error, {}, "We couldn't cancel that. Please retry.") };
+  if (data.length === 0) return { ok: false, message: "That session has already happened or was cancelled." };
+  return { ok: true, message: "Session cancelled. Its place is back in the pack." };
+}
+
+/**
+ * Set a client's training week. A client has one current plan with each coach, so saving a new
+ * one ends the old one; ended plans are kept.
+ */
+export async function savePlan(_prev: FormState, formData: FormData): Promise<FormState> {
+  const client = clientIdSchema.safeParse(formData.get("clientId") ?? "");
+  if (!client.success) return { status: "form_validation", message: "Choose a client" };
+  const title = z
+    .string()
+    .trim()
+    .min(1, "Give the plan a name")
+    .max(80, "That name is too long")
+    .safeParse(formData.get("title") ?? "");
+  if (!title.success) return { status: "form_validation", message: title.error.issues[0]?.message };
+  const days = coachPlanDaysSchema.safeParse(
+    [0, 1, 2, 3, 4, 5, 6]
+      .filter((weekday) => formData.get(`day${weekday}`) === "on")
+      .map((weekday) => ({ weekday, focus: String(formData.get(`focus${weekday}`) ?? "") })),
+  );
+  if (!days.success) {
+    return {
+      status: "form_validation",
+      message: "Tick at least one training day, and keep each focus under 80 characters.",
+    };
+  }
+  const { userId } = await requireSuiteSession();
+  const supabase = await createServerSupabase();
+  const { error: endError } = await supabase
+    .from("coach_plans")
+    .update({ ended_at: new Date().toISOString() })
+    .eq("coach_id", userId)
+    .eq("client_id", client.data)
+    .is("ended_at", null);
+  if (endError) return { status: "error", message: "We couldn't replace the current plan. Please retry." };
+  const { error } = await supabase
+    .from("coach_plans")
+    .insert({ client_id: client.data, title: title.data, days: days.data });
+  if (error) {
+    return {
+      status: "error",
+      message: describeDbError(
+        error,
+        { NOT_A_CLIENT: "That person is not on your client list." },
+        "We couldn't save the plan. Please retry.",
+      ),
+    };
+  }
+  return { status: "success", message: `Plan saved: ${days.data.length} training days a week.` };
+}
+
+/** Stop following a plan. */
+export async function endPlan(planId: string): Promise<ActionResult> {
+  const parsed = clientIdSchema.safeParse(planId);
+  if (!parsed.success) return { ok: false, message: "That plan could not be found." };
+  const { userId } = await requireSuiteSession();
+  const supabase = await createServerSupabase();
+  const { error } = await supabase
+    .from("coach_plans")
+    .update({ ended_at: new Date().toISOString() })
+    .eq("id", parsed.data)
+    .eq("coach_id", userId);
+  if (error) return { ok: false, message: describeDbError(error, {}, "We couldn't end the plan. Please retry.") };
+  return { ok: true, message: "Plan ended." };
 }

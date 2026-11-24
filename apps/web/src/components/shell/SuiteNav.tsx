@@ -3,6 +3,7 @@
 import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Banknote,
   CalendarDays,
   CalendarRange,
   ClipboardList,
@@ -36,6 +37,7 @@ const ICONS: Record<SuiteNavItem["icon"], LucideIcon> = {
   events: Trophy,
   schedule: CalendarDays,
   classes: CalendarRange,
+  till: Banknote,
 };
 
 /**

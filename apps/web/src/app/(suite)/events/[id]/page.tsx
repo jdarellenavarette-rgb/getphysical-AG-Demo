@@ -9,12 +9,14 @@ import { EmptyState, PageHeader, StatCard } from "../../../../components/ui/stat
 import { Table, Td, Th } from "../../../../components/ui/table";
 import { requireSection } from "../../../../lib/active-facility";
 import { loadDeskPaid, paidKey } from "../../../../lib/data/desk";
-import { loadEventRoster, loadEvents } from "../../../../lib/data/events";
+import { loadEventBracket, loadEventRoster, loadEvents } from "../../../../lib/data/events";
 import { loadQrCode } from "../../../../lib/data/join-code";
 import { SUITE_TIME_ZONE, formatDateTime, formatPeso } from "../../../../lib/format";
 import { ActionForm } from "../../../../components/ui/action-form";
 import { Input, Label } from "../../../../components/ui/input";
+import { MessagePeople } from "../../../../components/ui/message-people";
 import { PayButton } from "../../../../components/ui/pay-button";
+import { BracketCard } from "./BracketCard";
 import { cancelEvent, setAttendance, updateEvent } from "../../../actions/events";
 
 export const metadata = { title: "Event" };
@@ -33,10 +35,11 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
   // Looked up within the active venue, so an id from another venue is simply not found.
   const event = (await loadEvents(active.id)).find((e) => e.id === id);
   if (!event) notFound();
-  const [roster, code, paid] = await Promise.all([
+  const [roster, code, paid, bracket] = await Promise.all([
     loadEventRoster(event.id),
     loadQrCode("EVENT", event.id),
     loadDeskPaid(active.id, "EVENT"),
+    loadEventBracket(active.id, event.id),
   ]);
   const going = roster.filter((r) => r.status === "REGISTERED");
   const cancelled = event.status === "CANCELLED";
@@ -105,6 +108,11 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Sign-up list</CardTitle>
+            <MessagePeople
+              userIds={going.map((person) => person.userId)}
+              audience="everyone signed up"
+              placeholder="A change of time, where to park, what to bring…"
+            />
           </CardHeader>
           <CardContent className="px-0 pb-0">
             {going.length === 0 ? (
@@ -192,6 +200,14 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
         </Card>
       </div>
 
+      <BracketCard
+        eventId={event.id}
+        bracket={bracket}
+        categories={event.categories}
+        signedUp={going.length}
+        locked={cancelled}
+      />
+
       {!cancelled && !event.isPast && (
         <Card className="mt-6">
           <CardHeader>
@@ -254,7 +270,7 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
               </Label>
             </ActionForm>
             <p className="mt-2 text-sm text-muted-foreground">
-              Changing the time does not notify anyone. Post about it or message the people signed up.
+              Changing the time does not notify anyone. Use “Message everyone signed up” above to tell them.
             </p>
           </CardContent>
         </Card>

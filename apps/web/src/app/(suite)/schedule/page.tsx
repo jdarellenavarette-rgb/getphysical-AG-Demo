@@ -208,6 +208,19 @@ export default async function SchedulePage({
                       </Select>
                     </Label>
                   </div>
+                  {!editing && (
+                    <Label>
+                      Repeat
+                      <Select name="weeks" defaultValue={1}>
+                        <option value={1}>Just this once</option>
+                        {[4, 8, 12].map((weeks) => (
+                          <option key={weeks} value={weeks}>
+                            Every week for {weeks} weeks
+                          </option>
+                        ))}
+                      </Select>
+                    </Label>
+                  )}
                   <Label>
                     Note (optional)
                     <Input

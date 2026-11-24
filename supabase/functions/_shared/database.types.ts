@@ -123,6 +123,45 @@ export type Database = {
           },
         ]
       }
+      automation_sends: {
+        Row: {
+          facility_id: string
+          kind: string
+          sent_at: string
+          subject_key: string
+          user_id: string
+        }
+        Insert: {
+          facility_id: string
+          kind: string
+          sent_at?: string
+          subject_key: string
+          user_id: string
+        }
+        Update: {
+          facility_id?: string
+          kind?: string
+          sent_at?: string
+          subject_key?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_sends_facility_id_fkey"
+            columns: ["facility_id"]
+            isOneToOne: false
+            referencedRelation: "facilities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "automation_sends_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_follows: {
         Row: {
           created_at: string
@@ -508,6 +547,51 @@ export type Database = {
           },
         ]
       }
+      coach_plans: {
+        Row: {
+          client_id: string
+          coach_id: string
+          created_at: string
+          days: Json
+          ended_at: string | null
+          id: string
+          title: string
+        }
+        Insert: {
+          client_id: string
+          coach_id?: string
+          created_at?: string
+          days: Json
+          ended_at?: string | null
+          id?: string
+          title: string
+        }
+        Update: {
+          client_id?: string
+          coach_id?: string
+          created_at?: string
+          days?: Json
+          ended_at?: string | null
+          id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_plans_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coach_plans_coach_id_fkey"
+            columns: ["coach_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coach_sessions: {
         Row: {
           created_at: string
@@ -720,6 +804,7 @@ export type Database = {
           payer_name: string | null
           ref_id: string | null
           reverses: string | null
+          shift_id: string | null
           taken_by: string | null
           user_id: string | null
         }
@@ -734,6 +819,7 @@ export type Database = {
           payer_name?: string | null
           ref_id?: string | null
           reverses?: string | null
+          shift_id?: string | null
           taken_by?: string | null
           user_id?: string | null
         }
@@ -748,6 +834,7 @@ export type Database = {
           payer_name?: string | null
           ref_id?: string | null
           reverses?: string | null
+          shift_id?: string | null
           taken_by?: string | null
           user_id?: string | null
         }
@@ -767,6 +854,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "desk_payments_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "desk_shifts"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "desk_payments_taken_by_fkey"
             columns: ["taken_by"]
             isOneToOne: false
@@ -776,6 +870,57 @@ export type Database = {
           {
             foreignKeyName: "desk_payments_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      desk_shifts: {
+        Row: {
+          closed_at: string | null
+          counted_cash: number | null
+          expected_cash: number | null
+          facility_id: string
+          id: string
+          note: string | null
+          opened_at: string
+          opened_by: string
+          opening_float: number
+        }
+        Insert: {
+          closed_at?: string | null
+          counted_cash?: number | null
+          expected_cash?: number | null
+          facility_id: string
+          id?: string
+          note?: string | null
+          opened_at?: string
+          opened_by?: string
+          opening_float: number
+        }
+        Update: {
+          closed_at?: string | null
+          counted_cash?: number | null
+          expected_cash?: number | null
+          facility_id?: string
+          id?: string
+          note?: string | null
+          opened_at?: string
+          opened_by?: string
+          opening_float?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "desk_shifts_facility_id_fkey"
+            columns: ["facility_id"]
+            isOneToOne: false
+            referencedRelation: "facilities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "desk_shifts_opened_by_fkey"
+            columns: ["opened_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -836,6 +981,7 @@ export type Database = {
       }
       events: {
         Row: {
+          bracket: Json | null
           capacity: number | null
           categories: string[]
           created_at: string | null
@@ -852,6 +998,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          bracket?: Json | null
           capacity?: number | null
           categories?: string[]
           created_at?: string | null
@@ -868,6 +1015,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          bracket?: Json | null
           capacity?: number | null
           categories?: string[]
           created_at?: string | null
@@ -1054,6 +1202,38 @@ export type Database = {
             columns: ["owner_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      facility_automations: {
+        Row: {
+          body: string
+          enabled: boolean
+          facility_id: string
+          kind: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          enabled?: boolean
+          facility_id: string
+          kind: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          enabled?: boolean
+          facility_id?: string
+          kind?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "facility_automations_facility_id_fkey"
+            columns: ["facility_id"]
+            isOneToOne: false
+            referencedRelation: "facilities"
             referencedColumns: ["id"]
           },
         ]
@@ -2663,6 +2843,10 @@ export type Database = {
         Args: { p_booking_id: string }
         Returns: undefined
       }
+      close_desk_shift: {
+        Args: { p_counted_cash: number; p_note?: string; p_shift_id: string }
+        Returns: Json
+      }
       close_payment_order: {
         Args: {
           p_order_id: string
@@ -3052,6 +3236,10 @@ export type Database = {
         Args: { p_conversation_id: string }
         Returns: undefined
       }
+      message_people: {
+        Args: { p_body: string; p_facility_id: string; p_user_ids: string[] }
+        Returns: number
+      }
       my_memberships: {
         Args: never
         Returns: {
@@ -3133,6 +3321,8 @@ export type Database = {
         }
         Returns: Json
       }
+      run_all_automations: { Args: never; Returns: number }
+      run_automations: { Args: { p_facility_id: string }; Returns: number }
       send_crm_broadcast: {
         Args: {
           p_audience: string

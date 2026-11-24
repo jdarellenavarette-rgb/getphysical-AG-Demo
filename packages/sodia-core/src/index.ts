@@ -16,3 +16,4 @@ export * from "./payments";
 export * from "./qr";
 export * from "./qrEncode";
 export * from "./workspaces";
+export * from "./bracket";

@@ -1,4 +1,5 @@
 import "server-only";
+import { bracketSchema, type Bracket } from "sodia-core";
 import { createServerSupabase } from "../supabase/server";
 
 export interface VenueEvent {
@@ -67,4 +68,18 @@ export async function loadEventRoster(eventId: string): Promise<EventAttendee[]>
     registeredAt: row.registered_at,
     checkedInAt: row.checked_in_at,
   }));
+}
+
+/** The event's draw, when one has been made. Anything that does not match the contract is ignored. */
+export async function loadEventBracket(facilityId: string, eventId: string): Promise<Bracket | null> {
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase
+    .from("events")
+    .select("bracket")
+    .eq("id", eventId)
+    .eq("facility_id", facilityId)
+    .maybeSingle();
+  if (error) throw new Error("Could not load the bracket.", { cause: error });
+  const parsed = bracketSchema.safeParse(data?.bracket);
+  return parsed.success ? parsed.data : null;
 }

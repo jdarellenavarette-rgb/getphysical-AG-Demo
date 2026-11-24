@@ -12,6 +12,7 @@ export const SECTION_HREFS: Record<WorkspaceSection, string> = {
   checkin: "/check-in",
   schedule: "/schedule",
   classes: "/classes",
+  till: "/till",
   events: "/events",
   clients: "/clients",
   inbox: "/inbox",

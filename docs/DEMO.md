@@ -87,9 +87,17 @@ Things to show:
 The demo's sample bookings and events were dated when the demo was created, so on a later day the court calendar
 for "today" can be empty and an event may have passed. Use the day arrows, or add new ones.
 
-Not built yet: collecting money online for anything but gym plans, booking from the app, tournament brackets and
-live scoring, training plans and form-check video for coaches, shifts and cash float, staff clock-in, and recurring
-billing.
+- **Till** (every workspace): open a shift with the float, record payments anywhere in the suite, then close by
+  counting the drawer. The expected amount is shown only after the count; owners see every shift and its variance.
+- **Courts → Repeat**: book the same slot every week for 4, 8 or 12 weeks; weeks that clash are skipped and listed.
+- **Events → an event → Bracket**: draw a single-elimination bracket from the sign-ups, enter scores, winners move on.
+- **Clients** (CoachDash): book sessions ahead from a pack, and set a client's training week to compare with what
+  they logged.
+- **Message everyone** on an event's sign-up list, a class, or quiet clients.
+- **Inbox → Automated messages**: welcome, pass ending, win-back, event, class and quiet-client messages. All start off.
+
+Not built yet: collecting money online for anything but gym plans, booking from the app, double-elimination and
+round-robin draws, form-check video for coaches, staff clock-in, refunds, and recurring billing.
 Payments work for gyms only (Maya test mode); clubs, coaches and organizers are routed to Stripe, which is not set up.
 
 ## Sodia app (mobile)

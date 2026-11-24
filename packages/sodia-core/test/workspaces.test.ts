@@ -31,7 +31,11 @@ describe("workspaces", () => {
   });
 
   it("gives every workspace a way to post to the people who follow it", () => {
-    for (const kind of BUSINESS_KINDS) expect(workspaceHas(kind, "STAFF", "posts")).toBe(true);
+    for (const kind of BUSINESS_KINDS) {
+      expect(workspaceHas(kind, "STAFF", "posts")).toBe(true);
+      // Front-desk staff take money, so the till is theirs too.
+      expect(workspaceHas(kind, "STAFF", "till")).toBe(true);
+    }
   });
 
   it("hides money and configuration from staff", () => {

@@ -154,6 +154,16 @@ Migrations `20261118000012` and `…13`. Built in the suite; these are what the 
 A route-level `loading.tsx` must not be added to the web suite: it made in-place updates hang (see
 `apps/web/src/lib/use-server-form.ts`).
 
+## Brackets, plans, booked sessions, messages (added 2026-11-24)
+
+| Contract                               | What it is                                                                                                                                                                                             | What mobile can do with it                                                     |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
+| `events.bracket` (jsonb)               | The event's draw. Shape is `bracketSchema` in `sodia-core` (`bracket.ts`); validate with it on read. Public wherever the event is.                                                                     | Show the bracket and live results on the event screen. Read only.              |
+| `coach_plans`                          | A client's training week from a coach: `title`, `days` (`coachPlanDaysSchema`: `[{ weekday 0-6, focus }]`). One current plan per coach and client (`ended_at is null`). The client can read their own. | Show "this week from your coach" to the client.                                |
+| `coach_sessions.held_at` in the future | A session booked ahead. It already takes a place in the pack.                                                                                                                                          | Show upcoming sessions to the client (needs a client read policy; none today). |
+| `message_people`, automations          | Staff messages and automated messages arrive as ordinary `FACILITY` conversation messages.                                                                                                             | Nothing new: they appear in the existing business thread.                      |
+| `desk_shifts`                          | Staff only.                                                                                                                                                                                            | None.                                                                          |
+
 ## Mobile status against these contracts (2026-11-18)
 
 Built and covered by automated tests with a stand-in backend; not yet run on a phone against staging.
@@ -181,7 +191,6 @@ Still open on mobile:
 ## What web will not do without agreement
 
 - Change anything further in `supabase/` or `sodia-core` beyond the member-relationship migration above.
-- Add cash sales and shifts, court or class bookings, staff invitations. Each needs one shared change first; see `BUSINESS_SUITE_FEATURE_GAPS.md`, group B.
 
 ## Checks that prove neither side broke the other
 

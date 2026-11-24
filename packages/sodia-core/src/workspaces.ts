@@ -15,6 +15,7 @@ export type WorkspaceSection =
   | "checkin"
   | "schedule"
   | "classes"
+  | "till"
   | "events"
   | "clients"
   | "inbox"
@@ -59,6 +60,7 @@ const GYMDASH_SECTIONS: WorkspaceSectionEntry[] = [
   { id: "members", label: "Members" },
   { id: "checkin", label: "Check-in" },
   { id: "classes", label: "Classes" },
+  { id: "till", label: "Till" },
   { id: "inbox", label: "Inbox" },
   { id: "posts", label: "Posts" },
   { id: "plans", label: "Plans and prices", adminOnly: true },
@@ -100,6 +102,7 @@ export const WORKSPACES: Record<BusinessKind, Workspace> = {
       { id: "schedule", label: "Courts" },
       { id: "members", label: "Players" },
       { id: "events", label: "Events" },
+      { id: "till", label: "Till" },
       { id: "inbox", label: "Inbox" },
       { id: "posts", label: "Posts" },
       { id: "plans", label: "Plans and prices", adminOnly: true },
@@ -118,6 +121,7 @@ export const WORKSPACES: Record<BusinessKind, Workspace> = {
     sections: [
       { id: "home", label: "Today" },
       { id: "clients", label: "Clients" },
+      { id: "till", label: "Till" },
       { id: "inbox", label: "Inbox" },
       { id: "posts", label: "Posts" },
       { id: "plans", label: "Packages and prices", adminOnly: true },
@@ -137,6 +141,7 @@ export const WORKSPACES: Record<BusinessKind, Workspace> = {
       { id: "home", label: "Overview" },
       { id: "events", label: "Events" },
       { id: "members", label: "Participants" },
+      { id: "till", label: "Till" },
       { id: "inbox", label: "Inbox" },
       { id: "posts", label: "Posts" },
       ...MONEY,

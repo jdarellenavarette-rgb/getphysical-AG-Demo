@@ -1,3 +1,5 @@
+import * as Sentry from "@sentry/nextjs";
+
 /** Result of a form posted to a Server Action. */
 export interface FormState {
   status: "idle" | "form_validation" | "error" | "success";
@@ -20,5 +22,11 @@ export function describeDbError(error: DbError, known: Record<string, string>, f
     if (error.message.includes(name)) return message;
   }
   if (error.code === "42501") return "You don't have permission to do this here.";
+  // A refusal nobody planned for. The operator sees the fallback; we get told, so it can be fixed.
+  // Values the database quotes back (in parentheses or quotes) are removed: they can be personal.
+  Sentry.captureMessage(`Unexpected database error ${error.code ?? "unknown"}`, {
+    level: "error",
+    extra: { detail: error.message.replace(/\([^)]*\)|"[^"]*"|'[^']*'/g, "…").slice(0, 200) },
+  });
   return fallback;
 }

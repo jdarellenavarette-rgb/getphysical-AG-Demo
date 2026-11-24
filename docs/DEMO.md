@@ -34,10 +34,11 @@ To start a real venue instead, use **Open your business profile** on the first s
 
 The Vercel project needs these environment variables (Settings → Environment Variables), for Production and Preview:
 
-| Name                            | Value                                                |
-| ------------------------------- | ---------------------------------------------------- |
-| `NEXT_PUBLIC_SUPABASE_URL`      | `https://cmahltbjopkihcfkzzex.supabase.co`           |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | the project's `anon` key (Supabase → Settings → API) |
+| Name                            | Value                                                              |
+| ------------------------------- | ------------------------------------------------------------------ |
+| `NEXT_PUBLIC_SUPABASE_URL`      | `https://cmahltbjopkihcfkzzex.supabase.co`                         |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | the project's `anon` key (Supabase → Settings → API)               |
+| `NEXT_PUBLIC_SENTRY_DSN`        | optional: the DSN of a Sentry project, to turn on error monitoring |
 
 If they are missing, every page answers "Supabase is not configured".
 

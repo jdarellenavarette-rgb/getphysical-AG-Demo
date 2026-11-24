@@ -14,6 +14,7 @@ export type WorkspaceSection =
   | "members"
   | "checkin"
   | "schedule"
+  | "classes"
   | "events"
   | "clients"
   | "inbox"
@@ -57,6 +58,7 @@ const GYMDASH_SECTIONS: WorkspaceSectionEntry[] = [
   { id: "home", label: "Overview" },
   { id: "members", label: "Members" },
   { id: "checkin", label: "Check-in" },
+  { id: "classes", label: "Classes" },
   { id: "inbox", label: "Inbox" },
   { id: "posts", label: "Posts" },
   { id: "plans", label: "Plans and prices", adminOnly: true },

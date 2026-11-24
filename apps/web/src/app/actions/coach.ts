@@ -66,3 +66,81 @@ export async function acceptClient(clientId: string): Promise<ActionResult> {
 export async function endClientLink(clientId: string): Promise<ActionResult> {
   return setLinkStatus(clientId, "CANCELLED", "Removed from your clients.");
 }
+
+const packSchema = z.object({
+  clientId: z.string().uuid("Choose a client"),
+  name: z.string().trim().min(1, "Give the pack a name").max(80, "That name is too long"),
+  sessions: z.coerce.number().int("Sessions must be a whole number").min(1, "At least 1 session").max(500),
+  price: z.union([z.literal(""), z.coerce.number().min(0, "The price can't be negative").max(1_000_000)]),
+});
+
+/** Sell a client a pack of sessions. Sessions are counted down as you log them. */
+export async function createPack(_prev: FormState, formData: FormData): Promise<FormState> {
+  const parsed = packSchema.safeParse({
+    clientId: formData.get("clientId") ?? "",
+    name: formData.get("name") ?? "",
+    sessions: formData.get("sessions") ?? "",
+    price: formData.get("price") ?? "",
+  });
+  if (!parsed.success) return { status: "form_validation", message: parsed.error.issues[0]?.message };
+  const { active } = await requireSuiteSession();
+  const supabase = await createServerSupabase();
+  const { error } = await supabase.from("coach_packs").insert({
+    client_id: parsed.data.clientId,
+    facility_id: active.id,
+    name: parsed.data.name,
+    sessions_total: parsed.data.sessions,
+    price_php: parsed.data.price === "" ? null : parsed.data.price,
+  });
+  if (error) {
+    return {
+      status: "error",
+      message: describeDbError(
+        error,
+        { NOT_A_CLIENT: "That person is not on your client list." },
+        "We couldn't create the pack. Please retry.",
+      ),
+    };
+  }
+  return { status: "success", message: `${parsed.data.name} created with ${parsed.data.sessions} sessions.` };
+}
+
+/** Count one session as held, now. Refused when the pack has none left. */
+export async function logSession(packId: string): Promise<ActionResult> {
+  const parsed = clientIdSchema.safeParse(packId);
+  if (!parsed.success) return { ok: false, message: "That pack could not be found." };
+  await requireSuiteSession();
+  const supabase = await createServerSupabase();
+  const { error } = await supabase.from("coach_sessions").insert({ pack_id: parsed.data });
+  if (error) {
+    return {
+      ok: false,
+      message: describeDbError(
+        error,
+        { PACK_USED_UP: "That pack has no sessions left. Sell a new one." },
+        "We couldn't log the session. Please retry.",
+      ),
+    };
+  }
+  return { ok: true, message: "Session logged." };
+}
+
+/** Take back the most recent session, for one logged by mistake. */
+export async function undoSession(packId: string): Promise<ActionResult> {
+  const parsed = clientIdSchema.safeParse(packId);
+  if (!parsed.success) return { ok: false, message: "That pack could not be found." };
+  await requireSuiteSession();
+  const supabase = await createServerSupabase();
+  const { data: last, error: findError } = await supabase
+    .from("coach_sessions")
+    .select("id")
+    .eq("pack_id", parsed.data)
+    .order("held_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (findError) return { ok: false, message: "We couldn't find the last session. Please retry." };
+  if (!last) return { ok: false, message: "No session has been logged on that pack." };
+  const { error } = await supabase.from("coach_sessions").delete().eq("id", last.id);
+  if (error) return { ok: false, message: describeDbError(error, {}, "We couldn't undo that. Please retry.") };
+  return { ok: true, message: "Last session removed." };
+}

@@ -272,6 +272,128 @@ export type Database = {
           },
         ]
       }
+      class_bookings: {
+        Row: {
+          attended_at: string | null
+          booked_name: string
+          contact_id: string | null
+          created_at: string
+          facility_id: string
+          id: string
+          session_id: string
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          attended_at?: string | null
+          booked_name: string
+          contact_id?: string | null
+          created_at?: string
+          facility_id: string
+          id?: string
+          session_id: string
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          attended_at?: string | null
+          booked_name?: string
+          contact_id?: string | null
+          created_at?: string
+          facility_id?: string
+          id?: string
+          session_id?: string
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_bookings_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "facility_imported_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_bookings_facility_id_fkey"
+            columns: ["facility_id"]
+            isOneToOne: false
+            referencedRelation: "facilities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_bookings_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "class_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_bookings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      class_sessions: {
+        Row: {
+          capacity: number
+          created_at: string
+          created_by: string | null
+          ends_at: string
+          facility_id: string
+          id: string
+          instructor: string | null
+          price_php: number | null
+          starts_at: string
+          status: string
+          title: string
+        }
+        Insert: {
+          capacity: number
+          created_at?: string
+          created_by?: string | null
+          ends_at: string
+          facility_id: string
+          id?: string
+          instructor?: string | null
+          price_php?: number | null
+          starts_at: string
+          status?: string
+          title: string
+        }
+        Update: {
+          capacity?: number
+          created_at?: string
+          created_by?: string | null
+          ends_at?: string
+          facility_id?: string
+          id?: string
+          instructor?: string | null
+          price_php?: number | null
+          starts_at?: string
+          status?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_sessions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_sessions_facility_id_fkey"
+            columns: ["facility_id"]
+            isOneToOne: false
+            referencedRelation: "facilities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coach_clients: {
         Row: {
           client_id: string
@@ -327,6 +449,93 @@ export type Database = {
             columns: ["invited_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coach_packs: {
+        Row: {
+          client_id: string
+          coach_id: string
+          created_at: string
+          facility_id: string | null
+          id: string
+          name: string
+          price_php: number | null
+          sessions_total: number
+        }
+        Insert: {
+          client_id: string
+          coach_id?: string
+          created_at?: string
+          facility_id?: string | null
+          id?: string
+          name: string
+          price_php?: number | null
+          sessions_total: number
+        }
+        Update: {
+          client_id?: string
+          coach_id?: string
+          created_at?: string
+          facility_id?: string | null
+          id?: string
+          name?: string
+          price_php?: number | null
+          sessions_total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_packs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coach_packs_coach_id_fkey"
+            columns: ["coach_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coach_packs_facility_id_fkey"
+            columns: ["facility_id"]
+            isOneToOne: false
+            referencedRelation: "facilities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coach_sessions: {
+        Row: {
+          created_at: string
+          held_at: string
+          id: string
+          note: string | null
+          pack_id: string
+        }
+        Insert: {
+          created_at?: string
+          held_at?: string
+          id?: string
+          note?: string | null
+          pack_id: string
+        }
+        Update: {
+          created_at?: string
+          held_at?: string
+          id?: string
+          note?: string | null
+          pack_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coach_sessions_pack_id_fkey"
+            columns: ["pack_id"]
+            isOneToOne: false
+            referencedRelation: "coach_packs"
             referencedColumns: ["id"]
           },
         ]
@@ -499,8 +708,83 @@ export type Database = {
           },
         ]
       }
+      desk_payments: {
+        Row: {
+          amount_php: number
+          created_at: string
+          facility_id: string
+          id: string
+          kind: string
+          method: string
+          note: string | null
+          payer_name: string | null
+          ref_id: string | null
+          reverses: string | null
+          taken_by: string | null
+          user_id: string | null
+        }
+        Insert: {
+          amount_php: number
+          created_at?: string
+          facility_id: string
+          id?: string
+          kind: string
+          method: string
+          note?: string | null
+          payer_name?: string | null
+          ref_id?: string | null
+          reverses?: string | null
+          taken_by?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          amount_php?: number
+          created_at?: string
+          facility_id?: string
+          id?: string
+          kind?: string
+          method?: string
+          note?: string | null
+          payer_name?: string | null
+          ref_id?: string | null
+          reverses?: string | null
+          taken_by?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "desk_payments_facility_id_fkey"
+            columns: ["facility_id"]
+            isOneToOne: false
+            referencedRelation: "facilities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "desk_payments_reverses_fkey"
+            columns: ["reverses"]
+            isOneToOne: true
+            referencedRelation: "desk_payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "desk_payments_taken_by_fkey"
+            columns: ["taken_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "desk_payments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_registrations: {
         Row: {
+          category: string | null
           checked_in_at: string | null
           checked_in_by: string | null
           event_id: string
@@ -509,6 +793,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          category?: string | null
           checked_in_at?: string | null
           checked_in_by?: string | null
           event_id: string
@@ -517,6 +802,7 @@ export type Database = {
           user_id?: string
         }
         Update: {
+          category?: string | null
           checked_in_at?: string | null
           checked_in_by?: string | null
           event_id?: string
@@ -551,9 +837,11 @@ export type Database = {
       events: {
         Row: {
           capacity: number | null
+          categories: string[]
           created_at: string | null
           description: string | null
           ends_at: string | null
+          entry_fee_php: number | null
           facility_id: string | null
           id: string
           organizer_id: string
@@ -565,9 +853,11 @@ export type Database = {
         }
         Insert: {
           capacity?: number | null
+          categories?: string[]
           created_at?: string | null
           description?: string | null
           ends_at?: string | null
+          entry_fee_php?: number | null
           facility_id?: string | null
           id?: string
           organizer_id?: string
@@ -579,9 +869,11 @@ export type Database = {
         }
         Update: {
           capacity?: number | null
+          categories?: string[]
           created_at?: string | null
           description?: string | null
           ends_at?: string | null
+          entry_fee_php?: number | null
           facility_id?: string | null
           id?: string
           organizer_id?: string
@@ -643,6 +935,8 @@ export type Database = {
           monthly_sub_price_php: number | null
           name: string
           owner_id: string | null
+          peak_end_hour: number | null
+          peak_start_hour: number | null
           plan: Database["public"]["Enums"]["subscription_plan"]
           rating: number | null
           registry: string
@@ -690,6 +984,8 @@ export type Database = {
           monthly_sub_price_php?: number | null
           name: string
           owner_id?: string | null
+          peak_end_hour?: number | null
+          peak_start_hour?: number | null
           plan?: Database["public"]["Enums"]["subscription_plan"]
           rating?: number | null
           registry?: string
@@ -737,6 +1033,8 @@ export type Database = {
           monthly_sub_price_php?: number | null
           name?: string
           owner_id?: string | null
+          peak_end_hour?: number | null
+          peak_start_hour?: number | null
           plan?: Database["public"]["Enums"]["subscription_plan"]
           rating?: number | null
           registry?: string
@@ -1051,6 +1349,8 @@ export type Database = {
           is_active: boolean
           name: string
           parent_id: string | null
+          peak_rate_php: number | null
+          rate_php: number | null
           sport: string | null
         }
         Insert: {
@@ -1060,6 +1360,8 @@ export type Database = {
           is_active?: boolean
           name: string
           parent_id?: string | null
+          peak_rate_php?: number | null
+          rate_php?: number | null
           sport?: string | null
         }
         Update: {
@@ -1069,6 +1371,8 @@ export type Database = {
           is_active?: boolean
           name?: string
           parent_id?: string | null
+          peak_rate_php?: number | null
+          rate_php?: number | null
           sport?: string | null
         }
         Relationships: [
@@ -1976,6 +2280,7 @@ export type Database = {
           facility_id: string
           id: string
           note: string | null
+          price_php: number | null
           space_id: string
           starts_at: string
           status: Database["public"]["Enums"]["booking_status"]
@@ -1990,6 +2295,7 @@ export type Database = {
           facility_id: string
           id?: string
           note?: string | null
+          price_php?: number | null
           space_id: string
           starts_at: string
           status?: Database["public"]["Enums"]["booking_status"]
@@ -2004,6 +2310,7 @@ export type Database = {
           facility_id?: string
           id?: string
           note?: string | null
+          price_php?: number | null
           space_id?: string
           starts_at?: string
           status?: Database["public"]["Enums"]["booking_status"]
@@ -2297,6 +2604,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      book_class: { Args: { p_session_id: string }; Returns: string }
       business_audience: {
         Args: { p_facility_id: string }
         Returns: {
@@ -2351,6 +2659,10 @@ export type Database = {
       }
       can_manage_event: { Args: { p_event_id: string }; Returns: boolean }
       can_view_user_content: { Args: { p_author: string }; Returns: boolean }
+      cancel_class_booking: {
+        Args: { p_booking_id: string }
+        Returns: undefined
+      }
       close_payment_order: {
         Args: {
           p_order_id: string
@@ -2505,6 +2817,14 @@ export type Database = {
         }
         Returns: Database["public"]["Enums"]["business_kind"]
       }
+      desk_paid: {
+        Args: { p_facility_id: string; p_kind: string }
+        Returns: {
+          paid_php: number
+          ref_id: string
+          user_id: string
+        }[]
+      }
       disconnect_sandbox_payouts: {
         Args: { p_facility_id: string }
         Returns: undefined
@@ -2520,6 +2840,7 @@ export type Database = {
       event_roster: {
         Args: { p_event_id: string }
         Returns: {
+          category: string
           checked_in_at: string
           name: string
           registered_at: string
@@ -2552,13 +2873,31 @@ export type Database = {
           slug: string
         }[]
       }
+      facility_classes: {
+        Args: { p_facility_id: string; p_from: string; p_to: string }
+        Returns: {
+          attended: number
+          booked: number
+          capacity: number
+          ends_at: string
+          id: string
+          instructor: string
+          price_php: number
+          starts_at: string
+          status: string
+          title: string
+          waitlist: number
+        }[]
+      }
       facility_events: {
         Args: { p_facility_id: string }
         Returns: {
           capacity: number
+          categories: string[]
           checked_in: number
           description: string
           ends_at: string
+          entry_fee_php: number
           id: string
           registered: number
           sport: string
@@ -2786,6 +3125,7 @@ export type Database = {
         Args: { p_accept: boolean; p_coach_id: string }
         Returns: Database["public"]["Enums"]["membership_status"]
       }
+      reverse_desk_payment: { Args: { p_payment_id: string }; Returns: string }
       rotate_qr_code: {
         Args: {
           p_kind: Database["public"]["Enums"]["qr_kind"]
@@ -2826,6 +3166,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      set_class_attendance: {
+        Args: { p_booking_id: string; p_present: boolean }
+        Returns: undefined
       }
       set_event_attendance: {
         Args: { p_event_id: string; p_present: boolean; p_user_id: string }
@@ -2874,6 +3218,15 @@ export type Database = {
         }
       }
       slugify: { Args: { p_text: string }; Returns: string }
+      staff_book_class: {
+        Args: {
+          p_contact_id?: string
+          p_name: string
+          p_session_id: string
+          p_user_id?: string
+        }
+        Returns: string
+      }
       totp_code: {
         Args: { p_counter: number; p_secret: string }
         Returns: string

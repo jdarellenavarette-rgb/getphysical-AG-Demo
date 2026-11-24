@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   CalendarDays,
+  CalendarRange,
   ClipboardList,
   Home,
   Megaphone,
@@ -34,6 +35,7 @@ const ICONS: Record<SuiteNavItem["icon"], LucideIcon> = {
   clients: ClipboardList,
   events: Trophy,
   schedule: CalendarDays,
+  classes: CalendarRange,
 };
 
 /** Section navigation: a side rail on desktop, a scrollable strip on tablets and phones. */

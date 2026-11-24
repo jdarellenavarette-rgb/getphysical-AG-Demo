@@ -17,6 +17,8 @@ describe("workspaces", () => {
   it("keeps each product's own tools out of the others", () => {
     expect(workspaceHas("GYM", "OWNER", "checkin")).toBe(true);
     expect(workspaceHas("GYM", "OWNER", "schedule")).toBe(false);
+    expect(workspaceHas("GYM", "STAFF", "classes")).toBe(true);
+    expect(workspaceHas("CLUB", "OWNER", "classes")).toBe(false);
     expect(workspaceHas("GYM", "OWNER", "events")).toBe(false);
     expect(workspaceHas("CLUB", "OWNER", "schedule")).toBe(true);
     expect(workspaceHas("CLUB", "OWNER", "checkin")).toBe(false);

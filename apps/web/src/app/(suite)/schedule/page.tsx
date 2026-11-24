@@ -10,10 +10,12 @@ import { Input, Label, Select } from "../../../components/ui/input";
 import { EmptyState, PageHeader } from "../../../components/ui/states";
 import { Table, Td, Th } from "../../../components/ui/table";
 import { canManageFacility, requireSection } from "../../../lib/active-facility";
+import { loadDeskPaid, paidKey } from "../../../lib/data/desk";
 import { loadPeople } from "../../../lib/data/people";
 import { loadDaySchedule, parseDay, shiftDay, todayKey } from "../../../lib/data/schedule";
-import { SUITE_TIME_ZONE } from "../../../lib/format";
-import { cancelBooking, createBooking, createSpace, setSpaceActive } from "../../actions/schedule";
+import { SUITE_TIME_ZONE, formatPeso } from "../../../lib/format";
+import { cancelBooking, createBooking, createSpace, setSpaceActive, updateCourtPrices } from "../../actions/schedule";
+import { PayButton } from "../../../components/ui/pay-button";
 
 export const metadata = { title: "Schedule" };
 
@@ -25,6 +27,17 @@ const longDay = new Intl.DateTimeFormat("en-PH", {
   day: "numeric",
 });
 const timeLabel = (iso: string) => time.format(new Date(iso));
+/** 24-hour HH:MM in Philippine time, for a time input. */
+const time24 = new Intl.DateTimeFormat("en-GB", {
+  timeZone: SUITE_TIME_ZONE,
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
+const HOURS = Array.from({ length: 25 }, (_, hour) => ({
+  value: hour,
+  label: `${hour % 12 === 0 ? 12 : hour % 12}:00 ${hour % 24 < 12 ? "AM" : "PM"}`,
+}));
 
 const DURATIONS = [
   { minutes: 30, label: "30 minutes" },
@@ -35,11 +48,25 @@ const DURATIONS = [
   { minutes: 240, label: "4 hours" },
 ];
 
-export default async function SchedulePage({ searchParams }: { searchParams: Promise<{ date?: string }> }) {
-  const { date } = await searchParams;
+export default async function SchedulePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ date?: string; edit?: string }>;
+}) {
+  const { date, edit } = await searchParams;
   const { active } = await requireSection("schedule");
   const day = parseDay(date);
-  const [schedule, people] = await Promise.all([loadDaySchedule(active.id, day), loadPeople(active.id)]);
+  const [schedule, people, paid] = await Promise.all([
+    loadDaySchedule(active.id, day),
+    loadPeople(active.id),
+    loadDeskPaid(active.id, "BOOKING"),
+  ]);
+  // A booking being moved: the form below is filled with it.
+  const editing = schedule.bookings.find((booking) => booking.id === edit) ?? null;
+  const editingMinutes = editing
+    ? Math.round((new Date(editing.endsAt).getTime() - new Date(editing.startsAt).getTime()) / 60_000)
+    : 60;
+  const hasPrices = schedule.spaces.some((space) => space.rate !== null);
   const canManage = canManageFacility(active.role);
   const inUse = schedule.spaces.filter((space) => space.isActive);
   const wholeCourts = schedule.spaces.filter((space) => !space.parentId);
@@ -107,20 +134,27 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
           {inUse.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>New booking</CardTitle>
+                <CardTitle>{editing ? `Move booking: ${editing.bookedFor}` : "New booking"}</CardTitle>
+                {editing && (
+                  <Link href={`/schedule?date=${day}`} className="text-sm font-semibold underline underline-offset-4">
+                    Stop moving
+                  </Link>
+                )}
               </CardHeader>
               <CardContent>
                 <ActionForm
-                  key={day}
+                  key={`${day}-${editing?.id ?? "new"}`}
+                  id="booking"
                   action={createBooking}
-                  submitLabel="Book court"
-                  pendingLabel="Booking…"
+                  submitLabel={editing ? "Move booking" : "Book court"}
+                  pendingLabel={editing ? "Moving…" : "Booking…"}
                   icon={<CalendarPlus size={16} aria-hidden />}
                   className="grid items-stretch gap-4"
                 >
+                  <input type="hidden" name="bookingId" value={editing?.id ?? ""} />
                   <Label>
                     Court
-                    <Select name="spaceId" required defaultValue={inUse[0]?.id}>
+                    <Select name="spaceId" required defaultValue={editing?.spaceId ?? inUse[0]?.id}>
                       {inUse.map((space) => (
                         <option key={space.id} value={space.id}>
                           {space.name}
@@ -129,7 +163,7 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
                       ))}
                     </Select>
                   </Label>
-                  {people.all.length > 0 && (
+                  {!editing && people.all.length > 0 && (
                     <Label>
                       Who is it for
                       <Select name="person" defaultValue="">
@@ -143,10 +177,12 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
                       </Select>
                     </Label>
                   )}
-                  <Label>
-                    {people.all.length > 0 ? "Name or group (optional if chosen above)" : "Booked for"}
-                    <Input name="bookedFor" maxLength={120} placeholder="Name or group" />
-                  </Label>
+                  {!editing && (
+                    <Label>
+                      {people.all.length > 0 ? "Name or group (optional if chosen above)" : "Booked for"}
+                      <Input name="bookedFor" maxLength={120} placeholder="Name or group" />
+                    </Label>
+                  )}
                   <Label>
                     Date
                     <Input name="date" type="date" required defaultValue={day} />
@@ -154,11 +190,17 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
                   <div className="grid grid-cols-2 gap-3">
                     <Label>
                       Starts
-                      <Input name="start" type="time" step={900} required />
+                      <Input
+                        name="start"
+                        type="time"
+                        step={900}
+                        required
+                        defaultValue={editing ? time24.format(new Date(editing.startsAt)) : undefined}
+                      />
                     </Label>
                     <Label>
                       Length
-                      <Select name="minutes" defaultValue={60}>
+                      <Select name="minutes" defaultValue={editingMinutes}>
                         {DURATIONS.map((option) => (
                           <option key={option.minutes} value={option.minutes}>
                             {option.label}
@@ -169,11 +211,17 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
                   </div>
                   <Label>
                     Note (optional)
-                    <Input name="note" maxLength={300} placeholder="Paid at the desk, bringing own net" />
+                    <Input
+                      name="note"
+                      maxLength={300}
+                      placeholder="Bringing own net"
+                      defaultValue={editing?.note ?? ""}
+                    />
                   </Label>
                 </ActionForm>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  Bookings are taken at the desk for now. Booking and paying from the Sodia app is not available yet.
+                  {hasPrices ? "The price is worked out from the court's rate. " : ""}Bookings are taken at the desk for
+                  now. Booking and paying from the Sodia app is not available yet.
                 </p>
               </CardContent>
             </Card>
@@ -194,7 +242,14 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
                       <span className="min-w-0">
                         <span className="block truncate text-sm font-semibold">{space.name}</span>
                         <span className="block text-sm text-muted-foreground">
-                          {[space.sport, space.isActive ? null : "Switched off"].filter(Boolean).join(" · ") || "Court"}
+                          {[
+                            space.sport,
+                            space.rate !== null ? `${formatPeso(space.rate)} an hour` : null,
+                            space.peakRate !== null ? `${formatPeso(space.peakRate)} at peak` : null,
+                            space.isActive ? null : "Switched off",
+                          ]
+                            .filter(Boolean)
+                            .join(" · ") || "Court"}
                         </span>
                       </span>
                       {canManage && (
@@ -250,6 +305,82 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
               )}
             </CardContent>
           </Card>
+
+          {canManage && schedule.spaces.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Prices</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ActionForm
+                  action={updateCourtPrices}
+                  submitLabel="Save prices"
+                  pendingLabel="Saving…"
+                  keepValues
+                  className="grid items-stretch gap-4"
+                >
+                  <div className="grid gap-3">
+                    {schedule.spaces.map((space) => (
+                      <fieldset key={space.id} className="grid grid-cols-2 gap-3">
+                        <legend className="mb-1.5 text-sm font-semibold">{space.name}</legend>
+                        <Label>
+                          Per hour (₱)
+                          <Input
+                            name={`rate_${space.id}`}
+                            type="number"
+                            min={0}
+                            step="any"
+                            inputMode="decimal"
+                            defaultValue={space.rate ?? ""}
+                          />
+                        </Label>
+                        <Label>
+                          At peak (₱)
+                          <Input
+                            name={`peak_${space.id}`}
+                            type="number"
+                            min={0}
+                            step="any"
+                            inputMode="decimal"
+                            defaultValue={space.peakRate ?? ""}
+                          />
+                        </Label>
+                      </fieldset>
+                    ))}
+                  </div>
+                  <fieldset className="grid grid-cols-2 gap-3">
+                    <legend className="mb-1.5 text-sm font-semibold">Peak hours</legend>
+                    <Label>
+                      From
+                      <Select name="peakStart" defaultValue={schedule.peak?.start ?? ""}>
+                        <option value="">No peak</option>
+                        {HOURS.slice(0, 24).map((hour) => (
+                          <option key={hour.value} value={hour.value}>
+                            {hour.label}
+                          </option>
+                        ))}
+                      </Select>
+                    </Label>
+                    <Label>
+                      Until
+                      <Select name="peakEnd" defaultValue={schedule.peak?.end ?? ""}>
+                        <option value="">No peak</option>
+                        {HOURS.slice(1).map((hour) => (
+                          <option key={hour.value} value={hour.value}>
+                            {hour.label}
+                          </option>
+                        ))}
+                      </Select>
+                    </Label>
+                  </fieldset>
+                </ActionForm>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Leave a price empty for a court you don&apos;t charge for. A booking that starts in peak hours is
+                  charged at the peak rate. Existing bookings keep their price.
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
 
@@ -266,6 +397,7 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
                   <Th>Court</Th>
                   <Th>Booked for</Th>
                   <Th>Note</Th>
+                  <Th>Payment</Th>
                   <Th className="text-right">Actions</Th>
                 </tr>
               </thead>
@@ -278,16 +410,34 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
                     <Td>{nameOf.get(booking.spaceId) ?? "Court"}</Td>
                     <Td className="font-semibold">{booking.bookedFor}</Td>
                     <Td className="text-muted-foreground">{booking.note ?? "—"}</Td>
+                    <Td>
+                      <PayButton
+                        kind="BOOKING"
+                        refId={booking.id}
+                        price={booking.price}
+                        paid={paid.get(paidKey(booking.id)) ?? 0}
+                        payerName={booking.bookedFor}
+                      />
+                    </Td>
                     <Td className="text-right">
-                      <ActionButton
-                        action={cancelBooking.bind(null, booking.id)}
-                        pendingLabel="Cancelling…"
-                        variant="ghost"
-                        aria-label={`Cancel booking for ${booking.bookedFor}`}
-                        confirm={{ question: "Cancel this booking?", yes: "Yes, cancel" }}
-                      >
-                        Cancel
-                      </ActionButton>
+                      <span className="inline-flex flex-wrap items-center justify-end gap-2">
+                        <Link
+                          href={`/schedule?date=${day}&edit=${booking.id}`}
+                          aria-label={`Move the booking for ${booking.bookedFor}`}
+                          className={buttonClasses("ghost", "sm")}
+                        >
+                          Move
+                        </Link>
+                        <ActionButton
+                          action={cancelBooking.bind(null, booking.id)}
+                          pendingLabel="Cancelling…"
+                          variant="ghost"
+                          aria-label={`Cancel booking for ${booking.bookedFor}`}
+                          confirm={{ question: "Cancel this booking?", yes: "Yes, cancel" }}
+                        >
+                          Cancel
+                        </ActionButton>
+                      </span>
                     </Td>
                   </tr>
                 ))}

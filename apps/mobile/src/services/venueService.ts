@@ -43,6 +43,8 @@ export async function loadVenues(): Promise<ServiceResult<FacilityRow[]>> {
       updated_at: null,
       terms_version: null,
       terms_accepted_at: null,
+      peak_start_hour: null,
+      peak_end_hour: null,
     })),
   };
 }

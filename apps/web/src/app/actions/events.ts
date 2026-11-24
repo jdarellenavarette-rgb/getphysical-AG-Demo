@@ -21,6 +21,18 @@ const eventSchema = z
     start: z.string().regex(/^\d{2}:\d{2}$/, "Choose a start time"),
     end: z.union([z.literal(""), z.string().regex(/^\d{2}:\d{2}$/)]),
     capacity: z.union([z.literal(""), z.coerce.number().int().min(1, "Places must be at least 1").max(100000)]),
+    fee: z.union([z.literal(""), z.coerce.number().min(0, "The fee can't be negative").max(1_000_000)]),
+    categories: z
+      .string()
+      .transform((value) => [
+        ...new Set(
+          value
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean),
+        ),
+      ])
+      .pipe(z.array(z.string().max(60, "Keep each category to 60 characters")).max(20, "List up to 20 categories")),
   })
   .transform((value, ctx) => {
     // Times are entered in Manila time, like every other time in the suite.
@@ -30,12 +42,17 @@ const eventSchema = z
     else if (startsAt.getTime() < Date.now())
       ctx.addIssue({ code: "custom", message: "The event must start in the future" });
     if (endsAt && endsAt <= startsAt) ctx.addIssue({ code: "custom", message: "The end time must be after the start" });
-    return { ...value, startsAt, endsAt, capacity: value.capacity === "" ? null : value.capacity };
+    return {
+      ...value,
+      startsAt,
+      endsAt,
+      capacity: value.capacity === "" ? null : value.capacity,
+      fee: value.fee === "" || value.fee === 0 ? null : value.fee,
+    };
   });
 
-/** Publish a new event at the active venue. People sign up in the Sodia app; capacity is enforced by the database. */
-export async function createEvent(_prev: FormState, formData: FormData): Promise<FormState> {
-  const parsed = eventSchema.safeParse({
+function readEventForm(formData: FormData) {
+  return eventSchema.safeParse({
     title: formData.get("title") ?? "",
     sport: formData.get("sport") ?? "",
     description: formData.get("description") ?? "",
@@ -43,7 +60,14 @@ export async function createEvent(_prev: FormState, formData: FormData): Promise
     start: formData.get("start") ?? "",
     end: formData.get("end") ?? "",
     capacity: formData.get("capacity") ?? "",
+    fee: formData.get("fee") ?? "",
+    categories: formData.get("categories") ?? "",
   });
+}
+
+/** Publish a new event at the active venue. People sign up in the Sodia app; capacity is enforced by the database. */
+export async function createEvent(_prev: FormState, formData: FormData): Promise<FormState> {
+  const parsed = readEventForm(formData);
   if (!parsed.success) return { status: "form_validation", message: parsed.error.issues[0]?.message };
 
   const session = await requireSuiteSession();
@@ -57,6 +81,8 @@ export async function createEvent(_prev: FormState, formData: FormData): Promise
     starts_at: parsed.data.startsAt.toISOString(),
     ends_at: parsed.data.endsAt?.toISOString() ?? null,
     capacity: parsed.data.capacity,
+    entry_fee_php: parsed.data.fee,
+    categories: parsed.data.categories,
     status: "PUBLISHED",
   });
   if (error)
@@ -103,4 +129,33 @@ export async function setAttendance(eventId: string, userId: string, present: bo
     };
   }
   return { ok: true, message: present ? "Marked as arrived." : "Arrival undone." };
+}
+
+/** Change an event's details. People already signed up keep their place and their category. */
+export async function updateEvent(eventId: string, _prev: FormState, formData: FormData): Promise<FormState> {
+  const id = idSchema.safeParse(eventId);
+  if (!id.success) return { status: "error", message: "That event could not be found." };
+  const parsed = readEventForm(formData);
+  if (!parsed.success) return { status: "form_validation", message: parsed.error.issues[0]?.message };
+  const { active } = await requireSuiteSession();
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase
+    .from("events")
+    .update({
+      title: parsed.data.title,
+      sport: parsed.data.sport,
+      description: parsed.data.description,
+      starts_at: parsed.data.startsAt.toISOString(),
+      ends_at: parsed.data.endsAt?.toISOString() ?? null,
+      capacity: parsed.data.capacity,
+      entry_fee_php: parsed.data.fee,
+      categories: parsed.data.categories,
+    })
+    .eq("id", id.data)
+    .eq("facility_id", active.id)
+    .select("id");
+  if (error)
+    return { status: "error", message: describeDbError(error, {}, "We couldn't save the event. Please retry.") };
+  if ((data ?? []).length === 0) return { status: "error", message: "That event could not be found." };
+  return { status: "success", message: "Event saved. Tell the people signed up if the time changed." };
 }

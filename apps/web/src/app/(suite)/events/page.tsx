@@ -8,7 +8,7 @@ import { EmptyState, PageHeader, StatCard } from "../../../components/ui/states"
 import { Table, Td, Th } from "../../../components/ui/table";
 import { requireSection } from "../../../lib/active-facility";
 import { loadEvents, type VenueEvent } from "../../../lib/data/events";
-import { formatDateTime } from "../../../lib/format";
+import { formatDateTime, formatPeso } from "../../../lib/format";
 import { createEvent } from "../../actions/events";
 
 export const metadata = { title: "Events" };
@@ -44,7 +44,9 @@ function EventTable({ events, past }: { events: VenueEvent[]; past: boolean }) {
               <Link href={`/events/${event.id}`} className="font-semibold underline-offset-4 hover:underline">
                 {event.title}
               </Link>
-              {event.sport && <p className="text-sm text-muted-foreground">{event.sport}</p>}
+              <p className="text-sm text-muted-foreground">
+                {[event.sport, event.entryFee ? formatPeso(event.entryFee) : "Free"].filter(Boolean).join(" · ")}
+              </p>
             </Td>
             <Td className="whitespace-nowrap">{formatDateTime(event.startsAt)}</Td>
             <Td>
@@ -143,12 +145,21 @@ export default async function EventsPage() {
                 <Input name="capacity" type="number" min={1} inputMode="numeric" />
               </Label>
               <Label>
+                Entry fee in ₱ (leave empty if free)
+                <Input name="fee" type="number" min={0} step="any" inputMode="decimal" />
+              </Label>
+              <Label>
+                Categories, separated by commas (optional)
+                <Input name="categories" maxLength={600} placeholder="Beginner, Intermediate, Open" />
+              </Label>
+              <Label>
                 Details (optional)
                 <Input name="description" maxLength={2000} placeholder="Format, what to bring, who it is for" />
               </Label>
             </ActionForm>
             <p className="mt-2 text-sm text-muted-foreground">
-              Times are in Philippine time. Sign-up is free: entry fees are not collected through the suite yet.
+              Times are in Philippine time. An entry fee is shown to people signing up; you collect it yourself and
+              record it on the event's sign-up list until online payments open.
             </p>
           </CardContent>
         </Card>

@@ -9,7 +9,10 @@ import { EmptyState, Notice, PageHeader, StatCard } from "../../../components/ui
 import { Table, Td, Th } from "../../../components/ui/table";
 import { requireSection } from "../../../lib/active-facility";
 import { FREE_CLIENT_CAP, loadCoachDesk, NUDGE_AFTER_DAYS, type CoachClient } from "../../../lib/data/coach";
+import { loadCoachPacks } from "../../../lib/data/coach-packs";
+import { loadDeskPaid } from "../../../lib/data/desk";
 import { loadQrCode } from "../../../lib/data/join-code";
+import { PacksCard } from "./PacksCard";
 import { formatDate } from "../../../lib/format";
 import { acceptClient, endClientLink, inviteClient } from "../../actions/coach";
 
@@ -40,7 +43,17 @@ function StatusBadge({ client }: { client: CoachClient }) {
 
 export default async function ClientsPage() {
   const session = await requireSection("clients");
-  const [desk, code] = await Promise.all([loadCoachDesk(session.userId, session.active), loadQrCode("COACH", null)]);
+  const isCoachBusiness = session.active.kind === "COACH";
+  const [desk, code, packs, paid] = await Promise.all([
+    loadCoachDesk(session.userId, session.active),
+    loadQrCode("COACH", null),
+    loadCoachPacks(session.userId),
+    // Payments are recorded under the coaching business; a coach on a venue's team has none here.
+    isCoachBusiness ? loadDeskPaid(session.active.id, "PACK") : new Map<string, number>(),
+  ]);
+  const packClients = desk.clients
+    .filter((client) => client.isMine && client.status !== "CANCELLED")
+    .map((client) => ({ id: client.id, name: client.name }));
   const current = desk.clients.filter((c) => c.status !== "CANCELLED");
   const nudges = desk.clients.filter((c) => c.needsNudge);
   const waiting = desk.clients.filter((c) => c.isMine && c.status === "PENDING");
@@ -148,6 +161,8 @@ export default async function ClientsPage() {
           </CardContent>
         </Card>
       </div>
+
+      <PacksCard packs={packs} clients={packClients} paid={paid} canRecordPayments={isCoachBusiness} />
 
       <Card className="mt-6">
         <CardHeader>

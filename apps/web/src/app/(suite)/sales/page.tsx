@@ -6,7 +6,9 @@ import { Card, CardHeader, CardTitle } from "../../../components/ui/card";
 import { EmptyState, Notice, PageHeader, StatCard } from "../../../components/ui/states";
 import { Table, Td, Th } from "../../../components/ui/table";
 import { canManageFacility, requireSection } from "../../../lib/active-facility";
+import { loadDeskLedger } from "../../../lib/data/desk";
 import { loadPayoutStatus } from "../../../lib/data/payouts";
+import { DeskLedgerCard } from "./DeskLedgerCard";
 import { loadSales, type OrderStatus } from "../../../lib/data/sales";
 import { formatDateTime, formatPeso } from "../../../lib/format";
 
@@ -32,13 +34,17 @@ export default async function SalesPage() {
       </>
     );
   }
-  const [{ sales, summary }, payouts] = await Promise.all([loadSales(active.id), loadPayoutStatus(active.id, true)]);
+  const [{ sales, summary }, payouts, ledger] = await Promise.all([
+    loadSales(active.id),
+    loadPayoutStatus(active.id, true),
+    loadDeskLedger(active.id),
+  ]);
 
   return (
     <>
       <PageHeader
         title="Sales"
-        description={`Plans bought for ${active.name} in the Sodia app.`}
+        description={`What ${active.name} took at the desk, and what it sold in the Sodia app.`}
         actions={
           sales.length > 0 && (
             <a href="/sales/export" className={buttonClasses("secondary", "md")}>
@@ -47,17 +53,27 @@ export default async function SalesPage() {
           )
         }
       />
+      {payouts.state === "NOT_SET_UP" && (
+        <div className="mb-6">
+          <Notice tone="warning" role="note">
+            Online payments are under construction, so there are no app sales to show yet.{" "}
+            <Link href="/payouts" className="font-semibold underline">
+              How payments will work
+            </Link>
+          </Notice>
+        </div>
+      )}
       {payouts.state === "TEST_MODE" && (
         <div className="mb-6">
           <Notice tone="warning" role="note">
-            Payments are in test mode. These orders used Maya&apos;s test system; no real money moved.
+            Payments are in test mode. These orders used the payment provider&apos;s test system; no real money moved.
           </Notice>
         </div>
       )}
 
       <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          label="Earned, last 30 days"
+          label="Earned in the app, 30 days"
           value={formatPeso(summary.earned30d)}
           hint="Your price, before the member's service fee"
         />
@@ -66,9 +82,11 @@ export default async function SalesPage() {
         <StatCard label="Refunded, last 30 days" value={String(summary.refunded30d)} />
       </div>
 
+      <DeskLedgerCard ledger={ledger} />
+
       <Card>
         <CardHeader>
-          <CardTitle>Orders</CardTitle>
+          <CardTitle>Sold in the app</CardTitle>
           <span className="text-sm text-muted-foreground">Newest first</span>
         </CardHeader>
         {sales.length === 0 ? (

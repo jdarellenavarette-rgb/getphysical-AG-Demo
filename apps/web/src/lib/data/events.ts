@@ -1,4 +1,5 @@
 import "server-only";
+import { bracketSchema, type Bracket } from "sodia-core";
 import { createServerSupabase } from "../supabase/server";
 
 export interface VenueEvent {
@@ -12,6 +13,9 @@ export interface VenueEvent {
   status: "DRAFT" | "PUBLISHED" | "CANCELLED";
   registered: number;
   checkedIn: number;
+  /** What it costs to enter; null when it is free. */
+  entryFee: number | null;
+  categories: string[];
   /** Already finished (or started, when no end time is set). */
   isPast: boolean;
 }
@@ -21,6 +25,7 @@ export interface EventAttendee {
   name: string;
   username: string | null;
   status: "REGISTERED" | "CANCELLED";
+  category: string | null;
   registeredAt: string | null;
   checkedInAt: string | null;
 }
@@ -42,6 +47,8 @@ export async function loadEvents(facilityId: string): Promise<VenueEvent[]> {
     status: row.status,
     registered: row.registered,
     checkedIn: row.checked_in,
+    entryFee: row.entry_fee_php === null ? null : Number(row.entry_fee_php),
+    categories: row.categories ?? [],
     isPast: new Date(row.ends_at ?? row.starts_at).getTime() < now,
   }));
   const upcoming = events.filter((e) => !e.isPast).sort((a, b) => a.startsAt.localeCompare(b.startsAt));
@@ -57,7 +64,22 @@ export async function loadEventRoster(eventId: string): Promise<EventAttendee[]>
     name: row.name,
     username: row.username,
     status: row.status === "CANCELLED" ? "CANCELLED" : "REGISTERED",
+    category: row.category,
     registeredAt: row.registered_at,
     checkedInAt: row.checked_in_at,
   }));
+}
+
+/** The event's draw, when one has been made. Anything that does not match the contract is ignored. */
+export async function loadEventBracket(facilityId: string, eventId: string): Promise<Bracket | null> {
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase
+    .from("events")
+    .select("bracket")
+    .eq("id", eventId)
+    .eq("facility_id", facilityId)
+    .maybeSingle();
+  if (error) throw new Error("Could not load the bracket.", { cause: error });
+  const parsed = bracketSchema.safeParse(data?.bracket);
+  return parsed.success ? parsed.data : null;
 }

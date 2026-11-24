@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { Zap } from "lucide-react";
+import { buttonClasses } from "../../../components/ui/button";
 import { InboxView } from "../../../components/inbox/InboxView";
 import { PageHeader } from "../../../components/ui/states";
 import { requireSection } from "../../../lib/active-facility";
@@ -15,6 +18,12 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
       <PageHeader
         title="Inbox"
         description="Conversations with members, and broadcasts to everyone or a chosen group."
+        actions={
+          <Link href="/inbox/automations" className={buttonClasses("secondary")}>
+            <Zap size={16} aria-hidden />
+            Automated messages
+          </Link>
+        }
       />
       <InboxView
         key={active.id}

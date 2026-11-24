@@ -48,6 +48,20 @@ select tests.ok(
         where f.owner_id = auth.uid()),
   'each demo business has followers and posts, some scheduled');
 select tests.ok(
+  (select count(*) from public.class_sessions where facility_id = (select id from demo)) = 21
+  and (select count(*) from public.class_bookings where facility_id = (select id from demo) and status = 'WAITLIST') > 0,
+  'the demo gym has a week of classes, one with a waitlist');
+select tests.ok(
+  (select count(*) from public.space_bookings b join public.facilities f on f.id = b.facility_id
+    where f.owner_id = auth.uid() and f.business_kind = 'CLUB' and b.price_php is null) = 0
+  and (select count(*) from public.facilities f, public.desk_paid(f.id, 'BOOKING') p
+        where f.owner_id = auth.uid() and f.business_kind = 'CLUB') = 3,
+  'the demo club''s bookings are priced and three are paid at the desk');
+select tests.ok(
+  (select sessions_total - (select count(*) from public.coach_sessions s where s.pack_id = p.id)
+     from public.coach_packs p where p.name = '10-session pack' and p.coach_id = auth.uid()) = 4,
+  'the demo coach has a client with four sessions left on a pack');
+select tests.ok(
   (select array_agg(e.title || ':' || e.registered || ':' || e.checked_in order by e.starts_at)
      from public.facilities f, public.facility_events(f.id) e
     where f.owner_id = auth.uid() and f.business_kind = 'ORGANIZER')

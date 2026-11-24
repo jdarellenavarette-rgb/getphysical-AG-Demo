@@ -3,6 +3,8 @@ import { BellRing, UserPlus } from "lucide-react";
 import { acceptClient } from "../../app/actions/coach";
 import type { ActiveSuiteSession } from "../../lib/active-facility";
 import { FREE_CLIENT_CAP, loadCoachDesk, NUDGE_AFTER_DAYS } from "../../lib/data/coach";
+import { loadUpcomingSessions } from "../../lib/data/coach-packs";
+import { formatDateTime } from "../../lib/format";
 import { loadSetupProgress } from "../../lib/data/setup";
 import { SetupChecklist } from "../shell/SetupChecklist";
 import { ActionButton } from "../ui/action-button";
@@ -14,10 +16,12 @@ import { HomeHeader, SeeAll } from "./shared";
 
 /** CoachDash home: a coach's day is about individual people, so it opens on who needs them today. */
 export async function CoachHome({ session }: { session: ActiveSuiteSession }) {
-  const [desk, setup] = await Promise.all([
+  const [desk, setup, upcoming] = await Promise.all([
     loadCoachDesk(session.userId, session.active),
     loadSetupProgress(session.active.id, "COACH", session.userId),
+    loadUpcomingSessions(session.userId),
   ]);
+  const nameOf = new Map(desk.clients.map((client) => [client.id, client.name]));
   const nudges = desk.clients.filter((c) => c.needsNudge);
   const requests = desk.clients.filter((c) => c.isMine && c.awaiting === "COACH");
   const invited = desk.clients.filter((c) => c.isMine && c.awaiting === "CLIENT");
@@ -135,6 +139,31 @@ export async function CoachHome({ session }: { session: ActiveSuiteSession }) {
           </CardContent>
         </Card>
       </div>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>Next sessions</CardTitle>
+          <SeeAll href="/clients">Book a session</SeeAll>
+        </CardHeader>
+        <CardContent>
+          {upcoming.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No sessions booked ahead. Book one from a client&apos;s pack under Clients.
+            </p>
+          ) : (
+            <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {upcoming.slice(0, 6).map((item) => (
+                <li key={item.id} className="rounded-xl border border-border p-4">
+                  <p className="font-semibold">{formatDateTime(item.at)}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {nameOf.get(item.clientId) ?? "Client"} · {item.packName}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
     </>
   );
 }

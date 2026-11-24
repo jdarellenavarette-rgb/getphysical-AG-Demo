@@ -1,6 +1,6 @@
 "use client";
 
-import { useServerForm } from "../../lib/use-server-form";
+import { submitWith, useServerForm } from "../../lib/use-server-form";
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { idleFormState, type FormState } from "../../lib/form-state";
 import { cn } from "../../lib/utils";
@@ -15,8 +15,6 @@ interface ActionFormProps {
   className?: string;
   /** Keep what was typed after a successful save (settings-style forms). */
   keepValues?: boolean;
-  /** Names the form on its page when the button label can change. Defaults to the label. */
-  id?: string;
 }
 
 /**
@@ -31,9 +29,8 @@ export function ActionForm({
   icon,
   className,
   keepValues = false,
-  id,
 }: ActionFormProps) {
-  const [state, formAction, pending] = useServerForm(action, idleFormState, { id: id ?? submitLabel });
+  const [state, formAction, pending] = useServerForm(action, idleFormState);
   const formRef = useRef<HTMLFormElement>(null);
   const resultId = useId();
   // The form clears itself after a save unless it shows settings that should stay on screen.
@@ -43,7 +40,7 @@ export function ActionForm({
   const failed = state.status === "form_validation" || state.status === "error";
 
   return (
-    <form ref={formRef} action={formAction} noValidate aria-describedby={resultId} className="grid gap-2">
+    <form ref={formRef} onSubmit={submitWith(formAction)} noValidate aria-describedby={resultId} className="grid gap-2">
       <div className={cn("flex flex-wrap items-end gap-3", className)}>
         {children}
         <Button type="submit" disabled={pending}>

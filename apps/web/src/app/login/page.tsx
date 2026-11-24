@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CalendarDays, ClipboardList, Dumbbell, Trophy } from "lucide-react";
 import { BrandMark } from "../../components/shell/BrandMark";
@@ -88,6 +89,17 @@ export default async function LoginPage({
             </div>
           )}
           <LoginForm next={params.next ?? "/"} />
+          <p className="mt-6 text-sm text-muted-foreground">
+            By continuing you agree to the{" "}
+            <Link href="/legal/terms" className="font-medium underline underline-offset-4">
+              Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link href="/legal/privacy" className="font-medium underline underline-offset-4">
+              Privacy Notice
+            </Link>
+            .
+          </p>
         </div>
       </section>
     </main>

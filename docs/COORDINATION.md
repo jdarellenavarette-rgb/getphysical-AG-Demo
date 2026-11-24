@@ -130,6 +130,40 @@ Migration `20261118000010`. The suite writes posts today; **the app needs to rea
 
 Until the app reads the feed, a post can also be sent as an inbox broadcast from the composer, which the app already shows.
 
+## Legal documents (added 2026-11-23)
+
+The drafts live in the web app at `/legal` (`/legal/terms`, `/legal/privacy`, `/legal/refunds`, `/legal/community`,
+`/legal/business-terms`) and are readable signed out. The app should link to these same pages from sign-up and
+Settings so there is one copy. The text is in `apps/web/src/lib/legal/documents.ts`. Two statements in the drafts
+depend on the app and need confirming: that an account can be deleted in Settings, and that a post, message or
+account can be reported from its menu.
+
+## Classes, court prices, event fees, session packs, desk payments (added 2026-11-24)
+
+Migrations `20261118000012` and `…13`. Built in the suite; these are what the app can use.
+
+| Contract                                                                                                                 | What it does                                                                                                  | What mobile can build                                                                                      |
+| ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `facility_classes(p_facility_id, p_from, p_to)`                                                                          | A venue's timetable with places taken. Callable signed out.                                                   | A timetable on the venue's page.                                                                           |
+| `book_class(p_session_id)` → `BOOKED` or `WAITLIST`; `cancel_class_booking(p_booking_id)`                                | A member books or gives up a place. The first person waiting is promoted automatically.                       | Book and cancel buttons; "You're on the waitlist". `class_bookings` is readable for the member's own rows. |
+| `events.entry_fee_php`, `events.categories`; `event_registrations.category`                                              | An event's fee and categories; the entrant picks one category when signing up (must be one the event offers). | Show the fee and a category picker at sign-up. The fee is collected by the organizer for now.              |
+| `coach_packs`, `coach_sessions`                                                                                          | Sessions a client bought and sessions held. Readable by the client.                                           | "4 of 10 sessions left" on the client's coach screen.                                                      |
+| `facility_spaces.rate_php` / `peak_rate_php`, `facilities.peak_start_hour` / `peak_end_hour`, `space_bookings.price_php` | Court prices; a booking's price is set by the database.                                                       | Needed when booking from the app is built.                                                                 |
+| `desk_payments`                                                                                                          | Staff-only, append-only record of money a business took itself.                                               | None.                                                                                                      |
+
+A route-level `loading.tsx` must not be added to the web suite: it made in-place updates hang (see
+`apps/web/src/lib/use-server-form.ts`).
+
+## Brackets, plans, booked sessions, messages (added 2026-11-24)
+
+| Contract                               | What it is                                                                                                                                                                                             | What mobile can do with it                                                     |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
+| `events.bracket` (jsonb)               | The event's draw. Shape is `bracketSchema` in `sodia-core` (`bracket.ts`); validate with it on read. Public wherever the event is.                                                                     | Show the bracket and live results on the event screen. Read only.              |
+| `coach_plans`                          | A client's training week from a coach: `title`, `days` (`coachPlanDaysSchema`: `[{ weekday 0-6, focus }]`). One current plan per coach and client (`ended_at is null`). The client can read their own. | Show "this week from your coach" to the client.                                |
+| `coach_sessions.held_at` in the future | A session booked ahead. It already takes a place in the pack.                                                                                                                                          | Show upcoming sessions to the client (needs a client read policy; none today). |
+| `message_people`, automations          | Staff messages and automated messages arrive as ordinary `FACILITY` conversation messages.                                                                                                             | Nothing new: they appear in the existing business thread.                      |
+| `desk_shifts`                          | Staff only.                                                                                                                                                                                            | None.                                                                          |
+
 ## Mobile status against these contracts (2026-11-18)
 
 Built and covered by automated tests with a stand-in backend; not yet run on a phone against staging.
@@ -157,7 +191,6 @@ Still open on mobile:
 ## What web will not do without agreement
 
 - Change anything further in `supabase/` or `sodia-core` beyond the member-relationship migration above.
-- Add cash sales and shifts, court or class bookings, staff invitations. Each needs one shared change first; see `BUSINESS_SUITE_FEATURE_GAPS.md`, group B.
 
 ## Checks that prove neither side broke the other
 

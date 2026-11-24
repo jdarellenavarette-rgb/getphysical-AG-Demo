@@ -1,6 +1,6 @@
 "use client";
 
-import { useServerForm } from "../../../lib/use-server-form";
+import { submitWith, useServerForm } from "../../../lib/use-server-form";
 import { Button } from "../../../components/ui/button";
 import { FieldError, Input, Label } from "../../../components/ui/input";
 import type { SellingSettings } from "../../../lib/data/products";
@@ -10,11 +10,11 @@ const initialState: ProductFormState = { status: "idle" };
 
 /** Venue-wide switches. Not every gym sells memberships; some only take walk-ins. */
 export function SellingSettingsForm({ settings, canEdit }: { settings: SellingSettings; canEdit: boolean }) {
-  const [state, action, pending] = useServerForm(updateSellingSettings, initialState, { id: "selling-settings" });
+  const [state, action, pending] = useServerForm(updateSellingSettings, initialState);
   const failed = state.status !== "success" && state.status !== "idle";
 
   return (
-    <form action={action} noValidate className="grid gap-4">
+    <form onSubmit={submitWith(action)} noValidate className="grid gap-4">
       <fieldset disabled={!canEdit || pending} className="grid gap-4">
         <label className="flex items-start gap-3">
           <input

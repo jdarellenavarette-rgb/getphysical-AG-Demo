@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { WORKSPACES } from "sodia-core";
+import { LEGAL_DOCUMENTS } from "../../../lib/legal/documents";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { PageHeader } from "../../../components/ui/states";
 import { canManageFacility, requireSection } from "../../../lib/active-facility";
@@ -81,6 +82,18 @@ export default async function SettingsPage() {
                 — a second location, or a different kind of business. Each one has its own workspace.
               </span>
             </p>
+            <div className="mt-5 border-t border-border pt-5">
+              <p className="mb-2 text-sm font-semibold">Terms and policies</p>
+              <ul className="grid gap-1.5 text-sm">
+                {LEGAL_DOCUMENTS.map((document) => (
+                  <li key={document.slug}>
+                    <Link href={`/legal/${document.slug}`} className="underline underline-offset-4">
+                      {document.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
             {mode === "sandbox" && !isDemo && (
               <div className="mt-5 border-t border-border pt-5">
                 <p className="mb-3 text-sm text-muted-foreground">

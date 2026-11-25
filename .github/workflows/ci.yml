@@ -32,6 +32,38 @@ jobs:
         env:
           NEXT_TELEMETRY_DISABLED: "1"
 
+  browser:
+    name: Browser tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # A real Supabase stack for this run only: every migration applied, then a test owner with
+      # the demo businesses. The signed-in tests use it, so they need no secrets and no shared data.
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - run: supabase start
+      - name: Create the test account and demo businesses
+        run: node apps/web/e2e/prepare-local.mjs | tee -a "$GITHUB_ENV" | grep -v "PASSWORD\|ANON_KEY"
+      - run: pnpm --filter @getphysical/web exec playwright install --with-deps chromium
+      - run: pnpm --filter @getphysical/web build
+      - run: pnpm --filter @getphysical/web e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: browser-test-results
+          path: apps/web/test-results
+          retention-days: 7
+
   database:
     name: Migrations, RLS & ledger tests
     runs-on: ubuntu-latest

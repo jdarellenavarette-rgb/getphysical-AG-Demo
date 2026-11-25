@@ -1053,6 +1053,7 @@ export type Database = {
           about: string | null
           address: string
           amenities: string[] | null
+          app_booking: boolean
           business_kind: Database["public"]["Enums"]["business_kind"]
           category: string
           challenge_title: string | null
@@ -1102,6 +1103,7 @@ export type Database = {
           about?: string | null
           address?: string
           amenities?: string[] | null
+          app_booking?: boolean
           business_kind: Database["public"]["Enums"]["business_kind"]
           category?: string
           challenge_title?: string | null
@@ -1151,6 +1153,7 @@ export type Database = {
           about?: string | null
           address?: string
           amenities?: string[] | null
+          app_booking?: boolean
           business_kind?: Database["public"]["Enums"]["business_kind"]
           category?: string
           challenge_title?: string | null
@@ -2785,6 +2788,10 @@ export type Database = {
         }
       }
       book_class: { Args: { p_session_id: string }; Returns: string }
+      book_court: {
+        Args: { p_minutes: number; p_space_id: string; p_starts_at: string }
+        Returns: Json
+      }
       business_audience: {
         Args: { p_facility_id: string }
         Returns: {
@@ -2840,6 +2847,10 @@ export type Database = {
       can_manage_event: { Args: { p_event_id: string }; Returns: boolean }
       can_view_user_content: { Args: { p_author: string }; Returns: boolean }
       cancel_class_booking: {
+        Args: { p_booking_id: string }
+        Returns: undefined
+      }
+      cancel_court_booking: {
         Args: { p_booking_id: string }
         Returns: undefined
       }
@@ -2928,6 +2939,10 @@ export type Database = {
       conversation_facility_id: {
         Args: { p_conversation_id: string }
         Returns: string
+      }
+      court_availability: {
+        Args: { p_day: string; p_facility_id: string }
+        Returns: Json
       }
       create_demo_venue: { Args: never; Returns: string }
       create_payment_order: {

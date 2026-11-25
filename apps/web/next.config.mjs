@@ -1,3 +1,5 @@
+import sentryConfig from "@sentry/nextjs/config";
+
 /** @type {import('next').NextConfig} */
 
 // Baseline security headers for every response (OWASP secure-headers recommendations).
@@ -25,4 +27,10 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+// Error monitoring. Readable stack traces need source maps uploaded at build time, which happens
+// only when SENTRY_AUTH_TOKEN, SENTRY_ORG and SENTRY_PROJECT are set in the build environment.
+export default sentryConfig.withSentryConfig(nextConfig, {
+  silent: true,
+  telemetry: false,
+  sourcemaps: { disable: !process.env.SENTRY_AUTH_TOKEN },
+});

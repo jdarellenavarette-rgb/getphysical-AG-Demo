@@ -45,3 +45,7 @@ app-screenshots/
 
 # Local agent worktrees
 .claude/worktrees/
+
+# Playwright
+test-results/
+playwright-report/

@@ -173,8 +173,20 @@ The suite side of each exists. Until the app does these, the feature is half a f
   a list. Date-based ones are checked when a team member opens Home. For production, schedule
   `public.run_all_automations()` (service role) hourly so they do not depend on someone opening the suite.
 
-Still open in phase A: A3 error monitoring needs an account with a monitoring service, and A4 browser tests in CI
-need `@playwright/test` added as a development dependency. Both wait on the owner's approval.
+**Built on 2026-11-24, phase A:**
+
+- A3 error monitoring in the suite (Sentry). It sends nothing until `NEXT_PUBLIC_SENTRY_DSN` is set on the host.
+  Reports carry no cookies, request bodies or IP addresses, and session replay is off. Unexpected database refusals
+  are reported too, with quoted values removed. Still to do: alerts (set in Sentry), source-map upload
+  (`SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` at build), and the Supabase server functions.
+- A4 browser tests in CI (`apps/web/e2e`, `pnpm --filter @getphysical/web e2e`). CI starts a local Supabase stack for
+  the run, applies every migration, creates a test owner with the four demo businesses, and runs all ten tests,
+  signed-in ones included. No secrets and no shared data are involved. Tests that create and change records are the
+  next step, now that each run has its own database.
+
+**Built on 2026-11-25:** booking a court from the app, database side (`court_availability`, `book_court`,
+`cancel_court_booking`), off until a club switches it on under Courts. With classes and events already bookable,
+the remaining work for app booking is the mobile screens. See `docs/COORDINATION.md`.
 
 ### Phase G — The ecosystem · after the workspaces have payments
 
@@ -209,7 +221,6 @@ The critical path to the pilot is **decision 1 → provider approval → B3**. E
 | GetPhysical ends up holding other businesses' money | Regulatory exposure                    | Settle decision 1 with a lawyer before any live transaction          |
 | The app is not on real devices yet                  | Unknown problems at the pilot          | Run C2 on staging now, not after production exists                   |
 | Migrations applied by hand                          | Staging and production drift apart     | A1 before any production data                                        |
-| No browser tests                                    | A change breaks a workspace unnoticed  | A4                                                                   |
 | In-place updates fail after a save                  | Extra page reloads; root cause unknown | A10                                                                  |
 | One person's account owns a business                | Lost access if they leave              | Hand-over is built; an organization layer is G3                      |
 

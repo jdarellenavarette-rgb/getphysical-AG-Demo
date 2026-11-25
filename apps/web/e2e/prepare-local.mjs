@@ -34,6 +34,8 @@ await call("/auth/v1/admin/users", serviceKey, serviceKey, {
   email_confirm: true,
   user_metadata: { name: "Ella Tester", full_name: "Ella Tester" },
 });
+// Demo businesses exist only in test mode, which an operator switches on. This stack is ours.
+await call("/rest/v1/rpc/admin_set_payments_mode", serviceKey, serviceKey, { p_mode: "sandbox" });
 const session = await call("/auth/v1/token?grant_type=password", anonKey, anonKey, { email, password });
 // The same demo data a new owner gets from "Try the demo": a gym, a club, a coach and an organizer.
 await call("/rest/v1/rpc/create_demo_venue", anonKey, session.access_token, {});

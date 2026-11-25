@@ -5,9 +5,10 @@ const PORT = 3100;
 /**
  * Browser tests for the Business Suite. They run against a production build (`pnpm build` first).
  *
- * The public tests need no backend. The signed-in tests need a real Supabase project and a test
- * account, given as E2E_EMAIL and E2E_PASSWORD, with NEXT_PUBLIC_SUPABASE_URL and
- * NEXT_PUBLIC_SUPABASE_ANON_KEY set when the app was built. They only read; they change no data.
+ * The signed-out tests need no backend. The signed-in tests need a Supabase project and an
+ * account: in CI that is a local stack made for the run (`e2e/prepare-local.mjs`); elsewhere set
+ * E2E_EMAIL and E2E_PASSWORD, with NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY set
+ * when the app was built. They only read; they change no data.
  */
 export default defineConfig({
   testDir: "./e2e",

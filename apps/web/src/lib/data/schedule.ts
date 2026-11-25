@@ -32,6 +32,8 @@ export interface DaySchedule {
   bookings: Booking[];
   /** Hours (Philippine time) when the peak rate applies; null when there is no peak. */
   peak: { start: number; end: number } | null;
+  /** The club takes court bookings from the Sodia app. */
+  appBooking: boolean;
 }
 
 export const OPEN_HOUR = 6;
@@ -79,7 +81,7 @@ export async function loadDaySchedule(facilityId: string, day: string): Promise<
       .lt("starts_at", to.toISOString())
       .gt("ends_at", from.toISOString())
       .order("starts_at"),
-    supabase.from("facilities").select("peak_start_hour, peak_end_hour").eq("id", facilityId).single(),
+    supabase.from("facilities").select("peak_start_hour, peak_end_hour, app_booking").eq("id", facilityId).single(),
   ]);
   if (spaces.error ?? bookings.error ?? venue.error) {
     throw new Error("Could not load the schedule.", { cause: spaces.error ?? bookings.error ?? venue.error });
@@ -114,5 +116,6 @@ export async function loadDaySchedule(facilityId: string, day: string): Promise<
       venue.data.peak_start_hour !== null && venue.data.peak_end_hour !== null
         ? { start: venue.data.peak_start_hour, end: venue.data.peak_end_hour }
         : null,
+    appBooking: venue.data.app_booking,
   };
 }

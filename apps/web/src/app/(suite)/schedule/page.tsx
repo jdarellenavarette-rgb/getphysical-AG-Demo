@@ -385,6 +385,21 @@ export default async function SchedulePage({
                       </Select>
                     </Label>
                   </fieldset>
+                  <label className="flex min-h-11 items-start gap-2 text-sm font-medium">
+                    <input
+                      type="checkbox"
+                      name="appBooking"
+                      defaultChecked={schedule.appBooking}
+                      className="mt-0.5 size-5 accent-primary"
+                    />
+                    <span>
+                      Take bookings from the Sodia app
+                      <span className="block font-normal text-muted-foreground">
+                        People book free slots themselves, up to three at a time and 30 days ahead. Bookings arrive
+                        unpaid; record the payment at the desk.
+                      </span>
+                    </span>
+                  </label>
                 </ActionForm>
                 <p className="mt-2 text-sm text-muted-foreground">
                   Leave a price empty for a court you don&apos;t charge for. A booking that starts in peak hours is

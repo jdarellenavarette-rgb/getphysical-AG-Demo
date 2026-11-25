@@ -35,15 +35,9 @@ jobs:
   browser:
     name: Browser tests
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     env:
       NEXT_TELEMETRY_DISABLED: "1"
-      # The signed-out tests need no backend, so they run on a placeholder. The signed-in tests run
-      # when these four repository secrets are set (a staging project and a test account).
-      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL || 'https://placeholder.supabase.co' }}
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY || 'placeholder' }}
-      E2E_EMAIL: ${{ secrets.E2E_EMAIL }}
-      E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -52,6 +46,14 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # A real Supabase stack for this run only: every migration applied, then a test owner with
+      # the demo businesses. The signed-in tests use it, so they need no secrets and no shared data.
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - run: supabase start
+      - name: Create the test account and demo businesses
+        run: node apps/web/e2e/prepare-local.mjs | tee -a "$GITHUB_ENV" | grep -v "PASSWORD\|ANON_KEY"
       - run: pnpm --filter @getphysical/web exec playwright install --with-deps chromium
       - run: pnpm --filter @getphysical/web build
       - run: pnpm --filter @getphysical/web e2e

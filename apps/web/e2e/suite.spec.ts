@@ -8,7 +8,11 @@ const password = process.env.E2E_PASSWORD;
  * opens, shows its heading, and raises no error. Read-only, so it is safe against shared data.
  */
 test.describe("signed in", () => {
-  test.skip(!email || !password, "Set E2E_EMAIL and E2E_PASSWORD to run the signed-in tests.");
+  // In CI these must run: a missing account there is a broken pipeline, not a reason to skip.
+  test.skip(!process.env.CI && (!email || !password), "Set E2E_EMAIL and E2E_PASSWORD to run the signed-in tests.");
+  test.beforeAll(() => {
+    if (!email || !password) throw new Error("E2E_EMAIL and E2E_PASSWORD are not set.");
+  });
   test.describe.configure({ mode: "serial" });
 
   let page: Page;

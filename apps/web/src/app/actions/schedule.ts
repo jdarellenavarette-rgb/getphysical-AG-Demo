@@ -234,7 +234,11 @@ export async function updateCourtPrices(_prev: FormState, formData: FormData): P
   }
   const { data: saved, error } = await supabase
     .from("facilities")
-    .update({ peak_start_hour: start === "" ? null : start, peak_end_hour: end === "" ? null : end })
+    .update({
+      peak_start_hour: start === "" ? null : start,
+      peak_end_hour: end === "" ? null : end,
+      app_booking: formData.get("appBooking") === "on",
+    })
     .eq("id", active.id)
     .select("id");
   if (error) return { status: "error", message: "We couldn't save the peak hours. Please retry." };
